@@ -25,7 +25,7 @@ void demo_strategy::on_tick(const tick_info* tick)
 
 void demo_strategy::on_entrust(estid_t localid)
 {
-	set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + 60));
+	//set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + 60));
 	LOG_INFO("on_entrust tick : %s\n", localid.to_str());
 }
 

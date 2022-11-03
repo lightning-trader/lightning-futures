@@ -14,6 +14,7 @@ void start_runtime()
 	runtime_driver dirver ;
 	if(dirver.init_from_file("./runtime.ini"))
 	{
+	//max money : 2106547.600000 i:[5] j:[4] k:5
 		hft_1_strategy hcc(2, 3, 6, 480, 480);
 		exec_ctx app(dirver, hcc);
 		app.start();

@@ -31,7 +31,7 @@ void hft_1_strategy::on_entrust(estid_t localid)
 	LOG_DEBUG("on_entrust : %s\n", localid.to_str());
 	if (localid == _buy_order|| localid == _sell_order)
 	{
-		set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + _cancel_seconds));
+		//set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + _cancel_seconds));
 	}
 	else
 	{
