@@ -57,7 +57,7 @@ bool runtime_driver::init_from_file(const std::string& config_path)
 		return false;
 	}
 	//market
-	if (!_market_dll.load("./market.dll"))
+	if (!_market_dll.load("market.dll"))
 	{
 		LOG_ERROR("runtime_engine init_from_file _market_dll load error : %s", config_path.c_str());
 		return false;
@@ -70,7 +70,7 @@ bool runtime_driver::init_from_file(const std::string& config_path)
 	}
 	
 	//trader
-	if (!_trader_dll.load("./trader.dll"))
+	if (!_trader_dll.load("trader.dll"))
 	{
 		LOG_ERROR("runtime_engine init_from_file _trader_dll load error : %s", config_path.c_str());
 		return false;
@@ -82,7 +82,7 @@ bool runtime_driver::init_from_file(const std::string& config_path)
 		return false;
 	}
 	//recorder
-	if (!_recorder_dll.load("./recorder.dll"))
+	if (!_recorder_dll.load("recorder.dll"))
 	{
 		LOG_ERROR("runtime_engine init_from_file _recorder_dll load error : %s", config_path.c_str());
 		return false;

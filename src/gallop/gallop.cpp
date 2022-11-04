@@ -9,43 +9,23 @@
 #include <log_wapper.hpp>
 #include "hft_1_strategy.h"
 
+
 void start_runtime()
 {
 	runtime_driver dirver ;
 	if(dirver.init_from_file("./runtime.ini"))
 	{
 	//max money : 2106547.600000 i:[5] j:[4] k:5
-		hft_1_strategy hcc(2, 3, 6, 480, 480);
+		//hft_1_strategy hcc(2, 3, 6, 480, 480);
+		demo_strategy hcc(2,1);
 		exec_ctx app(dirver, hcc);
 		app.start();
 	}
 }
 
-void start_evaluate()
+void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 {
-	std::vector<uint32_t> all_trading_day = {
-		20220901,
-		20220902,
-		20220905,
-		20220906,
-		20220907,
-		20220908,
-		20220909,
-		20220913,
-		20220914,
-		20220915,
-		20220916,
-		20220919,
-		20220920,
-		20220921,
-		20220922,
-		20220923,
-		20220926,
-		20220927,
-		20220928,
-		20220928,
-		20220930
-	};
+
 	
 	evaluate_driver dirver;
 	if (dirver.init_from_file("./evaluate.ini"))
@@ -67,32 +47,8 @@ void start_evaluate()
 
 
 
-void start_hft_1_optimize()
+void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
 {
-
-	std::vector<uint32_t> all_trading_day = {
-			20220901,
-			20220902,
-			20220905,
-			20220906,
-			20220907,
-			20220908,
-			20220909,
-			20220913,
-			20220914,
-			20220915,
-			20220916,
-			20220919,
-			20220920,
-			20220921,
-			20220922,
-			20220923,
-			20220926,
-			20220927,
-			20220928,
-			20220928,
-			20220930
-	};
 
 	//max money : 99890.400000 i:[1] j:[6]
 	double max_monery = 0;
@@ -131,46 +87,21 @@ void start_hft_1_optimize()
 }
 
 
-void start_demo_optimize(int tradeing_day)
+void start_demo_optimize(const std::vector<uint32_t>& all_trading_day)
 {
 
-	std::vector<uint32_t> all_trading_day = {
-			20220901,
-			20220902,
-			20220905,
-			20220906,
-			20220907,
-			20220908,
-			20220909,
-			20220913,
-			20220914,
-			20220915,
-			20220916,
-			20220919,
-			20220920,
-			20220921,
-			20220922,
-			20220923,
-			20220926,
-			20220927,
-			20220928,
-			20220928,
-			20220930
-	};
-
-	int ratio_arr[8] = {1,2.3,4,5,6,7,8 };
 	//max money : 99890.400000 i:[1] j:[6]
 	double max_monery = 0;
-	for (int i = 0; i < 8; i++)
+	for (int i = 2; i < 6; i++)
 	{
-		for (int j = 0; j < 8; j++)
+		for (int j = 2; j < 6; j++)
 		{
 			double_t current_monery = 0;
 			evaluate_driver dirver;
 			if (dirver.init_from_file("./evaluate.ini"))
 			{
 
-				demo_strategy hcc(ratio_arr[i], ratio_arr[j]);
+				demo_strategy hcc(i, j);
 				exec_ctx app(dirver, hcc);
 				for (auto& trading : all_trading_day)
 				{
@@ -230,11 +161,34 @@ void start_optimize(int tradeing_day)
 }
 int main()
 {
+	std::vector<uint32_t> all_trading_day = {
+		20220901,
+		20220902,
+		20220905,
+		20220906,
+		20220907,
+		20220908,
+		20220909,
+		20220913,
+		20220914,
+		20220915,
+		20220916,
+		20220919,
+		20220920,
+		20220921,
+		20220922,
+		20220923,
+		20220926,
+		20220927,
+		20220928,
+		20220928,
+		20220930
+	};
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
 	//start_evaluate();
-	start_hft_1_optimize();
-	//start_demo_optimize(20220901);
-	//start_runtime();
+	//start_hft_1_optimize();
+	//start_demo_optimize(all_trading_day);
+	start_runtime();
 	//getchar();
 	return 0;
 }

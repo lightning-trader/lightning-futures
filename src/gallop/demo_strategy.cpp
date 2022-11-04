@@ -4,14 +4,18 @@
 void demo_strategy::on_init()
 {
 	set_trading_optimize(2, TO_INVALID,false);
-	subscribe({"SHFF.rb2301"});
+	subscribe({"SHFF.ag2212"});
+	//add_condition(std::make_shared<fall_back_cds>());
 }
 
 void demo_strategy::on_tick(const tick_info* tick)
 {
-	check_lose(tick);
+	if(check_lose(tick))
+	{
+		return ;
+	}
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
-	if(_buy_order.is_valid()|| _sell_order.is_valid())
+	if (estid_t() != _buy_order|| estid_t() != _sell_order)
 	{
 		return ;
 	}
@@ -33,30 +37,39 @@ void demo_strategy::on_trade(estid_t localid, code_t code, offset_type offset, d
 {
 	if(localid == _buy_order)
 	{
+		_buy_order = estid_t();
 		cancel_order(_sell_order);
 	}
 	if(localid == _sell_order)
 	{
+		_sell_order = estid_t();
 		cancel_order(_buy_order);
 	}
-	auto pos = get_position(code);
-	if(pos && pos->is_mepty())
+	if(offset == OT_OPEN)
 	{
-		_buy_order = estid_t();
-		_sell_order = estid_t();
+		if(direction == DT_LONG)
+		{
+			_highest_price = price;
+		}
+		else if(direction == DT_SHORT)
+		{
+			_lowest_price = price;
+		}
 	}
 }
 
 void demo_strategy::on_cancel(estid_t localid,code_t code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
 	LOG_INFO("on_cancel tick : %s\n", localid.to_str());
-	if(localid == _buy_order)
+	if (localid == _buy_order)
 	{
 		_buy_order = estid_t();
+	
 	}
 	if (localid == _sell_order)
 	{
 		_sell_order = estid_t();
+	
 	}
 }
 
@@ -71,28 +84,27 @@ bool demo_strategy::check_lose(const tick_info* tick)
 	}
 	if (position->long_postion > 0)
 	{
-		if (tick->price < _long_lose_price)
+		if (_highest_price < tick->price)
+		{
+			_highest_price = tick->price;
+		}
+		if (tick->price < _highest_price - _lose_offset)
 		{
 			sell_for_close(tick->id, position->long_postion);
-			_last_order_time = tick->time;
 		}
-		if (_long_lose_price < tick->price - _lose_offset)
-		{
-			_long_lose_price = tick->price - _lose_offset;
-		}
+
 		return true;
 	}
 	if (position->short_postion > 0)
 	{
 		//³ÖÓÐ¿Õµ¥
-		if (tick->price > _short_lose_price)
+		if (_lowest_price > tick->price)
+		{
+			_lowest_price = tick->price;
+		}
+		if (tick->price > _lowest_price + _lose_offset)
 		{
 			buy_for_close(tick->id, position->short_postion);
-			_last_order_time = tick->time;
-		}
-		if (_short_lose_price > tick->price + _lose_offset)
-		{
-			_short_lose_price = tick->price + _lose_offset;
 		}
 		return true;
 	}

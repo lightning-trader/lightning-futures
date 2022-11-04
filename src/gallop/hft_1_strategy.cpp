@@ -41,11 +41,11 @@ void hft_1_strategy::on_entrust(estid_t localid)
 		{
 			if(order->direction == DT_LONG)
 			{
-				set_cancel_condition(localid, std::make_shared<price_down_cdt>(_last_tick.price - _lose_delta));
+				set_cancel_condition(localid, std::make_shared<price_down_cds>(_last_tick.price - _lose_delta));
 			}
 			else if(order->direction == DT_SHORT)
 			{
-				set_cancel_condition(localid, std::make_shared<price_up_cdt>(_last_tick.price + _lose_delta));
+				set_cancel_condition(localid, std::make_shared<price_up_cds>(_last_tick.price + _lose_delta));
 			}
 		}
 	}

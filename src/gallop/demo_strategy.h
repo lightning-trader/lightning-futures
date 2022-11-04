@@ -4,7 +4,7 @@
 class demo_strategy : public strategy
 {
 public:
-	demo_strategy(int lose_offset,int open_delta):_lose_offset(lose_offset), _open_delta(open_delta), _last_order_time(0), _long_lose_price(0), _short_lose_price(0) {};
+	demo_strategy(int lose_offset,int open_delta):_lose_offset(lose_offset), _open_delta(open_delta), _highest_price(0), _lowest_price(0) {};
 	~demo_strategy(){};
 
 
@@ -58,9 +58,8 @@ private:
 
 	estid_t _buy_order ;
 
-	time_t _last_order_time;
-	double _long_lose_price; //Ö¹Ëð¼Û
-	double _short_lose_price; //Ö¹Ëð¼Û
+	double _highest_price; //Ö¹Ëð¼Û
+	double _lowest_price; //Ö¹Ëð¼Û
 
 	std::list<double_t> _history_list ;
 

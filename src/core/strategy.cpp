@@ -94,6 +94,7 @@ void strategy::tick(const tick_info* tick)
 {
 	this->on_tick(tick);
 	check_order_condition(tick);
+	check_all_condition(tick);
 }
 
 estid_t strategy::buy_for_open(code_t code,uint32_t count ,double_t price , order_flag flag )
@@ -244,7 +245,7 @@ time_t strategy::get_last_time() const
 	return _market->last_tick_time();
 }
 
-void strategy::set_cancel_condition(estid_t order_id,std::shared_ptr<const condition> cds)
+void strategy::set_cancel_condition(estid_t order_id,std::shared_ptr<condition> cds)
 {
 	LOG_DEBUG("set_timeout_cancel : %s\n", order_id.to_str());
 	_need_check_condition[order_id] = cds;
@@ -275,5 +276,34 @@ void strategy::remove_invalid_condition(estid_t order_id)
 	if (odit != _need_check_condition.end())
 	{
 		_need_check_condition.erase(odit);
+	}
+}
+
+std::shared_ptr<condition> strategy::add_condition(std::shared_ptr<condition> cds, std::function<void(const tick_info*)> cb)
+{
+	_condition_callback[cds] = cb ;
+	return cds;
+}
+
+
+void strategy::remove_condition(std::shared_ptr<condition> cds)
+{
+	auto it = _condition_callback.find(cds);
+	if(it != _condition_callback.end())
+	{
+		_condition_callback.erase(it);
+	}
+}
+
+void strategy::check_all_condition(const tick_info* tick)
+{
+	//为了实现回调中可以删除condition这里复制一次
+	auto check_condition = _condition_callback;
+	for (auto it = check_condition.begin(); it != check_condition.end(); ++it)
+	{
+		if (it->first->check(tick))
+		{
+			it->second(tick);
+		}
 	}
 }

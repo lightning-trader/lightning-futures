@@ -6,9 +6,9 @@ struct condition
 	virtual bool check(const tick_info* tick) = 0;
 };
 //时间到达目标时间触发
-struct time_out_cdt : condition
+struct time_out_cds : condition
 {
-	time_out_cdt(time_t target_time):_target_time(target_time)
+	time_out_cds(time_t target_time):_target_time(target_time)
 	{
 	
 	}
@@ -19,9 +19,9 @@ private:
 };
 
 //价格上涨超过目标价格时候触发
-struct price_up_cdt : condition
+struct price_up_cds : condition
 {
-	price_up_cdt(double_t price) :_target_price(price)
+	price_up_cds(double_t price) :_target_price(price)
 	{
 
 	}
@@ -32,9 +32,9 @@ private:
 };
 
 //价格跌穿目标价触发
-struct price_down_cdt : condition
+struct price_down_cds : condition
 {
-	price_down_cdt(double_t price) :_target_price(price)
+	price_down_cds(double_t price) :_target_price(price)
 	{
 
 	}
@@ -45,9 +45,9 @@ private:
 };
 
 //冲高回落指定点位触发
-struct fall_back_cdt : condition
+struct fall_back_cds : condition
 {
-	fall_back_cdt(double_t price, double_t fall_offset) :_highest_price(price), _fall_offset(fall_offset)
+	fall_back_cds(double_t price, double_t fall_offset) :_highest_price(price), _fall_offset(fall_offset)
 	{
 
 	}
@@ -59,9 +59,9 @@ private:
 };
 
 //触底反弹指定点位触发
-struct bounce_back_cdt : condition
+struct bounce_back_cds : condition
 {
-	bounce_back_cdt(double_t price, double_t bounce_offset) :_lowest_price(price), _bounce_offset(bounce_offset)
+	bounce_back_cds(double_t price, double_t bounce_offset) :_lowest_price(price), _bounce_offset(bounce_offset)
 	{
 
 	}

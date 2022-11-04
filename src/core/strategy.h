@@ -168,15 +168,25 @@ protected:
 	/*
 	* 设置撤销条件
 	*/
-	void set_cancel_condition(estid_t order_id, std::shared_ptr<const condition> cds);
+	void set_cancel_condition(estid_t order_id, std::shared_ptr<condition> cds);
 
+	/*
+	增加condition
+	*/
+	std::shared_ptr<condition> add_condition(std::shared_ptr<condition> cds,std::function<void(const tick_info*)> cb);
 
+	/*
+	移除condition
+	*/
+	void remove_condition(std::shared_ptr<condition> cds);
 
 private:
 	
 	void check_order_condition(const tick_info* tick);
 
 	void remove_invalid_condition(estid_t order_id);
+
+	void check_all_condition(const tick_info* tick);
 
 private:
 
@@ -188,7 +198,9 @@ private:
 
 	class pod_chain* _chain;
 
-	std::map<estid_t,std::shared_ptr<const condition>> _need_check_condition;
+	std::map<estid_t,std::shared_ptr<condition>> _need_check_condition;
+
+	std::map<std::shared_ptr<condition>, std::function<void(const tick_info*)>> _condition_callback ;
 
 };
 

@@ -119,7 +119,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 		LOG_ERROR("OnRtnDepthMarketData _tick_info_pool construct Error");
 		return;
 	}
-	tick->id = code_t(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
+	tick->id = code_t(pDepthMarketData->InstrumentID, "SHFE");
 	
 	tick->time = make_time(pDepthMarketData->TradingDay, pDepthMarketData->UpdateTime);
 	tick->tick = pDepthMarketData->UpdateMillisec;

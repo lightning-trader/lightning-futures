@@ -1,7 +1,7 @@
 #pragma once
 #include "condition.h"
 
-bool time_out_cdt::check(const tick_info* tick)
+bool time_out_cds::check(const tick_info* tick)
 {
 	if (tick)
 	{
@@ -12,7 +12,7 @@ bool time_out_cdt::check(const tick_info* tick)
 	}
 	return false;
 }
-bool price_up_cdt::check(const tick_info* tick)
+bool price_up_cds::check(const tick_info* tick)
 {
 	if (tick)
 	{
@@ -23,7 +23,7 @@ bool price_up_cdt::check(const tick_info* tick)
 	}
 	return false;
 }
-bool price_down_cdt::check(const tick_info* tick)
+bool price_down_cds::check(const tick_info* tick)
 {
 	if (tick)
 	{
@@ -35,7 +35,7 @@ bool price_down_cdt::check(const tick_info* tick)
 	return false;
 }
 
-bool fall_back_cdt::check(const tick_info* tick)
+bool fall_back_cds::check(const tick_info* tick)
 {
 	if (tick)
 	{
@@ -51,7 +51,7 @@ bool fall_back_cdt::check(const tick_info* tick)
 	return false;
 }
 
-bool bounce_back_cdt::check(const tick_info* tick)
+bool bounce_back_cds::check(const tick_info* tick)
 {
 	if (tick)
 	{

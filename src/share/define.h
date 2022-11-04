@@ -83,7 +83,7 @@ public:
 		{
 			return true;
 		}
-		if (strcmp(get_id(), other.get_id()))
+		if (strcmp(get_id(), other.get_id())<0)
 		{
 			return true;
 		}
