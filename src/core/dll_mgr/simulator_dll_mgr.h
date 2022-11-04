@@ -2,6 +2,8 @@
 #include "dll_mgr.h"
 #include <simulator.h>
 #include <platform_helper.hpp>
+#include <boost/property_tree/ptree.hpp>
+
 
 class simulator_dll_mgr : public dll_mgr
 {

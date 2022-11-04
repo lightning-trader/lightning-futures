@@ -5,6 +5,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <ThostFtdcMdApi.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/pool/object_pool.hpp>
+
 
 
 class ctp_market :	public actual_market_api,public CThostFtdcMdSpi

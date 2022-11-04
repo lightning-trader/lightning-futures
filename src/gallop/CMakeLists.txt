@@ -10,7 +10,7 @@ link_directories(${CMAKE_LIBRARY_PATH})
 # 将源代码添加到此项目的可执行文件。
 add_executable (gallop "gallop.cpp" "demo_strategy.cpp" "hcc_strategy.cpp" "hft_1_strategy.cpp")
 
-target_link_libraries(gallop "core")
+target_link_libraries(gallop "lightning")
 
 target_link_libraries(gallop)
 

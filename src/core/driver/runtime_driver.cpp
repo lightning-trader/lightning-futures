@@ -119,3 +119,18 @@ void runtime_driver::add_handle(std::function<void(event_type, const std::vector
 		_trader_api->add_handle(handle);
 	}
 }
+
+market_api* runtime_driver::get_market_api()
+{
+	return _market_api;
+}
+
+trader_api* runtime_driver::get_trader_api()
+{
+	return _trader_api;
+}
+
+recorder* runtime_driver::get_recorder()
+{
+	return _recorder;
+}

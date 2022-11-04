@@ -2,6 +2,7 @@
 #include <define.h>
 #include <data_types.hpp>
 #include "./csv_recorder/csv_recorder.h"
+#include <boost/property_tree/ptree.hpp>
 
 
 extern "C"

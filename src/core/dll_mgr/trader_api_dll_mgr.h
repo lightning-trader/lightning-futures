@@ -2,6 +2,7 @@
 #include "dll_mgr.h"
 #include <trader_api.h>
 #include <platform_helper.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 class trader_api_dll_mgr : public dll_mgr
 {

@@ -2,6 +2,7 @@
 #include "dll_mgr.h"
 #include <recorder.h>
 #include <platform_helper.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 class recorder_dll_mgr : public dll_mgr
 {

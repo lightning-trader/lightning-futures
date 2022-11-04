@@ -170,15 +170,6 @@ protected:
 	*/
 	void set_cancel_condition(estid_t order_id, std::shared_ptr<condition> cds);
 
-	/*
-	Ôö¼Ócondition
-	*/
-	std::shared_ptr<condition> add_condition(std::shared_ptr<condition> cds,std::function<void(const tick_info*)> cb);
-
-	/*
-	ÒÆ³ýcondition
-	*/
-	void remove_condition(std::shared_ptr<condition> cds);
 
 private:
 	
@@ -186,7 +177,6 @@ private:
 
 	void remove_invalid_condition(estid_t order_id);
 
-	void check_all_condition(const tick_info* tick);
 
 private:
 
@@ -199,8 +189,6 @@ private:
 	class pod_chain* _chain;
 
 	std::map<estid_t,std::shared_ptr<condition>> _need_check_condition;
-
-	std::map<std::shared_ptr<condition>, std::function<void(const tick_info*)>> _condition_callback ;
 
 };
 

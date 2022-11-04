@@ -2,6 +2,7 @@
 #include "dll_mgr.h"
 #include <market_api.h>
 #include <platform_helper.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 class market_api_dll_mgr : public dll_mgr
 {

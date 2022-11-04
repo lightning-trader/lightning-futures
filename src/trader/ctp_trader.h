@@ -8,6 +8,7 @@
 #include <data_types.hpp>
 #include <ThostFtdcTraderApi.h>
 #include <boost/pool/pool_alloc.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 
 /*

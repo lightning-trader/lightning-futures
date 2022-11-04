@@ -33,19 +33,10 @@ public:
 
 	virtual void add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle) override;
 
-	virtual class market_api* get_market_api() override
-	{
-		return _market_api;
-	}
-
-	virtual class trader_api* get_trader_api() override
-	{
-		return _trader_api;
-	}
-
-	virtual class recorder* get_recorder() override
-	{
-		return _recorder;
-	}
-
+	virtual class market_api* get_market_api() override;
+	
+	virtual class trader_api* get_trader_api() override;
+	
+	virtual class recorder* get_recorder() override;
+	
 };

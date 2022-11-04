@@ -7,10 +7,6 @@
 #include <vector>
 #include <stdint.h>
 #include <memory>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/pool/pool_alloc.hpp>
-#include <boost/pool/object_pool.hpp>
-#include <boost/lockfree/spsc_queue.hpp>
 
 #ifndef EXPORT_FLAG
 #ifdef _MSC_VER

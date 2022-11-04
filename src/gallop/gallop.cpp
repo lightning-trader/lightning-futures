@@ -37,8 +37,7 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 		exec_ctx app(dirver, hcc);
 		for(auto& trading : all_trading_day)
 		{
-			dirver.set_trading_day(trading);
-			dirver.play();
+			dirver.play(trading);
 			app.start();
 			//break;
 		}
@@ -68,8 +67,7 @@ void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
 					exec_ctx app(dirver, hcc);
 					for (auto& trading : all_trading_day)
 					{
-						dirver.set_trading_day(trading);
-						dirver.play();
+						dirver.play(trading);
 						app.start();
 						current_monery += dirver.get_money();
 						//break;
@@ -105,8 +103,7 @@ void start_demo_optimize(const std::vector<uint32_t>& all_trading_day)
 				exec_ctx app(dirver, hcc);
 				for (auto& trading : all_trading_day)
 				{
-					dirver.set_trading_day(trading);
-					dirver.play();
+					dirver.play(trading);
 					app.start();
 					//break;
 					current_monery += dirver.get_money();
@@ -143,8 +140,7 @@ void start_optimize(int tradeing_day)
 				{
 					hcc_strategy hcc("SHFE.rb2301", record_ratio_arr[i], lose_offset_arr[j], drag_limit_arr[k], 10);
 					exec_ctx app(dirver, hcc);
-					dirver.set_trading_day(tradeing_day);
-					dirver.play();
+					dirver.play(tradeing_day);
 					app.start();
 					auto cur = dirver.get_money();
 					if (cur > max_monery)

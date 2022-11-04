@@ -94,13 +94,22 @@ void evaluate_driver::add_handle(std::function<void(event_type, const std::vecto
 	}
 }
 
-void evaluate_driver::set_trading_day(uint32_t tradeing_day)
+market_api* evaluate_driver::get_market_api()
 {
-	if (_simulator)
-	{
-		_simulator->set_trading_day(tradeing_day);
-	}
+	return _simulator;
 }
+
+trader_api* evaluate_driver::get_trader_api()
+{
+	return _simulator;
+}
+
+recorder* evaluate_driver::get_recorder()
+{
+	return _recorder;
+}
+
+
 
 double evaluate_driver::get_money()
 {
@@ -115,10 +124,11 @@ double evaluate_driver::get_money()
 	return 0;
 }
 
-void evaluate_driver::play()
+void evaluate_driver::play(uint32_t tradeing_day)
 {
 	if(_simulator)
 	{
+		_simulator->set_trading_day(tradeing_day);
 		_simulator->play();
 	}
 }
