@@ -22,12 +22,12 @@ void hcc_strategy::on_tick(const tick_info* tick)
 		return;
 	}
 
-
+	/*
 	if (check_lose(tick))
 	{
 		return;
 	}
-
+	*/
 	if (tick->price < buy_pending_order.first)
 	{
 		//ÏÂµøÖÐ
@@ -136,7 +136,9 @@ void hcc_strategy::on_price_change(const tick_info* tick, bool is_up)
 
 void hcc_strategy::on_entrust(estid_t localid)
 {
-	set_cancel_condition(localid, std::make_shared<time_out_cds>(get_last_time() + _cancel_seconds));
+	set_cancel_condition(localid, [this](const tick_info* tick)->bool{
+		return tick->time > (get_last_time() + _cancel_seconds);
+	});
 	_last_order_time = get_last_time();
 	LOG_INFO("on_entrust success tick : %s\n", localid.to_str());
 }

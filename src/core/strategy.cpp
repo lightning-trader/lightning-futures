@@ -244,10 +244,10 @@ time_t strategy::get_last_time() const
 	return _market->last_tick_time();
 }
 
-void strategy::set_cancel_condition(estid_t order_id,std::shared_ptr<condition> cds)
+void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const tick_info*)> callback)
 {
 	LOG_DEBUG("set_timeout_cancel : %s\n", order_id.to_str());
-	_need_check_condition[order_id] = cds;
+	_need_check_condition[order_id] = callback;
 }
 
 
@@ -256,7 +256,7 @@ void strategy::check_order_condition(const tick_info* tick)
 
 	for(auto it = _need_check_condition.begin();it!= _need_check_condition.end();)
 	{
-		if(it->second->check(tick))
+		if(it->second(tick))
 		{
 			cancel_order(it->first);
 			it = _need_check_condition.erase(it);

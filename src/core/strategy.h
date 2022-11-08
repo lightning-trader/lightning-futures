@@ -2,7 +2,7 @@
 #include <any>
 #include <define.h>
 #include <data_types.hpp>
-#include "condition.h"
+#include <functional>
 
 
 class strategy 
@@ -168,7 +168,7 @@ protected:
 	/*
 	* 设置撤销条件
 	*/
-	void set_cancel_condition(estid_t order_id, std::shared_ptr<condition> cds);
+	void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info*)> callback);
 
 
 private:
@@ -188,7 +188,7 @@ private:
 
 	class pod_chain* _chain;
 
-	std::map<estid_t,std::shared_ptr<condition>> _need_check_condition;
+	std::map<estid_t,std::function<bool(const tick_info*)>> _need_check_condition;
 
 };
 
