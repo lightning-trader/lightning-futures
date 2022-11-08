@@ -7,7 +7,7 @@
 #include <platform_helper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-runtime_driver::runtime_driver():_market_api(nullptr), _trader_api(nullptr), _recorder(nullptr)
+runtime_driver::runtime_driver():_market_api(nullptr), _trader_api(nullptr)
 {
 }
 runtime_driver::~runtime_driver()
@@ -22,14 +22,9 @@ runtime_driver::~runtime_driver()
 		_trader_dll.destory_trader_api(_trader_api);
 		_trader_api = nullptr;
 	}
-	if (_recorder)
-	{
-		_recorder_dll.destory_recorder(_recorder);
-		_recorder = nullptr;
-	}
+
 	_market_dll.unload();
 	_trader_dll.unload();
-	_recorder_dll.unload();
 }
 
 bool runtime_driver::init_from_file(const std::string& config_path)
@@ -81,18 +76,7 @@ bool runtime_driver::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
 		return false;
 	}
-	//recorder
-	if (!_recorder_dll.load("recorder.dll"))
-	{
-		LOG_ERROR("runtime_engine init_from_file _recorder_dll load error : %s", config_path.c_str());
-		return false;
-	}
-	_recorder = _recorder_dll.create_recorder(recorder_config);
-	if (_recorder == nullptr)
-	{
-		LOG_ERROR("runtime_engine init_from_file create_recorder error : %s", config_path.c_str());
-		return false;
-	}
+
 	return true ;
 }
 
@@ -128,9 +112,4 @@ market_api* runtime_driver::get_market_api()
 trader_api* runtime_driver::get_trader_api()
 {
 	return _trader_api;
-}
-
-recorder* runtime_driver::get_recorder()
-{
-	return _recorder;
 }

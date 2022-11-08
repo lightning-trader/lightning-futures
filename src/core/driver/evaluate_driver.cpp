@@ -5,7 +5,7 @@
 #include <file_wapper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-evaluate_driver::evaluate_driver():_simulator(nullptr), _recorder(nullptr)
+evaluate_driver::evaluate_driver():_simulator(nullptr)
 {
 }
 evaluate_driver::~evaluate_driver()
@@ -60,20 +60,7 @@ bool evaluate_driver::init_from_file(const std::string& config_path)
 		LOG_ERROR("evaluate_driver init_from_file create_simulator error : %s", config_path.c_str());
 		return false;
 	}
-	/*
-	//recorder
-	if (!_recorder_dll.load("./recorder.dll"))
-	{
-		LOG_ERROR("runtime_engine init_from_file _recorder_dll load error : %s", config_path.c_str());
-		return false;
-	}
-	_recorder = _recorder_dll.create_recorder(recorder_config);
-	if (_recorder == nullptr)
-	{
-		LOG_ERROR("runtime_engine init create_recorder error : %s", config_path.c_str());
-		return false;
-	}
-	*/
+
 	return true;
 	
 }
@@ -103,12 +90,6 @@ trader_api* evaluate_driver::get_trader_api()
 {
 	return _simulator;
 }
-
-recorder* evaluate_driver::get_recorder()
-{
-	return _recorder;
-}
-
 
 
 double evaluate_driver::get_money()

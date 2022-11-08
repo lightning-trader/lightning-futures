@@ -1,7 +1,6 @@
 #pragma once
 #include <define.h>
 #include "../driver.h"
-#include "../dll_mgr/recorder_dll_mgr.h"
 #include "../dll_mgr/market_api_dll_mgr.h"
 #include "../dll_mgr/trader_api_dll_mgr.h"
 
@@ -13,11 +12,10 @@ private:
 	
 	market_api_dll_mgr _market_dll ;
 	trader_api_dll_mgr _trader_dll ;
-	recorder_dll_mgr _recorder_dll;
-
+	
 	class actual_market_api* _market_api;
 	class actual_trader_api* _trader_api;
-	class recorder * _recorder;
+
 public:
 
 	runtime_driver();
@@ -36,7 +34,5 @@ public:
 	virtual class market_api* get_market_api() override;
 	
 	virtual class trader_api* get_trader_api() override;
-	
-	virtual class recorder* get_recorder() override;
 	
 };

@@ -19,6 +19,4 @@ public:
 
 	virtual class trader_api* get_trader_api() = 0;
 
-	virtual class recorder* get_recorder() = 0;
-
 };
