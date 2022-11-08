@@ -1,14 +1,10 @@
 #pragma once
 #include "../driver.h"
-#include "../dll_mgr/simulator_dll_mgr.h"
 
 class evaluate_driver : public driver
 {
 
 private:
-	
-
-	simulator_dll_mgr _simulator_dll;
 	
 	class simulator* _simulator;
 

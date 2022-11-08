@@ -6,6 +6,12 @@
 #include <log_wapper.hpp>
 #include <platform_helper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include "../../market/interface.h"
+#include "../../trader/interface.h"
+
+#pragma comment (lib,"trader.lib")
+#pragma comment (lib,"market.lib")
+
 
 runtime_driver::runtime_driver():_market_api(nullptr), _trader_api(nullptr)
 {
@@ -14,17 +20,15 @@ runtime_driver::~runtime_driver()
 {
 	if (_market_api)
 	{
-		_market_dll.destory_market_api(_market_api);
+		destory_market_api(_market_api);
 		_market_api = nullptr;
 	}
 	if (_trader_api)
 	{
-		_trader_dll.destory_trader_api(_trader_api);
+		destory_trader_api(_trader_api);
 		_trader_api = nullptr;
 	}
 
-	_market_dll.unload();
-	_trader_dll.unload();
 }
 
 bool runtime_driver::init_from_file(const std::string& config_path)
@@ -52,12 +56,8 @@ bool runtime_driver::init_from_file(const std::string& config_path)
 		return false;
 	}
 	//market
-	if (!_market_dll.load("market.dll"))
-	{
-		LOG_ERROR("runtime_engine init_from_file _market_dll load error : %s", config_path.c_str());
-		return false;
-	}
-	_market_api = _market_dll.create_market_api(market_config);
+	
+	_market_api = create_market_api(market_config);
 	if (_market_api == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
@@ -65,12 +65,8 @@ bool runtime_driver::init_from_file(const std::string& config_path)
 	}
 	
 	//trader
-	if (!_trader_dll.load("trader.dll"))
-	{
-		LOG_ERROR("runtime_engine init_from_file _trader_dll load error : %s", config_path.c_str());
-		return false;
-	}
-	_trader_api = _trader_dll.create_trader_api(trader_config);
+	
+	_trader_api = create_trader_api(trader_config);
 	if (_trader_api == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());

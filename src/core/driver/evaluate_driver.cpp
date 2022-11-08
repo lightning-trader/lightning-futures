@@ -4,6 +4,9 @@
 #include <log_wapper.hpp>
 #include <file_wapper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include "../../simulator/interface.h"
+
+#pragma comment (lib,"simulator.lib")
 
 evaluate_driver::evaluate_driver():_simulator(nullptr)
 {
@@ -12,18 +15,10 @@ evaluate_driver::~evaluate_driver()
 {
 	if (_simulator)
 	{
-		_simulator_dll.destory_simulator(_simulator);
+		destory_simulator(_simulator);
 		_simulator = nullptr;
 	}
-	/*
-	if (_recorder)
-	{
-		_recorder_dll.destory_recorder(_recorder);
-		_recorder = nullptr;
-	}
-	*/
-	_simulator_dll.unload();
-	//_recorder_dll.unload();
+
 }
 
 bool evaluate_driver::init_from_file(const std::string& config_path)
@@ -49,12 +44,8 @@ bool evaluate_driver::init_from_file(const std::string& config_path)
 		return false;
 	}
 	//simulator
-	if (!_simulator_dll.load("./simulator.dll"))
-	{
-		LOG_ERROR("evaluate_driver init_from_file _market_dll load error : %s", config_path.c_str());
-		return false;
-	}
-	_simulator = _simulator_dll.create_simulator(simulator_config);
+
+	_simulator = create_simulator(simulator_config);
 	if (_simulator == nullptr)
 	{
 		LOG_ERROR("evaluate_driver init_from_file create_simulator error : %s", config_path.c_str());
