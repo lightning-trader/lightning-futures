@@ -1,5 +1,5 @@
 #pragma once
-#include "../core/strategy.h"
+#include "strategy.h"
 #include <list>
 
 class demo_strategy : public strategy

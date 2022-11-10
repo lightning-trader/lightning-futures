@@ -1,7 +1,7 @@
-#include "exec_ctx.h"
+#include "context.h"
 #include <file_wapper.hpp>
-#include "driver.h"
-#include "strategy.h"
+#include <driver.h>
+#include <strategy.h>
 #include <market_api.h>
 #include <trader_api.h>
 #include <recorder.h>
@@ -9,7 +9,7 @@
 #include <log_wapper.hpp>
 
 
-exec_ctx::exec_ctx(driver& driver, strategy& strategy):
+context::context(driver& driver, strategy& strategy):
 	_is_runing(false),
 	_driver(driver), 
 	_strategy(strategy)
@@ -17,9 +17,9 @@ exec_ctx::exec_ctx(driver& driver, strategy& strategy):
 	_market = _driver.get_market_api();
 	_trader = _driver.get_trader_api();
 	_strategy.init(_market, _trader);
-	_driver.add_handle(std::bind(&exec_ctx::on_event_trigger, this, std::placeholders::_1, std::placeholders::_2));
+	_driver.add_handle(std::bind(&context::on_event_trigger, this, std::placeholders::_1, std::placeholders::_2));
 }
-exec_ctx::~exec_ctx()
+context::~context()
 {
 	if(_market)
 	{
@@ -32,19 +32,19 @@ exec_ctx::~exec_ctx()
 }
 
 
-void exec_ctx::start()
+void context::start()
 {
 	_is_runing = true;
 	this->run();
 }
 
-void exec_ctx::stop()
+void context::stop()
 {
 	_is_runing = false ;
 }
 
 
-void exec_ctx::run()
+void context::run()
 {
 	int core = platform_helper::get_cpu_cores();
 	if (!platform_helper::bind_core(core - 1))
@@ -66,7 +66,7 @@ void exec_ctx::run()
 }
 
 
-void exec_ctx::on_event_trigger(event_type type,const std::vector<std::any>& param)
+void context::on_event_trigger(event_type type,const std::vector<std::any>& param)
 {
 	switch(type)
 	{

@@ -8,6 +8,8 @@ project ("gallop")
 SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} 
     "C:/Boost/include/boost-1_80" 
     "${PROJECT_SOURCE_DIR}/share" 
+    "${PROJECT_SOURCE_DIR}/include" 
+    "${PROJECT_SOURCE_DIR}/include/driver" 
 )
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} 
     "C:/Boost/lib" 

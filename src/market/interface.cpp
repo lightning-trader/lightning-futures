@@ -2,32 +2,30 @@
 #include <market_api.h>
 #include "ctp_market.h"
 
-extern "C"
+actual_market_api* create_market_api(const boost::property_tree::ptree& config)
 {
-	EXPORT_FLAG actual_market_api* create_market_api(const boost::property_tree::ptree& config)
+	auto market_type = config.get<std::string>("market");
+	if (market_type == "ctp")
 	{
-		auto market_type = config.get<std::string>("market");
-		if(market_type =="ctp")
+		ctp_market* api = new ctp_market();
+		if (api->init(config))
 		{
-			ctp_market* api = new ctp_market();
-			if(api->init(config))
-			{
-				return api;
-			}else
-			{
-				delete api;
-			}
+			return api;
 		}
-		
-		return nullptr;
-	}
-
-	EXPORT_FLAG void destory_market_api(actual_market_api* api)
-	{
-		if (nullptr != api)
+		else
 		{
 			delete api;
-			api = nullptr;
 		}
 	}
-};
+
+	return nullptr;
+}
+
+void destory_market_api(actual_market_api* api)
+{
+	if (nullptr != api)
+	{
+		delete api;
+		api = nullptr;
+	}
+}

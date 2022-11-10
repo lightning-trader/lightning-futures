@@ -1,5 +1,5 @@
 #pragma once
-#include "../core/strategy.h"
+#include "strategy.h"
 
 class hcc_strategy : public strategy
 {

@@ -23,14 +23,14 @@ public:
 
 #ifdef _WIN32
 #include <thread>
-	static bool bind_core(uint32_t i)
+	static bool bind_core(uint64_t i)
 	{
 		uint32_t cores = get_cpu_cores();
 		if (i >= cores)
 			return false;
 
 		HANDLE hThread = GetCurrentThread();
-		DWORD_PTR mask = SetThreadAffinityMask(hThread, (DWORD_PTR)(1 << i));
+		DWORD_PTR mask = SetThreadAffinityMask(hThread, (DWORD_PTR)(1LL << i));
 		return (mask != 0);
 	}
 #else

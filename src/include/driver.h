@@ -1,9 +1,9 @@
 #pragma once
 #include <any>
 #include <functional>
-#include <event_center.hpp>
+#include <define.h>
 
-class driver
+class EXPORT_FLAG driver
 {
 public:
 	driver(){}

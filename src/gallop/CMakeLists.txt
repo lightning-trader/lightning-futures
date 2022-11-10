@@ -12,6 +12,8 @@ add_executable (gallop "gallop.cpp" "demo_strategy.cpp" "hcc_strategy.cpp" "hft_
 
 target_link_libraries(gallop "lightning")
 
+target_link_libraries(gallop )
+
 target_link_libraries(gallop)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

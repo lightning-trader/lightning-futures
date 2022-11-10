@@ -1,7 +1,7 @@
 #pragma once
 #include "../driver.h"
 
-class evaluate_driver : public driver
+class EXPORT_FLAG evaluate_driver : public driver
 {
 
 private:
@@ -25,8 +25,8 @@ public:
 
 	virtual void add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle) override;
 
-	virtual class market_api* get_market_api() override;
+	virtual market_api* get_market_api() override;
 	
-	virtual class trader_api* get_trader_api() override;
+	virtual trader_api* get_trader_api() override;
 	
 };

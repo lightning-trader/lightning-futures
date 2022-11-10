@@ -1,12 +1,11 @@
 #pragma once
-#include "../core/strategy.h"
+#include "strategy.h"
 
 class hft_1_strategy : public strategy
 {
 public:
-	hft_1_strategy(double open_delta, double close_delta, double lose_delta,int cancel_seconds, int lose_cd_seconds):
+	hft_1_strategy(double open_delta, double close_delta, double lose_delta,int lose_cd_seconds):
 		_lose_cd_seconds(lose_cd_seconds), _open_delta(open_delta), _close_delta(close_delta), _lose_delta(lose_delta)
-		, _cancel_seconds(cancel_seconds)
 		, _last_lose_time(0)
 		{};
 	~hft_1_strategy(){};
@@ -57,8 +56,6 @@ private:
 	double _close_delta;
 
 	double _lose_delta;
-
-	int _cancel_seconds ;
 
 	int _lose_cd_seconds ;
 

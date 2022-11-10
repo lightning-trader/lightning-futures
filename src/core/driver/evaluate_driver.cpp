@@ -1,10 +1,10 @@
-#include "evaluate_driver.h"
+#include <evaluate_driver.h>
 #include <define.h>
 #include <simulator.h>
 #include <log_wapper.hpp>
 #include <file_wapper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
-#include "../../simulator/interface.h"
+#include <interface.h>
 
 #pragma comment (lib,"simulator.lib")
 

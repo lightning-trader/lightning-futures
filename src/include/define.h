@@ -175,3 +175,5 @@ enum offset_type;
 
 enum direction_type;
 
+enum event_type;
+

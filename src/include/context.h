@@ -1,15 +1,13 @@
 #pragma once
 #include <define.h>
-#include <event_center.hpp>
+#include <any>
 
-
-
-class exec_ctx
+class EXPORT_FLAG context
 {
 
 public:
-	exec_ctx(class driver& driver,class strategy& strategy);
-	virtual ~exec_ctx();
+	context(class driver& driver,class strategy& strategy);
+	virtual ~context();
 
 private:
 	

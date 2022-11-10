@@ -1,4 +1,4 @@
-#include "runtime_driver.h"
+#include <runtime_driver.h>
 #include <define.h>
 #include <market_api.h>
 #include <trader_api.h>
@@ -6,8 +6,7 @@
 #include <log_wapper.hpp>
 #include <platform_helper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
-#include "../../market/interface.h"
-#include "../../trader/interface.h"
+#include <interface.h>
 
 #pragma comment (lib,"trader.lib")
 #pragma comment (lib,"market.lib")

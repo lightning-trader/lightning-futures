@@ -10,4 +10,4 @@ include_directories(${CMAKE_INCLUDE_PATH})
 
 link_directories(${CMAKE_LIBRARY_PATH})
 
-add_library(trader SHARED "ctp_trader.cpp" "interface.cpp")
+add_library(trader STATIC "ctp_trader.cpp" "interface.cpp")

@@ -4,7 +4,7 @@
 void hft_1_strategy::on_init()
 {
 	set_trading_optimize(2, TO_INVALID,false);
-	subscribe({"SHFF.rb2301"});
+	subscribe({"SHFE.rb2301"});
 }
 
 void hft_1_strategy::on_tick(const tick_info* tick)
@@ -41,14 +41,16 @@ void hft_1_strategy::on_entrust(estid_t localid)
 		{
 			if(order->direction == DT_LONG)
 			{
-				set_cancel_condition(localid, [this](const tick_info* tick)->bool {
-					return tick->price < _last_tick.price - _lose_delta;
+				double_t lost_price = _last_tick.price - _lose_delta;
+				set_cancel_condition(localid, [lost_price](const tick_info* tick)->bool {
+					return tick->price < lost_price;
 				});
 			}
 			else if(order->direction == DT_SHORT)
 			{
-				set_cancel_condition(localid, [this](const tick_info* tick)->bool {
-					return tick->price > _last_tick.price + _lose_delta;
+				double_t lost_price = _last_tick.price + _lose_delta;
+				set_cancel_condition(localid, [lost_price](const tick_info* tick)->bool {
+					return tick->price > lost_price;
 					});
 			}
 		}

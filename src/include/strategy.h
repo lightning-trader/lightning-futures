@@ -1,11 +1,11 @@
 #pragma once
 #include <any>
 #include <define.h>
-#include <data_types.hpp>
 #include <functional>
+#include <data_types.hpp>
 
 
-class strategy 
+class EXPORT_FLAG strategy
 {
 
 public:
