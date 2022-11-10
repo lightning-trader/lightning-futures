@@ -120,8 +120,8 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 		return;
 	}
 	tick->id = code_t(pDepthMarketData->InstrumentID, "SHFE");
-	
-	tick->time = make_time(pDepthMarketData->TradingDay, pDepthMarketData->UpdateTime);
+	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
+	tick->time = get_day_begin() + make_time(pDepthMarketData->UpdateTime);
 	tick->tick = pDepthMarketData->UpdateMillisec;
 	tick->price = pDepthMarketData->LastPrice;
 	tick->standard = pDepthMarketData->PreSettlementPrice ;

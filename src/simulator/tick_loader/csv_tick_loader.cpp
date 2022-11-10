@@ -26,7 +26,7 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result ,code_t code, uin
 		tick.id = code;
 		const std::string& date_str = doc.GetCell<std::string>("业务日期",i);
 		const std::string& time_str = doc.GetCell<std::string>("最后修改时间",i);
-		tick.time = make_time(date_str.c_str(), time_str.c_str());
+		tick.time = make_datetime(date_str.c_str(), time_str.c_str());
 		tick.tick = doc.GetCell<uint32_t>("最后修改毫秒",i);
 		tick.price = doc.GetCell<double_t>("最新价",i);
 		tick.open = doc.GetCell<double_t>("今开盘",i);

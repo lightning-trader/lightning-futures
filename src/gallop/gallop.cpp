@@ -144,10 +144,10 @@ int main()
 	};
 	*/
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	start_evaluate(all_trading_day);
+	//start_evaluate(all_trading_day);
 	//start_hft_1_optimize(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	//start_runtime();
+	start_runtime();
 	//getchar();
 	return 0;
 }

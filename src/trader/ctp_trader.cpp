@@ -257,7 +257,7 @@ void ctp_trader::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CTho
 	{
 
 		LOG_INFO("[%s][用户登录] UserID:%s AppID:%s SessionID:%d FrontID:%d\n",
-			time_to_string(pRspUserLogin->TradingDay, pRspUserLogin->LoginTime).c_str(),
+			datetime_to_string(pRspUserLogin->TradingDay, pRspUserLogin->LoginTime).c_str(),
 			pRspUserLogin->UserID, _appid.c_str(), pRspUserLogin->SessionID, pRspUserLogin->FrontID);
 		//LOG("OnRspUserLogin\tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 			// 保存会话参数
@@ -397,7 +397,7 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		estid_t estid = generate_estid(pOrder->FrontID, pOrder->SessionID,strtoul(pOrder->OrderRef,NULL,10));
 		auto& order = _order_info[estid];
 		order.code = pOrder->InstrumentID ;
-		order.create_time = make_time(pOrder->InsertDate, pOrder->InsertTime);
+		order.create_time = make_datetime(pOrder->InsertDate, pOrder->InsertTime);
 		order.est_id = estid;
 		order.direction = wrap_position_direction(pOrder->Direction);
 		order.offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
@@ -432,7 +432,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
 		{
 			LOG_INFO("[%s][订单撤销] UserID:%s SessionID:%d 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n"
-				, time_to_string(get_now()).c_str(), pOrder->UserID, pOrder->SessionID
+				, datetime_to_string(get_now()).c_str(), pOrder->UserID, pOrder->SessionID
 				, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->CombHedgeFlag[0], pOrder->LimitPrice, pOrder->VolumeTotal);
 			fire_event(ET_OrderCancel, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 
@@ -440,7 +440,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
 		{
 			LOG_INFO("[%s][订单成交] UserID:%s SessionID:%d 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n"
-				, time_to_string(get_now()).c_str(), pOrder->UserID, pOrder->SessionID
+				, datetime_to_string(get_now()).c_str(), pOrder->UserID, pOrder->SessionID
 				, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->Direction, pOrder->LimitPrice, pOrder->VolumeTraded);
 			fire_event(ET_OrderTrade, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 		}
@@ -457,7 +457,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		{
 			order_info entrust;
 			entrust.code = code;
-			entrust.create_time = make_time(pOrder->InsertDate, pOrder->InsertTime);
+			entrust.create_time = make_datetime(pOrder->InsertDate, pOrder->InsertTime);
 			entrust.est_id = estid;
 			entrust.direction = direction;
 			entrust.last_volume = pOrder->VolumeTotal;

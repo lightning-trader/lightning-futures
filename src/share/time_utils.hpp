@@ -3,7 +3,7 @@
 #include<string>
 #include<ctime>
 
-static std::string time_to_string(time_t timestamp)
+static std::string datetime_to_string(time_t timestamp)
 {
 	char buffer[64] = { 0 };
 	struct tm info;
@@ -12,7 +12,7 @@ static std::string time_to_string(time_t timestamp)
 	return std::string(buffer);
 }
 
-static time_t make_time(int year, int month, int day, int hour, int minute, int second)
+static time_t make_datetime(int year, int month, int day, int hour, int minute, int second)
 {
 	tm t;
 	t.tm_year = year - 1900;
@@ -24,7 +24,7 @@ static time_t make_time(int year, int month, int day, int hour, int minute, int 
 	return mktime(&t);
 }
 
-static time_t make_time(const char* date, const char* time)
+static time_t make_datetime(const char* date, const char* time)
 {
 	if (date != nullptr && time != nullptr && date != "" && time != "")
 	{
@@ -32,10 +32,17 @@ static time_t make_time(const char* date, const char* time)
 		sscanf_s(date, "%4d%2d%2d", &year, &month, &day);
 		int hour, minute, second;
 		sscanf_s(time, "%2d:%2d:%2d", &hour, &minute, &second);
-		time_t t = make_time(year, month, day, hour, minute, second);
+		time_t t = make_datetime(year, month, day, hour, minute, second);
 		return t;
 	}
 	return -1;
+}
+
+static time_t make_time(const char* time)
+{
+	int hour, minute, second;
+	sscanf_s(time, "%2d:%2d:%2d", &hour, &minute, &second);
+	return hour*3600 + minute*60+ second;
 }
 
 static time_t get_now()
@@ -45,12 +52,23 @@ static time_t get_now()
 	return t;
 }
 
-static std::string time_to_string(const char* date, const char* time)
+static time_t get_day_begin()
 {
-	time_t t = make_time(date, time);
+	int now = get_now();
+	if (now < 86400)
+		return 0;
+	int _0 = now / 86400 * 86400 - 28800;
+	if (_0 <= (now - 86400))
+		_0 += 86400;
+	return _0;
+}
+
+static std::string datetime_to_string(const char* date, const char* time)
+{
+	time_t t = make_datetime(date, time);
 	if (t > 0)
 	{
-		return time_to_string(t);
+		return datetime_to_string(t);
 	}
 	return "";
 }
