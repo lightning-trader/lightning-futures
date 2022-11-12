@@ -161,6 +161,11 @@ struct estid_t
 	}
 };
 
+struct ltobj
+{
+	virtual void on_update() = 0;
+};
+
 struct tick_info;
 
 struct position_info;

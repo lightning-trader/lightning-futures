@@ -9,7 +9,6 @@ SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH}
     "C:/Boost/include/boost-1_80" 
     "${PROJECT_SOURCE_DIR}/share" 
     "${PROJECT_SOURCE_DIR}/include" 
-    "${PROJECT_SOURCE_DIR}/include/driver" 
 )
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} 
     "C:/Boost/lib" 
@@ -30,7 +29,6 @@ IF (Boost_FOUND)
 ENDIF()
 
 # 包含子项目。
-add_subdirectory ("gallop")
 
 add_subdirectory("trader")
 

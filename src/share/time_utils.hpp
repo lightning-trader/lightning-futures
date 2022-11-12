@@ -37,6 +37,21 @@ static time_t make_datetime(const char* date, const char* time)
 	}
 	return -1;
 }
+static time_t make_datetime(uint32_t date, const char* time)
+{
+	if (time != nullptr && time != "")
+	{
+		int year, month, day;
+		year = date / 10000;
+		month = date % 10000 / 100;
+		day = date % 100;
+		int hour, minute, second;
+		sscanf_s(time, "%2d:%2d:%2d", &hour, &minute, &second);
+		time_t t = make_datetime(year, month, day, hour, minute, second);
+		return t;
+	}
+	return -1;
+}
 
 static time_t make_time(const char* time)
 {
@@ -52,13 +67,12 @@ static time_t get_now()
 	return t;
 }
 
-static time_t get_day_begin()
+static time_t get_day_begin(time_t cur)
 {
-	int now = get_now();
-	if (now < 86400)
+	if (cur < 86400)
 		return 0;
-	int _0 = now / 86400 * 86400 - 28800;
-	if (_0 <= (now - 86400))
+	int _0 = (int)cur / 86400 * 86400 - 28800;
+	if (_0 <= (cur - 86400))
 		_0 += 86400;
 	return _0;
 }

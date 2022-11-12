@@ -121,14 +121,17 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	}
 	tick->id = code_t(pDepthMarketData->InstrumentID, "SHFE");
 	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
-	tick->time = get_day_begin() + make_time(pDepthMarketData->UpdateTime);
+	tick->time = get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime);
 	tick->tick = pDepthMarketData->UpdateMillisec;
 	tick->price = pDepthMarketData->LastPrice;
 	tick->standard = pDepthMarketData->PreSettlementPrice ;
 	tick->volume = pDepthMarketData->Volume;
 	tick->open = pDepthMarketData->OpenPrice;
+	tick->close = pDepthMarketData->ClosePrice;
 	tick->high = pDepthMarketData->HighestPrice;
 	tick->low = pDepthMarketData->LowestPrice;
+	tick->high_limit = pDepthMarketData->UpperLimitPrice;
+	tick->low_limit = pDepthMarketData->LowerLimitPrice;
 
 	tick->buy_order[0] = std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1);
 	tick->buy_order[1] = std::make_pair(pDepthMarketData->BidPrice2, pDepthMarketData->BidVolume2);
@@ -147,7 +150,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	if(_current_trading_day != tick->trading_day)
 	{
 		_current_trading_day = tick->trading_day;
-		this->fire_event(ET_CrossDay);
+		this->fire_event(ET_BeginTrading);
 	}
 }
 

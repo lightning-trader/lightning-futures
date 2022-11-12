@@ -12,10 +12,16 @@ struct tick_info
 	double_t price;  //pDepthMarketData->LastPrice
 
 	double_t open;
+	
+	double_t close;
 
 	double_t high;
 
 	double_t low;
+
+	double_t high_limit;
+
+	double_t low_limit;
 
 	double_t standard;
 
@@ -46,24 +52,17 @@ struct tick_info
 		:time(0),
 		tick(0),
 		open(0),
+		close(0),
 		high(0),
 		low(0),
+		high_limit(0),
+		low_limit(0),
 		price(0),
 		standard(0),
 		volume(0),
 		trading_day(0)
 	{}
 
-	tick_info(const tick_info& p) :id(p.id),
-		time(p.time),
-		tick(p.tick),
-		price(p.price),
-		standard(p.standard),
-		volume(p.volume),
-		buy_order(p.buy_order),
-		sell_order(p.sell_order)
-	{
-	}
 
 	int32_t total_buy_valume()const
 	{

@@ -30,8 +30,11 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result ,code_t code, uin
 		tick.tick = doc.GetCell<uint32_t>("最后修改毫秒",i);
 		tick.price = doc.GetCell<double_t>("最新价",i);
 		tick.open = doc.GetCell<double_t>("今开盘",i);
+		tick.close = doc.GetCell<double_t>("今收盘", i);
 		tick.high = doc.GetCell<double_t>("最高价", i);
 		tick.low = doc.GetCell<double_t>("最低价", i);
+		tick.high_limit = doc.GetCell<double_t>("涨停板价", i);
+		tick.low_limit = doc.GetCell<double_t>("跌停板价", i);
 		tick.standard = doc.GetCell<double_t>("上次结算价", i);
 		tick.volume = doc.GetCell<uint32_t>("数量", i);
 		tick.trading_day = doc.GetCell<uint32_t>("交易日", i);

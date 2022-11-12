@@ -8,7 +8,6 @@
 typedef enum event_type
 {
 	ET_Invalid,
-	ET_CrossDay,
 	ET_AccountChange,
 	ET_BeginTrading,
 	ET_EndTrading,

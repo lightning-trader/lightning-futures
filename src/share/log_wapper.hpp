@@ -36,8 +36,8 @@ bool init_log_environment(std::string _cfg)
 	return true;
 }
 */
-#define LOG_DEBUG(format, ...) printf(format, __VA_ARGS__);
-#define LOG_INFO(format, ...) printf(format, __VA_ARGS__);
+#define LOG_DEBUG(format, ...) //printf(format, __VA_ARGS__);
+#define LOG_INFO(format, ...) //printf(format, __VA_ARGS__);
 #define LOG_WARNING(format, ...) //printf(format, __VA_ARGS__);
 #define LOG_ERROR(format, ...) //printf(format, __VA_ARGS__);
 #define LOG_OPTIMIZE(format, ...) printf(format, __VA_ARGS__);

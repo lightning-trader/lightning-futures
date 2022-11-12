@@ -1,5 +1,6 @@
 #include "hft_1_strategy.h"
 #include <log_wapper.hpp>
+#include <time_utils.hpp>
 
 void hft_1_strategy::on_init()
 {
@@ -10,12 +11,17 @@ void hft_1_strategy::on_init()
 void hft_1_strategy::on_tick(const tick_info* tick)
 {
 	_last_tick = *tick ; 
+	_coming_to_close = make_datetime(tick->trading_day,"14:58:00");
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
 	if(_buy_order.is_valid()|| _sell_order.is_valid()|| _profit_order.is_valid()|| _loss_order.is_valid())
 	{
 		return ;
 	}
 	if(get_last_time() - _last_lose_time < _lose_cd_seconds)
+	{
+		return ;
+	}
+	if (tick->time > _coming_to_close)
 	{
 		return ;
 	}
@@ -29,32 +35,59 @@ void hft_1_strategy::on_tick(const tick_info* tick)
 void hft_1_strategy::on_entrust(estid_t localid)
 {
 	LOG_DEBUG("on_entrust : %s\n", localid.to_str());
+	if (_last_tick.time > _coming_to_close)
+	{
+		return;
+	}
 	if (localid == _buy_order|| localid == _sell_order)
 	{
+		set_cancel_condition(localid, [this](const tick_info* tick)->bool {
+
+			if (tick->time > _coming_to_close)
+			{
+				return true;
+			}
+			return false;
+			});
 		//set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + _cancel_seconds));
-	}
-	else
+	}else
 	{
-		//set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + _cancel_seconds));
 		auto order = get_order(localid);
-		if(order && order->offset == OT_CLOSE)
+		if (order && order->offset == OT_CLOSE)
 		{
-			if(order->direction == DT_LONG)
+			if (order->direction == DT_LONG)
 			{
 				double_t lost_price = _last_tick.price - _lose_delta;
-				set_cancel_condition(localid, [lost_price](const tick_info* tick)->bool {
-					return tick->price < lost_price;
-				});
+				set_cancel_condition(localid, [this, lost_price](const tick_info* tick)->bool {
+					if (tick->price < lost_price)
+					{
+						return true;
+					}
+					if (tick->time > _coming_to_close)
+					{
+						return true;
+					}
+					return false;
+					});
 			}
-			else if(order->direction == DT_SHORT)
+			else if (order->direction == DT_SHORT)
 			{
 				double_t lost_price = _last_tick.price + _lose_delta;
-				set_cancel_condition(localid, [lost_price](const tick_info* tick)->bool {
-					return tick->price > lost_price;
+				set_cancel_condition(localid, [this, lost_price](const tick_info* tick)->bool {
+					if (tick->price > lost_price)
+					{
+						return true;
+					}
+					if (tick->time > _coming_to_close)
+					{
+						return true;
+					}
+					return false;
 					});
 			}
 		}
 	}
+	
 	
 }
 

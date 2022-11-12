@@ -1,4 +1,4 @@
-#include <runtime_driver.h>
+#include "runtime_context.h"
 #include <define.h>
 #include <market_api.h>
 #include <trader_api.h>
@@ -12,10 +12,10 @@
 #pragma comment (lib,"market.lib")
 
 
-runtime_driver::runtime_driver():_market_api(nullptr), _trader_api(nullptr)
+runtime_context::runtime_context():_market_api(nullptr), _trader_api(nullptr)
 {
 }
-runtime_driver::~runtime_driver()
+runtime_context::~runtime_context()
 {
 	if (_market_api)
 	{
@@ -30,7 +30,7 @@ runtime_driver::~runtime_driver()
 
 }
 
-bool runtime_driver::init_from_file(const std::string& config_path)
+bool runtime_context::init_from_file(const std::string& config_path)
 {
 	boost::property_tree::ptree	market_config;
 	boost::property_tree::ptree	trader_config;
@@ -62,7 +62,8 @@ bool runtime_driver::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
 		return false;
 	}
-	
+	_market_api->add_handle(std::bind(&context::handle_event, this, std::placeholders::_1, std::placeholders::_2));
+	_market = _market_api;
 	//trader
 	
 	_trader_api = create_trader_api(trader_config);
@@ -71,11 +72,12 @@ bool runtime_driver::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
 		return false;
 	}
-
+	_trader_api->add_handle(std::bind(&context::handle_event, this, std::placeholders::_1, std::placeholders::_2));
+	_trader = _trader_api;
 	return true ;
 }
 
-void runtime_driver::update()
+void runtime_context::on_update()
 {
 	if(_market_api)
 	{
@@ -87,24 +89,3 @@ void runtime_driver::update()
 	}
 }
 
-void runtime_driver::add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle)
-{
-	if (_market_api)
-	{
-		_market_api->add_handle(handle);
-	}
-	if (_trader_api)
-	{
-		_trader_api->add_handle(handle);
-	}
-}
-
-market_api* runtime_driver::get_market_api()
-{
-	return _market_api;
-}
-
-trader_api* runtime_driver::get_trader_api()
-{
-	return _trader_api;
-}

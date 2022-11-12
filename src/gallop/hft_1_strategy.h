@@ -71,5 +71,7 @@ private:
 
 	//最后一次止损时间，计算止损cd用
 	time_t _last_lose_time;
+
+	time_t _coming_to_close ;
 };
 
