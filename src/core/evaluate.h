@@ -1,7 +1,6 @@
 #pragma once
-#include "context.h"
 
-class evaluate_context : public context
+class evaluate : public context
 {
 
 private:
@@ -9,8 +8,8 @@ private:
 	class simulator * _simulator;
 
 public:
-	evaluate_context();
-	virtual ~evaluate_context();
+	evaluate();
+	virtual ~evaluate();
 public:
 
 	bool init_from_file(const std::string& config_path);
@@ -18,10 +17,10 @@ public:
 	double get_money();
 
 	void play(uint32_t tradeing_day);
-	
-protected:
-	
-	virtual void on_update() override;
 
+public:
 	
+	virtual trader_api* get_trader() override;
+
+	virtual market_api* get_market() override;
 };

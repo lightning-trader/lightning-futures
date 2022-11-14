@@ -54,14 +54,3 @@ public:
 	virtual void submit_settlement() = 0 ;
 
 };
-
-class actual_trader_api : public trader_api, public event_source
-{
-public:
-
-	void update()
-	{
-		handle_event();
-	}
-
-};

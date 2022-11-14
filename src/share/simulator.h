@@ -3,11 +3,10 @@
 #include "trader_api.h"
 
 
-class simulator : public market_api, public trader_api, public event_source
+class simulator : public market_api, public trader_api
 {
 public:
 
-	virtual void update() = 0 ;
 
 	virtual void set_trading_day(uint32_t tradeing_day) = 0 ;
 

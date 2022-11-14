@@ -29,6 +29,7 @@ IF (Boost_FOUND)
 ENDIF()
 
 # 包含子项目。
+add_subdirectory ("gallop")
 
 add_subdirectory("trader")
 
@@ -38,3 +39,4 @@ add_subdirectory("market")
 
 add_subdirectory("simulator")
 
+add_subdirectory("ltpp")

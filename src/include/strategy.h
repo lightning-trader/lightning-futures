@@ -18,18 +18,8 @@ public:
 	/*
 	*	初始化
 	*/
-	void init(class market_api* market, class trader_api* trader);
+	void init(ltobj lt);
 	
-	void entrust(const std::vector<std::any>& param);
-
-	void deal(const std::vector<std::any>& param);
-
-	void trade(const std::vector<std::any>& param);
-
-	void cancel(const std::vector<std::any>& param);
-
-	void tick(const tick_info* tick) ;
-
 	//回调函数
 protected:
 	/*
@@ -170,25 +160,9 @@ protected:
 	*/
 	void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info*)> callback);
 
-
-private:
-	
-	void check_order_condition(const tick_info* tick);
-
-	void remove_invalid_condition(estid_t order_id);
-
-
 private:
 
-	class trader_api* _trader;
-
-	class market_api* _market;
-
-	uint32_t _max_position;
-
-	class pod_chain* _chain;
-
-	std::map<estid_t,std::function<bool(const tick_info*)>> _need_check_condition;
+	ltobj _lt;
 
 };
 

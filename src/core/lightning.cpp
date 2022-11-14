@@ -1,167 +1,263 @@
 #include "lightning.h"
-#include "runtime_context.h"
-#include "evaluate_context.h"
+#include "runtime.h"
+#include "evaluate.h"
 #include "context.h"
 
 extern "C"
 {
-	ltobj* create_runtime_context(const char* config_path)
+	ltobj lt_create_context(context_type ctx_type, const char* config_path)
 	{
-		auto context = new runtime_context();
-		if (!context->init_from_file(config_path))
+		ltobj lt(ctx_type);
+		if(ctx_type == CT_RUNTIME)
 		{
-			delete context;
-			context = nullptr ;
+			auto obj = new runtime();
+			if (!obj->init_from_file(config_path))
+			{
+				delete obj;
+				obj = nullptr;
+			}
+			lt.obj_ptr = obj;
+			return lt;
 		}
-		return context;
+		if(ctx_type == CT_EVALUATE)
+		{
+			auto obj = new evaluate();
+			if (!obj->init_from_file(config_path))
+			{
+				delete obj;
+				obj = nullptr;
+			}
+			lt.obj_ptr = obj;
+			return lt;
+		}
+		return lt;
 	}
 
-	void destory_runtime_context(ltobj* ctx)
+	void lt_destory_context(ltobj lt)
 	{
-		if(ctx)
+		if(lt.obj_ptr)
 		{
-			runtime_context* runtime = (runtime_context*)ctx;
-			delete runtime;
-			ctx = nullptr;
-		}
-	}
-
-	ltobj* create_evaluate_context(const char* config_path)
-	{
-		auto evaluate = new evaluate_context();
-		if (!evaluate->init_from_file(config_path))
-		{
-			delete evaluate;
-			evaluate = nullptr;
-		}
-		return evaluate;
-	}
-
-	void destory_evaluate_context(ltobj* ctx)
-	{
-		if (ctx)
-		{
-			evaluate_context* evaluate = (evaluate_context*)ctx;
-			delete evaluate;
-			ctx = nullptr;
-		}
-	}
-
-	void start(ltobj* ctx)
-	{
-		context* c = dynamic_cast<context*>(ctx);
-		if(c)
-		{
-			c->start();
+			if(lt.obj_type == CT_RUNTIME)
+			{
+				runtime* obj = (runtime*)lt.obj_ptr;
+				delete obj;
+				lt.obj_ptr = nullptr;
+			}
+			else if (lt.obj_type == CT_EVALUATE)
+			{
+				evaluate* obj = (evaluate*)lt.obj_ptr;
+				delete obj;
+				lt.obj_ptr = nullptr;
+			}
 		}
 	}
 
-	void stop(ltobj* ctx)
+
+	void lt_start_service(ltobj lt)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			c->stop();
+			return;
 		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return;
+		}
+		c->start();
 	}
 
-	estid_t place_order(ltobj* ctx, offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+	void lt_stop_service(ltobj lt)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			return c->place_order(offset, direction, code, count, price, flag);
+			return ;
 		}
-		return estid_t();
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return ;
+		}
+		c->stop();
 	}
 
-	void cancel_order(ltobj* ctx, estid_t order_id)
+	estid_t lt_place_order(ltobj lt, offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			c->cancel_order(order_id);
+			return estid_t();
 		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return estid_t();
+		}
+		return c->place_order(offset, direction, code, count, price, flag);
+	}
+
+	void lt_cancel_order(ltobj lt, estid_t order_id)
+	{
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
+		{
+			return;
+		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return;
+		}
+		c->cancel_order(order_id);
 	}
 
 	
-	void set_trading_optimize(ltobj* ctx, uint32_t max_position, trading_optimal opt, bool flag)
+	void lt_set_trading_optimize(ltobj lt, uint32_t max_position, trading_optimal opt, bool flag)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			c->set_trading_optimize(max_position, opt, flag);
+			return;
 		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return;
+		}
+		c->set_trading_optimize(max_position, opt, flag);
 	}
 
 	
-	const position_info* get_position(ltobj* ctx, code_t code)
+	const position_info* lt_get_position(ltobj lt, code_t code)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			return c->get_position(code);
+			return nullptr;
 		}
-		return nullptr ;
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return nullptr;
+		}
+		return c->get_position(code);
 	}
 
 	
-	const account_info* get_account(ltobj* ctx)
+	const account_info* lt_get_account(ltobj lt)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			return c->get_account();
+			return nullptr;
 		}
-		return nullptr ;
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return nullptr;
+		}
+		return c->get_account();
 	}
 
 
-	const order_info* get_order(ltobj* ctx, estid_t order_id)
+	const order_info* lt_get_order(ltobj lt, estid_t order_id)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			return c->get_order(order_id);
+			return nullptr;
 		}
-		return nullptr ;
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return nullptr;
+		}
+		return c->get_order(order_id);
 	}
 
 
-	void subscribe(ltobj* ctx, code_t code)
+	void lt_subscribe(ltobj lt, code_t code)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			c->subscribe({code});
+			return;
 		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return;
+		}
+		c->subscribe({ code });
 	}
 
-	void unsubscribe(ltobj* ctx, code_t code)
+	void lt_unsubscribe(ltobj lt, code_t code)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			c->unsubscribe({code});
+			return ;
 		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return ;
+		}
+		c->unsubscribe({ code });
+		
 	}
 
-	time_t get_last_time(ltobj* ctx)
+	time_t lt_get_last_time(ltobj lt)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			c->get_last_time();
+			return -1;
 		}
-		return -1;
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return -1;
+		}
+		return c->get_last_time();
 	}
 
-	void set_cancel_condition(ltobj* ctx, estid_t order_id, on_condition_callback callback)
+	void lt_set_cancel_condition(ltobj lt, estid_t order_id, condition_callback callback)
 	{
-		context* c = dynamic_cast<context*>(ctx);
-		if (c)
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			c->set_cancel_condition(order_id, callback);
+			return ;
 		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return ;
+		}
+		c->set_cancel_condition(order_id, callback);
+	}
+
+	void lt_bind_callback(ltobj lt, tick_callback tick_cb, entrust_callback entrust_cb, deal_callback deal_cb
+		, trade_callback trade_cb, cancel_callback cancel_cb)
+	{
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
+		{
+			return;
+		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return;
+		}
+		c->on_tick = tick_cb;
+		c->on_entrust = entrust_cb;
+		c->on_deal = deal_cb;
+		c->on_trade = trade_cb;
+		c->on_cancel = cancel_cb;
+	}
+
+	void lt_playback_history(ltobj lt, uint32_t trading_day)
+	{
+		if (lt.obj_type != CT_EVALUATE)
+		{
+			return;
+		}
+		evaluate* c = (evaluate*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return;
+		}
+		c->play(trading_day);
+
 	}
 }

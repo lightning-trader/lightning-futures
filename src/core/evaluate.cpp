@@ -1,4 +1,5 @@
-#include "evaluate_context.h"
+#include "evaluate.h"
+#include "context.h"
 #include <simulator.h>
 #include <log_wapper.hpp>
 #include <file_wapper.hpp>
@@ -7,20 +8,19 @@
 
 #pragma comment (lib,"simulator.lib")
 
-evaluate_context::evaluate_context():_simulator(nullptr)
+evaluate::evaluate():_simulator(nullptr)
 {
 }
-evaluate_context::~evaluate_context()
+evaluate::~evaluate()
 {
 	if (_simulator)
 	{
 		destory_simulator(_simulator);
 		_simulator = nullptr;
 	}
-
 }
 
-bool evaluate_context::init_from_file(const std::string& config_path)
+bool evaluate::init_from_file(const std::string& config_path)
 {
 	boost::property_tree::ptree	simulator_config;
 	boost::property_tree::ptree  recorder_config;
@@ -44,29 +44,19 @@ bool evaluate_context::init_from_file(const std::string& config_path)
 	}
 	//simulator
 
-	_simulator = create_simulator(simulator_config);
+	_simulator = create_simulator(this,simulator_config);
 	if (_simulator == nullptr)
 	{
 		LOG_ERROR("evaluate_driver init_from_file create_simulator error : %s", config_path.c_str());
 		return false;
 	}
-	_simulator->add_handle(std::bind(&context::handle_event, this, std::placeholders::_1, std::placeholders::_2));
-	_trader = _simulator;
-	_market = _simulator;
-	return true;
+	return this->init();
 	
 }
 
-void evaluate_context::on_update()
-{
-	if(_simulator)
-	{
-		_simulator->update();
-	}
-}
 
 
-double evaluate_context::get_money()
+double evaluate::get_money()
 {
 	if (_simulator)
 	{
@@ -79,11 +69,21 @@ double evaluate_context::get_money()
 	return 0;
 }
 
-void evaluate_context::play(uint32_t tradeing_day)
+void evaluate::play(uint32_t tradeing_day)
 {
 	if(_simulator)
 	{
 		_simulator->set_trading_day(tradeing_day);
 		_simulator->play();
 	}
+}
+
+trader_api* evaluate::get_trader()
+{
+	return _simulator;
+}
+
+market_api* evaluate::get_market()
+{
+	return _simulator;
 }

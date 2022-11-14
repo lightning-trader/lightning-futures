@@ -2,12 +2,12 @@
 #include <trader_api.h>
 #include "ctp_trader.h"
 
-actual_trader_api* create_trader_api(const boost::property_tree::ptree& config)
+trader_api* create_trader_api(event_source* evt, const boost::property_tree::ptree& config)
 {
 	auto trader_type = config.get<std::string>("trader");
 	if (trader_type == "ctp")
 	{
-		ctp_trader* api = new ctp_trader();
+		ctp_trader* api = new ctp_trader(evt);
 		if (api->init(config))
 		{
 			return api;
@@ -20,7 +20,7 @@ actual_trader_api* create_trader_api(const boost::property_tree::ptree& config)
 	return nullptr;
 }
 
-void destory_trader_api(actual_trader_api* api)
+void destory_trader_api(trader_api* api)
 {
 	if (nullptr != api)
 	{

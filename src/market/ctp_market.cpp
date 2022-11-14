@@ -6,13 +6,14 @@
 
 #pragma comment (lib,"thostmduserapi_se.lib")
 
-ctp_market::ctp_market()
+ctp_market::ctp_market(event_source* evt)
 	:_md_api(nullptr)
 	,_reqid(0)
 	,_process_mutex(_mutex)
 	,_last_tick_time(0)
 	, _current_trading_day(0)
 	, _is_inited(false)
+	, _event(evt)
 {
 }
 
@@ -145,12 +146,25 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	tick->sell_order[3] = std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4);
 	tick->sell_order[4] = std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5);
 	tick->trading_day = std::atoi(pDepthMarketData->TradingDay);
-	while(!_tick_queue.push(tick));
-	_last_tick_time = tick->time;
-	if(_current_trading_day != tick->trading_day)
+	if (_current_trading_day != tick->trading_day)
 	{
 		_current_trading_day = tick->trading_day;
-		this->fire_event(ET_BeginTrading);
+		if(_event)
+		{
+			_event->fire_event(ET_BeginTrading);
+		}
+		
+	}
+	if(_event)
+	{
+		_event->fire_event(ET_TickReceived, tick);
+	}
+	
+	_last_tick_time = tick->time;
+
+	if(tick->close != 0&& _event)
+	{
+		_event->fire_event(ET_EndTrading);
 	}
 }
 
@@ -259,13 +273,4 @@ void ctp_market::unsubscribe(const std::set<code_t>& code_list)
 	do_unsubscribe(delete_code_list);
 }
 
-
-void ctp_market::pop_tick_info(std::vector<const tick_info*>& result)
-{
-	const tick_info* current = nullptr ;
-	while(_tick_queue.pop(current))
-	{
-		result.emplace_back(current);
-	}
-}
 

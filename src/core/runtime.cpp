@@ -1,4 +1,4 @@
-#include "runtime_context.h"
+#include "runtime.h"
 #include <define.h>
 #include <market_api.h>
 #include <trader_api.h>
@@ -12,10 +12,10 @@
 #pragma comment (lib,"market.lib")
 
 
-runtime_context::runtime_context():_market_api(nullptr), _trader_api(nullptr)
+runtime::runtime():_market_api(nullptr), _trader_api(nullptr)
 {
 }
-runtime_context::~runtime_context()
+runtime::~runtime()
 {
 	if (_market_api)
 	{
@@ -30,7 +30,7 @@ runtime_context::~runtime_context()
 
 }
 
-bool runtime_context::init_from_file(const std::string& config_path)
+bool runtime::init_from_file(const std::string& config_path)
 {
 	boost::property_tree::ptree	market_config;
 	boost::property_tree::ptree	trader_config;
@@ -56,36 +56,29 @@ bool runtime_context::init_from_file(const std::string& config_path)
 	}
 	//market
 	
-	_market_api = create_market_api(market_config);
+	_market_api = create_market_api(this,market_config);
 	if (_market_api == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
 		return false;
 	}
-	_market_api->add_handle(std::bind(&context::handle_event, this, std::placeholders::_1, std::placeholders::_2));
-	_market = _market_api;
 	//trader
-	
-	_trader_api = create_trader_api(trader_config);
+	_trader_api = create_trader_api(this,trader_config);
 	if (_trader_api == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
 		return false;
 	}
-	_trader_api->add_handle(std::bind(&context::handle_event, this, std::placeholders::_1, std::placeholders::_2));
-	_trader = _trader_api;
-	return true ;
+	return this->init();
 }
 
-void runtime_context::on_update()
+trader_api* runtime::get_trader()
 {
-	if(_market_api)
-	{
-		_market_api->update();
-	}
-	if(_trader_api)
-	{
-		_trader_api->update();
-	}
+	return _trader_api;
+}
+
+market_api* runtime::get_market()
+{
+	return _market_api;
 }
 

@@ -1,52 +1,29 @@
 ﻿#include "gallop.h"
 #include <define.h>
-#include "lightning.h"
 #include "demo_strategy.h"
 #include "hcc_strategy.h"
 #include <log_wapper.hpp>
 #include "hft_1_strategy.h"
 #include "dm_strategy.h"
+#include "../ltpp/runtime_engine.h"
+#include "../ltpp/evaluate_engine.h"
 
 #pragma comment (lib,"lightning.lib")
 
 void start_runtime()
 {
-	auto dirver = create_runtime_driver("./runtime.ini");
-	if(dirver)
-	{
-	//max money : 2106547.600000 i:[5] j:[4] k:5
-		//hft_1_strategy hcc(2, 3, 6, 480, 480);
-		//demo_strategy hcc(2,1);
-		hft_1_strategy hcc(8, 16, 300, 0);
-		context* app = create_context(dirver, &hcc);
-		if(app)
-		{
-			app->start();
-			destory_context(app);
-		}
-		destory_runtime_driver(dirver);
-	}
+	auto app = runtime_engine("./runtime.ini");
+	hft_1_strategy hcc(8, 16, 300, 0);
+	app.start(hcc);
+	
 }
 
 void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 {
-	auto dirver = create_evaluate_driver("./evaluate.ini");
-	if (dirver)
-	{
-		hft_1_strategy hcc(1, 3, 200, 0);
-		auto app = create_context(dirver, &hcc);
-		if(app)
-		{
-			for (auto& trading : all_trading_day)
-			{
-				dirver->play(trading);
-				app->start();
-				//break;
-			}
-			destory_context(app);
-		}
-		destory_evaluate_driver(dirver);
-	}
+	auto app = evaluate_engine("./evaluate.ini");
+	hft_1_strategy hcc(1, 3, 200, 0);
+	app.start(hcc, all_trading_day);
+	
 }
 
 
@@ -63,26 +40,9 @@ void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
 			for(int k=50;k<=200;k+=50)
 			{
 				double_t current_monery = 0;
-				auto dirver = create_evaluate_driver("./evaluate.ini");
-				if (dirver)
-				{
-					hft_1_strategy hcc(i, j, k,0 );
-					//demo_strategy hcc(2, 7);
-					//hcc_strategy hcc("SHFE.rb2301", 0.4, 10, 50, 120);
-					auto app = create_context(dirver, &hcc);
-					if (app)
-					{
-						for (auto& trading : all_trading_day)
-						{
-							dirver->play(trading);
-							app->start();
-							current_monery += dirver->get_money();
-							//break;
-						}
-						destory_context(app);
-					}
-					destory_evaluate_driver(dirver);
-				}
+				auto app = evaluate_engine("./evaluate.ini");
+				hft_1_strategy hcc(i, j, k, 0);
+				app.start(hcc, all_trading_day);
 				if (current_monery > max_monery)
 				{
 					max_monery = current_monery;
@@ -150,8 +110,8 @@ int main()
 	};
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	//start_evaluate(all_trading_day);
-	start_hft_1_optimize(all_trading_day);
+	start_evaluate(all_trading_day);
+	//start_hft_1_optimize(all_trading_day);
 	//start_demo_optimize(all_trading_day);
 	//start_runtime();
 	//getchar();

@@ -28,23 +28,8 @@ public:
 	*/
 	virtual time_t last_tick_time()const = 0;
 
-	/***  
-	* 弹出tick信息
-	*/
-	virtual void pop_tick_info(std::vector<const tick_info*>& result) = 0;
-
 	/**   
 	* 获取当前交易日  
 	*/
 	virtual uint32_t get_trading_day()const = 0 ;
-};
-
-class actual_market_api : public market_api,public event_source
-{
-public:
-
-	void update()
-	{
-		handle_event();
-	}
 };

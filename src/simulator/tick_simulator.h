@@ -8,6 +8,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/pool/object_pool.hpp>
+#include "spin_mutex.hpp"
 
 struct order_match
 {
@@ -22,6 +23,11 @@ class tick_simulator : public simulator
 {
 
 private:
+	
+	mutable spin_mutex _mutex ;
+
+	event_source* _event ;
+	
 	tick_loader* _loader ;
 
 	std::set<code_t> _instrument_id_list ;
@@ -41,8 +47,6 @@ private:
 	bool _is_in_trading ;
 
 	boost::object_pool<tick_info> _tick_pool;
-
-	boost::lockfree::spsc_queue<const tick_info*, boost::lockfree::capacity<1024>>  _tick_queue;
 
 	std::map<estid_t, order_info> _order_info;
 
@@ -66,7 +70,7 @@ private:
 
 public:
 
-	tick_simulator():_loader(nullptr),
+	tick_simulator(event_source* evt):_loader(nullptr),
 		_is_in_trading(false), 
 		_current_trading_day(0), 
 		_current_time(0),
@@ -75,7 +79,8 @@ public:
 		_order_ref(0),
 		_service_charge(0),
 		_margin_rate(0),
-		_multiple(0)
+		_multiple(0),
+		_event(evt)
 	{}
 	virtual ~tick_simulator()
 	{
@@ -91,7 +96,6 @@ public:
 public:
 
 	//simulator
-	virtual void update() override;
 
 	virtual void set_trading_day(uint32_t tradeing_day) override 
 	{
@@ -109,8 +113,6 @@ public:
 
 	virtual time_t last_tick_time()const override;
 
-	virtual void pop_tick_info(std::vector<const tick_info*>& result) override;
-	
 	virtual uint32_t get_trading_day()const override;
 	
 public:

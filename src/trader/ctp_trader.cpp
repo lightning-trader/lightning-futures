@@ -5,7 +5,7 @@
 
 #pragma comment (lib,"thosttraderapi_se.lib")
 
-ctp_trader::ctp_trader()
+ctp_trader::ctp_trader(event_source* evt)
 	: _td_api(nullptr)
 	, _reqid(0)
 	, _last_query_time(0)
@@ -17,6 +17,7 @@ ctp_trader::ctp_trader()
 	, _work_thread(nullptr)
 	, _is_inited(false)
 	, _is_connected(false)
+	, _event(evt)
 {
 }
 
@@ -434,15 +435,21 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			LOG_INFO("[%s][订单撤销] UserID:%s SessionID:%d 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n"
 				, datetime_to_string(get_now()).c_str(), pOrder->UserID, pOrder->SessionID
 				, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->CombHedgeFlag[0], pOrder->LimitPrice, pOrder->VolumeTotal);
-			fire_event(ET_OrderCancel, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
-
+			if(_event)
+			{
+				_event->fire_event(ET_OrderCancel, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+			}
+		
 		}
 		if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
 		{
 			LOG_INFO("[%s][订单成交] UserID:%s SessionID:%d 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n"
 				, datetime_to_string(get_now()).c_str(), pOrder->UserID, pOrder->SessionID
 				, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->Direction, pOrder->LimitPrice, pOrder->VolumeTraded);
-			fire_event(ET_OrderTrade, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+			if (_event)
+			{
+				_event->fire_event(ET_OrderTrade, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+			}
 		}
 		auto it = _order_info.find(estid);
 		if (it != _order_info.end())
@@ -463,7 +470,10 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			entrust.last_volume = pOrder->VolumeTotal;
 			entrust.offset = offset;
 			order = _order_info.insert(std::make_pair(estid, entrust)).first;
-			fire_event(ET_OrderPlace, estid);
+			if(_event)
+			{
+				_event->fire_event(ET_OrderPlace, estid);
+			}
 		}
 		else
 		{
@@ -474,7 +484,10 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		if (pOrder->OrderStatus == THOST_FTDC_OST_PartTradedQueueing || pOrder->OrderStatus == THOST_FTDC_OST_PartTradedNotQueueing)
 		{
 			//触发 deal 事件
-			fire_event(ET_OrderDeal, estid, pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+			if(_event)
+			{
+				_event->fire_event(ET_OrderDeal, estid, pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+			}
 		}
 	}
 }

@@ -10,17 +10,15 @@
 
 
 
-class ctp_market :	public actual_market_api,public CThostFtdcMdSpi
+class ctp_market :	public market_api,public CThostFtdcMdSpi
 {
 public:
 
-	ctp_market();
+	ctp_market(event_source* evt);
 
 	virtual ~ctp_market();
 	
 	bool init(const boost::property_tree::ptree& config);
-
-	void release();
 
 //IMarketAPI ½Ó¿Ú
 public:
@@ -29,8 +27,6 @@ public:
 	virtual void subscribe(const std::set<code_t>& codes) override;
 
 	virtual void unsubscribe(const std::set<code_t>& codes) override;
-
-	virtual void pop_tick_info(std::vector<const tick_info*>& result) override;
 
 	virtual uint32_t get_trading_day() const override
 	{
@@ -74,6 +70,7 @@ private:
 
 private:
 	
+	event_source*		_event ;
 	CThostFtdcMdApi*	_md_api;
 
 	std::string			_front_addr;
@@ -88,7 +85,6 @@ private:
 	std::condition_variable _process_signal;
 
 	boost::object_pool<tick_info> _tick_pool;
-	boost::lockfree::spsc_queue<tick_info*, boost::lockfree::capacity<1024>>  _tick_queue;
 	
 	std::vector<code_t> _instrument_id_list;
 

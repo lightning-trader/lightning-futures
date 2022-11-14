@@ -47,19 +47,14 @@ void tick_simulator::play()
 		load_data(it, _current_trading_day);
 	}
 	_is_in_trading = true ;
-	fire_event(ET_BeginTrading);
-}
-
-void tick_simulator::update()
-{
-	if(_is_in_trading)
+	while (_is_in_trading)
 	{
 		//先触发tick，再进行撮合
 		publish_tick();
 		handle_order();
 	}
-	handle_event();
 }
+
 
 void tick_simulator::subscribe(const std::set<code_t>& codes)
 {
@@ -86,14 +81,6 @@ time_t tick_simulator::last_tick_time()const
 	return _current_time;
 }
 
-void tick_simulator::pop_tick_info(std::vector<const tick_info*>& result)
-{
-	const tick_info* current = nullptr;
-	while (_tick_queue.pop(current))
-	{
-		result.emplace_back(current);
-	}
-}
 
 uint32_t tick_simulator::get_trading_day()const
 {
@@ -120,6 +107,7 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 			return estid_t();
 		}
 	}
+	spin_lock lock(_mutex);
 	auto est_id = make_estid();
 	LOG_DEBUG("tick_simulator::place_order 2 %s \n", est_id.to_str());
 	order_match match;
@@ -155,7 +143,10 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 			pos.short_frozen += count;
 		}
 	}
-	fire_event(ET_OrderPlace,est_id);
+	if(_event)
+	{
+		_event->fire_event(ET_OrderPlace, est_id);
+	}
 	return match.est_id;
 }
 
@@ -181,6 +172,7 @@ const position_info* tick_simulator::get_position(code_t code) const
 
 const order_info* tick_simulator::get_order(estid_t order_id) const
 {
+	spin_lock lock(_mutex);
 	auto it = _order_info.find(order_id);
 	if (it != _order_info.end())
 	{
@@ -191,6 +183,7 @@ const order_info* tick_simulator::get_order(estid_t order_id) const
 
 void tick_simulator::find_orders(std::vector<const order_info*>& order_result, std::function<bool(const order_info&)> func) const
 {
+	spin_lock lock(_mutex);
 	for (auto& it : _order_info)
 	{
 		if (func(it.second))
@@ -248,14 +241,30 @@ void tick_simulator::publish_tick()
 		//结束了触发收盘事件
 		_is_in_trading = false;
 		_last_frame_volume.clear();
-		fire_event(ET_EndTrading);
 		return;
 	}
 	_current_tick_info.clear();
 	while(_current_time == tick->time && _current_tick == tick->tick)
 	{
+		if(tick->trading_day != _current_trading_day)
+		{
+			if(_event)
+			{
+				_event->fire_event(ET_BeginTrading);
+			}
+		}
 		_current_tick_info.emplace_back(tick);
-		while (!_tick_queue.push(tick));
+		if (_event)
+		{
+			_event->fire_event(ET_TickReceived, tick);
+		}
+		if(tick->close>0)
+		{
+			if (_event)
+			{
+				_event->fire_event(ET_EndTrading);
+			}
+		}
 		_current_index++;
 		if(_current_index < _pending_tick_info.size())
 		{
@@ -267,7 +276,6 @@ void tick_simulator::publish_tick()
 			//结束了触发收盘事件
 			_is_in_trading = false ;
 			_last_frame_volume.clear();
-			fire_event(ET_EndTrading);
 			return;
 		}
 	}
@@ -335,7 +343,7 @@ void tick_simulator::match_entrust(const tick_info* tick)
 		return ;
 	}
 	uint32_t current_volume = tick->volume - last_volume->second ;
-
+	spin_lock lock(_mutex);
 	auto it = _order_match.find(tick->id);
 	if (it != _order_match.end())
 	{
@@ -593,12 +601,18 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 	if(order.last_volume > 0)
 	{
 		//部分成交
-		fire_event(ET_OrderDeal, order.est_id, order.total_volume - order.last_volume, order.total_volume);
+		if(_event)
+		{
+			_event->fire_event(ET_OrderDeal, order.est_id, order.total_volume - order.last_volume, order.total_volume);
+		}
 	}
 	else
 	{
 		//全部成交
-		fire_event(ET_OrderTrade, order.est_id, order.code, order.offset, order.direction, order.price, order.total_volume);
+		if (_event)
+		{
+			_event->fire_event(ET_OrderTrade, order.est_id, order.code, order.offset, order.direction, order.price, order.total_volume);
+		}
 		auto& odit = _order_info.find(order.est_id);
 		if (odit != _order_info.end())
 		{
@@ -621,7 +635,7 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 
 void tick_simulator::order_cancel(estid_t order_id)
 {
-	
+	spin_lock lock(_mutex);
 	auto& order = _order_info.find(order_id);
 	if (order != _order_info.end())
 	{
@@ -655,7 +669,10 @@ void tick_simulator::order_cancel(estid_t order_id)
 			}
 		}
 		//撤单
-		fire_event(ET_OrderCancel, order_id, order->second.code, order->second.offset, order->second.direction, order->second.price, order->second.last_volume, order->second.total_volume);
+		if (_event)
+		{
+			_event->fire_event(ET_OrderCancel, order_id, order->second.code, order->second.offset, order->second.direction, order->second.price, order->second.last_volume, order->second.total_volume);
+		}
 		_order_info.erase(order);
 		
 	}

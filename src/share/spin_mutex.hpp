@@ -34,3 +34,15 @@ public:
 		flag.store(false, std::memory_order_release);
 	}
 };
+
+class spin_lock
+{
+public:
+	spin_lock(spin_mutex& mtx) :_mutex(mtx) { _mutex.lock(); }
+	spin_lock(const spin_lock&) = delete;
+	spin_lock& operator=(const spin_lock&) = delete;
+	~spin_lock() { _mutex.unlock(); }
+
+private:
+	spin_mutex& _mutex;
+};

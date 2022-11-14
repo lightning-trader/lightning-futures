@@ -8,6 +8,7 @@
 typedef enum event_type
 {
 	ET_Invalid,
+	ET_TickReceived,
 	ET_AccountChange,
 	ET_BeginTrading,
 	ET_EndTrading,
@@ -46,7 +47,7 @@ private:
 		fire_event(data, args...);
 	}
 
-protected:
+public:
 
 	template<typename... Types>
 	void fire_event(event_type type, const Types&... args) {
@@ -55,7 +56,9 @@ protected:
 		fire_event(data, args...);
 	}
 
-	void handle_event()
+protected:
+
+	void update()
 	{
 		event_data data;
 		while (_event_queue.pop(data))
