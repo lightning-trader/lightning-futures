@@ -300,7 +300,11 @@ estid_t tick_simulator::make_estid()
 	uint64_t p1 = (uint64_t)_current_time<<32;
 	uint64_t p2 = (uint64_t)_current_tick<<16;
 	uint64_t p3 = (uint64_t)_order_ref;
-	return p1 & 0XFFFFFFFF00000000 + p2 & 0X00000000FFFF0000 + p3 & 0X000000000000FFFF;
+
+	uint64_t v1 = p1 & 0XFFFFFFFF00000000LLU;
+	uint64_t v2 = p2 & 0X00000000FFFF0000LLU;
+	uint64_t v3 = p3 & 0X000000000000FFFFLLU;
+	return v1 + v2 + v3;
 }
 
 uint32_t tick_simulator::get_front_count(code_t code,double_t price)

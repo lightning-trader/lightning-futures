@@ -212,14 +212,20 @@ private:
 		uint64_t p1 = (uint64_t)session_id<<32;
 		uint64_t p2 = (uint64_t)front_id<<16;
 		uint64_t p3 = (uint64_t)order_ref;
-		return p1 & 0XFFFFFFFF00000000 + p2 & 0X00000000FFFF0000 + p3 & 0X000000000000FFFF;
+		uint64_t v1 = p1 & 0XFFFFFFFF00000000LLU;
+		uint64_t v2 = p2 & 0X00000000FFFF0000LLU;
+		uint64_t v3 = p3 & 0X000000000000FFFFLLU;
+		return v1+v2+v3;
 	}
 	
 	inline void	extract_estid(estid_t estid, uint32_t& front_id, uint32_t& session_id, uint32_t& order_ref)
 	{
-		session_id = static_cast<uint32_t>((estid | 0XFFFFFFFF00000000) >> 32);
-		front_id = static_cast<uint32_t>((estid | 0X0000000FFFF0000) >> 16);
-		order_ref = static_cast<uint32_t>((estid | 0X00000000000FFFF));
+		uint64_t v1 = estid | 0XFFFFFFFF00000000LLU;
+		uint64_t v2 = estid | 0X00000000FFFF0000LLU;
+		uint64_t v3 = estid | 0X000000000000FFFFLLU;
+		session_id = static_cast<uint32_t>(v1 >> 32);
+		front_id = static_cast<uint32_t>(v2 >> 16);
+		order_ref = static_cast<uint32_t>(v3);
 	}
 
 	inline uint32_t genreqid()
