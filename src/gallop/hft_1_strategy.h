@@ -5,6 +5,7 @@ class hft_1_strategy : public strategy
 {
 public:
 	hft_1_strategy(double open_delta, double close_delta, double lose_delta,int lose_cd_seconds):
+		_sell_order(INVALID_ESTID), _buy_order(INVALID_ESTID), _profit_order(INVALID_ESTID), _loss_order(INVALID_ESTID),
 		_lose_cd_seconds(lose_cd_seconds), _open_delta(open_delta), _close_delta(close_delta), _lose_delta(lose_delta)
 		, _last_lose_time(0)
 		{};

@@ -79,6 +79,7 @@ void context::start()
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 	});
+	_strategy_thread->detach();
 }
 
 void context::stop()
@@ -156,11 +157,15 @@ estid_t context::place_order(offset_type offset, direction_type direction, code_
 		return INVALID_ESTID;
 	}
 
-	return _chain->place_order(OT_CLOSE, DT_SHORT, code, count, price, flag);
+	return _chain->place_order(offset, direction, code, count, price, flag);
 }
 
 void context::cancel_order(estid_t order_id)
 {
+	if(order_id == INVALID_ESTID)
+	{
+		return ;
+	}
 	LOG_DEBUG("cancel_order : %llu\n", order_id);
 	auto trader = get_trader();
 	if (trader)
@@ -239,6 +244,7 @@ void context::handle_begin(const std::vector<std::any>& param)
 	auto trader = get_trader();
 	if(trader)
 	{
+		LOG_INFO("ET_BeginTrading submit_settlement\n");
 		trader->submit_settlement();
 	}
 }
@@ -249,9 +255,8 @@ void context::handle_end(const std::vector<std::any>& param)
 	if(trader)
 	{
 		auto acc = trader->get_account();
-		LOG_INFO("ET_EndTrading %f %f", acc->money, acc->frozen_monery);
+		LOG_INFO("ET_EndTrading %f %f\n", acc->money, acc->frozen_monery);
 	}
-	_is_runing = false;
 }
 
 void context::handle_entrust(const std::vector<std::any>& param)

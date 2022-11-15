@@ -52,6 +52,7 @@ void tick_simulator::play()
 		//先触发tick，再进行撮合
 		publish_tick();
 		handle_order();
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
 
@@ -301,9 +302,9 @@ estid_t tick_simulator::make_estid()
 	uint64_t p2 = (uint64_t)_current_tick<<16;
 	uint64_t p3 = (uint64_t)_order_ref;
 
-	uint64_t v1 = p1 & 0XFFFFFFFF00000000LLU;
-	uint64_t v2 = p2 & 0X00000000FFFF0000LLU;
-	uint64_t v3 = p3 & 0X000000000000FFFFLLU;
+	uint64_t v1 = p1 & 0xFFFFFFFF00000000LLU;
+	uint64_t v2 = p2 & 0x00000000FFFF0000LLU;
+	uint64_t v3 = p3 & 0x000000000000FFFFLLU;
 	return v1 + v2 + v3;
 }
 

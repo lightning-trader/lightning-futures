@@ -13,7 +13,7 @@ void hft_1_strategy::on_tick(const tick_info* tick)
 	_last_tick = *tick ; 
 	_coming_to_close = make_datetime(tick->trading_day,"14:58:00");
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
-	if(_buy_order == INVALID_ESTID || _sell_order == INVALID_ESTID|| _profit_order == INVALID_ESTID || _loss_order == INVALID_ESTID)
+	if(_buy_order != INVALID_ESTID || _sell_order != INVALID_ESTID|| _profit_order != INVALID_ESTID || _loss_order != INVALID_ESTID)
 	{
 		return ;
 	}

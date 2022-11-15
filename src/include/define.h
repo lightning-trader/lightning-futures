@@ -118,7 +118,7 @@ public:
 
 typedef uint64_t estid_t;
 
-#define INVALID_ESTID 0LL 
+#define INVALID_ESTID 0x0LLU 
 
 struct tick_info;
 
