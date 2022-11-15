@@ -116,51 +116,9 @@ public:
 	}
 };
 
-struct estid_t 
-{
-	std::string id ;
+typedef uint64_t estid_t;
 
-	estid_t(const char* id)
-	{
-		this->id = id;
-	}
-
-	estid_t(const estid_t& obj)
-	{
-		id = obj.id;
-	}
-
-	estid_t()
-	{
-		id = "";
-	}
-
-	const char* to_str()
-	{
-		return id.c_str();
-	}
-
-	bool is_valid()const
-	{
-		return !id.empty();
-	}
-
-	bool operator < (const estid_t& other)const
-	{
-		return id < other.id;
-	}
-	bool operator == (const estid_t& other)const
-	{
-		return id == other.id;
-	}
-
-	const estid_t& operator = (const estid_t& other)
-	{
-		this->id = other.id ;
-		return *this;
-	}
-};
-
+#define INVALID_ESTID 0LL 
 
 struct tick_info;
 

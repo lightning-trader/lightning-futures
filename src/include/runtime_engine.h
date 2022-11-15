@@ -1,5 +1,7 @@
 #pragma once
 #include <define.h>
+#include <lightning.h>
+#include <strategy.h>
 
 class runtime_engine
 {
@@ -11,7 +13,7 @@ public:
 
 public:
 	
-	void start(const strategy& stra);
+	void start(strategy& stra);
 
 private:
 

@@ -1,9 +1,8 @@
 #pragma once
-#include <any>
 #include <define.h>
-#include <functional>
 #include <data_types.hpp>
-
+#include <lightning.h>
+#include <functional>
 
 class strategy
 {
@@ -18,7 +17,64 @@ public:
 	/*
 	*	初始化
 	*/
-	void init(ltobj lt);
+	void init(const ltobj& lt);
+
+private:
+
+
+	static inline strategy* _self ;
+	static inline void _tick_callback(const tick_info* tick)
+	{
+		if(_self)
+		{
+			_self->on_tick(tick);
+		}
+	}
+
+	static inline void _entrust_callback(estid_t localid) 
+	{
+		if (_self)
+		{
+			_self->on_entrust(localid);
+		}
+	};
+
+	static inline void _deal_callback(estid_t localid, uint32_t deal_volume, uint32_t total_volume)
+	{
+		if(_self)
+		{
+			_self->on_deal(localid, deal_volume, total_volume);
+		}
+	}
+
+	static inline void _trade_callback(estid_t localid, code_t	code, offset_type offset, direction_type direction, double_t price, uint32_t volume) 
+	{
+		if(_self)
+		{
+			_self->on_trade(localid, code, offset, direction, price, volume);
+		}
+	}
+
+
+	static inline void _cancel_callback(estid_t localid, code_t	code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume) 
+	{
+		if (_self)
+		{
+			_self->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
+		}
+	}
+
+	static inline std::map<estid_t, std::function<bool(const tick_info*)>> _condition_function ;
+	static inline bool _condition_callback(estid_t localid,const tick_info* tick)
+	{
+		auto it = _condition_function.find(localid);
+		if(it == _condition_function.end())
+		{
+			return false;
+		}
+		return it->second(tick);
+	}
+
 	
 	//回调函数
 protected:
@@ -32,12 +88,7 @@ protected:
 	 *	tick推送
 	 */
 	virtual void on_tick(const tick_info* tick) {}
-	
-	/*
-	 *	跨天时候调用
-	 *  @day	当前交易日
-	 */
-	virtual void on_cross_day(uint32_t day) {}
+
 	
 	/*
 	 *	订单接收回报
@@ -142,12 +193,12 @@ protected:
 	/**
 	* 订阅行情
 	**/
-	void subscribe(const std::set<code_t>& codes) ;
+	void subscribe(code_t code) ;
 
 	/**
 	* 取消订阅行情
 	**/
-	void unsubscribe(const std::set<code_t>& codes) ;
+	void unsubscribe(code_t code) ;
 
 	/**
 	* 获取时间

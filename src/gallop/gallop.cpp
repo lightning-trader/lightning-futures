@@ -5,8 +5,8 @@
 #include <log_wapper.hpp>
 #include "hft_1_strategy.h"
 #include "dm_strategy.h"
-#include "../ltpp/runtime_engine.h"
-#include "../ltpp/evaluate_engine.h"
+#include "runtime_engine.h"
+#include "evaluate_engine.h"
 
 #pragma comment (lib,"lightning.lib")
 

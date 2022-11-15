@@ -1,5 +1,7 @@
 #pragma once
 #include <define.h>
+#include <lightning.h>
+#include <strategy.h>
 
 class evaluate_engine
 {
@@ -11,7 +13,7 @@ public:
 
 public:
 
-	void start(const strategy& stra,const std::vector<uint32_t> trading_days);
+	void start(strategy& stra, const std::vector<uint32_t>& trading_days);
 
 private:
 

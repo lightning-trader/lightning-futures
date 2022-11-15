@@ -104,12 +104,12 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 		double_t frozen_monery = count * price * _multiple * _margin_rate;
 		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
 		{
-			return estid_t();
+			return INVALID_ESTID;
 		}
 	}
 	spin_lock lock(_mutex);
 	auto est_id = make_estid();
-	LOG_DEBUG("tick_simulator::place_order 2 %s \n", est_id.to_str());
+	LOG_DEBUG("tick_simulator::place_order 2 %llu \n", est_id);
 	order_match match;
 	match.est_id = est_id;
 	match.queue_seat = get_front_count(code, price);
@@ -297,9 +297,10 @@ void tick_simulator::handle_order()
 estid_t tick_simulator::make_estid()
 {
 	_order_ref++;
-	thread_local static char buff[32];
-	sprintf_s(buff,32,"%u.%u.%u",(uint32_t)_current_time, _current_tick, _order_ref);
-	return buff;
+	uint64_t p1 = (uint64_t)_current_time<<32;
+	uint64_t p2 = (uint64_t)_current_tick<<16;
+	uint64_t p3 = (uint64_t)_order_ref;
+	return p1 & 0XFFFFFFFF00000000 + p2 & 0X00000000FFFF0000 + p3 & 0X000000000000FFFF;
 }
 
 uint32_t tick_simulator::get_front_count(code_t code,double_t price)

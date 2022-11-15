@@ -2,33 +2,29 @@
 #include <log_wapper.hpp>
 #include "lightning.h"
 
-strategy::strategy():_lt(CT_INVALID)
+strategy::strategy()
 {
+	strategy::_self = (this);
 }
 strategy::~strategy()
 {
 	
 }
-static void tick_p(const tick_info* tick)
-{
 
-}
 /*
 	*	³õÊ¼»¯
 	*/
-void strategy::init(ltobj lt)
+void strategy::init(const ltobj& lt)
 {
-	//_lt = lt;
-	//tick_callback tick_cb = std::bind(&strategy::on_tick, this, std::placeholders::_1);
-	tick_callback tick_cb = (tick_callback)((uint64_t)this + (uint64_t)(&strategy::on_tick));
+	_lt = lt;
 
 	lt_bind_callback(_lt
-		, std::bind(this+&strategy::on_tick,this, std::placeholders::_1)
-		, std::bind(&strategy::on_entrust, this, std::placeholders::_1)
-		, std::bind(&strategy::on_deal, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
-		, std::bind(&strategy::on_trade, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6)
-		, std::bind(&strategy::on_cancel, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6, std::placeholders::_7)
-	);
+		, _tick_callback
+		, _entrust_callback
+		, _deal_callback
+		, _trade_callback
+		, _cancel_callback
+		);
 	this->on_init();
 }
 
@@ -36,7 +32,6 @@ estid_t strategy::buy_for_open(code_t code,uint32_t count ,double_t price , orde
 {
 	return lt_place_order(_lt,OT_OPEN, DT_LONG, code, count, price, flag);
 }
-
 
 estid_t strategy::sell_for_close(code_t code, uint32_t count, double_t price , order_flag flag )
 {
@@ -55,7 +50,7 @@ estid_t strategy::buy_for_close(code_t code, uint32_t count, double_t price , or
 
 void strategy::cancel_order(estid_t order_id)
 {
-	LOG_DEBUG("cancel_order : %s\n", order_id.to_str());
+	LOG_DEBUG("cancel_order : %llu\n", order_id);
 	lt_cancel_order(_lt, order_id);
 }
 
@@ -95,7 +90,8 @@ time_t strategy::get_last_time() const
 
 void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const tick_info*)> callback)
 {
-	LOG_DEBUG("set_timeout_cancel : %s\n", order_id.to_str());
-	lt_set_cancel_condition(_lt, order_id, callback);
+	LOG_DEBUG("set_timeout_cancel : %llu\n", order_id);
+	strategy::_condition_function[order_id] = callback;
+	lt_set_cancel_condition(_lt, order_id, _condition_callback);
 }
 

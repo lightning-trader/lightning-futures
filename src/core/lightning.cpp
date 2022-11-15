@@ -7,7 +7,9 @@ extern "C"
 {
 	ltobj lt_create_context(context_type ctx_type, const char* config_path)
 	{
-		ltobj lt(ctx_type);
+		ltobj lt;
+		lt.obj_type = CT_INVALID;
+		lt.obj_ptr = nullptr;
 		if(ctx_type == CT_RUNTIME)
 		{
 			auto obj = new runtime();
@@ -16,6 +18,7 @@ extern "C"
 				delete obj;
 				obj = nullptr;
 			}
+			lt.obj_type = ctx_type;
 			lt.obj_ptr = obj;
 			return lt;
 		}
@@ -27,13 +30,14 @@ extern "C"
 				delete obj;
 				obj = nullptr;
 			}
+			lt.obj_type = ctx_type;
 			lt.obj_ptr = obj;
 			return lt;
 		}
 		return lt;
 	}
 
-	void lt_destory_context(ltobj lt)
+	void lt_destory_context(ltobj& lt)
 	{
 		if(lt.obj_ptr)
 		{
@@ -53,7 +57,7 @@ extern "C"
 	}
 
 
-	void lt_start_service(ltobj lt)
+	void lt_start_service(const ltobj& lt)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -67,7 +71,7 @@ extern "C"
 		c->start();
 	}
 
-	void lt_stop_service(ltobj lt)
+	void lt_stop_service(const ltobj& lt)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -81,21 +85,21 @@ extern "C"
 		c->stop();
 	}
 
-	estid_t lt_place_order(ltobj lt, offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+	estid_t lt_place_order(const ltobj& lt, offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			return estid_t();
+			return INVALID_ESTID;
 		}
 		context* c = (context*)(lt.obj_ptr);
 		if (c == nullptr)
 		{
-			return estid_t();
+			return INVALID_ESTID;
 		}
 		return c->place_order(offset, direction, code, count, price, flag);
 	}
 
-	void lt_cancel_order(ltobj lt, estid_t order_id)
+	void lt_cancel_order(const ltobj& lt, estid_t order_id)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -110,7 +114,7 @@ extern "C"
 	}
 
 	
-	void lt_set_trading_optimize(ltobj lt, uint32_t max_position, trading_optimal opt, bool flag)
+	void lt_set_trading_optimize(const ltobj& lt, uint32_t max_position, trading_optimal opt, bool flag)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -125,7 +129,7 @@ extern "C"
 	}
 
 	
-	const position_info* lt_get_position(ltobj lt, code_t code)
+	const position_info* lt_get_position(const ltobj& lt, code_t code)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -140,7 +144,7 @@ extern "C"
 	}
 
 	
-	const account_info* lt_get_account(ltobj lt)
+	const account_info* lt_get_account(const ltobj& lt)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -155,7 +159,7 @@ extern "C"
 	}
 
 
-	const order_info* lt_get_order(ltobj lt, estid_t order_id)
+	const order_info* lt_get_order(const ltobj& lt, estid_t order_id)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -170,7 +174,7 @@ extern "C"
 	}
 
 
-	void lt_subscribe(ltobj lt, code_t code)
+	void lt_subscribe(const ltobj& lt, code_t code)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -184,7 +188,7 @@ extern "C"
 		c->subscribe({ code });
 	}
 
-	void lt_unsubscribe(ltobj lt, code_t code)
+	void lt_unsubscribe(const ltobj& lt, code_t code)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -199,7 +203,7 @@ extern "C"
 		
 	}
 
-	time_t lt_get_last_time(ltobj lt)
+	time_t lt_get_last_time(const ltobj& lt)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -213,7 +217,7 @@ extern "C"
 		return c->get_last_time();
 	}
 
-	void lt_set_cancel_condition(ltobj lt, estid_t order_id, condition_callback callback)
+	void lt_set_cancel_condition(const ltobj& lt, estid_t order_id, condition_callback callback)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -227,7 +231,7 @@ extern "C"
 		c->set_cancel_condition(order_id, callback);
 	}
 
-	void lt_bind_callback(ltobj lt, tick_callback tick_cb, entrust_callback entrust_cb, deal_callback deal_cb
+	void lt_bind_callback(const ltobj& lt, tick_callback tick_cb, entrust_callback entrust_cb, deal_callback deal_cb
 		, trade_callback trade_cb, cancel_callback cancel_cb)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
@@ -246,7 +250,7 @@ extern "C"
 		c->on_cancel = cancel_cb;
 	}
 
-	void lt_playback_history(ltobj lt, uint32_t trading_day)
+	void lt_playback_history(const ltobj& lt, uint32_t trading_day)
 	{
 		if (lt.obj_type != CT_EVALUATE)
 		{

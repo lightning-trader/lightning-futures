@@ -13,7 +13,7 @@ void hft_1_strategy::on_tick(const tick_info* tick)
 	_last_tick = *tick ; 
 	_coming_to_close = make_datetime(tick->trading_day,"14:58:00");
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
-	if(_buy_order.is_valid()|| _sell_order.is_valid()|| _profit_order.is_valid()|| _loss_order.is_valid())
+	if(_buy_order == INVALID_ESTID || _sell_order == INVALID_ESTID|| _profit_order == INVALID_ESTID || _loss_order == INVALID_ESTID)
 	{
 		return ;
 	}
@@ -34,7 +34,7 @@ void hft_1_strategy::on_tick(const tick_info* tick)
 
 void hft_1_strategy::on_entrust(estid_t localid)
 {
-	LOG_DEBUG("on_entrust : %s\n", localid.to_str());
+	LOG_DEBUG("on_entrust : %llu\n", localid);
 	if (_last_tick.time > _coming_to_close)
 	{
 		return;
@@ -93,43 +93,43 @@ void hft_1_strategy::on_entrust(estid_t localid)
 
 void hft_1_strategy::on_trade(estid_t localid, code_t code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_DEBUG("on_trade : %s\n", localid.to_str());
+	LOG_DEBUG("on_trade : %llu\n", localid);
 	if(localid == _buy_order)
 	{
 		cancel_order(_sell_order);
 		_profit_order = sell_for_close(code, volume, price + _close_delta);
-		_buy_order = estid_t();
+		_buy_order = INVALID_ESTID;
 	}
 	if(localid == _sell_order)
 	{
 		cancel_order(_buy_order);
 		_profit_order = buy_for_close(code, volume, price - _close_delta);
-		_sell_order = estid_t();
+		_sell_order = INVALID_ESTID;
 	}
 
 	if (localid == _profit_order)
 	{
-		_profit_order = estid_t();
+		_profit_order = INVALID_ESTID;
 	}
 	if(localid == _loss_order)
 	{
 		_last_lose_time = get_last_time();
-		_loss_order = estid_t();
+		_loss_order = INVALID_ESTID;
 	}
 }
 
 void hft_1_strategy::on_cancel(estid_t localid,code_t code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
 {
-	LOG_DEBUG("on_cancel : %s\n", localid.to_str());
+	LOG_DEBUG("on_cancel : %llu\n", localid);
 
 	if(localid == _buy_order)
 	{
-		_buy_order = estid_t();
+		_buy_order = INVALID_ESTID;
 		return ;
 	}
 	if (localid == _sell_order)
 	{
-		_sell_order = estid_t();
+		_sell_order = INVALID_ESTID;
 		return;
 	}
 	if (localid == _profit_order || localid == _loss_order)
@@ -137,7 +137,7 @@ void hft_1_strategy::on_cancel(estid_t localid,code_t code, offset_type offset, 
 		//止盈单被撤销，直接市价单止损
 		if(localid == _profit_order)
 		{
-			_profit_order = estid_t();
+			_profit_order = INVALID_ESTID;
 		}
 		if(offset == OT_CLOSE)
 		{

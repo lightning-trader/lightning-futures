@@ -15,7 +15,7 @@ void demo_strategy::on_tick(const tick_info* tick)
 		return ;
 	}
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
-	if (estid_t() != _buy_order|| estid_t() != _sell_order)
+	if (INVALID_ESTID != _buy_order|| INVALID_ESTID != _sell_order)
 	{
 		return ;
 	}
@@ -30,19 +30,19 @@ void demo_strategy::on_tick(const tick_info* tick)
 void demo_strategy::on_entrust(estid_t localid)
 {
 	//set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + 60));
-	LOG_INFO("on_entrust tick : %s\n", localid.to_str());
+	LOG_INFO("on_entrust tick : %llu\n", localid);
 }
 
 void demo_strategy::on_trade(estid_t localid, code_t code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
 	if(localid == _buy_order)
 	{
-		_buy_order = estid_t();
+		_buy_order = INVALID_ESTID;
 		cancel_order(_sell_order);
 	}
 	if(localid == _sell_order)
 	{
-		_sell_order = estid_t();
+		_sell_order = INVALID_ESTID;
 		cancel_order(_buy_order);
 	}
 	if(offset == OT_OPEN)
@@ -60,15 +60,15 @@ void demo_strategy::on_trade(estid_t localid, code_t code, offset_type offset, d
 
 void demo_strategy::on_cancel(estid_t localid,code_t code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
-	LOG_INFO("on_cancel tick : %s\n", localid.to_str());
+	LOG_INFO("on_cancel tick : %llu\n", localid);
 	if (localid == _buy_order)
 	{
-		_buy_order = estid_t();
+		_buy_order = INVALID_ESTID;
 	
 	}
 	if (localid == _sell_order)
 	{
-		_sell_order = estid_t();
+		_sell_order = INVALID_ESTID;
 	
 	}
 }

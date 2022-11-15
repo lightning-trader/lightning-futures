@@ -44,6 +44,9 @@ bool context::init()
 		case ET_EndTrading:
 			handle_end(param);
 			break;
+		case ET_TickReceived:
+			handle_tick(param);
+			break;
 		case ET_OrderCancel:
 			handle_cancel(param);
 			break;
@@ -137,9 +140,9 @@ void context::set_trading_optimize(uint32_t max_position, trading_optimal opt, b
 	}
 }
 
-void context::set_cancel_condition(estid_t order_id, std::function<bool(const tick_info*)> callback)
+void context::set_cancel_condition(estid_t order_id, condition_callback callback)
 {
-	LOG_DEBUG("set_timeout_cancel : %s\n", order_id.to_str());
+	LOG_DEBUG("set_timeout_cancel : %llu\n", order_id);
 	_need_check_condition[order_id] = callback;
 }
 
@@ -150,7 +153,7 @@ estid_t context::place_order(offset_type offset, direction_type direction, code_
 	if (_chain == nullptr)
 	{
 		LOG_ERROR("buy_for_close _chain nullptr");
-		return estid_t();
+		return INVALID_ESTID;
 	}
 
 	return _chain->place_order(OT_CLOSE, DT_SHORT, code, count, price, flag);
@@ -158,7 +161,7 @@ estid_t context::place_order(offset_type offset, direction_type direction, code_
 
 void context::cancel_order(estid_t order_id)
 {
-	LOG_DEBUG("cancel_order : %s\n", order_id.to_str());
+	LOG_DEBUG("cancel_order : %llu\n", order_id);
 	auto trader = get_trader();
 	if (trader)
 	{
@@ -322,7 +325,7 @@ void context::check_order_condition(const tick_info* tick)
 
 	for (auto it = _need_check_condition.begin(); it != _need_check_condition.end();)
 	{
-		if (it->second(tick))
+		if (it->second(it->first,tick))
 		{
 			auto trader = get_trader();
 			if(trader)

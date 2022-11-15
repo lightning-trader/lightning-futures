@@ -15,7 +15,7 @@ struct order_match
 	estid_t		est_id;
 	uint32_t	queue_seat; //队列前面有多少个
 	
-	order_match():queue_seat(0)
+	order_match():est_id(INVALID_ESTID), queue_seat(0)
 	{}
 };
 

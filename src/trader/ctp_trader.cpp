@@ -605,7 +605,7 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 
 	if (_td_api == nullptr)
 	{
-		return estid_t();
+		return INVALID_ESTID;
 	}
 	estid_t est_id = generate_estid();
 	//LOG_INFO("place_order : %s", est_id);
@@ -683,7 +683,7 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 	if (iResult != 0)
 	{
 		LOG_ERROR("ctp_trader order_insert request failed: %d", iResult);
-		return estid_t();
+		return INVALID_ESTID;
 	}
 	return est_id;
 
@@ -701,12 +701,7 @@ void ctp_trader::cancel_order(estid_t order_id)
 		return;
 	}
 	uint32_t frontid = 0, sessionid = 0, orderref = 0;
-	if (!extract_estid(order_id, frontid, sessionid, orderref))
-	{
-		return;
-
-	}
-
+	extract_estid(order_id, frontid, sessionid, orderref);
 	CThostFtdcInputOrderActionField req;
 	memset(&req, 0, sizeof(req));
 	strcpy_s(req.BrokerID, _broker_id.c_str());

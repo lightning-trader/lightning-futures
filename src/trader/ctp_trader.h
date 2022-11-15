@@ -209,30 +209,17 @@ private:
 
 	inline estid_t generate_estid(uint32_t front_id,uint32_t session_id,uint32_t order_ref)
 	{
-		thread_local static char buffer[32];
-		sprintf_s(buffer, "%u.%u.%u", front_id, session_id, order_ref);
-		const char * est_id = buffer;
-		return est_id;
+		uint64_t p1 = (uint64_t)session_id<<32;
+		uint64_t p2 = (uint64_t)front_id<<16;
+		uint64_t p3 = (uint64_t)order_ref;
+		return p1 & 0XFFFFFFFF00000000 + p2 & 0X00000000FFFF0000 + p3 & 0X000000000000FFFF;
 	}
 	
-	inline bool	extract_estid(estid_t estid, uint32_t& front_id, uint32_t& session_id, uint32_t& order_ref)
+	inline void	extract_estid(estid_t estid, uint32_t& front_id, uint32_t& session_id, uint32_t& order_ref)
 	{
-		std::string estid_str = std::string(estid.id);
-		auto front_id_end = estid_str.find('.');
-		if (front_id_end == std::string::npos)
-			return false;
-		auto front_id_str = estid_str.substr(0, front_id_end);
-		front_id = strtoul(front_id_str.c_str(), nullptr, 10);
-		
-		auto session_id_end = estid_str.find('.',front_id_end+1);
-		if (session_id_end == std::string::npos)
-			return false;
-		auto session_id_str = estid_str.substr(front_id_end+1, session_id_end - front_id_end - 1);
-		session_id = strtoul(session_id_str.c_str(), nullptr, 10);
-
-		auto order_ref_str = estid_str.substr(session_id_end+1, estid_str.size() - session_id_end - 1);
-		order_ref = strtoul(order_ref_str.c_str(), nullptr, 10);
-		return true ;
+		session_id = static_cast<uint32_t>((estid | 0XFFFFFFFF00000000) >> 32);
+		front_id = static_cast<uint32_t>((estid | 0X0000000FFFF0000) >> 16);
+		order_ref = static_cast<uint32_t>((estid | 0X00000000000FFFF));
 	}
 
 	inline uint32_t genreqid()

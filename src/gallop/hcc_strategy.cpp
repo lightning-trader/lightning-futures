@@ -15,9 +15,7 @@ void hcc_strategy::on_tick(const tick_info* tick)
 {
 	//LOG_INFO("tick:%f %d \n", tick->price, tick->volume);
 	
-
-
-	if (_order_id.is_valid())
+	if (_order_id == INVALID_ESTID)
 	{
 		return;
 	}
@@ -40,7 +38,7 @@ void hcc_strategy::on_tick(const tick_info* tick)
 	}
 	else
 	{
-		float delta_volume = tick->volume - current_volume;
+		float delta_volume = static_cast<float>(tick->volume - current_volume);
 		if (tick->buy_price() == tick->price)
 		{
 			float r = delta_volume / buy_pending_order.second;
@@ -140,7 +138,7 @@ void hcc_strategy::on_entrust(estid_t localid)
 		return tick->time > (get_last_time() + _cancel_seconds);
 	});
 	_last_order_time = get_last_time();
-	LOG_INFO("on_entrust success tick : %s\n", localid.to_str());
+	LOG_INFO("on_entrust success tick : %llu\n", localid);
 }
 
 void hcc_strategy::on_trade(estid_t localid, code_t	code, offset_type offset, direction_type direction,double_t price,uint32_t volume)
@@ -151,9 +149,9 @@ void hcc_strategy::on_trade(estid_t localid, code_t	code, offset_type offset, di
 	auto pos = get_position(_code);
 	if (acc && pos)
 	{
-		LOG_INFO("on_trade %s %f %f [%d %d %d %d]\n", localid.to_str(), acc->money, acc->frozen_monery, pos->long_postion, pos->short_postion,pos->long_frozen,pos->short_frozen);
+		LOG_INFO("on_trade %llu %f %f [%d %d %d %d]\n", localid, acc->money, acc->frozen_monery, pos->long_postion, pos->short_postion,pos->long_frozen,pos->short_frozen);
 	}
-	_order_id = estid_t();
+	_order_id = INVALID_ESTID;
 }
 
 void hcc_strategy::on_cancel(estid_t localid, code_t code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
@@ -161,6 +159,6 @@ void hcc_strategy::on_cancel(estid_t localid, code_t code, offset_type offset, d
 	auto acc = get_account();
 	auto pos = get_position(_code);
 	if (acc && pos)
-		LOG_INFO("on_cancel tick : %s [%d %d %d %d]\n", localid.to_str(), pos->long_postion, pos->short_postion, pos->long_frozen, pos->short_frozen);
-	_order_id = estid_t();
+		LOG_INFO("on_cancel tick : %llu [%d %d %d %d]\n", localid, pos->long_postion, pos->short_postion, pos->long_frozen, pos->short_frozen);
+	_order_id = INVALID_ESTID;
 }

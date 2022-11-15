@@ -1,5 +1,4 @@
 #pragma once
-#include <define.h>
 #include "context.h"
 
 class runtime : public context

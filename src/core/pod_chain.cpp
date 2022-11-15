@@ -103,7 +103,7 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 	if (entrust != nullptr)
 	{
 		_trader->cancel_order(entrust->est_id);
-		return estid_t();
+		return INVALID_ESTID;
 	}
 	return _next->place_order(offset, direction, code, count, price, flag);
 }
@@ -117,7 +117,7 @@ estid_t the_end_chain::place_order(offset_type offset, direction_type direction,
 		auto pending = get_pending_position(code);
 		if (position && position->get_total()+ pending + count > _max_position)
 		{
-			return estid_t();
+			return INVALID_ESTID;
 		}
 	}
 	else if (offset == OT_CLOSE)
@@ -125,11 +125,11 @@ estid_t the_end_chain::place_order(offset_type offset, direction_type direction,
 		const auto pos = _trader->get_position(code);
 		if (pos && direction == DT_LONG && pos->long_postion - pos->long_frozen < count)
 		{
-			return estid_t();
+			return INVALID_ESTID;
 		}
 		else if (pos && direction == DT_SHORT && pos->short_postion - pos->short_frozen < count)
 		{
-			return estid_t();
+			return INVALID_ESTID;
 		}
 	}
 	return _trader->place_order(offset, direction, code, count, price, flag);
