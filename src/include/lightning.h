@@ -34,6 +34,8 @@ extern "C"
 
 	typedef bool (PORTER_FLAG * condition_callback)(estid_t, const tick_info*);
 
+	typedef bool (PORTER_FLAG* filter_callback)();
+
 	EXPORT_FLAG ltobj lt_create_context(context_type ctx_type, const char* config_path);
 	
 	EXPORT_FLAG void lt_destory_context(ltobj& obj);
@@ -95,6 +97,11 @@ extern "C"
 	* 设置撤销条件
 	*/
 	EXPORT_FLAG void lt_set_cancel_condition(const ltobj& ctx, estid_t order_id, condition_callback callback);
+
+	/*
+	* 设置交易过滤器
+	*/
+	EXPORT_FLAG void lt_set_trading_filter(const ltobj& lt, filter_callback callback);
 
 	/*
 	* 绑定回调 

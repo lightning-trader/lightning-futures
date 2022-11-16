@@ -75,7 +75,15 @@ private:
 		return it->second(tick);
 	}
 
-	
+	static inline std::function<bool()> _filter_function = nullptr;
+	static inline bool _filter_callback()
+	{
+		if(_filter_function)
+		{
+			return _filter_function();
+		}
+		return true;
+	}
 	//回调函数
 protected:
 	/*
@@ -211,6 +219,10 @@ protected:
 	*/
 	void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info*)> callback);
 
+	/*
+	* 设置交易过滤器
+	*/
+	void set_trading_filter(std::function<bool()> callback);
 private:
 
 	ltobj _lt;

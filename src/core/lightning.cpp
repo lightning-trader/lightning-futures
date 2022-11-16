@@ -231,6 +231,20 @@ extern "C"
 		c->set_cancel_condition(order_id, callback);
 	}
 
+	void lt_set_trading_filter(const ltobj& lt, filter_callback callback)
+	{
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
+		{
+			return;
+		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return;
+		}
+		c->set_trading_filter(callback);
+	}
+
 	void lt_bind_callback(const ltobj& lt, tick_callback tick_cb, entrust_callback entrust_cb, deal_callback deal_cb
 		, trade_callback trade_cb, cancel_callback cancel_cb)
 	{

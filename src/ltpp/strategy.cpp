@@ -95,3 +95,9 @@ void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const ti
 	lt_set_cancel_condition(_lt, order_id, _condition_callback);
 }
 
+void strategy::set_trading_filter(std::function<bool()> callback)
+{
+	strategy::_filter_function = callback;
+	lt_set_trading_filter(_lt, _filter_callback);
+}
+

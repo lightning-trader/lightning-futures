@@ -27,6 +27,7 @@ private:
 	
 	std::map<estid_t, condition_callback> _need_check_condition;
 
+	filter_callback _trading_filter;
 
 public:
 
@@ -56,6 +57,11 @@ public:
 	* 设置撤销条件
 	*/
 	void set_cancel_condition(estid_t order_id, condition_callback callback);
+
+	/*
+	* 设置交易过滤器
+	*/
+	void set_trading_filter(filter_callback callback);
 
 	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
 	
