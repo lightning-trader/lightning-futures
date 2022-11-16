@@ -119,7 +119,15 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 		LOG_ERROR("OnRtnDepthMarketData _tick_info_pool construct Error");
 		return;
 	}
-	tick->id = code_t(pDepthMarketData->InstrumentID, "SHFE");
+	auto& excg_it = _instrument_id_list.find(pDepthMarketData->InstrumentID);
+	if(excg_it != _instrument_id_list.end())
+	{
+		tick->id = code_t(pDepthMarketData->InstrumentID, excg_it->second.c_str());
+	}
+	else
+	{
+		tick->id = code_t(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
+	}
 	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
 	tick->time = get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime);
 	tick->tick = pDepthMarketData->UpdateMillisec;
@@ -205,16 +213,17 @@ void ctp_market::do_userlogin()
 void ctp_market::do_subscribe()
 {
 	char* id_list[500];
-	int num = 0;
-	for (size_t i = 0; i < _instrument_id_list.size(); i++)
+	int i = 0, num = 0;
+	for (auto& it : _instrument_id_list)
 	{
-		id_list[i] = const_cast<char*>(_instrument_id_list[i].get_id());
+		id_list[i] = const_cast<char*>(it.first.c_str());
 		num++;
 		if (num == 500)
 		{
 			_md_api->SubscribeMarketData(id_list, num);//订阅行情
 			num = 0;
 		}
+		i++;
 	}
 	if (num > 0)
 	{
@@ -248,26 +257,22 @@ void ctp_market::subscribe(const std::set<code_t>& code_list)
 {
 	for(auto& it : code_list)
 	{
-		_instrument_id_list.emplace_back(it);
+		_instrument_id_list[it.get_id()] = it.get_excg();
 	}
 	do_subscribe();
 }
 
 void ctp_market::unsubscribe(const std::set<code_t>& code_list)
 {
-	auto pre_code_list = _instrument_id_list;
-	_instrument_id_list.clear();
 	std::vector<code_t> delete_code_list ;
-	for (auto& it : pre_code_list)
+	for (auto& it : code_list)
 	{
-		if(code_list.end() != code_list.find(it))
-		{
-			_instrument_id_list.emplace_back(it);
-		}else
+		auto n = _instrument_id_list.find(it.get_id());
+		if(n != _instrument_id_list.end())
 		{
 			delete_code_list.emplace_back(it);
+			_instrument_id_list.erase(n);
 		}
-		
 	}
 	do_unsubscribe(delete_code_list);
 }

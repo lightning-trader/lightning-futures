@@ -86,7 +86,7 @@ private:
 
 	boost::object_pool<tick_info> _tick_pool;
 	
-	std::vector<code_t> _instrument_id_list;
+	std::unordered_map<std::string,std::string> _instrument_id_list;
 
 	time_t _last_tick_time ;
 
