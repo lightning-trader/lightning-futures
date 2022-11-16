@@ -76,6 +76,7 @@ void context::start()
 		while (_is_runing)
 		{
 			this->update();
+			LOG_DEBUG("context update \n");
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 	});
@@ -182,7 +183,9 @@ const position_info* context::get_position(code_t code)
 		LOG_ERROR("cancel_order error _trader nullptr");
 		return nullptr;
 	}
-	return trader->get_position(code);
+	static position_info cache_data ;
+	cache_data = trader->get_position(code);
+	return &cache_data;
 }
 
 const account_info* context::get_account()
@@ -193,7 +196,9 @@ const account_info* context::get_account()
 		LOG_ERROR("get_account error _trader nullptr");
 		return nullptr;
 	}
-	return trader->get_account();
+	static account_info cache_data;
+	cache_data = trader->get_account();
+	return &cache_data;
 }
 
 const order_info* context::get_order(estid_t order_id)
@@ -204,7 +209,9 @@ const order_info* context::get_order(estid_t order_id)
 		LOG_ERROR("get_account error _trader nullptr");
 		return nullptr;
 	}
-	return trader->get_order(order_id);
+	static order_info cache_data;
+	cache_data = trader->get_order(order_id);
+	return &cache_data;
 }
 
 void context::subscribe(const std::set<code_t>& codes)
@@ -255,7 +262,7 @@ void context::handle_end(const std::vector<std::any>& param)
 	if(trader)
 	{
 		auto acc = trader->get_account();
-		LOG_INFO("ET_EndTrading %f %f\n", acc->money, acc->frozen_monery);
+		LOG_INFO("ET_EndTrading %f %f\n", acc.money, acc.frozen_monery);
 	}
 }
 

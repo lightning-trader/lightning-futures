@@ -8,23 +8,13 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/pool/object_pool.hpp>
-#include "spin_mutex.hpp"
+#include "order_container.h"
 
-struct order_match
-{
-	estid_t		est_id;
-	uint32_t	queue_seat; //队列前面有多少个
-	
-	order_match():est_id(INVALID_ESTID), queue_seat(0)
-	{}
-};
 
 class tick_simulator : public simulator
 {
 
 private:
-	
-	mutable spin_mutex _mutex ;
 
 	event_source* _event ;
 	
@@ -48,9 +38,7 @@ private:
 
 	boost::object_pool<tick_info> _tick_pool;
 
-	std::map<estid_t, order_info> _order_info;
-
-	std::map<code_t, std::vector<order_match>> _order_match;
+	order_container _order_info;
 
 	//撮合时候用
 	std::vector<const tick_info*> _current_tick_info;
@@ -61,7 +49,6 @@ private:
 	account_info _account_info;
 
 	std::map<code_t, position_info> _position_info;
-
 
 
 	double_t	_service_charge ;	//手续费
@@ -123,13 +110,13 @@ public:
 
 	virtual void cancel_order(estid_t order_id) override;
 
-	virtual const account_info* get_account() const override;
+	virtual const account_info get_account() const override;
 
-	virtual const position_info* get_position(code_t code) const override;
+	virtual const position_info get_position(code_t code) const override;
 
-	virtual const order_info* get_order(estid_t order_id) const override;
+	virtual const order_info get_order(estid_t order_id) const override;
 
-	virtual void find_orders(std::vector<const order_info*>& order_result, std::function<bool(const order_info&)> func) const override;
+	virtual void find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const override;
 
 	virtual void submit_settlement() override;
 
@@ -147,18 +134,20 @@ private:
 
 	void match_entrust(const tick_info* tick);
 
-	void handle_entrust(const tick_info* tick, order_match& match, uint32_t max_volume);
+	void handle_entrust(const tick_info* tick, const order_match& match, uint32_t max_volume);
 
-	void handle_sell(const tick_info* tick, order_info& order, order_match& match, uint32_t deal_volume);
+	void handle_sell(const tick_info* tick, const order_info& order, const order_match& match, uint32_t deal_volume);
 	
-	void handle_buy(const tick_info* tick, order_info& order, order_match& match, uint32_t deal_volume);
+	void handle_buy(const tick_info* tick, const order_info& order, const order_match& match, uint32_t deal_volume);
 
-	void handle_deal(order_info& order, uint32_t volume);
-	
-	void order_deal(order_info& order, uint32_t deal_volume);
+	void order_deal(const order_info& order, uint32_t deal_volume);
 
-	void order_cancel(estid_t order_id);
+	void order_cancel(const order_info& order);
 
 	boost::posix_time::ptime pt = boost::posix_time::ptime();
 
+	//冻结
+	void frozen_deduction(code_t code, offset_type offset, direction_type direction, uint32_t count, double_t price);
+	//解冻
+	void thawing_deduction(code_t code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price);
 };

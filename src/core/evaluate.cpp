@@ -61,10 +61,7 @@ double evaluate::get_money()
 	if (_simulator)
 	{
 		auto acc = _simulator->get_account();
-		if(acc)
-		{
-			return acc->money ;
-		}
+		return acc.money;
 	}
 	return 0;
 }

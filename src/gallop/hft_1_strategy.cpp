@@ -25,8 +25,8 @@ void hft_1_strategy::on_tick(const tick_info* tick)
 	{
 		return ;
 	}
-	_buy_order = buy_for_open(tick->id, 1, tick->buy_price()- _open_delta, OF_OTK);
-	_sell_order = sell_for_open(tick->id, 1, tick->sell_price() + _open_delta, OF_OTK);
+	_buy_order = buy_for_open(tick->id, 1, tick->buy_price()- _open_delta);
+	_sell_order = sell_for_open(tick->id, 1, tick->sell_price() + _open_delta);
 
 }
 

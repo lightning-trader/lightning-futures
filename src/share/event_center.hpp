@@ -29,7 +29,7 @@ class event_source
 {
 private:
 
-	boost::lockfree::spsc_queue<event_data, boost::lockfree::capacity<1024>>  _event_queue;
+	boost::lockfree::spsc_queue<event_data, boost::lockfree::capacity<128>>  _event_queue;
 	std::vector<std::function<void(event_type, const std::vector<std::any>& param)>> _handle_list;
 
 

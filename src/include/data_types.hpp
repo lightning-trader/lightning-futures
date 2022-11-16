@@ -125,8 +125,6 @@ struct position_info
 	position_info() :
 		long_postion(0),
 		short_postion(0),
-		buy_price(0),
-		sell_price(0),
 		long_frozen(0),
 		short_frozen(0)
 	{}
@@ -163,7 +161,6 @@ typedef enum order_flag
 	OF_NOR = '0',		//普通订单
 	OF_FAK,			//全成全撤，不等待自动撤销
 	OF_FOK,			//部成部撤，不等待自动撤销
-	OF_OTK,			//进入队列等待，一次性全部成交，触发前可以手动撤销
 } order_flag;
 
 /*
@@ -209,6 +206,7 @@ struct order_info
 	double_t		price;
 
 	order_info() :
+		est_id(INVALID_ESTID),
 		offset(OT_OPEN),
 		direction(DT_LONG),
 		total_volume(0),

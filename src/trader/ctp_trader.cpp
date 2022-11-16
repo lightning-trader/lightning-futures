@@ -650,12 +650,6 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 		req.VolumeCondition = THOST_FTDC_VC_AV;
 		req.MinVolume = 1;
 	}
-	else if (flag == OF_OTK)
-	{
-		req.TimeCondition = THOST_FTDC_TC_GFD;
-		req.VolumeCondition = THOST_FTDC_VC_AV;
-		req.MinVolume = volume;
-	}
 	else if (flag == OF_FAK)
 	{
 		req.TimeCondition = THOST_FTDC_TC_IOC;
@@ -696,7 +690,7 @@ void ctp_trader::cancel_order(estid_t order_id)
 		return ;
 	}
 	auto order = get_order(order_id);
-	if(order == nullptr)
+	if(order.est_id != INVALID_ESTID)
 	{
 		return;
 	}
@@ -717,14 +711,14 @@ void ctp_trader::cancel_order(estid_t order_id)
 	///操作标志
 	req.ActionFlag = wrap_action_flag(AF_CANCEL);
 	///合约代码
-	strcpy_s(req.InstrumentID, order->code.get_id());
+	strcpy_s(req.InstrumentID, order.code.get_id());
 
 	//req.LimitPrice = change.price;
 
 	//req.VolumeChange = (int)change.volume;
 
 	//strcpy_s(req.OrderSysID, change.order_id.c_str());
-	strcpy_s(req.ExchangeID, order->code.get_excg());
+	strcpy_s(req.ExchangeID, order.code.get_excg());
 
 	int iResult = _td_api->ReqOrderAction(&req, genreqid());
 	if (iResult != 0)
@@ -733,37 +727,37 @@ void ctp_trader::cancel_order(estid_t order_id)
 	}
 }
 
-const account_info* ctp_trader::get_account() const
+const account_info ctp_trader::get_account() const
 {
-	return &_account_info ;
+	return _account_info ;
 }
 
-const position_info* ctp_trader::get_position(code_t code) const
+const position_info ctp_trader::get_position(code_t code) const
 {
 	auto it = _position_info.find(code);
 	if (it != _position_info.end())
 	{
-		return &(it->second);
+		return (it->second);
 	}
-	return nullptr;
+	return position_info();
 }
 
-const order_info* ctp_trader::get_order(estid_t order_id) const
+const order_info ctp_trader::get_order(estid_t order_id) const
 {
 	auto it = _order_info.find(order_id);
 	if(it != _order_info.end())
 	{
-		return &(it->second);
+		return (it->second);
 	}
-	return nullptr ;
+	return order_info();
 }
-void ctp_trader::find_orders(std::vector<const order_info*>& order_result, std::function<bool(const order_info&)> func) const
+void ctp_trader::find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const
 {
 	for(auto& it : _order_info)
 	{
 		if(func(it.second))
 		{
-			order_result.emplace_back(&(it.second));
+			order_result.emplace_back(it.second);
 		}
 	}
 }
