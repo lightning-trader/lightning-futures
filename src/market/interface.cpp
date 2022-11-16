@@ -2,12 +2,12 @@
 #include <market_api.h>
 #include "ctp_market.h"
 
-market_api* create_market_api(event_source* evt,const boost::property_tree::ptree& config)
+futures_market* create_market_api(const boost::property_tree::ptree& config)
 {
 	auto market_type = config.get<std::string>("market");
 	if (market_type == "ctp")
 	{
-		ctp_market* api = new ctp_market(evt);
+		ctp_market* api = new ctp_market();
 		if (api->init(config))
 		{
 			return api;
@@ -21,7 +21,7 @@ market_api* create_market_api(event_source* evt,const boost::property_tree::ptre
 	return nullptr;
 }
 
-void destory_market_api(market_api* api)
+void destory_market_api(futures_market* api)
 {
 	if (nullptr != api)
 	{

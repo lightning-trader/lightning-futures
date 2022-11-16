@@ -10,7 +10,7 @@ runtime_engine::~runtime_engine()
 	lt_destory_context(_lt);
 }
 
-void runtime_engine::start(strategy& stra)
+void runtime_engine::run(strategy& stra)
 {
 	stra.init(_lt);
 	lt_start_service(_lt);

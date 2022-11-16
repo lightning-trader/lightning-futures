@@ -220,22 +220,13 @@ void tick_simulator::publish_tick()
 	{
 		if(tick->trading_day != _current_trading_day)
 		{
-			if(_event)
-			{
-				_event->fire_event(ET_BeginTrading);
-			}
+			this->fire_event(ET_BeginTrading);
 		}
 		_current_tick_info.emplace_back(tick);
-		if (_event)
-		{
-			_event->fire_event(ET_TickReceived, tick);
-		}
+		this->fire_event(ET_TickReceived, tick);
 		if(tick->close>0)
 		{
-			if (_event)
-			{
-				_event->fire_event(ET_EndTrading);
-			}
+			this->fire_event(ET_EndTrading);
 		}
 		_current_index++;
 		if(_current_index < _pending_tick_info.size())
@@ -338,10 +329,7 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 	
 	if(match.state == OS_INVALID)
 	{
-		if (_event)
-		{
-			_event->fire_event(ET_OrderPlace, match.est_id);
-		}
+		this->fire_event(ET_OrderPlace, match.est_id);
 		auto queue_seat = get_front_count(order.code, order.price);
 		_order_info.set_seat(match.est_id,queue_seat);
 		_order_info.set_state(match.est_id, OS_IN_MATCH);
@@ -584,18 +572,13 @@ void tick_simulator::order_deal(const order_info& order, uint32_t deal_volume)
 	if(order.last_volume > 0)
 	{
 		//部分成交
-		if(_event)
-		{
-			_event->fire_event(ET_OrderDeal, order.est_id, order.total_volume - order.last_volume, order.total_volume);
-		}
+		this->fire_event(ET_OrderDeal, order.est_id, order.total_volume - order.last_volume, order.total_volume);
+
 	}
 	else
 	{
 		//全部成交
-		if (_event)
-		{
-			_event->fire_event(ET_OrderTrade, order.est_id, order.code, order.offset, order.direction, order.price, order.total_volume);
-		}
+		this->fire_event(ET_OrderTrade, order.est_id, order.code, order.offset, order.direction, order.price, order.total_volume);
 		_order_info.del_order(order.est_id);
 	}
 }
@@ -603,10 +586,7 @@ void tick_simulator::order_deal(const order_info& order, uint32_t deal_volume)
 void tick_simulator::order_cancel(const order_info& order)
 {
 	thawing_deduction(order.code,order.offset,order.direction,order.last_volume, order.price);
-	if (_event)
-	{
-		_event->fire_event(ET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
-	}
+	this->fire_event(ET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
 	_order_info.del_order(order.est_id);
 }
 void tick_simulator::frozen_deduction(code_t code,offset_type offset, direction_type direction,uint32_t count,double_t price)

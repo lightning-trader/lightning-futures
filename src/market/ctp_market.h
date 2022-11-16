@@ -10,11 +10,11 @@
 
 
 
-class ctp_market :	public market_api,public CThostFtdcMdSpi
+class ctp_market :	public futures_market,public CThostFtdcMdSpi
 {
 public:
 
-	ctp_market(event_source* evt);
+	ctp_market();
 
 	virtual ~ctp_market();
 	

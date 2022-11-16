@@ -15,8 +15,6 @@ class tick_simulator : public simulator
 {
 
 private:
-
-	event_source* _event ;
 	
 	tick_loader* _loader ;
 
@@ -57,7 +55,7 @@ private:
 
 public:
 
-	tick_simulator(event_source* evt):_loader(nullptr),
+	tick_simulator():_loader(nullptr),
 		_is_in_trading(false), 
 		_current_trading_day(0), 
 		_current_time(0),
@@ -66,8 +64,7 @@ public:
 		_order_ref(0),
 		_service_charge(0),
 		_margin_rate(0),
-		_multiple(0),
-		_event(evt)
+		_multiple(0)
 	{}
 	virtual ~tick_simulator()
 	{

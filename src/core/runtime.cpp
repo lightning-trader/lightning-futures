@@ -56,14 +56,14 @@ bool runtime::init_from_file(const std::string& config_path)
 	}
 	//market
 	
-	_market_api = create_market_api(this,market_config);
+	_market_api = create_market_api(market_config);
 	if (_market_api == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
 		return false;
 	}
 	//trader
-	_trader_api = create_trader_api(this,trader_config);
+	_trader_api = create_trader_api(trader_config);
 	if (_trader_api == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
@@ -82,3 +82,26 @@ market_api* runtime::get_market()
 	return _market_api;
 }
 
+void runtime::update()
+{
+	if(_trader_api)
+	{
+		_trader_api->update();
+	}
+	if(_market_api)
+	{
+		_market_api->update();
+	}
+}
+
+void runtime::add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle)
+{
+	if (_trader_api)
+	{
+		_trader_api->add_handle(handle);
+	}
+	if (_market_api)
+	{
+		_market_api->add_handle(handle);
+	}
+}

@@ -8,7 +8,7 @@
 #include "market_api.h"
 #include "trader_api.h"
 
-class context : public event_source
+class context
 {
 
 public:
@@ -102,6 +102,10 @@ protected:
 	virtual class trader_api* get_trader() = 0;
 
 	virtual class market_api* get_market() = 0;
+
+	virtual void update() = 0;
+
+	virtual void add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle) = 0;
 
 };
 

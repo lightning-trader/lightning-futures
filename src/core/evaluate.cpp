@@ -44,7 +44,7 @@ bool evaluate::init_from_file(const std::string& config_path)
 	}
 	//simulator
 
-	_simulator = create_simulator(this,simulator_config);
+	_simulator = create_simulator(simulator_config);
 	if (_simulator == nullptr)
 	{
 		LOG_ERROR("evaluate_driver init_from_file create_simulator error : %s", config_path.c_str());
@@ -83,4 +83,20 @@ trader_api* evaluate::get_trader()
 market_api* evaluate::get_market()
 {
 	return _simulator;
+}
+
+void evaluate::update()
+{
+	if(_simulator)
+	{
+		_simulator->update();
+	}
+}
+
+void evaluate::add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle)
+{
+	if (_simulator)
+	{
+		_simulator->add_handle(handle);
+	}
 }

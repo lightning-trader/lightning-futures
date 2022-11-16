@@ -47,7 +47,7 @@ private:
 		fire_event(data, args...);
 	}
 
-public:
+protected:
 
 	template<typename... Types>
 	void fire_event(event_type type, const Types&... args) {
@@ -56,7 +56,8 @@ public:
 		fire_event(data, args...);
 	}
 
-protected:
+
+public:
 
 	void update()
 	{

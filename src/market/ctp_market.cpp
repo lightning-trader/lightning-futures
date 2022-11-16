@@ -6,14 +6,13 @@
 
 #pragma comment (lib,"thostmduserapi_se.lib")
 
-ctp_market::ctp_market(event_source* evt)
+ctp_market::ctp_market()
 	:_md_api(nullptr)
 	,_reqid(0)
 	,_process_mutex(_mutex)
 	,_last_tick_time(0)
 	, _current_trading_day(0)
 	, _is_inited(false)
-	, _event(evt)
 {
 }
 
@@ -151,20 +150,20 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 		_current_trading_day = tick->trading_day;
 		if(_event)
 		{
-			_event->fire_event(ET_BeginTrading);
+			this->fire_event(ET_BeginTrading);
 		}
 		
 	}
 	if(_event)
 	{
-		_event->fire_event(ET_TickReceived, tick);
+		this->fire_event(ET_TickReceived, tick);
 	}
 	
 	_last_tick_time = tick->time;
 
 	if(tick->close != 0&& _event)
 	{
-		_event->fire_event(ET_EndTrading);
+		this->fire_event(ET_EndTrading);
 	}
 }
 

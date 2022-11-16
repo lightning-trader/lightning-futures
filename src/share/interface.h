@@ -2,15 +2,16 @@
 #include "market_api.h"
 #include "trader_api.h"
 #include "simulator.h"
+#include <boost/property_tree/ptree.hpp>
 
-market_api* create_market_api(event_source* evt, const boost::property_tree::ptree& config);
+futures_market* create_market_api(const boost::property_tree::ptree& config);
 
-void destory_market_api(market_api* api);
+void destory_market_api(futures_market* api);
 
-trader_api* create_trader_api(event_source* evt, const boost::property_tree::ptree& config);
+futures_trader* create_trader_api(const boost::property_tree::ptree& config);
 
-void destory_trader_api(trader_api* api);
+void destory_trader_api(futures_trader* api);
 
-simulator* create_simulator(event_source* evt, const boost::property_tree::ptree& config);
+simulator* create_simulator(const boost::property_tree::ptree& config);
 
 void destory_simulator(simulator* smlt);

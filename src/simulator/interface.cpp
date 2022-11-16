@@ -1,9 +1,9 @@
 #pragma once
 #include "tick_simulator.h"
 
-simulator* create_simulator(event_source* evt,const boost::property_tree::ptree& config)
+simulator* create_simulator(const boost::property_tree::ptree& config)
 {
-	tick_simulator* smlt = new tick_simulator(evt);
+	tick_simulator* smlt = new tick_simulator();
 	if (smlt->init(config))
 	{
 		return smlt;

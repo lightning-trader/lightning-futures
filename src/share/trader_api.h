@@ -54,3 +54,8 @@ public:
 	virtual void submit_settlement() = 0 ;
 
 };
+
+class futures_trader : public trader_api, public event_source
+{
+
+};

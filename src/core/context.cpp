@@ -76,7 +76,7 @@ void context::start()
 		while (_is_runing)
 		{
 			this->update();
-			LOG_DEBUG("context update \n");
+			//LOG_DEBUG("context update \n");
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 	});

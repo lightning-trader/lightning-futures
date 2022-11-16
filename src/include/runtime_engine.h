@@ -13,7 +13,7 @@ public:
 
 public:
 	
-	void start(strategy& stra);
+	void run(strategy& stra);
 
 private:
 

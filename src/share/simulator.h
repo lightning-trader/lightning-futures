@@ -3,7 +3,7 @@
 #include "trader_api.h"
 
 
-class simulator : public market_api, public trader_api
+class simulator : public market_api, public trader_api,public event_source
 {
 public:
 

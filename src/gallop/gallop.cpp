@@ -14,15 +14,15 @@ void start_runtime()
 {
 	auto app = runtime_engine("./runtime.ini");
 	hft_1_strategy hcc(8, 16, 300, 0);
-	app.start(hcc);
+	app.run(hcc);
 	
 }
 
 void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 {
 	auto app = evaluate_engine("./evaluate.ini");
-	hft_1_strategy hcc(1, 3, 200, 0);
-	app.start(hcc, all_trading_day);
+	hft_1_strategy hcc(8, 16, 300, 0);
+	app.back_test(hcc, all_trading_day);
 	
 }
 
@@ -30,7 +30,7 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 
 void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
 {
-
+/*
 	//max money : 99890.400000 i:[1] j:[6]
 	double max_monery = 0;
 	for (int i = 1; i <= 15; i++)
@@ -55,7 +55,7 @@ void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
 			
 		}
 	}
-
+*/
 }
 
 int main()

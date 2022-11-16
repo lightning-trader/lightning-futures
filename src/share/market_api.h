@@ -33,3 +33,8 @@ public:
 	*/
 	virtual uint32_t get_trading_day()const = 0 ;
 };
+
+class futures_market : public market_api, public event_source
+{
+
+};

@@ -21,10 +21,10 @@ typedef enum action_flag
 } action_flag;
 
 
-class ctp_trader : public trader_api, public CThostFtdcTraderSpi
+class ctp_trader : public futures_trader, public CThostFtdcTraderSpi
 {
 public:
-	ctp_trader(event_source* evt);
+	ctp_trader();
 	
 	virtual ~ctp_trader();
 
@@ -235,7 +235,6 @@ private:
 
 protected:
 
-	event_source*			_event ;
 	CThostFtdcTraderApi*	_td_api;
 	std::atomic<uint32_t>	_reqid;
 
