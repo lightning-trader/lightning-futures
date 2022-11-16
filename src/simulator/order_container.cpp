@@ -5,7 +5,7 @@
 void order_container::add_order(const order_info& order)
 {
 	spin_lock lock(_mutex);
-	_order_info[order.est_id];
+	_order_info[order.est_id] = order;
 	_order_match[order.code].emplace_back(order.est_id);
 }
 
