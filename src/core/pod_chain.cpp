@@ -1,7 +1,7 @@
 #include "pod_chain.h"
 #include <trader_api.h>
 
-uint32_t pod_chain::get_pending_position(code_t code) const
+uint32_t pod_chain::get_pending_position(const code_t& code) const
 {
 	std::vector<order_info> order_list;
 	_trader->find_orders(order_list, [code](const order_info& order)->bool {
@@ -15,7 +15,7 @@ uint32_t pod_chain::get_pending_position(code_t code) const
 	return res;
 }
 
-estid_t close_to_open_chain::place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+estid_t close_to_open_chain::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	if (offset == OT_CLOSE)
 	{
@@ -45,7 +45,7 @@ estid_t close_to_open_chain::place_order(offset_type offset, direction_type dire
 	return _next->place_order(offset, direction, code, count, price, flag);
 }
 
-estid_t open_to_close_chain::place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+estid_t open_to_close_chain::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	//暂时先不处理拆单情况了，因为拆弹会导致上层接口变得复杂，所以只有持有单量大于等于需要单量才起作用
 	if(offset == OT_OPEN)
@@ -73,7 +73,7 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 }
 
 
-estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	std::vector<order_info> order_list ;
 	if(direction == DT_LONG)
@@ -106,7 +106,7 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 }
 
 
-estid_t the_end_chain::place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+estid_t the_end_chain::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	if(offset == OT_OPEN)
 	{

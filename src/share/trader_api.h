@@ -20,7 +20,7 @@ public:
 	 *	下单接口
 	 *	entrust 下单的具体数据结构
 	 */
-	virtual estid_t place_order(offset_type offset, direction_type direction , code_t code, uint32_t count, double_t price , order_flag flag) = 0;
+	virtual estid_t place_order(offset_type offset, direction_type direction , const code_t& code, uint32_t count, double_t price , order_flag flag) = 0;
 
 	/*
 	 *	撤单
@@ -36,7 +36,7 @@ public:
 	/*
 	*	获取持仓信息
 	*/
-	virtual const position_info get_position(code_t code) const = 0;
+	virtual const position_info get_position(const code_t& code) const = 0;
 	
 	/*
 	 *	获取订单信息

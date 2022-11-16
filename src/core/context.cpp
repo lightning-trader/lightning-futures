@@ -150,7 +150,7 @@ void context::set_cancel_condition(estid_t order_id, condition_callback callback
 
 
 
-estid_t context::place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+estid_t context::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	if (_chain == nullptr)
 	{
@@ -175,43 +175,37 @@ void context::cancel_order(estid_t order_id)
 	}
 }
 
-const position_info* context::get_position(code_t code)
+const position_info& context::get_position(const code_t& code)
 {
 	auto trader = get_trader();
 	if (trader == nullptr)
 	{
 		LOG_ERROR("cancel_order error _trader nullptr");
-		return nullptr;
+		return default_position;
 	}
-	static position_info cache_data ;
-	cache_data = trader->get_position(code);
-	return &cache_data;
+	return std::move(trader->get_position(code));
 }
 
-const account_info* context::get_account()
+const account_info& context::get_account()
 {
 	auto trader = get_trader();
 	if (trader == nullptr)
 	{
 		LOG_ERROR("get_account error _trader nullptr");
-		return nullptr;
+		return default_account;
 	}
-	static account_info cache_data;
-	cache_data = trader->get_account();
-	return &cache_data;
+	return std::move(trader->get_account());
 }
 
-const order_info* context::get_order(estid_t order_id)
+const order_info& context::get_order(estid_t order_id)
 {
 	auto trader = get_trader();
 	if (trader == nullptr)
 	{
 		LOG_ERROR("get_account error _trader nullptr");
-		return nullptr;
+		return default_order;
 	}
-	static order_info cache_data;
-	cache_data = trader->get_order(order_id);
-	return &cache_data;
+	return std::move(trader->get_order(order_id));
 }
 
 void context::subscribe(const std::set<code_t>& codes)

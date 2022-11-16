@@ -85,7 +85,7 @@ extern "C"
 		c->stop();
 	}
 
-	estid_t lt_place_order(const ltobj& lt, offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+	estid_t lt_place_order(const ltobj& lt, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -129,52 +129,52 @@ extern "C"
 	}
 
 	
-	const position_info* lt_get_position(const ltobj& lt, code_t code)
+	const position_info& lt_get_position(const ltobj& lt, const code_t& code)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			return nullptr;
+			return default_position;
 		}
 		context* c = (context*)(lt.obj_ptr);
 		if (c == nullptr)
 		{
-			return nullptr;
+			return default_position;
 		}
 		return c->get_position(code);
 	}
 
 	
-	const account_info* lt_get_account(const ltobj& lt)
+	const account_info& lt_get_account(const ltobj& lt)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			return nullptr;
+			return default_account;
 		}
 		context* c = (context*)(lt.obj_ptr);
 		if (c == nullptr)
 		{
-			return nullptr;
+			return default_account;
 		}
 		return c->get_account();
 	}
 
 
-	const order_info* lt_get_order(const ltobj& lt, estid_t order_id)
+	const order_info& lt_get_order(const ltobj& lt, estid_t order_id)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
-			return nullptr;
+			return default_order;
 		}
 		context* c = (context*)(lt.obj_ptr);
 		if (c == nullptr)
 		{
-			return nullptr;
+			return default_order;
 		}
 		return c->get_order(order_id);
 	}
 
 
-	void lt_subscribe(const ltobj& lt, code_t code)
+	void lt_subscribe(const ltobj& lt, const code_t& code)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -188,7 +188,7 @@ extern "C"
 		c->subscribe({ code });
 	}
 
-	void lt_unsubscribe(const ltobj& lt, code_t code)
+	void lt_unsubscribe(const ltobj& lt, const code_t& code)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{

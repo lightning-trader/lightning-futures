@@ -45,14 +45,14 @@ protected:
 	 *
 	 *	@localid	本地订单id
 	 */
-	virtual void on_trade(estid_t localid, code_t	code, offset_type offset, direction_type direction, double_t price, uint32_t volume)  override;
+	virtual void on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)  override;
 
 
 	/*
 	 *	撤单
 	 *	@localid	本地订单id
 	 */
-	virtual void on_cancel(estid_t localid, code_t	code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)  override;
+	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)  override;
 
 
 private:

@@ -103,13 +103,13 @@ public:
 	// td
 	virtual bool is_usable()const override;
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 	virtual void cancel_order(estid_t order_id) override;
 
 	virtual const account_info get_account() const override;
 
-	virtual const position_info get_position(code_t code) const override;
+	virtual const position_info get_position(const code_t& code) const override;
 
 	virtual const order_info get_order(estid_t order_id) const override;
 
@@ -119,7 +119,7 @@ public:
 
 private:
 
-	void load_data(code_t code,uint32_t trading_day);
+	void load_data(const code_t& code,uint32_t trading_day);
 
 	void publish_tick();
 
@@ -127,7 +127,7 @@ private:
 
 	estid_t make_estid();
 
-	uint32_t get_front_count(code_t code, double_t price);
+	uint32_t get_front_count(const code_t& code, double_t price);
 
 	void match_entrust(const tick_info* tick);
 
@@ -144,7 +144,7 @@ private:
 	boost::posix_time::ptime pt = boost::posix_time::ptime();
 
 	//冻结
-	void frozen_deduction(code_t code, offset_type offset, direction_type direction, uint32_t count, double_t price);
+	void frozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price);
 	//解冻
-	void thawing_deduction(code_t code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price);
+	void thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price);
 };

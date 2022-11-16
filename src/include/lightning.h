@@ -28,9 +28,9 @@ extern "C"
 
 	typedef void (PORTER_FLAG * deal_callback)(estid_t, uint32_t , uint32_t);
 
-	typedef void (PORTER_FLAG * trade_callback)(estid_t, code_t, offset_type, direction_type, double_t, uint32_t);
+	typedef void (PORTER_FLAG * trade_callback)(estid_t, const code_t&, offset_type, direction_type, double_t, uint32_t);
 
-	typedef void (PORTER_FLAG * cancel_callback)(estid_t, code_t, offset_type, direction_type, double_t, uint32_t, uint32_t);
+	typedef void (PORTER_FLAG * cancel_callback)(estid_t, const code_t&, offset_type, direction_type, double_t, uint32_t, uint32_t);
 
 	typedef bool (PORTER_FLAG * condition_callback)(estid_t, const tick_info*);
 
@@ -47,7 +47,7 @@ extern "C"
 	/*
 	下单
 	*/
-	EXPORT_FLAG estid_t lt_place_order(const ltobj& ctx,offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag);
+	EXPORT_FLAG estid_t lt_place_order(const ltobj& ctx,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
 
 	/*
 	* 撤销订单
@@ -62,28 +62,28 @@ extern "C"
 	/**
 	* 获取仓位信息
 	*/
-	EXPORT_FLAG const position_info* lt_get_position(const ltobj& ctx, code_t code) ;
+	EXPORT_FLAG const position_info& lt_get_position(const ltobj& ctx, const code_t& code) ;
 
 	/**
 	* 获取账户资金
 	*/
-	EXPORT_FLAG const account_info* lt_get_account(const ltobj& ctx) ;
+	EXPORT_FLAG const account_info& lt_get_account(const ltobj& ctx) ;
 
 	/**
 	* 获取委托订单
 	**/
-	EXPORT_FLAG const order_info* lt_get_order(const ltobj& ctx, estid_t order_id) ;
+	EXPORT_FLAG const order_info& lt_get_order(const ltobj& ctx, estid_t order_id) ;
 
 
 	/**
 	* 订阅行情
 	**/
-	EXPORT_FLAG void lt_subscribe(const ltobj& ctx, code_t code);
+	EXPORT_FLAG void lt_subscribe(const ltobj& ctx, const code_t& code);
 
 	/**
 	* 取消订阅行情
 	**/
-	EXPORT_FLAG void lt_unsubscribe(const ltobj& ctx, code_t code);
+	EXPORT_FLAG void lt_unsubscribe(const ltobj& ctx, const code_t& code);
 
 	/**
 	* 获取时间

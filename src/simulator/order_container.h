@@ -49,7 +49,7 @@ public:
 
 	void set_price(estid_t estid, double_t price);
 
-	void get_order_match(std::vector<order_match>& match_list, code_t code)const;
+	void get_order_match(std::vector<order_match>& match_list, const code_t& code)const;
 
 	bool get_order_info(order_info& order, estid_t estid)const;
 	

@@ -47,7 +47,7 @@ private:
 		}
 	}
 
-	static inline void _trade_callback(estid_t localid, code_t	code, offset_type offset, direction_type direction, double_t price, uint32_t volume) 
+	static inline void _trade_callback(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 	{
 		if(_self)
 		{
@@ -56,7 +56,7 @@ private:
 	}
 
 
-	static inline void _cancel_callback(estid_t localid, code_t	code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume) 
+	static inline void _cancel_callback(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 	{
 		if (_self)
 		{
@@ -109,14 +109,14 @@ protected:
 	 *
 	 *	@localid	本地订单id
 	 */
-	virtual void on_trade(estid_t localid, code_t	code, offset_type offset, direction_type direction, double_t price, uint32_t volume) {}
+	virtual void on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume) {}
 
 
 	/*
 	 *	撤单
 	 *	@localid	本地订单id
 	 */
-	virtual void on_cancel(estid_t localid, code_t	code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume) {}
+	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume) {}
 
 	
 
@@ -129,7 +129,7 @@ protected:
 	 *  flag 默认为正常单
 	 *	@localid	本地订单id
 	 */
-	estid_t buy_for_open(code_t code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
+	estid_t buy_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
 	 *	平多单
@@ -138,7 +138,7 @@ protected:
 	 *  flag 默认为正常单
 	 *	@localid	本地订单id
 	 */
-	estid_t sell_for_close(code_t code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
+	estid_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
 	 *	开空单
@@ -147,7 +147,7 @@ protected:
 	 *  flag 默认为正常单
 	 *	@localid	本地订单id
 	 */
-	estid_t sell_for_open(code_t code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
+	estid_t sell_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
 	 *	平空单
@@ -156,7 +156,7 @@ protected:
 	 *  flag 默认为正常单
 	 *	@localid	本地订单id
 	 */
-	estid_t buy_for_close(code_t code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
+	estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
 	 *	撤单
@@ -177,28 +177,28 @@ protected:
 	/**  
 	* 获取仓位信息
 	*/
-	const position_info* get_position(code_t code) const;
+	const position_info& get_position(const code_t& code) const;
 
 	/**
 	* 获取账户资金
 	*/
-	const account_info* get_account() const;
+	const account_info& get_account() const;
 
 	/**  
 	* 获取委托订单
 	**/
-	const order_info* get_order(estid_t order_id) const;
+	const order_info& get_order(estid_t order_id) const;
 
 
 	/**
 	* 订阅行情
 	**/
-	void subscribe(code_t code) ;
+	void subscribe(const code_t& code) ;
 
 	/**
 	* 取消订阅行情
 	**/
-	void unsubscribe(code_t code) ;
+	void unsubscribe(const code_t& code) ;
 
 	/**
 	* 获取时间

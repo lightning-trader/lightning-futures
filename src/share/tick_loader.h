@@ -6,5 +6,5 @@ struct tick_loader
 public:
 
 
-	virtual void load_tick(std::vector<tick_info>& result, code_t code, uint32_t trade_day) = 0;
+	virtual void load_tick(std::vector<tick_info>& result, const code_t& code, uint32_t trade_day) = 0;
 };

@@ -93,7 +93,7 @@ void order_container::set_price(estid_t estid, double_t price)
 	}
 }
 
-void order_container::get_order_match(std::vector<order_match>& match_list,code_t code)const
+void order_container::get_order_match(std::vector<order_match>& match_list, const code_t& code)const
 {
 	spin_lock lock(_mutex);
 	auto it = _order_match.find(code);

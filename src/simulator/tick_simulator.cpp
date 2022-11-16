@@ -93,7 +93,7 @@ bool tick_simulator::is_usable()const
 	return true ;
 }
 
-estid_t tick_simulator::place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag)
+estid_t tick_simulator::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	
 	//boost::posix_time::ptime pt2 = boost::posix_time::microsec_clock::local_time();
@@ -136,14 +136,14 @@ const account_info tick_simulator::get_account() const
 	return _account_info ;
 }
 
-const position_info tick_simulator::get_position(code_t code) const
+const position_info tick_simulator::get_position(const code_t& code) const
 {
 	auto it = _position_info.find(code);
 	if(it != _position_info.end())
 	{
 		return (it->second);
 	}
-	return position_info();
+	return default_position;
 }
 
 const order_info tick_simulator::get_order(estid_t order_id) const
@@ -170,7 +170,7 @@ void tick_simulator::submit_settlement()
 
 }
 
-void tick_simulator::load_data(code_t code, uint32_t trading_day)
+void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
 {
 	if(_loader)
 	{
@@ -270,7 +270,7 @@ estid_t tick_simulator::make_estid()
 	return v1 + v2 + v3;
 }
 
-uint32_t tick_simulator::get_front_count(code_t code,double_t price)
+uint32_t tick_simulator::get_front_count(const code_t& code,double_t price)
 {
 	auto tick_it = std::find_if(_current_tick_info.begin(), _current_tick_info.end(),[code](auto cur) ->bool {
 		if(cur->id == code)
@@ -333,6 +333,7 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 		auto queue_seat = get_front_count(order.code, order.price);
 		_order_info.set_seat(match.est_id,queue_seat);
 		_order_info.set_state(match.est_id, OS_IN_MATCH);
+		frozen_deduction(order.code,order.offset,order.direction,order.last_volume,order.price);
 	}
 	if(match.state == OS_CANELED)
 	{
@@ -589,7 +590,7 @@ void tick_simulator::order_cancel(const order_info& order)
 	this->fire_event(ET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
 	_order_info.del_order(order.est_id);
 }
-void tick_simulator::frozen_deduction(code_t code,offset_type offset, direction_type direction,uint32_t count,double_t price)
+void tick_simulator::frozen_deduction(const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
 {
 	if (offset == OT_OPEN)
 	{
@@ -609,7 +610,7 @@ void tick_simulator::frozen_deduction(code_t code,offset_type offset, direction_
 		}
 	}
 }
-void tick_simulator::thawing_deduction(code_t code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
+void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
 {
 
 	if (offset == OT_OPEN)

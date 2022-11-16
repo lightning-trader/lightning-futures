@@ -34,11 +34,11 @@ public:
 		}
 	}
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag) = 0;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) = 0;
 
 protected:
 
-	uint32_t get_pending_position(code_t code)const;
+	uint32_t get_pending_position(const code_t& code)const;
 	
 };
 
@@ -53,7 +53,7 @@ public:
 	virtual ~close_to_open_chain()
 	{}
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 };
 
@@ -68,7 +68,7 @@ public:
 	virtual ~open_to_close_chain()
 	{}
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 };
 
@@ -82,7 +82,7 @@ public:
 	virtual ~price_to_cancel_chain()
 	{}
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 };
 
@@ -98,7 +98,7 @@ public:
 	virtual ~the_end_chain()
 	{}
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 
 };

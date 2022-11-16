@@ -586,7 +586,7 @@ bool ctp_trader::is_usable()const
 }
 
 
-estid_t ctp_trader::place_order(offset_type offset, direction_type direction, code_t code, uint32_t volume, double_t price, order_flag flag)
+estid_t ctp_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
 {
 
 	if (_td_api == nullptr)
@@ -718,14 +718,14 @@ const account_info ctp_trader::get_account() const
 	return _account_info ;
 }
 
-const position_info ctp_trader::get_position(code_t code) const
+const position_info ctp_trader::get_position(const code_t& code) const
 {
 	auto it = _position_info.find(code);
 	if (it != _position_info.end())
 	{
 		return (it->second);
 	}
-	return position_info();
+	return default_position;
 }
 
 const order_info ctp_trader::get_order(estid_t order_id) const

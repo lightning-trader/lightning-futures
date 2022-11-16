@@ -129,6 +129,7 @@ struct position_info
 		short_frozen(0)
 	{}
 };
+const position_info default_position;
 
 struct account_info
 {
@@ -141,6 +142,7 @@ struct account_info
 		frozen_monery(0)
 	{}
 };
+const account_info default_account;
 
 typedef enum trading_optimal
 {
@@ -217,6 +219,8 @@ struct order_info
 	{}
 
 };
+const order_info default_order ;
+
 struct trade_info
 {
 public:

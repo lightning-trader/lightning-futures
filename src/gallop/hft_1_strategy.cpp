@@ -52,10 +52,10 @@ void hft_1_strategy::on_entrust(estid_t localid)
 		//set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + _cancel_seconds));
 	}else
 	{
-		auto order = get_order(localid);
-		if (order && order->offset == OT_CLOSE)
+		auto& order = get_order(localid);
+		if (order.offset == OT_CLOSE)
 		{
-			if (order->direction == DT_LONG)
+			if (order.direction == DT_LONG)
 			{
 				double_t lost_price = _last_tick.price - _lose_delta;
 				set_cancel_condition(localid, [this, lost_price](const tick_info* tick)->bool {
@@ -70,7 +70,7 @@ void hft_1_strategy::on_entrust(estid_t localid)
 					return false;
 					});
 			}
-			else if (order->direction == DT_SHORT)
+			else if (order.direction == DT_SHORT)
 			{
 				double_t lost_price = _last_tick.price + _lose_delta;
 				set_cancel_condition(localid, [this, lost_price](const tick_info* tick)->bool {
@@ -91,7 +91,7 @@ void hft_1_strategy::on_entrust(estid_t localid)
 	
 }
 
-void hft_1_strategy::on_trade(estid_t localid, code_t code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
+void hft_1_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
 	LOG_DEBUG("on_trade : %llu\n", localid);
 	if(localid == _buy_order)
@@ -118,7 +118,7 @@ void hft_1_strategy::on_trade(estid_t localid, code_t code, offset_type offset, 
 	}
 }
 
-void hft_1_strategy::on_cancel(estid_t localid,code_t code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
+void hft_1_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
 {
 	LOG_DEBUG("on_cancel : %llu\n", localid);
 

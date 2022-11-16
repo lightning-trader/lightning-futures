@@ -40,13 +40,13 @@ public:
 
 	virtual bool is_usable() const override;
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 	virtual void cancel_order(estid_t order_id) override ;
 
 	virtual const account_info get_account() const override ;
 
-	virtual const position_info get_position(code_t code) const override ;
+	virtual const position_info get_position(const code_t& code) const override ;
 
 	virtual const order_info get_order(estid_t order_id) const override ;
 
@@ -152,7 +152,7 @@ private:
 			return DT_SHORT;
 	}
 
-	inline int wrap_offset_type(code_t code,uint32_t volume,offset_type offset, direction_type direction)
+	inline int wrap_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)
 	{
 		if (OT_OPEN == offset)
 		{

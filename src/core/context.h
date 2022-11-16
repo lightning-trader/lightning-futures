@@ -57,15 +57,15 @@ public:
 	*/
 	void set_cancel_condition(estid_t order_id, condition_callback callback);
 
-	estid_t place_order(offset_type offset, direction_type direction, code_t code, uint32_t count, double_t price, order_flag flag);
+	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
 	
 	void cancel_order(estid_t order_id);
 	
-	const position_info* get_position(code_t code);
+	const position_info& get_position(const code_t& code);
 	
-	const account_info* get_account();
+	const account_info& get_account();
 	
-	const order_info* get_order(estid_t order_id);
+	const order_info& get_order(estid_t order_id);
 
 	void subscribe(const std::set<code_t>& codes);
 

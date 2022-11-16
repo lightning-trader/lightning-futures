@@ -33,7 +33,7 @@ void demo_strategy::on_entrust(estid_t localid)
 	LOG_INFO("on_entrust tick : %llu\n", localid);
 }
 
-void demo_strategy::on_trade(estid_t localid, code_t code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
+void demo_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
 	if(localid == _buy_order)
 	{
@@ -58,7 +58,7 @@ void demo_strategy::on_trade(estid_t localid, code_t code, offset_type offset, d
 	}
 }
 
-void demo_strategy::on_cancel(estid_t localid,code_t code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
+void demo_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
 	LOG_INFO("on_cancel tick : %llu\n", localid);
 	if (localid == _buy_order)
@@ -77,12 +77,9 @@ void demo_strategy::on_cancel(estid_t localid,code_t code, offset_type offset, d
 bool demo_strategy::check_lose(const tick_info* tick)
 {
 	//Ö¹Ëð
-	auto position = get_position(tick->id);
-	if (position == nullptr)
-	{
-		return false;
-	}
-	if (position->long_postion > 0)
+	auto& position = get_position(tick->id);
+
+	if (position.long_postion > 0)
 	{
 		if (_highest_price < tick->price)
 		{
@@ -90,12 +87,12 @@ bool demo_strategy::check_lose(const tick_info* tick)
 		}
 		if (tick->price < _highest_price - _lose_offset)
 		{
-			sell_for_close(tick->id, position->long_postion);
+			sell_for_close(tick->id, position.long_postion);
 		}
 
 		return true;
 	}
-	if (position->short_postion > 0)
+	if (position.short_postion > 0)
 	{
 		//³ÖÓÐ¿Õµ¥
 		if (_lowest_price > tick->price)
@@ -104,7 +101,7 @@ bool demo_strategy::check_lose(const tick_info* tick)
 		}
 		if (tick->price > _lowest_price + _lose_offset)
 		{
-			buy_for_close(tick->id, position->short_postion);
+			buy_for_close(tick->id, position.short_postion);
 		}
 		return true;
 	}

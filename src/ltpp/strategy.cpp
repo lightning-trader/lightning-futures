@@ -28,22 +28,22 @@ void strategy::init(const ltobj& lt)
 	this->on_init();
 }
 
-estid_t strategy::buy_for_open(code_t code,uint32_t count ,double_t price , order_flag flag )
+estid_t strategy::buy_for_open(const code_t& code,uint32_t count ,double_t price , order_flag flag )
 {
 	return lt_place_order(_lt,OT_OPEN, DT_LONG, code, count, price, flag);
 }
 
-estid_t strategy::sell_for_close(code_t code, uint32_t count, double_t price , order_flag flag )
+estid_t strategy::sell_for_close(const code_t& code, uint32_t count, double_t price , order_flag flag )
 {
 	return lt_place_order(_lt, OT_CLOSE, DT_LONG, code, count, price, flag);
 }
 
-estid_t strategy::sell_for_open(code_t code, uint32_t count, double_t price , order_flag flag )
+estid_t strategy::sell_for_open(const code_t& code, uint32_t count, double_t price , order_flag flag )
 {
 	return lt_place_order(_lt, OT_OPEN, DT_SHORT, code, count, price, flag);
 }
 
-estid_t strategy::buy_for_close(code_t code, uint32_t count, double_t price , order_flag flag )
+estid_t strategy::buy_for_close(const code_t& code, uint32_t count, double_t price , order_flag flag )
 {
 	return lt_place_order(_lt, OT_CLOSE, DT_SHORT,code, count, price, flag);
 }
@@ -59,27 +59,27 @@ void strategy::set_trading_optimize(uint32_t max_position, trading_optimal opt ,
 	lt_set_trading_optimize(_lt, max_position, opt, flag);
 }
 
-const position_info* strategy::get_position(code_t code) const
+const position_info& strategy::get_position(const code_t& code) const
 {
 	return lt_get_position(_lt,code);
 }
 
-const account_info* strategy::get_account() const
+const account_info& strategy::get_account() const
 {
 	return lt_get_account(_lt);
 }
 
-const order_info* strategy::get_order(estid_t order_id) const
+const order_info& strategy::get_order(estid_t order_id) const
 {
 	return lt_get_order(_lt,order_id);
 }
 
-void strategy::subscribe(code_t code) 
+void strategy::subscribe(const code_t& code)
 {
 	lt_subscribe(_lt,code);
 }
 
-void strategy::unsubscribe(code_t code)
+void strategy::unsubscribe(const code_t& code)
 {
 	lt_unsubscribe(_lt, code);
 }
