@@ -53,7 +53,7 @@ bool evaluate::init_from_file(const std::string& config_path)
 		LOG_ERROR("evaluate_driver init_from_file create_simulator error : %s", config_path.c_str());
 		return false;
 	}
-	return this->init(localdb_config);
+	return this->init(localdb_config, recorder_config);
 	
 }
 

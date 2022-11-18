@@ -167,7 +167,7 @@ void tick_simulator::find_orders(std::vector<order_info>& order_result, std::fun
 
 void tick_simulator::submit_settlement()
 {
-
+	_is_submit_settlement = true ;
 }
 
 void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
@@ -220,7 +220,9 @@ void tick_simulator::publish_tick()
 	{
 		if(tick->trading_day != _current_trading_day)
 		{
-			this->fire_event(ET_BeginTrading);
+			_current_trading_day = tick->trading_day;
+			_is_submit_settlement = false ;
+			this->fire_event(ET_CrossDay, _current_trading_day);
 		}
 		_current_tick_info.emplace_back(tick);
 		this->fire_event(ET_TickReceived, tick);

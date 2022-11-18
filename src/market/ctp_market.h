@@ -70,7 +70,6 @@ private:
 
 private:
 	
-	event_source*		_event ;
 	CThostFtdcMdApi*	_md_api;
 
 	std::string			_front_addr;

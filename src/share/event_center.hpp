@@ -9,7 +9,9 @@ typedef enum event_type
 {
 	ET_Invalid,
 	ET_TickReceived,
+	ET_CrossDay,
 	ET_AccountChange,
+	ET_PositionChange,
 	ET_BeginTrading,
 	ET_EndTrading,
 	ET_OrderCancel,

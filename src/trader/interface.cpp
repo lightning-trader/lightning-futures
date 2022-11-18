@@ -1,5 +1,4 @@
-﻿#pragma once
-#include <trader_api.h>
+﻿#include <trader_api.h>
 #include "ctp_trader.h"
 
 futures_trader* create_trader_api(const boost::property_tree::ptree& config)

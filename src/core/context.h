@@ -1,6 +1,7 @@
 #pragma once
 #include <define.h>
 #include <any>
+#include <recorder.h>
 #include <lightning.h>
 #include <thread>
 #include <functional>
@@ -56,6 +57,10 @@ private:
 	size_t _userdata_size ;
 
 	std::vector<std::shared_ptr<boost::interprocess::mapped_region>> _userdata_region ;
+
+	recorder* _recorder ;
+
+	bool _is_trading ;
 
 public:
 
@@ -117,6 +122,12 @@ private:
 
 	void load_data(const char* localdb_name, size_t oper_size);
 
+	void handle_account(const std::vector<std::any>& param);
+
+	void handle_position(const std::vector<std::any>& param);
+
+	void handle_crossday(const std::vector<std::any>& param);
+
 	void handle_begin(const std::vector<std::any>& param);
 
 	void handle_end(const std::vector<std::any>& param);
@@ -138,7 +149,7 @@ private:
 
 protected:
 
-	bool init(boost::property_tree::ptree& localdb);
+	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& rcd_config);
 
 	virtual class trader_api* get_trader() = 0;
 

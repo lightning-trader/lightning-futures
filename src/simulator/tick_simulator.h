@@ -48,6 +48,7 @@ private:
 
 	std::map<code_t, position_info> _position_info;
 
+	bool _is_submit_settlement;
 
 	double_t	_service_charge ;	//手续费
 	uint32_t	_multiple ;			//资金倍数
@@ -64,7 +65,8 @@ public:
 		_order_ref(0),
 		_service_charge(0),
 		_margin_rate(0),
-		_multiple(0)
+		_multiple(0),
+		_is_submit_settlement(false)
 	{}
 	virtual ~tick_simulator()
 	{

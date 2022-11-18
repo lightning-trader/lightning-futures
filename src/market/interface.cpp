@@ -1,5 +1,4 @@
-﻿#pragma once
-#include <market_api.h>
+﻿#include <market_api.h>
 #include "ctp_market.h"
 
 futures_market* create_market_api(const boost::property_tree::ptree& config)

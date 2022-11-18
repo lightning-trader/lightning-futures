@@ -156,20 +156,13 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	if (_current_trading_day != tick->trading_day)
 	{
 		_current_trading_day = tick->trading_day;
-		if(_event)
-		{
-			this->fire_event(ET_BeginTrading, _current_trading_day);
-		}
-		
+		this->fire_event(ET_CrossDay, _current_trading_day);
 	}
-	if(_event)
-	{
-		this->fire_event(ET_TickReceived, tick);
-	}
-	
+	this->fire_event(ET_TickReceived, tick);
+
 	_last_tick_time = tick->time;
 
-	if(tick->close != 0&& _event)
+	if(tick->close != 0)
 	{
 		this->fire_event(ET_EndTrading);
 	}

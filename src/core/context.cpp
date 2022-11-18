@@ -7,6 +7,7 @@
 #include <log_wapper.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include "pod_chain.h"
+#include <interface.h>
 
 
 context::context():
@@ -16,7 +17,9 @@ context::context():
 	_chain(nullptr),
 	_trading_filter(nullptr),
 	_userdata_block(10),
-	_userdata_size(1024)
+	_userdata_size(1024),
+	_recorder(nullptr),
+	_is_trading(false)
 {
 	
 }
@@ -26,14 +29,22 @@ context::~context()
 	{
 		_operational_region->flush();
 	}
+	for(auto it : _userdata_region)
+	{
+		it->flush();
+	}
 	if(_chain)
 	{
 		delete _chain ;
 		_chain = nullptr ;
 	}
+	if(_recorder)
+	{
+		destory_recorder(_recorder);
+	}
 }
 
-bool context::init(boost::property_tree::ptree& localdb)
+bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& rcd_config)
 {
 	auto& localdb_name = localdb.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
@@ -43,6 +54,9 @@ bool context::init(boost::property_tree::ptree& localdb)
 		_userdata_size = localdb.get<size_t>("userdata_size", 1024);
 		load_data(localdb_name.c_str(), operational_size);
 	}
+
+	_recorder = create_recorder(rcd_config);
+
 	auto trader = get_trader();
 	if (trader == nullptr)
 	{
@@ -53,6 +67,13 @@ bool context::init(boost::property_tree::ptree& localdb)
 		switch (type)
 		{
 		case ET_AccountChange:
+			handle_account(param);
+			break;
+		case ET_PositionChange:
+			handle_position(param);
+			break;
+		case ET_CrossDay:
+			handle_crossday(param);
 			break;
 		case ET_BeginTrading:
 			handle_begin(param);
@@ -323,14 +344,44 @@ void context::load_data(const char* localdb_name,size_t oper_size)
 	}
 }
 
-void context::handle_begin(const std::vector<std::any>& param)
+void context::handle_account(const std::vector<std::any>& param)
+{
+	if (_recorder)
+	{
+		const auto& account = get_account();
+		_recorder->record_account_flow(get_last_time(), account);
+	}
+}
+
+void context::handle_position(const std::vector<std::any>& param)
+{
+	if (param.size() >= 1)
+	{
+		auto code = std::any_cast<code_t>(param[0]);
+		if (_recorder)
+		{
+			const auto& position = get_position(code);
+			_recorder->record_position_flow(get_last_time(), code, position);
+		}
+	}
+	
+}
+
+void context::handle_crossday(const std::vector<std::any>& param)
 {
 	auto trader = get_trader();
-	if(trader)
+	if (trader)
 	{
-		LOG_INFO("ET_BeginTrading submit_settlement\n");
+		LOG_INFO("ET_CrossDay submit_settlement\n");
 		trader->submit_settlement();
 	}
+}
+
+
+void context::handle_begin(const std::vector<std::any>& param)
+{
+	_is_trading = true ;
+	
 	if (param.size() >= 1)
 	{
 		uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
@@ -350,6 +401,7 @@ void context::handle_end(const std::vector<std::any>& param)
 		auto acc = trader->get_account();
 		LOG_INFO("ET_EndTrading %f %f\n", acc.money, acc.frozen_monery);
 	}
+	_is_trading = false;
 }
 
 void context::handle_entrust(const std::vector<std::any>& param)
@@ -361,6 +413,11 @@ void context::handle_entrust(const std::vector<std::any>& param)
 		if(_operational_data)
 		{
 			_operational_data->statistic_info.cancel_amount++;
+		}
+		if (_recorder)
+		{
+			const auto& order = get_order(localid);
+			_recorder->record_order_entrust(get_last_time(), order);
 		}
 	}
 }
@@ -393,6 +450,10 @@ void context::handle_trade(const std::vector<std::any>& param)
 		{
 			_operational_data->statistic_info.trade_amount++;
 		}
+		if (_recorder)
+		{
+			_recorder->record_order_trade(get_last_time(), localid);
+		}
 	}
 }
 
@@ -412,6 +473,10 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		if (_operational_data)
 		{
 			_operational_data->statistic_info.cancel_amount++;
+		}
+		if (_recorder)
+		{
+			_recorder->record_order_cancel(get_last_time(), localid, cancel_volume);
 		}
 	}
 }

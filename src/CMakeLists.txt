@@ -40,3 +40,5 @@ add_subdirectory("market")
 add_subdirectory("simulator")
 
 add_subdirectory("ltpp")
+
+add_subdirectory("recorder")

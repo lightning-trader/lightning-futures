@@ -287,6 +287,7 @@ void ctp_trader::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField
 	{
 		LOG_DEBUG("OnRspSettlementInfoConfirm\tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
+	this->fire_event(ET_BeginTrading);
 }
 
 void ctp_trader::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
