@@ -101,3 +101,12 @@ void strategy::set_trading_filter(std::function<bool()> callback)
 	lt_set_trading_filter(_lt, _filter_callback);
 }
 
+time_t strategy::last_order_time()
+{
+	return lt_last_order_time(_lt);
+}
+
+const order_statistic& strategy::get_order_statistic()
+{
+	return lt_get_order_statistic(_lt);
+}

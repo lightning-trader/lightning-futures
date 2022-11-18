@@ -278,4 +278,33 @@ extern "C"
 		c->play(trading_day);
 
 	}
+
+	time_t lt_last_order_time(const ltobj& lt)
+	{
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
+		{
+			return -1;
+		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return -1;
+		}
+		return c->last_order_time();
+	}
+
+
+	const order_statistic& lt_get_order_statistic(const ltobj& lt)
+	{
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
+		{
+			return default_statistic;
+		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return default_statistic;
+		}
+		return c->get_order_statistic();
+	}
 }

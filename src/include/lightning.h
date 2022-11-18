@@ -114,4 +114,16 @@ extern "C"
 	*
 	*/
 	EXPORT_FLAG void lt_playback_history(const ltobj& ctx,uint32_t trading_day);
+
+	/**
+	* 获取最后一次下单时间
+	*	跨交易日返回0
+	*/
+	EXPORT_FLAG time_t lt_last_order_time(const ltobj& lt);
+
+	/**
+	* 获取当前交易日的订单统计
+	*	跨交易日会被清空
+	*/
+	EXPORT_FLAG const order_statistic& lt_get_order_statistic(const ltobj& lt);
 }

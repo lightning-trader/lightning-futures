@@ -223,6 +223,19 @@ protected:
 	* 设置交易过滤器
 	*/
 	void set_trading_filter(std::function<bool()> callback);
+
+	/**
+	* 获取最后一次下单时间
+	*	跨交易日返回0
+	*/
+	time_t last_order_time();
+
+	/**
+	* 获取当前交易日的订单统计
+	*	跨交易日会被清空
+	*/
+	const order_statistic& get_order_statistic();
+
 private:
 
 	ltobj _lt;
