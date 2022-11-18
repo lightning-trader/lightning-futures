@@ -191,7 +191,7 @@ const position_info& context::get_position(const code_t& code)
 		LOG_ERROR("cancel_order error _trader nullptr");
 		return default_position;
 	}
-	return std::move(trader->get_position(code));
+	return trader->get_position(code);
 }
 
 const account_info& context::get_account()
@@ -202,7 +202,7 @@ const account_info& context::get_account()
 		LOG_ERROR("get_account error _trader nullptr");
 		return default_account;
 	}
-	return std::move(trader->get_account());
+	return trader->get_account();
 }
 
 const order_info& context::get_order(estid_t order_id)
@@ -213,7 +213,7 @@ const order_info& context::get_order(estid_t order_id)
 		LOG_ERROR("get_account error _trader nullptr");
 		return default_order;
 	}
-	return std::move(trader->get_order(order_id));
+	return trader->get_order(order_id);
 }
 
 void context::subscribe(const std::set<code_t>& codes)

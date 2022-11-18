@@ -131,12 +131,12 @@ void tick_simulator::cancel_order(estid_t order_id)
 	_order_info.set_state(order_id,OS_CANELED);
 }
 
-const account_info tick_simulator::get_account() const
+const account_info& tick_simulator::get_account() const
 {
 	return _account_info ;
 }
 
-const position_info tick_simulator::get_position(const code_t& code) const
+const position_info& tick_simulator::get_position(const code_t& code) const
 {
 	auto it = _position_info.find(code);
 	if(it != _position_info.end())
@@ -146,11 +146,11 @@ const position_info tick_simulator::get_position(const code_t& code) const
 	return default_position;
 }
 
-const order_info tick_simulator::get_order(estid_t order_id) const
+const order_info& tick_simulator::get_order(estid_t order_id) const
 {
-	order_info order ;
+	static order_info order ;
 	_order_info.get_order_info(order,order_id);
-	return order;
+	return std::move(order);
 }
 
 void tick_simulator::find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const
