@@ -7,6 +7,24 @@
 #include "event_center.hpp"
 #include "market_api.h"
 #include "trader_api.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+
+struct operational_data
+{
+	time_t last_order_time;
+	order_statistic statistic_info;
+
+	void clear()
+	{
+		last_order_time = 0;
+		statistic_info.place_order_amount = 0;
+		statistic_info.entrust_amount = 0;
+		statistic_info.trade_amount = 0;
+		statistic_info.cancel_amount = 0;
+	}
+
+};
 
 class context
 {
@@ -28,6 +46,10 @@ private:
 	std::map<estid_t, condition_callback> _need_check_condition;
 
 	filter_callback _trading_filter;
+
+	operational_data* _operational_data;
+
+	std::shared_ptr<boost::interprocess::mapped_region> _operational_region;
 
 public:
 
@@ -79,8 +101,13 @@ public:
 	
 	time_t get_last_time();
 
+	time_t last_order_time();
+
+	const order_statistic& get_order_statistic();
 
 private:
+
+	void load_operational(const char* local_db_name);
 
 	void handle_begin(const std::vector<std::any>& param);
 
@@ -103,7 +130,7 @@ private:
 
 protected:
 
-	bool init();
+	bool init(boost::property_tree::ptree& localdb);
 
 	virtual class trader_api* get_trader() = 0;
 

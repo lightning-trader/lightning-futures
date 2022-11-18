@@ -5,6 +5,7 @@
 #include <recorder.h>
 #include <platform_helper.hpp>
 #include <log_wapper.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
 #include "pod_chain.h"
 
 
@@ -19,6 +20,10 @@ context::context():
 }
 context::~context()
 {
+	if(_operational_region)
+	{
+		_operational_region->flush();
+	}
 	if(_chain)
 	{
 		delete _chain ;
@@ -26,12 +31,17 @@ context::~context()
 	}
 }
 
-bool context::init()
+bool context::init(boost::property_tree::ptree& localdb)
 {
-	auto trader = get_trader();
-	if(trader == nullptr)
+	auto& localdb_name = localdb.get<std::string>("localdb_name");
+	if(!localdb_name.empty())
 	{
-		return false ;
+		load_operational(localdb_name.c_str());
+	}
+	auto trader = get_trader();
+	if (trader == nullptr)
+	{
+		return false;
 	}
 	_chain = new the_end_chain(trader, _max_position);
 	this->add_handle([this](event_type type, const std::vector<std::any>& param)->void {
@@ -166,6 +176,15 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 		LOG_DEBUG("place_order trading filter false");
 		return INVALID_ESTID;
 	}
+	if(_operational_data)
+	{
+		auto market = get_market();
+		if(market)
+		{
+			_operational_data->last_order_time = market->last_tick_time();
+		}
+		_operational_data->statistic_info.place_order_amount++;
+	}
 	return _chain->place_order(offset, direction, code, count, price, flag);
 }
 
@@ -248,6 +267,39 @@ time_t context::get_last_time()
 	return market->last_tick_time();
 }
 
+time_t context::last_order_time()
+{
+	if (_operational_data)
+	{
+		return _operational_data->last_order_time;
+	}
+	return -1;
+}
+
+const order_statistic& context::get_order_statistic()
+{
+	if(_operational_data)
+	{
+		return _operational_data->statistic_info;
+	}
+	return default_statistic;
+}
+
+void context::load_operational(const char* local_db_name)
+{
+	boost::interprocess::shared_memory_object shdmem
+	{
+		boost::interprocess::open_or_create, 
+		local_db_name,
+		boost::interprocess::read_write 
+	};
+	shdmem.truncate(sizeof(operational_data));
+	
+	_operational_region = std::make_shared<boost::interprocess::mapped_region>(shdmem,boost::interprocess::read_write);
+	_operational_data = static_cast<operational_data*>(_operational_region->get_address());
+
+}
+
 void context::handle_begin(const std::vector<std::any>& param)
 {
 	auto trader = get_trader();
@@ -255,6 +307,15 @@ void context::handle_begin(const std::vector<std::any>& param)
 	{
 		LOG_INFO("ET_BeginTrading submit_settlement\n");
 		trader->submit_settlement();
+	}
+	if (param.size() >= 1)
+	{
+		uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
+		LOG_INFO("ET_BeginTrading %u\n", trading_day);
+	}
+	if(_operational_data)
+	{
+		_operational_data->clear();
 	}
 }
 
@@ -274,6 +335,10 @@ void context::handle_entrust(const std::vector<std::any>& param)
 	{
 		estid_t localid = std::any_cast<estid_t>(param[0]);
 		this->on_entrust(localid);
+		if(_operational_data)
+		{
+			_operational_data->statistic_info.cancel_amount++;
+		}
 	}
 }
 
@@ -301,6 +366,10 @@ void context::handle_trade(const std::vector<std::any>& param)
 		uint32_t trade_volume = std::any_cast<uint32_t>(param[5]);
 		this->on_trade(localid, code, offset, direction, price, trade_volume);
 		remove_invalid_condition(localid);
+		if (_operational_data)
+		{
+			_operational_data->statistic_info.trade_amount++;
+		}
 	}
 }
 
@@ -317,6 +386,10 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		uint32_t total_volume = std::any_cast<uint32_t>(param[6]);
 		this->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
 		remove_invalid_condition(localid);
+		if (_operational_data)
+		{
+			_operational_data->statistic_info.cancel_amount++;
+		}
 	}
 }
 

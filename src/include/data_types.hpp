@@ -249,3 +249,19 @@ protected:
 	double		amount;
 
 };
+
+//订单统计数据
+struct order_statistic
+{
+	//下单数量
+	uint32_t place_order_amount;
+	//委托数量
+	uint32_t entrust_amount;
+	//成交数量
+	uint32_t trade_amount;
+	//撤单数量
+	uint32_t cancel_amount;
+
+};
+
+const order_statistic default_statistic;
