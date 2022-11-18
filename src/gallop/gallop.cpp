@@ -14,7 +14,7 @@ void start_runtime()
 {
 	auto app = runtime_engine("./runtime.ini");
 	auto hcc = std::make_shared<hft_1_strategy>(8, 16, 300, 0);
-	app.add_strategy(hcc);
+	app.add_strategy(0,hcc);
 	app.run();
 	
 }

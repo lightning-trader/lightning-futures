@@ -126,4 +126,9 @@ extern "C"
 	*	跨交易日会被清空
 	*/
 	EXPORT_FLAG const order_statistic& lt_get_order_statistic(const ltobj& lt);
+
+	/**
+	* 获取用户数据指针
+	*/
+	EXPORT_FLAG void* lt_get_userdata(const ltobj& lt, uint32_t index, size_t size);
 }

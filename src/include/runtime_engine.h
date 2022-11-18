@@ -13,7 +13,7 @@ public:
 
 public:
 
-	void add_strategy(std::shared_ptr<strategy> stra);
+	void add_strategy(straid_t id, std::shared_ptr<strategy> stra);
 
 	void run();
 

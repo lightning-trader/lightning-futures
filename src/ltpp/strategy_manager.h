@@ -8,7 +8,7 @@ class strategy_manager
 
 	ltobj& _lt;
 
-	std::vector<std::shared_ptr<strategy>> _strategy_list;
+	std::map<straid_t,std::shared_ptr<strategy>> _strategy_map;
 
 	std::map<code_t,std::set<strategy*>> _code_to_strategy;
 
@@ -146,9 +146,9 @@ private:
 	
 public:
 
-	void regist_strategy(std::shared_ptr<strategy> stra);
+	void regist_strategy(straid_t straid,std::shared_ptr<strategy> stra);
 
-	void unregist_strategy(std::shared_ptr<strategy> stra);
+	void unregist_strategy(straid_t straid);
 
 private:
 

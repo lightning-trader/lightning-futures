@@ -51,6 +51,12 @@ private:
 
 	std::shared_ptr<boost::interprocess::mapped_region> _operational_region;
 
+	size_t _userdata_block ;
+
+	size_t _userdata_size ;
+
+	std::vector<std::shared_ptr<boost::interprocess::mapped_region>> _userdata_region ;
+
 public:
 
 	tick_callback on_tick ;
@@ -105,9 +111,11 @@ public:
 
 	const order_statistic& get_order_statistic();
 
+	void* get_userdata(uint32_t index, size_t size);
+
 private:
 
-	void load_operational(const char* local_db_name);
+	void load_data(const char* localdb_name, size_t oper_size);
 
 	void handle_begin(const std::vector<std::any>& param);
 

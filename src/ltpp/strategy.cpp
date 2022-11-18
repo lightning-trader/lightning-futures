@@ -14,8 +14,9 @@ strategy::~strategy()
 /*
 	*	³õÊ¼»¯
 	*/
-void strategy::init(strategy_manager* manager)
+void strategy::init(straid_t id, strategy_manager* manager)
 {
+	_id = id;
 	_manager = manager;
 	this->on_init();
 }
@@ -167,4 +168,13 @@ const order_statistic& strategy::get_order_statistic()
 		return default_statistic;
 	}
 	return lt_get_order_statistic(_manager->get_lt());
+}
+
+void* strategy::get_username(size_t size)
+{
+	if (_manager == nullptr)
+	{
+		return nullptr;
+	}
+	return lt_get_userdata(_manager->get_lt(), _id, size);;
 }

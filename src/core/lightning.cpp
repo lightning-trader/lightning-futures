@@ -307,4 +307,18 @@ extern "C"
 		}
 		return c->get_order_statistic();
 	}
+
+	void* lt_get_userdata(const ltobj& lt, uint32_t index,size_t size)
+	{
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
+		{
+			return nullptr;
+		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return nullptr;
+		}
+		return c->get_userdata(index, size);
+	}
 }

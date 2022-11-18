@@ -17,7 +17,7 @@ void evaluate_engine::back_test(std::shared_ptr<strategy> stra, const std::vecto
 {
 	if(_strategy_manager)
 	{
-		_strategy_manager->regist_strategy(stra);
+		_strategy_manager->regist_strategy(0,stra);
 		lt_start_service(_lt);
 		for (auto it : trading_days)
 		{

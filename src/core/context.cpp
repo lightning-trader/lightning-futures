@@ -14,7 +14,9 @@ context::context():
 	_strategy_thread(nullptr),
 	_max_position(1),
 	_chain(nullptr),
-	_trading_filter(nullptr)
+	_trading_filter(nullptr),
+	_userdata_block(10),
+	_userdata_size(1024)
 {
 	
 }
@@ -36,7 +38,10 @@ bool context::init(boost::property_tree::ptree& localdb)
 	auto& localdb_name = localdb.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
 	{
-		load_operational(localdb_name.c_str());
+		size_t operational_size = localdb.get<size_t>("operational_size",1024);
+		_userdata_block = localdb.get<size_t>("userdata_block", 10);
+		_userdata_size = localdb.get<size_t>("userdata_size", 1024);
+		load_data(localdb_name.c_str(), operational_size);
 	}
 	auto trader = get_trader();
 	if (trader == nullptr)
@@ -285,19 +290,37 @@ const order_statistic& context::get_order_statistic()
 	return default_statistic;
 }
 
-void context::load_operational(const char* local_db_name)
+void* context::get_userdata(uint32_t index,size_t size)
+{
+	if(size > _userdata_size)
+	{
+		return nullptr;
+	}
+	if(index < 0||index >= _userdata_block)
+	{
+		return nullptr;
+	}
+	return _userdata_region[index]->get_address();
+}
+
+void context::load_data(const char* localdb_name,size_t oper_size)
 {
 	boost::interprocess::shared_memory_object shdmem
 	{
 		boost::interprocess::open_or_create, 
-		local_db_name,
+		localdb_name,
 		boost::interprocess::read_write 
 	};
-	shdmem.truncate(sizeof(operational_data));
-	
+	shdmem.truncate(oper_size + _userdata_block * _userdata_size);
 	_operational_region = std::make_shared<boost::interprocess::mapped_region>(shdmem,boost::interprocess::read_write);
 	_operational_data = static_cast<operational_data*>(_operational_region->get_address());
 
+	for(size_t i=0;i < _userdata_block;i++)
+	{
+		boost::interprocess::offset_t offset = oper_size + i * _userdata_size;
+		auto region = std::make_shared<boost::interprocess::mapped_region>(shdmem, boost::interprocess::read_write, offset, _userdata_size);
+		_userdata_region.emplace_back(region);
+	}
 }
 
 void context::handle_begin(const std::vector<std::any>& param)

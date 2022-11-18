@@ -4,8 +4,16 @@
 #include <lightning.h>
 #include <functional>
 
+typedef uint32_t straid_t;
+
 class strategy
 {
+
+private:
+
+	straid_t _id;
+
+	class strategy_manager* _manager;
 
 public:
 
@@ -16,7 +24,7 @@ public:
 	/*
 	*	初始化
 	*/
-	void init(class strategy_manager* manager);
+	void init(straid_t id,class strategy_manager* manager);
 
 	//回调函数
 private:
@@ -177,9 +185,18 @@ protected:
 	*/
 	const order_statistic& get_order_statistic();
 
-private:
+	inline straid_t get_id()
+	{
+		return _id;
+	}
 
-	class strategy_manager* _manager ;
+	/**
+	* 获取用户数据，直接写入会被保存到共享内存中
+	*	注意多个策略时候id不能改变
+	*	ID最大值与localdb配置中的userdata_block对应
+	*/
+
+	void* get_username(size_t size);
 	
 
 };

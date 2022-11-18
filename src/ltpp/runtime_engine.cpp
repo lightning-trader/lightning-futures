@@ -12,11 +12,11 @@ runtime_engine::~runtime_engine()
 	lt_destory_context(_lt);
 }
 
-void runtime_engine::add_strategy(std::shared_ptr<strategy> stra)
+void runtime_engine::add_strategy(straid_t id,std::shared_ptr<strategy> stra)
 {
 	if(_strategy_manager&&stra)
 	{
-		_strategy_manager->regist_strategy(stra);
+		_strategy_manager->regist_strategy(id,stra);
 	}
 }
 

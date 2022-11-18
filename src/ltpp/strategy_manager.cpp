@@ -1,21 +1,20 @@
 #include "strategy_manager.h"
 
-void strategy_manager::regist_strategy(std::shared_ptr<strategy> stra)
+void strategy_manager::regist_strategy(straid_t straid, std::shared_ptr<strategy> stra)
 {
 	if(stra)
 	{
-		stra->init(this);
-		_strategy_list.emplace_back(stra);
+		stra->init(straid,this);
+		_strategy_map[straid] = (stra);
 	}
 }
-void strategy_manager::unregist_strategy(std::shared_ptr<strategy> stra)
+void strategy_manager::unregist_strategy(straid_t straid)
 {
-	auto it = std::find(_strategy_list.begin(), _strategy_list.end(), stra);
-	if(it != _strategy_list.end())
+	auto it = _strategy_map.find(straid);
+	if(it != _strategy_map.end())
 	{
-		_strategy_list.erase(it);
+		_strategy_map.erase(it);
 	}
-	
 }
 
 void strategy_manager::regist_code_strategy(const code_t& code, strategy* stra)
