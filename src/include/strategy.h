@@ -10,88 +10,24 @@ class strategy
 public:
 
 	strategy();
+	
 	virtual ~strategy();
 
-public:
-	
 	/*
 	*	初始化
 	*/
-	void init(const ltobj& lt);
+	void init(class strategy_manager* manager);
 
+	//回调函数
 private:
 
-
-	static inline strategy* _self ;
-	static inline void _tick_callback(const tick_info* tick)
-	{
-		if(_self)
-		{
-			_self->on_tick(tick);
-		}
-	}
-
-	static inline void _entrust_callback(estid_t localid) 
-	{
-		if (_self)
-		{
-			_self->on_entrust(localid);
-		}
-	};
-
-	static inline void _deal_callback(estid_t localid, uint32_t deal_volume, uint32_t total_volume)
-	{
-		if(_self)
-		{
-			_self->on_deal(localid, deal_volume, total_volume);
-		}
-	}
-
-	static inline void _trade_callback(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
-	{
-		if(_self)
-		{
-			_self->on_trade(localid, code, offset, direction, price, volume);
-		}
-	}
-
-
-	static inline void _cancel_callback(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
-	{
-		if (_self)
-		{
-			_self->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
-		}
-	}
-
-	static inline std::map<estid_t, std::function<bool(const tick_info*)>> _condition_function ;
-	static inline bool _condition_callback(estid_t localid,const tick_info* tick)
-	{
-		auto it = _condition_function.find(localid);
-		if(it == _condition_function.end())
-		{
-			return false;
-		}
-		return it->second(tick);
-	}
-
-	static inline std::function<bool()> _filter_function = nullptr;
-	static inline bool _filter_callback()
-	{
-		if(_filter_function)
-		{
-			return _filter_function();
-		}
-		return true;
-	}
-	//回调函数
-protected:
 	/*
 	 *	初始化事件
 	 *	生命周期中只会回调一次
 	 */
 	virtual void on_init() {};
 
+public:
 	/*
 	 *	tick推送
 	 */
@@ -167,6 +103,11 @@ protected:
 	estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
+	*	下单单
+	*	order_id 下单返回的id
+	*/
+	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
+	/*
 	 *	撤单
 	 *	order_id 下单返回的id
 	 */
@@ -238,7 +179,8 @@ protected:
 
 private:
 
-	ltobj _lt;
+	class strategy_manager* _manager ;
+	
 
 };
 
