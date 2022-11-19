@@ -1,20 +1,24 @@
 #pragma once
 #include "recorder.h"
 #include <boost/property_tree/ptree.hpp>
+#include <rapidcsv.h>
 
 class csv_recorder : public recorder
 {
 private:
 	bool _is_dirty ;
-	uint32_t _interval ;
 	std::string _basic_path;
+
+	rapidcsv::Document _order_flow_csv ;
+
+	rapidcsv::Document _position_flow_csv;
+
+	rapidcsv::Document _account_flow_csv;
+
 public :
 
-	csv_recorder():_is_dirty(false), _interval(10)
-	{}
+	csv_recorder(const char* basic_path) ;
 	
-	void init(const boost::property_tree::ptree& config);
-
 public:
 	//¶©µ¥±í
 	virtual void record_order_entrust(time_t time, const order_info& order) override;

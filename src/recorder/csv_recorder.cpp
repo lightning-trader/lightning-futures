@@ -2,10 +2,15 @@
 //
 
 #include "csv_recorder.h"
+#include <file_wapper.hpp>
 
-void csv_recorder::init(const boost::property_tree::ptree& config)
+csv_recorder::csv_recorder(const char* basic_path) :_is_dirty(false)
 {
-
+	if (!file_wapper::exists(basic_path))
+	{
+		file_wapper::create_directories(basic_path);
+	}
+	
 }
 
 void csv_recorder::record_order_entrust(time_t time, const order_info& order)
