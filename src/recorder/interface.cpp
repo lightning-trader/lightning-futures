@@ -8,8 +8,8 @@ recorder* create_recorder(const boost::property_tree::ptree& config)
 	if (type == "csv")
 	{
 		auto interval = config.get<uint32_t>("interval",100);
-		csv_recorder* rcd = new csv_recorder();
-		rcd->init(config);
+		auto basic_path = config.get<std::string>("basic_path", "./");
+		csv_recorder* rcd = new csv_recorder(basic_path.c_str());
 		return new recorder_proxy(rcd, interval);
 	}
 	return nullptr;
