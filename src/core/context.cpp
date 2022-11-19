@@ -361,7 +361,7 @@ void context::handle_position(const std::vector<std::any>& param)
 		if (_recorder)
 		{
 			const auto& position = get_position(code);
-			_recorder->record_position_flow(get_last_time(), code, position);
+			_recorder->record_position_flow(get_last_time(), position);
 		}
 	}
 	
@@ -476,7 +476,7 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		}
 		if (_recorder)
 		{
-			_recorder->record_order_cancel(get_last_time(), localid, cancel_volume);
+			_recorder->record_order_cancel(get_last_time(), localid, total_volume-cancel_volume);
 		}
 	}
 }

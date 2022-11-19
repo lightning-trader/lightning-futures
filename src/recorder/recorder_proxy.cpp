@@ -25,7 +25,7 @@ void recorder_proxy::record_update()
 	std::tuple<time_t, estid_t> order_trade_data;
 	while (_order_trade_queue.pop(order_trade_data))
 	{
-		_recorder->record_order_trade(std::get<0>(order_trade_data), std::get<0>( order_trade_data));
+		_recorder->record_order_trade(std::get<0>(order_trade_data), std::get<1>( order_trade_data));
 	}
 
 	std::tuple<time_t, estid_t, uint32_t> order_cancel_data;
@@ -34,10 +34,10 @@ void recorder_proxy::record_update()
 		_recorder->record_order_cancel(std::get<0>(order_cancel_data), std::get<1>(order_cancel_data), std::get<2>(order_cancel_data));
 	}
 
-	std::tuple<time_t, code_t, position_info> position_flow_data;
+	std::tuple<time_t, position_info> position_flow_data;
 	while (_position_flow_queue.pop(position_flow_data))
 	{
-		_recorder->record_position_flow(std::get<0>(position_flow_data), std::get<1>( position_flow_data),std::get<2>(position_flow_data));
+		_recorder->record_position_flow(std::get<0>(position_flow_data), std::get<1>( position_flow_data));
 	}
 
 	std::tuple<time_t, account_info> account_flow_data;
@@ -68,14 +68,14 @@ void recorder_proxy::record_order_trade(time_t time, estid_t localid)
 {
 	while (!_order_trade_queue.push(std::make_tuple(time, localid)));
 }
-void recorder_proxy::record_order_cancel(time_t time, estid_t localid, uint32_t cancel_volume)
+void recorder_proxy::record_order_cancel(time_t time, estid_t localid, uint32_t last_volume)
 {
-	while (!_order_cancel_queue.push(std::make_tuple(time, localid, cancel_volume)));
+	while (!_order_cancel_queue.push(std::make_tuple(time, localid, last_volume)));
 }
 
-void recorder_proxy::record_position_flow(time_t time, const code_t& code, const position_info& position)
+void recorder_proxy::record_position_flow(time_t time, const position_info& position)
 {
-	while (!_position_flow_queue.push(std::make_tuple(time, code, position)));
+	while (!_position_flow_queue.push(std::make_tuple(time,position)));
 }
 
 void recorder_proxy::record_account_flow(time_t time, const account_info& account)

@@ -180,8 +180,7 @@ typedef enum offset_type
 typedef enum direction_type
 {
 	DT_LONG = '0',	//做多
-	DT_SHORT,		//做空
-	DT_NET			//净
+	DT_SHORT		//做空
 } direction_type;
 
 struct order_info
