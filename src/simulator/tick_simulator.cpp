@@ -36,7 +36,7 @@ bool tick_simulator::init(const boost::property_tree::ptree& config)
 	return true;
 }
 
-void tick_simulator::play()
+void tick_simulator::play(uint32_t tradeing_day)
 {
 	_current_time = 0;
 	_current_tick = 0;
@@ -44,15 +44,23 @@ void tick_simulator::play()
 	_pending_tick_info.clear();
 	for (auto& it : _instrument_id_list)
 	{
-		load_data(it, _current_trading_day);
+		load_data(it, tradeing_day);
 	}
 	_is_in_trading = true ;
 	while (_is_in_trading)
 	{
-		//先触发tick，再进行撮合
-		publish_tick();
-		handle_order();
-		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		if(_is_submit_return)
+		{
+			_is_submit_return.exchange(true);
+			this->fire_event(ET_BeginTrading);
+		}
+		else
+		{
+			//先触发tick，再进行撮合
+			publish_tick();
+			handle_order();
+			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
 	}
 }
 
@@ -212,6 +220,7 @@ void tick_simulator::publish_tick()
 	{
 		//结束了触发收盘事件
 		_is_in_trading = false;
+		_is_submit_settlement.exchange(false);
 		_last_frame_volume.clear();
 		return;
 	}
@@ -221,7 +230,7 @@ void tick_simulator::publish_tick()
 		if(tick->trading_day != _current_trading_day)
 		{
 			_current_trading_day = tick->trading_day;
-			_is_submit_settlement = false ;
+			
 			this->fire_event(ET_CrossDay, _current_trading_day);
 		}
 		_current_tick_info.emplace_back(tick);
@@ -240,6 +249,7 @@ void tick_simulator::publish_tick()
 		{
 			//结束了触发收盘事件
 			_is_in_trading = false ;
+			_is_submit_settlement.exchange(false);
 			_last_frame_volume.clear();
 			return;
 		}

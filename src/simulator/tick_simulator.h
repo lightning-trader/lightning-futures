@@ -48,7 +48,8 @@ private:
 
 	std::map<code_t, position_info> _position_info;
 
-	bool _is_submit_settlement;
+	std::atomic<bool> _is_submit_return ;
+	std::atomic<bool> _is_submit_settlement;
 
 	double_t	_service_charge ;	//手续费
 	uint32_t	_multiple ;			//资金倍数
@@ -66,6 +67,7 @@ public:
 		_service_charge(0),
 		_margin_rate(0),
 		_multiple(0),
+		_is_submit_return(false),
 		_is_submit_settlement(false)
 	{}
 	virtual ~tick_simulator()
@@ -83,12 +85,7 @@ public:
 
 	//simulator
 
-	virtual void set_trading_day(uint32_t tradeing_day) override 
-	{
-		_current_trading_day = tradeing_day;
-	}
-
-	virtual void play() override;
+	virtual void play(uint32_t tradeing_day) override;
 
 public:
 	

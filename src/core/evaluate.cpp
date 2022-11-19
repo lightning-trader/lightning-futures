@@ -73,8 +73,7 @@ void evaluate::play(uint32_t tradeing_day)
 {
 	if(_simulator)
 	{
-		_simulator->set_trading_day(tradeing_day);
-		_simulator->play();
+		_simulator->play(tradeing_day);
 	}
 }
 
