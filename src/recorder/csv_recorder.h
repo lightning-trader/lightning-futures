@@ -5,8 +5,13 @@
 class csv_recorder : public recorder
 {
 private:
-	
+	bool _is_dirty ;
+	uint32_t _interval ;
+	std::string _basic_path;
 public :
+
+	csv_recorder():_is_dirty(false), _interval(10)
+	{}
 	
 	void init(const boost::property_tree::ptree& config);
 
