@@ -115,6 +115,10 @@ int main()
 	//start_runtime();
 	//getchar();
 	
-	LOG_INFO("123_%d----%s",123,"a");
+	LOG_DEBUG("123_%d----%s",123,"a");
+	LOG_INFO("123_%d----%s", 123, "a");
+	LOG_ERROR("123_%d----%s", 123, "a");
+	LOG_WARNING("123_%d----%s", 123, "a");
+	LOG_DEBUG("123_%d----%s", 123, "a");
 	return 0;
 }

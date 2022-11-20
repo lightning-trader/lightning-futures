@@ -63,29 +63,29 @@ void log_format(log_level lv, const char* format, ...)
 	}
 	va_list arg_list;
 	va_start(arg_list, format);
-	boost::scoped_array<char> formatted_string(new char[128]);
-	vsnprintf(formatted_string.get(), strlen(formatted_string.get()), format, arg_list);
+	char formatted_string[1024] = {0};
+	vsnprintf(formatted_string, 1024, format, arg_list);
 	//printf(formatted_string.get());
 	//BOOST_LOG(crush::common::SL_TRACE) << formatted_string;
 	switch(lv)
 	{
 		case LLV_TRACE:
-			BOOST_LOG_TRIVIAL(trace) << formatted_string.get();
+			BOOST_LOG_TRIVIAL(trace) << formatted_string;
 		break;
 		case LLV_DEBUG:
-			BOOST_LOG_TRIVIAL(debug) << formatted_string.get();
+			BOOST_LOG_TRIVIAL(debug) << formatted_string;
 			break;
 		case LLV_INFO:
-			BOOST_LOG_TRIVIAL(info) << formatted_string.get();
+			BOOST_LOG_TRIVIAL(info) << formatted_string;
 			break;
 		case LLV_WARNING:
-			BOOST_LOG_TRIVIAL(warning) << formatted_string.get();
+			BOOST_LOG_TRIVIAL(warning) << formatted_string;
 			break;
 		case LLV_ERROR:
-			BOOST_LOG_TRIVIAL(error) << formatted_string.get();
+			BOOST_LOG_TRIVIAL(error) << formatted_string;
 			break;
 		case LLV_FATAL:
-			BOOST_LOG_TRIVIAL(fatal) << formatted_string.get();
+			BOOST_LOG_TRIVIAL(fatal) << formatted_string;
 			break;
 	}
 	
