@@ -160,4 +160,4 @@ extern "C"
 #define LOG_INFO(format, ...) log_format(LLV_WARNING,format, __VA_ARGS__);
 #define LOG_WARNING(format, ...) log_format(LLV_INFO,format, __VA_ARGS__);
 #define LOG_ERROR(format, ...) log_format(LLV_ERROR,format, __VA_ARGS__);
-#define LOG_OPTIMIZE(format, ...) printf(format, __VA_ARGS__);
+#define LOG_FATAL(format, ...) log_format(LLV_FATAL,format, __VA_ARGS__);
