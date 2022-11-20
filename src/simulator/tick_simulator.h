@@ -49,8 +49,9 @@ private:
 	std::map<code_t, position_info> _position_info;
 
 	std::atomic<bool> _is_submit_return ;
-	std::atomic<bool> _is_submit_settlement;
 
+	uint32_t	_interval;			//间隔毫秒数
+	
 	double_t	_service_charge ;	//手续费
 	uint32_t	_multiple ;			//资金倍数
 	double_t	_margin_rate ;		//保证金率
@@ -67,8 +68,8 @@ public:
 		_service_charge(0),
 		_margin_rate(0),
 		_multiple(0),
-		_is_submit_return(false),
-		_is_submit_settlement(false)
+		_interval(1),
+		_is_submit_return(true)
 	{}
 	virtual ~tick_simulator()
 	{
@@ -119,6 +120,8 @@ public:
 private:
 
 	void load_data(const code_t& code,uint32_t trading_day);
+
+	void handle_submit();
 
 	void publish_tick();
 

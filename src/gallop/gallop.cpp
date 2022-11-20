@@ -21,7 +21,7 @@ void start_runtime()
 void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 {
 	auto app = evaluate_engine("./evaluate.ini");
-	auto hcc = std::make_shared<hft_1_strategy>(8, 16, 300, 0);
+	auto hcc = std::make_shared<hft_1_strategy>(2, 3, 3, 0);
 	app.back_test(hcc, all_trading_day);
 }
 

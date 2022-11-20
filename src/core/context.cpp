@@ -195,6 +195,10 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 		LOG_ERROR("place_order _chain nullptr");
 		return INVALID_ESTID;
 	}
+	if (!_is_trading)
+	{
+		return INVALID_ESTID;
+	}
 	if(_trading_filter&&!_trading_filter())
 	{
 		LOG_DEBUG("place_order trading filter false");
@@ -367,10 +371,15 @@ void context::handle_position(const std::vector<std::any>& param)
 
 void context::handle_crossday(const std::vector<std::any>& param)
 {
+	if (param.size() >= 1)
+	{
+		uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
+		LOG_INFO("cross day %d", trading_day);
+	}
 	auto trader = get_trader();
 	if (trader)
 	{
-		LOG_INFO("ET_CrossDay submit_settlement\n");
+		LOG_INFO("submit_settlement");
 		trader->submit_settlement();
 	}
 }
@@ -380,11 +389,7 @@ void context::handle_begin(const std::vector<std::any>& param)
 {
 	_is_trading = true ;
 	
-	if (param.size() >= 1)
-	{
-		uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
-		LOG_INFO("ET_BeginTrading %u\n", trading_day);
-	}
+	LOG_INFO("begin trading ");
 	if(_operational_data)
 	{
 		_operational_data->clear();
@@ -397,7 +402,7 @@ void context::handle_end(const std::vector<std::any>& param)
 	if(trader)
 	{
 		auto acc = trader->get_account();
-		LOG_INFO("ET_EndTrading %f %f\n", acc.money, acc.frozen_monery);
+		LOG_INFO("end trading %f %f", acc.money, acc.frozen_monery);
 	}
 	_is_trading = false;
 }

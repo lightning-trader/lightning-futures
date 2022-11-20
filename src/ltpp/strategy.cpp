@@ -47,7 +47,7 @@ estid_t strategy::place_order(offset_type offset, direction_type direction, cons
 	{
 		return INVALID_ESTID;
 	}
-	estid_t estid = lt_place_order(_manager->get_lt(), OT_CLOSE, DT_SHORT, code, count, price, flag);
+	estid_t estid = lt_place_order(_manager->get_lt(), offset, direction, code, count, price, flag);
 	if(estid != INVALID_ESTID)
 	{
 		_manager->regist_estid_strategy(estid,this);

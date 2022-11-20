@@ -14,6 +14,7 @@ bool tick_simulator::init(const boost::property_tree::ptree& config)
 		_service_charge = config.get<double_t>("service_charge");
 		_multiple = config.get<uint32_t>("multiple");
 		_margin_rate = config.get<double_t>("margin_rate");
+		_interval = config.get<uint32_t>("interval",1);
 		loader_type = config.get<std::string>("loader_type");
 		csv_data_path = config.get<std::string>("csv_data_path");
 	}
@@ -48,18 +49,12 @@ void tick_simulator::play(uint32_t tradeing_day)
 	_is_in_trading = true ;
 	while (_is_in_trading)
 	{
-		if(_is_submit_return)
-		{
-			_is_submit_return.exchange(true);
-			this->fire_event(ET_BeginTrading);
-		}
-		else
-		{
-			//先触发tick，再进行撮合
-			publish_tick();
-			handle_order();
-			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		}
+		handle_submit();
+		//先触发tick，再进行撮合
+		publish_tick();
+		handle_order();
+		//std::chrono::milliseconds(_interval)
+		std::this_thread::sleep_for(std::chrono::microseconds(_interval));
 	}
 }
 
@@ -106,7 +101,6 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 	//boost::posix_time::ptime pt2 = boost::posix_time::microsec_clock::local_time();
 	//std::cout << "place_order : " << pt2 - pt << est_id.to_str() << std::endl;
 	//LOG_DEBUG("tick_simulator::place_order 1 %s \n", est_id.to_str());
-	
 	if (offset == OT_OPEN)
 	{
 		double_t frozen_monery = count * price * _multiple * _margin_rate;
@@ -174,7 +168,7 @@ void tick_simulator::find_orders(std::vector<order_info>& order_result, std::fun
 
 void tick_simulator::submit_settlement()
 {
-	_is_submit_settlement = true ;
+	while (!_is_submit_return.exchange(false));
 }
 
 void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
@@ -204,6 +198,15 @@ void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
 	}
 }
 
+void tick_simulator::handle_submit()
+{
+	if (!_is_submit_return)
+	{
+		while(!_is_submit_return.exchange(true));
+		this->fire_event(ET_BeginTrading);
+	}
+}
+
 void tick_simulator::publish_tick()
 {
 	pt = boost::posix_time::microsec_clock::local_time();
@@ -219,7 +222,6 @@ void tick_simulator::publish_tick()
 	{
 		//结束了触发收盘事件
 		_is_in_trading = false;
-		_is_submit_settlement.exchange(false);
 		_last_frame_volume.clear();
 		return;
 	}
@@ -248,7 +250,6 @@ void tick_simulator::publish_tick()
 		{
 			//结束了触发收盘事件
 			_is_in_trading = false ;
-			_is_submit_settlement.exchange(false);
 			_last_frame_volume.clear();
 			return;
 		}
@@ -581,7 +582,7 @@ void tick_simulator::order_deal(const order_info& order, uint32_t deal_volume)
 		}
 	}
 	_order_info.set_last_volume(order.est_id,order.last_volume - deal_volume);
-	if(order.last_volume > 0)
+	if(order.last_volume - deal_volume > 0)
 	{
 		//部分成交
 		this->fire_event(ET_OrderDeal, order.est_id, order.total_volume - order.last_volume, order.total_volume);
