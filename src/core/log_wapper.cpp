@@ -15,6 +15,12 @@ bool _is_log_ready = false ;
 
 bool init_log_environment(std::string _cfg)
 {
+	
+	if (!boost::filesystem::exists(_cfg))
+	{
+		return false;
+	}
+
 	namespace logging = boost::log;
 	using namespace logging::trivial;
 
