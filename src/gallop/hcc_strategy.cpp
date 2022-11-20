@@ -1,5 +1,4 @@
 #include "hcc_strategy.h"
-#include <log_wapper.hpp>
 //#include <time_util.h>
 
 void hcc_strategy::on_init()

@@ -3,7 +3,6 @@
 #include <market_api.h>
 #include <trader_api.h>
 #include <file_wapper.hpp>
-#include <log_wapper.hpp>
 #include <platform_helper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <interface.h>

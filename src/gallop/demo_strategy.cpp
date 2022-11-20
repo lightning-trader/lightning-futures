@@ -1,5 +1,4 @@
 #include "demo_strategy.h"
-#include <log_wapper.hpp>
 
 void demo_strategy::on_init()
 {

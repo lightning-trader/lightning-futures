@@ -2,7 +2,6 @@
 #include <define.h>
 #include "demo_strategy.h"
 #include "hcc_strategy.h"
-#include <log_wapper.hpp>
 #include "hft_1_strategy.h"
 #include "dm_strategy.h"
 #include "runtime_engine.h"
@@ -110,10 +109,12 @@ int main()
 	};
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	start_evaluate(all_trading_day);
+	//start_evaluate(all_trading_day);
 	//start_hft_1_optimize(all_trading_day);
 	//start_demo_optimize(all_trading_day);
 	//start_runtime();
 	//getchar();
+	
+	LOG_INFO("123_%d----%s",123,"a");
 	return 0;
 }

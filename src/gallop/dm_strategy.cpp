@@ -1,5 +1,4 @@
 #include "dm_strategy.h"
-#include <log_wapper.hpp>
 
 void dm_strategy::on_init()
 {

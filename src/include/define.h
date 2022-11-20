@@ -136,3 +136,23 @@ enum direction_type;
 
 enum event_type;
 
+typedef enum log_level
+{
+	LLV_TRACE,
+	LLV_DEBUG,
+	LLV_INFO,
+	LLV_WARNING,
+	LLV_ERROR,
+	LLV_FATAL
+}log_level;
+
+extern "C"
+{
+	EXPORT_FLAG void log_format(log_level lv,const char* format, ...);
+}
+
+#define LOG_DEBUG(format, ...) log_format(LLV_DEBUG,format, __VA_ARGS__);
+#define LOG_INFO(format, ...) log_format(LLV_INFO,format, __VA_ARGS__);
+#define LOG_WARNING(format, ...) log_format(LLV_WARNING,format, __VA_ARGS__);
+#define LOG_ERROR(format, ...) log_format(LLV_ERROR,format, __VA_ARGS__);
+#define LOG_OPTIMIZE(format, ...) printf(format, __VA_ARGS__);

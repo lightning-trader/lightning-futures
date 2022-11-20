@@ -1,5 +1,4 @@
 #include <runtime_engine.h>
-#include <log_wapper.hpp>
 #include "strategy_manager.h"
 
 runtime_engine::runtime_engine(const char* config_path)

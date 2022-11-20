@@ -1,5 +1,4 @@
 ﻿#include "order_container.h"
-#include <log_wapper.hpp>
 
 
 void order_container::add_order(const order_info& order)

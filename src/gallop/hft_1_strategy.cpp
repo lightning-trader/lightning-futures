@@ -1,5 +1,4 @@
 #include "hft_1_strategy.h"
-#include <log_wapper.hpp>
 #include <time_utils.hpp>
 
 void hft_1_strategy::on_init()

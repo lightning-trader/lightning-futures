@@ -1,6 +1,5 @@
 #include "evaluate_engine.h"
 #include "strategy_manager.h"
-#include <log_wapper.hpp>
 
 
 evaluate_engine::evaluate_engine(const char* config_path)

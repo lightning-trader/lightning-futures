@@ -1,5 +1,4 @@
 #include "strategy.h"
-#include <log_wapper.hpp>
 #include "lightning.h"
 #include "strategy_manager.h"
 

@@ -4,7 +4,6 @@
 #include <trader_api.h>
 #include <recorder.h>
 #include <platform_helper.hpp>
-#include <log_wapper.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include "pod_chain.h"
 #include <interface.h>
@@ -21,7 +20,6 @@ context::context():
 	_recorder(nullptr),
 	_is_trading(false)
 {
-	
 }
 context::~context()
 {

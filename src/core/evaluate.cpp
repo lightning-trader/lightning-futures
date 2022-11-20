@@ -1,7 +1,6 @@
 #include "evaluate.h"
 #include "context.h"
 #include <simulator.h>
-#include <log_wapper.hpp>
 #include <file_wapper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <interface.h>

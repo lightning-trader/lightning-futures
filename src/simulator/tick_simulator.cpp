@@ -1,7 +1,6 @@
 ﻿#include "tick_simulator.h"
 #include <data_types.hpp>
 #include <event_center.hpp>
-#include <log_wapper.hpp>
 #include "./tick_loader/csv_tick_loader.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 

@@ -1,7 +1,6 @@
 
 #include "ctp_market.h"
 #include <file_wapper.hpp>
-#include <log_wapper.hpp>
 #include <time_utils.hpp>
 
 #pragma comment (lib,"thostmduserapi_se.lib")
