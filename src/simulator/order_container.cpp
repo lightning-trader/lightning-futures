@@ -70,21 +70,23 @@ void order_container::set_state(estid_t estid, order_state state)
 				od_it->state = state;
 			}
 		}
+		
 	}
-	
 }
 
-void order_container::set_last_volume(estid_t estid, uint32_t last_volume)
+uint32_t order_container::set_last_volume(estid_t estid, uint32_t last_volume)
 {
 	spin_lock lock(_mutex);
 	auto it = _order_info.find(estid);
 	if (it != _order_info.end())
 	{
 		it->second.last_volume = last_volume;
+		return it->second.last_volume;
 	}
+	return 0;
 }
 
-void order_container::set_price(estid_t estid, double_t price)
+double_t order_container::set_price(estid_t estid, double_t price)
 {
 	spin_lock lock(_mutex);
 	auto it = _order_info.find(estid);
@@ -92,6 +94,7 @@ void order_container::set_price(estid_t estid, double_t price)
 	{
 		it->second.price = price;
 	}
+	return it->second.price;
 }
 
 void order_container::get_order_match(std::vector<order_match>& match_list, const code_t& code)const

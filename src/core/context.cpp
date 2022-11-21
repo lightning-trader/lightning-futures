@@ -115,7 +115,7 @@ void context::start()
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 	});
-	_strategy_thread->detach();
+	//_strategy_thread->detach();
 }
 
 void context::stop()

@@ -135,11 +135,11 @@ private:
 
 	void handle_entrust(const tick_info* tick, const order_match& match, uint32_t max_volume);
 
-	void handle_sell(const tick_info* tick, const order_info& order, const order_match& match, uint32_t deal_volume);
+	void handle_sell(const tick_info* tick, order_info& order, const order_match& match, uint32_t deal_volume);
 	
-	void handle_buy(const tick_info* tick, const order_info& order, const order_match& match, uint32_t deal_volume);
+	void handle_buy(const tick_info* tick, order_info& order, const order_match& match, uint32_t deal_volume);
 
-	void order_deal(const order_info& order, uint32_t deal_volume);
+	void order_deal(order_info& order, uint32_t deal_volume);
 
 	void order_cancel(const order_info& order);
 

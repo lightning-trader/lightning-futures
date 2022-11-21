@@ -45,9 +45,9 @@ public:
 
 	void set_state(estid_t estid, order_state state);
 
-	void set_last_volume(estid_t estid, uint32_t last_volume);
+	uint32_t set_last_volume(estid_t estid, uint32_t last_volume);
 
-	void set_price(estid_t estid, double_t price);
+	double_t set_price(estid_t estid, double_t price);
 
 	void get_order_match(std::vector<order_match>& match_list, const code_t& code)const;
 
