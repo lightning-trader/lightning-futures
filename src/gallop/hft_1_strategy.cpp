@@ -10,6 +10,7 @@ void hft_1_strategy::on_init()
 void hft_1_strategy::on_tick(const tick_info* tick)
 {
 	_last_tick = *tick ; 
+	add_to_history(tick->price);
 	_coming_to_close = make_datetime(tick->trading_day,"14:58:00");
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
 	if(_buy_order != INVALID_ESTID || _sell_order != INVALID_ESTID|| _profit_order != INVALID_ESTID || _loss_order != INVALID_ESTID)
@@ -24,8 +25,21 @@ void hft_1_strategy::on_tick(const tick_info* tick)
 	{
 		return ;
 	}
-	_buy_order = buy_for_open(tick->id, 1, tick->buy_price()- _open_delta);
-	_sell_order = sell_for_open(tick->id, 1, tick->sell_price() + _open_delta);
+	double_t ma_delta = tick->price - _history_ma ;
+	double_t buy_price = tick->buy_price() - _open_delta - ma_delta;
+	double_t sell_price = tick->sell_price() + _open_delta - ma_delta;
+	buy_price = buy_price < tick->buy_price()? buy_price : tick->buy_price();
+	sell_price = sell_price > tick->sell_price() ? sell_price : tick->sell_price();
+	if(buy_price > tick->low_limit)
+	{
+		_buy_order = buy_for_open(tick->id, 1, buy_price);
+	}
+	if(sell_price < tick->high_limit)
+	{
+		_sell_order = sell_for_open(tick->id, 1, sell_price);
+	}
+	
+	
 
 }
 
@@ -151,4 +165,27 @@ void hft_1_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 		return ;
 	}
 	
+}
+void hft_1_strategy::add_to_history(double_t price)
+{
+	_history_price.emplace_back(price);
+	if(_history_price.size() < _history_count)
+	{
+		double_t sum = .0F;
+		for(auto it : _history_price)
+		{
+			sum += it;
+		}
+		_history_ma = std::round(sum / _history_price.size());
+		
+	}
+	else
+	{
+		double_t frist = _history_price.front();
+		double_t delta = (price - frist)/ _history_count;
+		_history_ma = std::round(delta + _history_ma);
+		_history_price.pop_front();
+	}
+	
+
 }

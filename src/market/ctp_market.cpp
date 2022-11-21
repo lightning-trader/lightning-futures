@@ -157,7 +157,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 		_current_trading_day = tick->trading_day;
 		this->fire_event(ET_CrossDay, _current_trading_day);
 	}
-	this->fire_event(ET_TickReceived, tick);
+	this->fire_event(ET_TickReceived, *tick);
 
 	_last_tick_time = tick->time;
 
@@ -165,6 +165,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	{
 		this->fire_event(ET_EndTrading);
 	}
+	_tick_pool.destroy(tick);
 }
 
 void ctp_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )

@@ -402,6 +402,8 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		order.direction = wrap_position_direction(pOrder->Direction);
 		order.offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
 		order.last_volume = pOrder->VolumeTotal;
+		order.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;
+		order.price = pOrder->LimitPrice;
 	}
 
 	if (bIsLast)
@@ -460,9 +462,11 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			entrust.est_id = estid;
 			entrust.direction = direction;
 			entrust.last_volume = pOrder->VolumeTotal;
+			entrust.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;
 			entrust.offset = offset;
+			entrust.price = pOrder->LimitPrice;
 			order = _order_info.insert(std::make_pair(estid, entrust)).first;
-			this->fire_event(ET_OrderPlace, order);
+			this->fire_event(ET_OrderPlace, order->second);
 		}
 		else
 		{

@@ -7,7 +7,7 @@ public:
 	hft_1_strategy(double open_delta, double close_delta, double lose_delta,int lose_cd_seconds):
 		_sell_order(INVALID_ESTID), _buy_order(INVALID_ESTID), _profit_order(INVALID_ESTID), _loss_order(INVALID_ESTID),
 		_lose_cd_seconds(lose_cd_seconds), _open_delta(open_delta), _close_delta(close_delta), _lose_delta(lose_delta)
-		, _last_lose_time(0)
+		, _last_lose_time(0), _coming_to_close(0), _history_count(120), _history_ma(0)
 		{};
 	~hft_1_strategy(){};
 
@@ -48,7 +48,9 @@ public:
 	 */
 	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type directionv, double_t price, uint32_t cancel_volume, uint32_t total_volume)  override;
 
+private:
 
+	void add_to_history(double_t price);
 
 private:
 
@@ -74,5 +76,11 @@ private:
 	time_t _last_lose_time;
 
 	time_t _coming_to_close ;
+
+	size_t _history_count ;
+
+	double_t _history_ma ;
+
+	std::list<double_t> _history_price ;
 };
 

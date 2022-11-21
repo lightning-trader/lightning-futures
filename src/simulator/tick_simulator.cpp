@@ -236,7 +236,7 @@ void tick_simulator::publish_tick()
 			this->fire_event(ET_CrossDay, _current_trading_day);
 		}
 		_current_tick_info.emplace_back(tick);
-		this->fire_event(ET_TickReceived, tick);
+		this->fire_event(ET_TickReceived, &tick);
 		if(tick->close>0)
 		{
 			this->fire_event(ET_EndTrading);

@@ -488,12 +488,9 @@ void context::handle_tick(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
-		const tick_info* tick = std::any_cast<const tick_info*>(param[0]);
-		if (tick)
-		{
-			this->on_tick(tick);
-			check_order_condition(tick);
-		}
+		const tick_info& tick = std::any_cast<tick_info>(param[0]);
+		this->on_tick(&tick);
+		check_order_condition(&tick);
 	}
 	
 }

@@ -22,4 +22,5 @@ void runtime_engine::add_strategy(straid_t id,std::shared_ptr<strategy> stra)
 void runtime_engine::run()
 {
 	lt_start_service(_lt);
+	getchar();
 }
