@@ -151,6 +151,7 @@ const order_info& tick_simulator::get_order(estid_t order_id) const
 {
 	static order_info order ;
 	_order_info.get_order_info(order,order_id);
+	LOG_TRACE("tick_simulator get_order  %lld %s ",order.est_id, order.code.get_id());
 	return std::move(order);
 }
 
@@ -341,7 +342,7 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 	
 	if(match.state == OS_INVALID)
 	{
-		this->fire_event(ET_OrderPlace, match.est_id);
+		this->fire_event(ET_OrderPlace, order);
 		auto queue_seat = get_front_count(order.code, order.price);
 		_order_info.set_seat(match.est_id,queue_seat);
 		_order_info.set_state(match.est_id, OS_IN_MATCH);

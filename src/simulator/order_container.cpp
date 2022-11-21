@@ -5,6 +5,7 @@ void order_container::add_order(const order_info& order)
 {
 	spin_lock lock(_mutex);
 	_order_info[order.est_id] = order;
+	LOG_TRACE("order_container add_order  %lld %d ", order.est_id, _order_info.size());
 	_order_match[order.code].emplace_back(order.est_id);
 }
 
@@ -25,6 +26,7 @@ void order_container::del_order(estid_t estid)
 				match->second.erase(mch_odr);
 			}
 		}
+		LOG_TRACE("order_container del_order %lld ", estid);
 		_order_info.erase(odit);
 	}
 }
@@ -108,12 +110,15 @@ void order_container::get_order_match(std::vector<order_match>& match_list, cons
 bool order_container::get_order_info(order_info& order, estid_t estid)const
 {
 	spin_lock lock(_mutex);
+	LOG_TRACE("order_container get_order_info  %lld %d ", estid, _order_info.size());
 	auto& odit = _order_info.find(estid);
 	if (odit != _order_info.end())
 	{
 		order = odit->second;
+		LOG_TRACE("order_container get_order_info order %lld %d ", order.est_id, _order_info.size());
 		return true;
 	}
+	LOG_TRACE("order_container get_order_info false");
 	return false;
 }
 

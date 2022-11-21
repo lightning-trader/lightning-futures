@@ -26,10 +26,10 @@ void demo_strategy::on_tick(const tick_info* tick)
 
 
 
-void demo_strategy::on_entrust(estid_t localid)
+void demo_strategy::on_entrust(const order_info& order)
 {
 	//set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + 60));
-	LOG_INFO("on_entrust tick : %llu\n", localid);
+	LOG_INFO("on_entrust tick : %llu\n", order.est_id);
 }
 
 void demo_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)

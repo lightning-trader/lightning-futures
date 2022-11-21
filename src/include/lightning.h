@@ -24,7 +24,7 @@ extern "C"
 {
 	typedef void (PORTER_FLAG * tick_callback)(const tick_info*);
 
-	typedef void (PORTER_FLAG * entrust_callback)(estid_t);
+	typedef void (PORTER_FLAG * entrust_callback)(const order_info&);
 
 	typedef void (PORTER_FLAG * deal_callback)(estid_t, uint32_t , uint32_t);
 

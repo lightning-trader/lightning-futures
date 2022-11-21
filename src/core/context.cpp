@@ -411,15 +411,15 @@ void context::handle_entrust(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
-		estid_t localid = std::any_cast<estid_t>(param[0]);
-		this->on_entrust(localid);
+		order_info order = std::any_cast<order_info>(param[0]);
+		this->on_entrust(order);
 		if(_operational_data)
 		{
 			_operational_data->statistic_info.cancel_amount++;
 		}
 		if (_recorder)
 		{
-			const auto& order = get_order(localid);
+			LOG_TRACE("context handle_entrust %lld %s", order.est_id, order.code.get_id());
 			_recorder->record_order_entrust(get_last_time(), order);
 		}
 	}

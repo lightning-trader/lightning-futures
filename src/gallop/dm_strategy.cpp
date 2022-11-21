@@ -28,24 +28,23 @@ void dm_strategy::on_tick(const tick_info* tick)
 
 
 
-void dm_strategy::on_entrust(estid_t localid)
+void dm_strategy::on_entrust(const order_info& order)
 {
-	const order_info& order = get_order(localid);
 	
-	if(_buy_order == localid)
+	if(_buy_order == order.est_id)
 	{
-		set_cancel_condition(localid, [order](const tick_info* tick)->bool{
+		set_cancel_condition(order.est_id, [order](const tick_info* tick)->bool{
 			return tick->buy_price() > order.price;
 		});
 	}
 	else
 	{
-		set_cancel_condition(localid, [order](const tick_info* tick)->bool {
+		set_cancel_condition(order.est_id, [order](const tick_info* tick)->bool {
 			return tick->sell_price() > order.price;
 			});
 	}
 	
-	LOG_INFO("on_entrust tick : %llu\n", localid);
+	LOG_INFO("on_entrust tick : %llu\n", order.est_id);
 }
 
 void dm_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)

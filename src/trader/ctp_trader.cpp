@@ -462,7 +462,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			entrust.last_volume = pOrder->VolumeTotal;
 			entrust.offset = offset;
 			order = _order_info.insert(std::make_pair(estid, entrust)).first;
-			this->fire_event(ET_OrderPlace, estid);
+			this->fire_event(ET_OrderPlace, order);
 		}
 		else
 		{

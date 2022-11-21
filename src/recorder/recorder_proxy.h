@@ -9,15 +9,21 @@ class recorder_proxy : public recorder
 {
 private:
 
+	typedef enum order_action_type
+	{
+		OAT_ENTRUST,
+		OAT_TRADE,
+		OAT_CANCEL
+	} order_action_type;
+private:
+
 	recorder* _recorder ;
 
 	bool _is_reocding ;
 
 	std::thread _record_thread;
 
-	boost::lockfree::spsc_queue<std::tuple<time_t, order_info>, boost::lockfree::capacity<128>>  _order_entrust_queue;
-	boost::lockfree::spsc_queue<std::tuple<time_t, estid_t>, boost::lockfree::capacity<128>>  _order_trade_queue;
-	boost::lockfree::spsc_queue<std::tuple<time_t, estid_t, uint32_t>, boost::lockfree::capacity<128>>  _order_cancel_queue;
+	boost::lockfree::spsc_queue<std::pair<order_action_type,std::any>, boost::lockfree::capacity<128>>  _order_lifecycle_queue;
 	boost::lockfree::spsc_queue<std::tuple<time_t,position_info>, boost::lockfree::capacity<128>>  _position_flow_queue;
 	boost::lockfree::spsc_queue<std::tuple<time_t, account_info>, boost::lockfree::capacity<128>>  _account_flow_queue;
 

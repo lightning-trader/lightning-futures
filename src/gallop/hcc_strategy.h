@@ -36,9 +36,9 @@ protected:
 	/*
 	 *	订单接收回报
 	 *  @is_success	是否成功
-	 *	@localid	本地订单id
+	 *	@order	本地订单
 	 */
-	virtual void on_entrust(estid_t localid) override;
+	virtual void on_entrust(const order_info& order) override;
 
 	/*
 	 *	成交回报

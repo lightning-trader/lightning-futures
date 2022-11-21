@@ -17,7 +17,7 @@ csv_recorder::csv_recorder(const char* basic_path) :_is_dirty(false), _order_lif
 	_order_lifecycle_csv.SetColumnName(2, "total_volume");
 	_order_lifecycle_csv.SetColumnName(3, "create_time");
 	_order_lifecycle_csv.SetColumnName(4, "finish_time");
-	_order_lifecycle_csv.SetColumnName(5, "finish_type");
+	_order_lifecycle_csv.SetColumnName(5, "state");
 	_order_lifecycle_csv.SetColumnName(6, "offset");
 	_order_lifecycle_csv.SetColumnName(7, "direction");
 	_order_lifecycle_csv.SetColumnName(8, "price");
@@ -38,6 +38,7 @@ csv_recorder::csv_recorder(const char* basic_path) :_is_dirty(false), _order_lif
 
 void csv_recorder::record_order_entrust(time_t time, const order_info& order)
 {
+	LOG_DEBUG("csv_recorder record_order_entrust %d %lld", time, order.est_id);
 	size_t count = _order_lifecycle_csv.GetRowCount();
 	std::vector<std::string> row_data ;
 	std::string estid = boost::lexical_cast<std::string>(order.est_id);
@@ -46,7 +47,7 @@ void csv_recorder::record_order_entrust(time_t time, const order_info& order)
 	row_data.emplace_back(boost::lexical_cast<std::string>(order.total_volume));
 	row_data.emplace_back(datetime_to_string(order.create_time));
 	row_data.emplace_back(datetime_to_string(0));
-	row_data.emplace_back("");
+	row_data.emplace_back("WAITING");
 	if(order.offset == offset_type::OT_OPEN)
 	{
 		row_data.emplace_back("open");
@@ -82,18 +83,20 @@ void csv_recorder::record_order_entrust(time_t time, const order_info& order)
 
 void csv_recorder::record_order_trade(time_t time, estid_t localid)
 {
+	LOG_DEBUG("csv_recorder record_order_trade %d %lld", time, localid);
 	std::string row_name = boost::lexical_cast<std::string>(localid);
 	_order_lifecycle_csv.SetCell<std::string>("last_volume", row_name,"0");
 	_order_lifecycle_csv.SetCell<std::string>("finish_time", row_name, datetime_to_string(time));
-	_order_lifecycle_csv.SetCell<std::string>("finish_type", row_name, "TRADE");
+	_order_lifecycle_csv.SetCell<std::string>("state", row_name, "TRADE");
 	_order_lifecycle_csv.Save(_basic_path + "/order_lifecycle.csv");
 }
 void csv_recorder::record_order_cancel(time_t time, estid_t localid, uint32_t last_volume)
 {
+	LOG_DEBUG("csv_recorder record_order_cancel %d %lld", time, localid);
 	std::string row_name = boost::lexical_cast<std::string>(localid);
 	_order_lifecycle_csv.SetCell<uint32_t>("last_volume", row_name, last_volume);
 	_order_lifecycle_csv.SetCell<std::string>("finish_time", row_name, datetime_to_string(time));
-	_order_lifecycle_csv.SetCell<std::string>("finish_type", row_name, "CANCEL");
+	_order_lifecycle_csv.SetCell<std::string>("state", row_name, "CANCEL");
 	_order_lifecycle_csv.Save(_basic_path + "/order_lifecycle.csv");
 }
 

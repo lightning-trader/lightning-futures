@@ -31,16 +31,16 @@ void hft_1_strategy::on_tick(const tick_info* tick)
 
 
 
-void hft_1_strategy::on_entrust(estid_t localid)
+void hft_1_strategy::on_entrust(const order_info& order)
 {
-	LOG_DEBUG("on_entrust : %llu\n", localid);
+	LOG_DEBUG("on_entrust : %llu\n", order.est_id);
 	if (_last_tick.time > _coming_to_close)
 	{
 		return;
 	}
-	if (localid == _buy_order|| localid == _sell_order)
+	if (order.est_id == _buy_order|| order.est_id == _sell_order)
 	{
-		set_cancel_condition(localid, [this](const tick_info* tick)->bool {
+		set_cancel_condition(order.est_id, [this](const tick_info* tick)->bool {
 
 			if (tick->time > _coming_to_close)
 			{
@@ -51,13 +51,12 @@ void hft_1_strategy::on_entrust(estid_t localid)
 		//set_cancel_condition(localid, std::make_shared<time_out_cdt>(get_last_time() + _cancel_seconds));
 	}else
 	{
-		auto& order = get_order(localid);
 		if (order.offset == OT_CLOSE)
 		{
 			if (order.direction == DT_LONG)
 			{
 				double_t lost_price = _last_tick.price - _lose_delta;
-				set_cancel_condition(localid, [this, lost_price](const tick_info* tick)->bool {
+				set_cancel_condition(order.est_id, [this, lost_price](const tick_info* tick)->bool {
 					if (tick->price < lost_price)
 					{
 						return true;
@@ -72,7 +71,7 @@ void hft_1_strategy::on_entrust(estid_t localid)
 			else if (order.direction == DT_SHORT)
 			{
 				double_t lost_price = _last_tick.price + _lose_delta;
-				set_cancel_condition(localid, [this, lost_price](const tick_info* tick)->bool {
+				set_cancel_condition(order.est_id, [this, lost_price](const tick_info* tick)->bool {
 					if (tick->price > lost_price)
 					{
 						return true;

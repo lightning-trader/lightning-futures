@@ -56,18 +56,18 @@ private:
 		}
 	}
 
-	static inline void _entrust_callback(estid_t localid)
+	static inline void _entrust_callback(const order_info& order)
 	{
 		if (_self)
 		{
-			auto it = _self->_estid_to_strategy.find(localid);
+			auto it = _self->_estid_to_strategy.find(order.est_id);
 			if (it == _self->_estid_to_strategy.end())
 			{
 				return;
 			}
 			if (it->second)
 			{
-				it->second->on_entrust(localid);
+				it->second->on_entrust(order);
 			}
 		}
 	};

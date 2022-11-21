@@ -128,13 +128,13 @@ void hcc_strategy::on_price_change(const tick_info* tick, bool is_up)
 }
 
 
-void hcc_strategy::on_entrust(estid_t localid)
+void hcc_strategy::on_entrust(const order_info& order)
 {
-	set_cancel_condition(localid, [this](const tick_info* tick)->bool{
+	set_cancel_condition(order.est_id, [this](const tick_info* tick)->bool{
 		return tick->time > (get_last_time() + _cancel_seconds);
 	});
 	_last_order_time = get_last_time();
-	LOG_INFO("on_entrust success tick : %llu\n", localid);
+	LOG_INFO("on_entrust success tick : %llu\n", order.est_id);
 }
 
 void hcc_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction,double_t price,uint32_t volume)
