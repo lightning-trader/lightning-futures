@@ -22,8 +22,7 @@ csv_recorder::csv_recorder(const char* basic_path) :_is_dirty(false), _order_lif
 	_order_lifecycle_csv.SetColumnName(6, "offset");
 	_order_lifecycle_csv.SetColumnName(7, "direction");
 	_order_lifecycle_csv.SetColumnName(8, "price");
-	_order_lifecycle_csv.SetColumnName(9, "flag");
-
+	
 	_position_flow_csv.SetColumnName(0,"time");
 	_position_flow_csv.SetColumnName(1, "code");
 	_position_flow_csv.SetColumnName(2, "long_postion");
@@ -66,18 +65,7 @@ void csv_recorder::record_order_entrust(time_t time, const order_info& order)
 		row_data.emplace_back("short");
 	}
 	row_data.emplace_back(boost::lexical_cast<std::string>(order.price));
-	if(order.flag == order_flag::OF_FAK)
-	{
-		row_data.emplace_back("FAK");
-	}
-	else if(order.flag == order_flag::OF_FOK)
-	{
-		row_data.emplace_back("FOK");
-	}
-	else
-	{
-		row_data.emplace_back("NOR");
-	}
+	
 	_order_lifecycle_csv.InsertRow<std::string>(count, row_data, estid);
 	_order_lifecycle_csv.Save(_basic_path+"/order_lifecycle.csv");
 }

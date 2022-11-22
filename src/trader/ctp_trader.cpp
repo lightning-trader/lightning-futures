@@ -72,7 +72,7 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 					{
 						continue ;
 					}
-					_is_in_query.exchange(true);
+					while (!_is_in_query.exchange(true));
 					handler();
 					_query_mutex.lock();
 					_query_queue.pop();
@@ -311,7 +311,7 @@ void ctp_trader::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingA
 {
 	if (_is_in_query)
 	{
-		_is_in_query.exchange(false);
+		while(!_is_in_query.exchange(false));
 	}
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
@@ -330,7 +330,7 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 {
 	if (_is_in_query)
 	{
-		_is_in_query.exchange(false);
+		while (!_is_in_query.exchange(false));
 		_position_info.clear();
 		_yestoday_position_info.clear();
 	}
@@ -366,7 +366,7 @@ void ctp_trader::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoFi
 {
 	if (_is_in_query)
 	{
-		_is_in_query.exchange(false);
+		while (!_is_in_query.exchange(false));
 		_trade_info.clear();
 	}
 	if (pRspInfo&& pRspInfo->ErrorID != 0)
@@ -389,7 +389,7 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 {
 	if (_is_in_query)
 	{
-		_is_in_query.exchange(false);
+		while (!_is_in_query.exchange(false));
 		_order_info.clear();
 	}
 	if (pOrder)

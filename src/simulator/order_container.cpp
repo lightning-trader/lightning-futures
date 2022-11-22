@@ -1,12 +1,12 @@
 ﻿#include "order_container.h"
 
 
-void order_container::add_order(const order_info& order)
+void order_container::add_order(const order_info& order,order_flag flag)
 {
 	spin_lock lock(_mutex);
 	_order_info[order.est_id] = order;
 	LOG_TRACE("order_container add_order  %lld %d ", order.est_id, _order_info.size());
-	_order_match[order.code].emplace_back(order.est_id);
+	_order_match[order.code].emplace_back(order.est_id, flag);
 }
 
 void order_container::del_order(estid_t estid)

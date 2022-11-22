@@ -18,8 +18,10 @@ struct order_match
 	estid_t		est_id;
 	uint32_t	queue_seat; //队列前面有多少个
 	order_state		state;
+	order_flag		flag;
 
-	order_match(estid_t id):est_id(id), queue_seat(0), state(OS_INVALID)
+
+	order_match(estid_t id, order_flag flg):est_id(id), queue_seat(0), state(OS_INVALID), flag(flg)
 	{}
 };
 
@@ -37,7 +39,7 @@ private:
 	
 public:
 
-	void add_order(const order_info& order_info);
+	void add_order(const order_info& order_info, order_flag flag);
 
 	void del_order(estid_t estid);
 

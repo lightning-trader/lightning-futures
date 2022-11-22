@@ -115,7 +115,6 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 	order_info order;
 	order.est_id = make_estid();
 	LOG_DEBUG("tick_simulator::place_order %llu \n", order.est_id);
-	order.flag = flag;
 	order.code = code ;
 	order.create_time = last_tick_time();
 	order.offset = offset;
@@ -123,7 +122,7 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 	order.total_volume = count;
 	order.last_volume = count;
 	order.price = price;
-	_order_info.add_order(order);
+	_order_info.add_order(order,flag);
 	return order.est_id;
 }
 
@@ -386,7 +385,7 @@ void tick_simulator::handle_sell(const tick_info* tick, order_info& order, const
 		//市价单直接成交(暂时先不考虑一次成交不完的情况)
 		order.price = _order_info.set_price(match.est_id,tick->buy_price());
 	}
-	if (order.flag == OF_FOK)
+	if (match.flag == OF_FOK)
 	{
 		if (order.last_volume <= max_volume && order.price <= tick->buy_price())
 		{
@@ -399,7 +398,7 @@ void tick_simulator::handle_sell(const tick_info* tick, order_info& order, const
 			order_cancel(order);
 		}
 	}
-	else if (order.flag == OF_FAK)
+	else if (match.flag == OF_FAK)
 	{
 		if(order.price <= tick->buy_price())
 		{
@@ -467,7 +466,7 @@ void tick_simulator::handle_buy(const tick_info* tick, order_info& order, const 
 		//市价单直接成交
 		order.price = _order_info.set_price(match.est_id,tick->sell_price());
 	}
-	if (order.flag == OF_FOK)
+	if (match.flag == OF_FOK)
 	{
 		if (order.last_volume <= max_volume&& order.price >= tick->sell_price())
 		{
@@ -480,7 +479,7 @@ void tick_simulator::handle_buy(const tick_info* tick, order_info& order, const 
 			order_cancel(order);
 		}
 	}
-	else if (order.flag == OF_FAK)
+	else if (match.flag == OF_FAK)
 	{
 		//部成
 		if(order.price >= tick->sell_price())

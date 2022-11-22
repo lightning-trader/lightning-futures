@@ -202,8 +202,6 @@ struct order_info
 
 	direction_type	direction;
 
-	order_flag		flag;
-
 	double_t		price;
 
 	order_info() :
@@ -213,8 +211,7 @@ struct order_info
 		total_volume(0),
 		last_volume(0),
 		create_time(0),
-		price(.0f),
-		flag(OF_NOR)
+		price(.0f)
 	{}
 
 };
