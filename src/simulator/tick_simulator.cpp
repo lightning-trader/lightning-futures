@@ -591,8 +591,8 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		this->fire_event(ET_OrderTrade, order.est_id, order.code, order.offset, order.direction, order.price, order.total_volume);
 		_order_info.del_order(order.est_id);
 	}
-	this->fire_event(ET_PositionChange, order.code);
-	this->fire_event(ET_AccountChange);
+	this->fire_event(ET_PositionChange, pos);
+	this->fire_event(ET_AccountChange,_account_info);
 }
 
 void tick_simulator::order_cancel(const order_info& order)
@@ -607,7 +607,7 @@ void tick_simulator::frozen_deduction(const code_t& code,offset_type offset, dir
 	{
 		//开仓 冻结保证金
 		_account_info.frozen_monery += count * price * _multiple * _margin_rate;
-		this->fire_event(ET_AccountChange);
+		this->fire_event(ET_AccountChange, _account_info);
 	}
 	else if (offset == OT_CLOSE)
 	{
@@ -620,7 +620,7 @@ void tick_simulator::frozen_deduction(const code_t& code,offset_type offset, dir
 		{
 			pos.short_frozen += count;
 		}
-		this->fire_event(ET_PositionChange, code);
+		this->fire_event(ET_PositionChange, pos);
 	}
 }
 void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
@@ -630,7 +630,7 @@ void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 	{
 		//撤单 取消冻结保证金
 		_account_info.frozen_monery -= last_volume * price * _multiple * _margin_rate;
-		this->fire_event(ET_AccountChange);
+		this->fire_event(ET_AccountChange, _account_info);
 	}
 	else if (offset == OT_CLOSE)
 	{
@@ -643,6 +643,6 @@ void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 		{
 			pos.short_frozen -= last_volume;
 		}
-		this->fire_event(ET_PositionChange, code);
+		this->fire_event(ET_PositionChange, pos);
 	}
 }

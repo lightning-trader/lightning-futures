@@ -348,21 +348,24 @@ void context::load_data(const char* localdb_name,size_t oper_size)
 
 void context::handle_account(const std::vector<std::any>& param)
 {
-	if (_recorder)
+	if (param.size() >= 1)
 	{
-		const auto& account = get_account();
-		_recorder->record_account_flow(get_last_time(), account);
+		const auto& account = std::any_cast<account_info>(param[0]);
+		if (_recorder)
+		{
+			_recorder->record_account_flow(get_last_time(), account);
+		}
 	}
+	
 }
 
 void context::handle_position(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
-		auto code = std::any_cast<code_t>(param[0]);
+		auto position = std::any_cast<position_info>(param[0]);
 		if (_recorder)
 		{
-			const auto& position = get_position(code);
 			_recorder->record_position_flow(get_last_time(), position);
 		}
 	}

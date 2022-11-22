@@ -92,9 +92,6 @@ public:
 
 	virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo) override;
 
-	virtual void OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField *pInstrumentStatus) override;
-
-
 
 private:
 
@@ -112,6 +109,10 @@ private:
 	void query_orders();
 
 	void query_trades();
+
+	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+	void frozen_deduction(const code_t& code, direction_type dir_type, uint32_t volume);
+	void thawing_deduction(const code_t& code, direction_type dir_type, uint32_t volume);
 
 private:
 	
