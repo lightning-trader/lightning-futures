@@ -7,11 +7,11 @@ void hft_1_strategy::on_init()
 	subscribe({"SHFE.rb2301"});
 }
 
-void hft_1_strategy::on_tick(const tick_info* tick)
+void hft_1_strategy::on_tick(const tick_info& tick)
 {
-	_last_tick = *tick ; 
-	add_to_history(tick->price);
-	_coming_to_close = make_datetime(tick->trading_day,"14:58:00");
+	_last_tick = tick ; 
+	add_to_history(tick.price);
+	_coming_to_close = make_datetime(tick.trading_day,"14:58:00");
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
 	if(_buy_order != INVALID_ESTID || _sell_order != INVALID_ESTID|| _profit_order != INVALID_ESTID || _loss_order != INVALID_ESTID)
 	{
@@ -21,22 +21,22 @@ void hft_1_strategy::on_tick(const tick_info* tick)
 	{
 		return ;
 	}
-	if (tick->time > _coming_to_close)
+	if (tick.time > _coming_to_close)
 	{
 		return ;
 	}
-	double_t ma_delta = tick->price - _history_ma ;
-	double_t buy_price = tick->buy_price() - _open_delta - ma_delta;
-	double_t sell_price = tick->sell_price() + _open_delta - ma_delta;
-	buy_price = buy_price < tick->buy_price()? buy_price : tick->buy_price();
-	sell_price = sell_price > tick->sell_price() ? sell_price : tick->sell_price();
-	if(buy_price > tick->low_limit)
+	double_t ma_delta = tick.price - _history_ma ;
+	double_t buy_price = tick.buy_price() - _open_delta - ma_delta;
+	double_t sell_price = tick.sell_price() + _open_delta - ma_delta;
+	buy_price = buy_price < tick.buy_price()? buy_price : tick.buy_price();
+	sell_price = sell_price > tick.sell_price() ? sell_price : tick.sell_price();
+	if(buy_price > tick.low_limit)
 	{
-		_buy_order = buy_for_open(tick->id, 1, buy_price);
+		_buy_order = buy_for_open(tick.id, 1, buy_price);
 	}
-	if(sell_price < tick->high_limit)
+	if(sell_price < tick.high_limit)
 	{
-		_sell_order = sell_for_open(tick->id, 1, sell_price);
+		_sell_order = sell_for_open(tick.id, 1, sell_price);
 	}
 	
 	

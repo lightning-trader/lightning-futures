@@ -31,7 +31,7 @@ protected:
 	/*
 	 *	tick推送
 	 */
-	virtual void on_tick(const tick_info* tick)  override;
+	virtual void on_tick(const tick_info& tick)  override;
 
 	/*
 	 *	订单接收回报
@@ -57,8 +57,8 @@ protected:
 
 private:
 
-	bool check_lose(const tick_info* tick);
-	void on_price_change(const tick_info* tick, bool is_up);
+	bool check_lose(const tick_info& tick);
+	void on_price_change(const tick_info& tick, bool is_up);
 	
 private:
 

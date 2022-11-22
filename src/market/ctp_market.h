@@ -83,8 +83,6 @@ private:
 	std::unique_lock<std::mutex> _process_mutex;
 	std::condition_variable _process_signal;
 
-	boost::object_pool<tick_info> _tick_pool;
-	
 	std::unordered_map<std::string,std::string> _instrument_id_list;
 
 	time_t _last_tick_time ;

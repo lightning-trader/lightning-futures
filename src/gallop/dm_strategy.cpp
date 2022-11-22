@@ -7,7 +7,7 @@ void dm_strategy::on_init()
 	//add_condition(std::make_shared<fall_back_cds>());
 }
 
-void dm_strategy::on_tick(const tick_info* tick)
+void dm_strategy::on_tick(const tick_info& tick)
 {
 
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
@@ -18,11 +18,11 @@ void dm_strategy::on_tick(const tick_info* tick)
 	const position_info& pos = get_position("SHFF.rb2210");
 	if (pos.long_postion == 0)
 	{
-		_buy_order = buy_for_open(tick->id, 1, tick->buy_price());
+		_buy_order = buy_for_open(tick.id, 1, tick.buy_price());
 	}
 	else if (pos.short_postion == 0)
 	{
-		_sell_order = sell_for_open(tick->id, 1, tick->sell_price());
+		_sell_order = sell_for_open(tick.id, 1, tick.sell_price());
 	}
 }
 

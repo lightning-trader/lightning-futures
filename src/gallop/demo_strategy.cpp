@@ -7,7 +7,7 @@ void demo_strategy::on_init()
 	//add_condition(std::make_shared<fall_back_cds>());
 }
 
-void demo_strategy::on_tick(const tick_info* tick)
+void demo_strategy::on_tick(const tick_info& tick)
 {
 	if(check_lose(tick))
 	{
@@ -19,8 +19,8 @@ void demo_strategy::on_tick(const tick_info* tick)
 		return ;
 	}
 
-	_buy_order = buy_for_open(tick->id, 1, tick->buy_price()- _open_delta);
-	_sell_order = sell_for_open(tick->id, 1, tick->sell_price()+ _open_delta);
+	_buy_order = buy_for_open(tick.id, 1, tick.buy_price()- _open_delta);
+	_sell_order = sell_for_open(tick.id, 1, tick.sell_price()+ _open_delta);
 
 }
 
@@ -73,20 +73,20 @@ void demo_strategy::on_cancel(estid_t localid, const code_t& code, offset_type o
 }
 
 
-bool demo_strategy::check_lose(const tick_info* tick)
+bool demo_strategy::check_lose(const tick_info& tick)
 {
 	//Ö¹Ëð
-	auto& position = get_position(tick->id);
+	auto& position = get_position(tick.id);
 
 	if (position.long_postion > 0)
 	{
-		if (_highest_price < tick->price)
+		if (_highest_price < tick.price)
 		{
-			_highest_price = tick->price;
+			_highest_price = tick.price;
 		}
-		if (tick->price < _highest_price - _lose_offset)
+		if (tick.price < _highest_price - _lose_offset)
 		{
-			sell_for_close(tick->id, position.long_postion);
+			sell_for_close(tick.id, position.long_postion);
 		}
 
 		return true;
@@ -94,13 +94,13 @@ bool demo_strategy::check_lose(const tick_info* tick)
 	if (position.short_postion > 0)
 	{
 		//³ÖÓÐ¿Õµ¥
-		if (_lowest_price > tick->price)
+		if (_lowest_price > tick.price)
 		{
-			_lowest_price = tick->price;
+			_lowest_price = tick.price;
 		}
-		if (tick->price > _lowest_price + _lose_offset)
+		if (tick.price > _lowest_price + _lose_offset)
 		{
-			buy_for_close(tick->id, position.short_postion);
+			buy_for_close(tick.id, position.short_postion);
 		}
 		return true;
 	}

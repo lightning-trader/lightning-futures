@@ -220,9 +220,9 @@ private:
 	
 	inline void	extract_estid(estid_t estid, uint32_t& front_id, uint32_t& session_id, uint32_t& order_ref)
 	{
-		uint64_t v1 = estid | 0xFFFFFFFF00000000LLU;
-		uint64_t v2 = estid | 0x00000000FFFF0000LLU;
-		uint64_t v3 = estid | 0x000000000000FFFFLLU;
+		uint64_t v1 = estid & 0xFFFFFFFF00000000LLU;
+		uint64_t v2 = estid & 0x00000000FFFF0000LLU;
+		uint64_t v3 = estid & 0x000000000000FFFFLLU;
 		session_id = static_cast<uint32_t>(v1 >> 32);
 		front_id = static_cast<uint32_t>(v2 >> 16);
 		order_ref = static_cast<uint32_t>(v3);

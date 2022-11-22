@@ -66,7 +66,7 @@ void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
 
 int main()
 {
-	/*
+	
 	std::vector<uint32_t> all_trading_day = {
 		20220901,
 		20220902,
@@ -90,7 +90,7 @@ int main()
 		20220928,
 		20220930
 	};
-	*/
+	/*
 	std::vector<uint32_t> all_trading_day = {
 		20220801,
 		20220802,
@@ -114,12 +114,13 @@ int main()
 		20220826
 
 	};
+	*/
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	//start_evaluate(all_trading_day);
+	start_evaluate(all_trading_day);
 	//start_hft_1_optimize(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	start_runtime();
+	//start_runtime();
 	//getchar();
 	/*
 	LOG_DEBUG("123_%d----%s",123,"a");

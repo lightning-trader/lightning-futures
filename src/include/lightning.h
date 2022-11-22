@@ -22,7 +22,7 @@ struct ltobj
 
 extern "C"
 {
-	typedef void (PORTER_FLAG * tick_callback)(const tick_info*);
+	typedef void (PORTER_FLAG * tick_callback)(const tick_info&);
 
 	typedef void (PORTER_FLAG * entrust_callback)(const order_info&);
 

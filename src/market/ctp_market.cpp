@@ -112,60 +112,54 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	}
 	LOG_DEBUG("MarketData = [%s] [%f]\n", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice);
 	
-	tick_info* tick = _tick_pool.construct();
-	if(tick == nullptr)
-	{
-		LOG_ERROR("OnRtnDepthMarketData _tick_info_pool construct Error");
-		return;
-	}
+	tick_info tick ;
 	auto& excg_it = _instrument_id_list.find(pDepthMarketData->InstrumentID);
 	if(excg_it != _instrument_id_list.end())
 	{
-		tick->id = code_t(pDepthMarketData->InstrumentID, excg_it->second.c_str());
+		tick.id = code_t(pDepthMarketData->InstrumentID, excg_it->second.c_str());
 	}
 	else
 	{
-		tick->id = code_t(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
+		tick.id = code_t(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
 	}
 	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
-	tick->time = get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime);
-	tick->tick = pDepthMarketData->UpdateMillisec;
-	tick->price = pDepthMarketData->LastPrice;
-	tick->standard = pDepthMarketData->PreSettlementPrice ;
-	tick->volume = pDepthMarketData->Volume;
-	tick->open = pDepthMarketData->OpenPrice;
-	tick->close = pDepthMarketData->ClosePrice;
-	tick->high = pDepthMarketData->HighestPrice;
-	tick->low = pDepthMarketData->LowestPrice;
-	tick->high_limit = pDepthMarketData->UpperLimitPrice;
-	tick->low_limit = pDepthMarketData->LowerLimitPrice;
+	tick.time = get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime);
+	tick.tick = pDepthMarketData->UpdateMillisec;
+	tick.price = pDepthMarketData->LastPrice;
+	tick.standard = pDepthMarketData->PreSettlementPrice ;
+	tick.volume = pDepthMarketData->Volume;
+	tick.open = pDepthMarketData->OpenPrice;
+	tick.close = pDepthMarketData->ClosePrice;
+	tick.high = pDepthMarketData->HighestPrice;
+	tick.low = pDepthMarketData->LowestPrice;
+	tick.high_limit = pDepthMarketData->UpperLimitPrice;
+	tick.low_limit = pDepthMarketData->LowerLimitPrice;
 
-	tick->buy_order[0] = std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1);
-	tick->buy_order[1] = std::make_pair(pDepthMarketData->BidPrice2, pDepthMarketData->BidVolume2);
-	tick->buy_order[2] = std::make_pair(pDepthMarketData->BidPrice3, pDepthMarketData->BidVolume3);
-	tick->buy_order[3] = std::make_pair(pDepthMarketData->BidPrice4, pDepthMarketData->BidVolume4);
-	tick->buy_order[4] = std::make_pair(pDepthMarketData->BidPrice5, pDepthMarketData->BidVolume5);
+	tick.buy_order[0] = std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1);
+	tick.buy_order[1] = std::make_pair(pDepthMarketData->BidPrice2, pDepthMarketData->BidVolume2);
+	tick.buy_order[2] = std::make_pair(pDepthMarketData->BidPrice3, pDepthMarketData->BidVolume3);
+	tick.buy_order[3] = std::make_pair(pDepthMarketData->BidPrice4, pDepthMarketData->BidVolume4);
+	tick.buy_order[4] = std::make_pair(pDepthMarketData->BidPrice5, pDepthMarketData->BidVolume5);
 
-	tick->sell_order[0] = std::make_pair(pDepthMarketData->AskPrice1, pDepthMarketData->AskVolume1);
-	tick->sell_order[1] = std::make_pair(pDepthMarketData->AskPrice2, pDepthMarketData->AskVolume2);
-	tick->sell_order[2] = std::make_pair(pDepthMarketData->AskPrice3, pDepthMarketData->AskVolume3);
-	tick->sell_order[3] = std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4);
-	tick->sell_order[4] = std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5);
-	tick->trading_day = std::atoi(pDepthMarketData->TradingDay);
-	if (_current_trading_day != tick->trading_day)
+	tick.sell_order[0] = std::make_pair(pDepthMarketData->AskPrice1, pDepthMarketData->AskVolume1);
+	tick.sell_order[1] = std::make_pair(pDepthMarketData->AskPrice2, pDepthMarketData->AskVolume2);
+	tick.sell_order[2] = std::make_pair(pDepthMarketData->AskPrice3, pDepthMarketData->AskVolume3);
+	tick.sell_order[3] = std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4);
+	tick.sell_order[4] = std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5);
+	tick.trading_day = std::atoi(pDepthMarketData->TradingDay);
+	if (_current_trading_day != tick.trading_day)
 	{
-		_current_trading_day = tick->trading_day;
+		_current_trading_day = tick.trading_day;
 		this->fire_event(ET_CrossDay, _current_trading_day);
 	}
-	this->fire_event(ET_TickReceived, *tick);
+	this->fire_event(ET_TickReceived, tick);
 
-	_last_tick_time = tick->time;
+	_last_tick_time = tick.time;
 
-	if(tick->close != 0)
+	if(tick.close != 0)
 	{
 		this->fire_event(ET_EndTrading);
 	}
-	_tick_pool.destroy(tick);
 }
 
 void ctp_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )

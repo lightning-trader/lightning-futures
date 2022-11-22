@@ -3,7 +3,7 @@
 #include <market_api.h>
 #include <trader_api.h>
 #include <recorder.h>
-#include <platform_helper.hpp>
+#include <cpu_helper.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include "pod_chain.h"
 #include <interface.h>
@@ -103,8 +103,8 @@ void context::start()
 {
 	_is_runing = true;
 	_strategy_thread = new std::thread([this]()->void{
-		int core = platform_helper::get_cpu_cores();
-		if (!platform_helper::bind_core(core - 1))
+		int core = cpu_helper::get_cpu_cores();
+		if (!cpu_helper::bind_core(core - 1))
 		{
 			LOG_ERROR("Binding to core {%d} failed", core);
 		}
@@ -489,7 +489,7 @@ void context::handle_tick(const std::vector<std::any>& param)
 	if (param.size() >= 1)
 	{
 		const tick_info& tick = std::any_cast<tick_info>(param[0]);
-		this->on_tick(&tick);
+		this->on_tick(tick);
 		check_order_condition(&tick);
 	}
 	

@@ -36,11 +36,11 @@ private:
 
 	static inline strategy_manager* _self;
 
-	static inline void _tick_callback(const tick_info* tick)
+	static inline void _tick_callback(const tick_info& tick)
 	{
 		if (_self)
 		{
-			auto it = _self->_code_to_strategy.find(tick->id);
+			auto it = _self->_code_to_strategy.find(tick.id);
 			if (it == _self->_code_to_strategy.end())
 			{
 				return;
