@@ -122,8 +122,8 @@ private:
 		}
 	}
 
-	static inline std::map<estid_t, std::function<bool(const tick_info*)>> _condition_function;
-	static inline bool _condition_callback(estid_t localid, const tick_info* tick)
+	static inline std::map<estid_t, std::function<bool(const tick_info&)>> _condition_function;
+	static inline bool _condition_callback(estid_t localid, const tick_info& tick)
 	{
 		auto it = _condition_function.find(localid);
 		if (it == _condition_function.end())
@@ -133,12 +133,12 @@ private:
 		return it->second(tick);
 	}
 
-	static inline std::function<bool()> _filter_function = nullptr;
-	static inline bool _filter_callback()
+	static inline std::function<bool(offset_type offset, direction_type direction)> _filter_function = nullptr;
+	static inline bool _filter_callback(offset_type offset, direction_type direction)
 	{
 		if (_filter_function)
 		{
-			return _filter_function();
+			return _filter_function(offset, direction);
 		}
 		return true;
 	}

@@ -32,9 +32,9 @@ extern "C"
 
 	typedef void (PORTER_FLAG * cancel_callback)(estid_t, const code_t&, offset_type, direction_type, double_t, uint32_t, uint32_t);
 
-	typedef bool (PORTER_FLAG * condition_callback)(estid_t, const tick_info*);
+	typedef bool (PORTER_FLAG * condition_callback)(estid_t, const tick_info&);
 
-	typedef bool (PORTER_FLAG* filter_callback)();
+	typedef bool (PORTER_FLAG* filter_callback)(offset_type offset, direction_type direction);
 
 	EXPORT_FLAG ltobj lt_create_context(context_type ctx_type, const char* config_path);
 	

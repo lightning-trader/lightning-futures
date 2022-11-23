@@ -130,7 +130,7 @@ time_t strategy::get_last_time() const
 	return lt_get_last_time(_manager->get_lt());
 }
 
-void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const tick_info*)> callback)
+void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const tick_info&)> callback)
 {
 	LOG_DEBUG("set_timeout_cancel : %llu\n", order_id);
 	if (_manager == nullptr)
@@ -141,7 +141,7 @@ void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const ti
 	lt_set_cancel_condition(_manager->get_lt(), order_id, strategy_manager::_condition_callback);
 }
 
-void strategy::set_trading_filter(std::function<bool()> callback)
+void strategy::set_trading_filter(std::function<bool(offset_type offset, direction_type direction)> callback)
 {
 	if (_manager == nullptr)
 	{

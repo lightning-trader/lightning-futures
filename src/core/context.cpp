@@ -207,7 +207,7 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 	{
 		return INVALID_ESTID;
 	}
-	if(_trading_filter&&!_trading_filter())
+	if (_trading_filter && !_trading_filter(offset, direction))
 	{
 		LOG_DEBUG("place_order trading filter false");
 		return INVALID_ESTID;
@@ -435,7 +435,7 @@ void context::handle_entrust(const std::vector<std::any>& param)
 		}
 		if(_operational_data)
 		{
-			_operational_data->statistic_info.cancel_amount++;
+			_operational_data->statistic_info.entrust_amount++;
 		}
 		if (_recorder)
 		{
@@ -522,12 +522,12 @@ void context::handle_tick(const std::vector<std::any>& param)
 		{
 			this->on_tick(tick);
 		}
-		check_order_condition(&tick);
+		check_order_condition(tick);
 	}
 	
 }
 
-void context::check_order_condition(const tick_info* tick)
+void context::check_order_condition(const tick_info& tick)
 {
 
 	for (auto it = _need_check_condition.begin(); it != _need_check_condition.end();)

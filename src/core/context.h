@@ -149,7 +149,7 @@ private:
 
 	void handle_tick(const std::vector<std::any>& param);
 
-	void check_order_condition(const tick_info* tick);
+	void check_order_condition(const tick_info& tick);
 
 	void remove_invalid_condition(estid_t order_id);
 

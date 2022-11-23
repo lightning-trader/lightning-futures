@@ -1,11 +1,32 @@
 #pragma once
 #include "strategy.h"
 #include <list>
+/*
+	策略原理：
+	这是一个做市策略，基本原理就是在买一点买入，卖一点价格卖出；
+	当价格变动导致自己的价格不是买一价格或者卖一价格时候，执行撤单并且重新下单，保证自己的报单维持在买一和卖一位置
+	当买一卖一分别成交以后，执行下一轮操作
+	风险分析：
+	此策略风险在于价格单边行情，会导致不断亏损，交易所下单和撤单数量限制
+	实现思路
+	1、由于交易所有撤单数量限制，所以可以通过ltpp的过滤器控制流量
+	2、为了使逻辑变得简单，可以通过ltpp开平互转功能，将开仓转成平仓，使我们可以不关注平仓问题，策略中只需要实现开空或者开多
+	3、价格变化导致我们的订单不在买一卖一位置时候，通过set_cancel_condition进行撤单，并且撤单后重新下单
+
+*/
+
+
+
 
 class demo_strategy : public strategy
 {
+
 public:
-	demo_strategy(int lose_offset,int open_delta):_lose_offset(lose_offset), _open_delta(open_delta), _highest_price(0), _lowest_price(0) {};
+
+	demo_strategy():
+	_short_order(INVALID_ESTID), 
+	_long_order(INVALID_ESTID) {};
+	
 	~demo_strategy(){};
 
 
@@ -45,24 +66,17 @@ public:
 	 */
 	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type directionv, double_t price, uint32_t cancel_volume, uint32_t total_volume)  override;
 
-private:
-
-	bool check_lose(const tick_info& tick);
 
 private:
 
-	int _lose_offset;
+	tick_info _last_tick ;
 
-	int _open_delta;
+	// 空仓订单
+	estid_t _short_order ;
 
-	estid_t _sell_order ;
+	// 多仓订单
+	estid_t _long_order ;
 
-	estid_t _buy_order ;
-
-	double _highest_price; //止损价
-	double _lowest_price; //止损价
-
-	std::list<double_t> _history_list ;
-
+	
 };
 

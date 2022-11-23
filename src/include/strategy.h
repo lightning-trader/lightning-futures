@@ -114,7 +114,7 @@ protected:
 	*	下单单
 	*	order_id 下单返回的id
 	*/
-	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
+	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 	/*
 	 *	撤单
 	 *	order_id 下单返回的id
@@ -164,14 +164,14 @@ protected:
 	time_t get_last_time() const ;
 
 	/*
-	* 设置撤销条件
+	* 设置撤销条件(返回true时候撤销)
 	*/
-	void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info*)> callback);
+	void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info&)> callback);
 
 	/*
 	* 设置交易过滤器
 	*/
-	void set_trading_filter(std::function<bool()> callback);
+	void set_trading_filter(std::function<bool(offset_type offset, direction_type direction)> callback);
 
 	/**
 	* 获取最后一次下单时间

@@ -1,9 +1,7 @@
 ﻿#include "gallop.h"
 #include <define.h>
 #include "demo_strategy.h"
-#include "hcc_strategy.h"
-#include "hft_1_strategy.h"
-#include "dm_strategy.h"
+
 #include "runtime_engine.h"
 #include "evaluate_engine.h"
 
@@ -11,8 +9,9 @@
 
 void start_runtime()
 {
-	auto app = runtime_engine("./rt_simnow.ini");
-	auto hcc = std::make_shared<hft_1_strategy>(8, 16, 300, 0);
+	//auto app = runtime_engine("./rt_simnow.ini");
+	auto app = runtime_engine("./runtime.ini");
+	auto hcc = std::make_shared<demo_strategy>();
 	app.add_strategy(0,hcc);
 	app.run();
 	
@@ -28,41 +27,11 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 		20220803
 		};
 	*/
-	auto hcc = std::make_shared<hft_1_strategy>(8, 16, 300, 0);
+	auto hcc = std::make_shared<demo_strategy>();
 	app.back_test(hcc, all_trading_day);
 }
 
 
-
-void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
-{
-/*
-	//max money : 99890.400000 i:[1] j:[6]
-	double max_monery = 0;
-	for (int i = 1; i <= 15; i++)
-	{
-		for (int j = 2; j <= 20; j++)
-		{
-			for(int k=50;k<=200;k+=50)
-			{
-				double_t current_monery = 0;
-				auto app = evaluate_engine("./evaluate.ini");
-				hft_1_strategy hcc(i, j, k, 0);
-				app.start(hcc, all_trading_day);
-				if (current_monery > max_monery)
-				{
-					max_monery = current_monery;
-				}
-				if (current_monery > 2100000)
-				{
-					LOG_OPTIMIZE("max money : %f i:[%d] j:[%d] k:%d\n", current_monery, i, j, k);
-				}
-			}
-			
-		}
-	}
-*/
-}
 
 int main()
 {
@@ -117,10 +86,10 @@ int main()
 	*/
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	//start_evaluate(all_trading_day);
+	start_evaluate(all_trading_day);
 	//start_hft_1_optimize(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	start_runtime();
+	//start_runtime();
 	
 	/*
 	LOG_DEBUG("123_%d----%s",123,"a");
