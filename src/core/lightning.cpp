@@ -321,4 +321,18 @@ extern "C"
 		}
 		return c->get_userdata(index, size);
 	}
+
+	bool lt_is_in_trading(const ltobj& lt)
+	{
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
+		{
+			return nullptr;
+		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return nullptr;
+		}
+		return c->is_in_trading();
+	}
 }

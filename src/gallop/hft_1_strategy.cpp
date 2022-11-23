@@ -4,7 +4,7 @@
 void hft_1_strategy::on_init()
 {
 	set_trading_optimize(2, TO_INVALID,false);
-	subscribe({"SHFE.rb2301"});
+	subscribe({"SHFE.ag2212"});
 }
 
 void hft_1_strategy::on_tick(const tick_info& tick)

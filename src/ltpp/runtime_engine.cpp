@@ -1,5 +1,6 @@
 #include <runtime_engine.h>
 #include "strategy_manager.h"
+#include <thread>
 
 runtime_engine::runtime_engine(const char* config_path)
 {
@@ -22,5 +23,17 @@ void runtime_engine::add_strategy(straid_t id,std::shared_ptr<strategy> stra)
 void runtime_engine::run()
 {
 	lt_start_service(_lt);
-	getchar();
+	bool is_in_trading = lt_is_in_trading(_lt);
+	while (!is_in_trading)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		is_in_trading = lt_is_in_trading(_lt);
+	}
+	LOG_INFO("runtime_engine run in trading true");
+	while (is_in_trading)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		is_in_trading = lt_is_in_trading(_lt);
+	}
+	lt_stop_service(_lt);
 }

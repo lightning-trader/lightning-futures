@@ -22,6 +22,7 @@ ctp_market::~ctp_market()
 	{
 		_md_api->RegisterSpi(nullptr);
 		_md_api->Release();
+		//_md_api->Join();
 		_md_api = nullptr;
 	}
 }
@@ -156,7 +157,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 
 	_last_tick_time = tick.time;
 
-	if(tick.close != 0)
+	if(pDepthMarketData->SettlementPrice == tick.close && pDepthMarketData->SettlementPrice == tick.price && pDepthMarketData->SettlementPrice > 0)
 	{
 		this->fire_event(ET_EndTrading);
 	}

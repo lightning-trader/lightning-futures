@@ -258,6 +258,13 @@ struct order_statistic
 	//³·µ¥ÊıÁ¿
 	uint32_t cancel_amount;
 
+	order_statistic():
+		place_order_amount(0),
+		entrust_amount(0),
+		trade_amount(0),
+		cancel_amount(0)
+	{}
+
 };
 
 const order_statistic default_statistic;

@@ -22,6 +22,23 @@ ctp_trader::ctp_trader()
 
 ctp_trader::~ctp_trader()
 {
+	_is_runing = false;
+	if (_work_thread)
+	{
+		_work_thread->join();
+		delete _work_thread;
+		_work_thread = nullptr;
+	}
+	if (_td_api)
+	{
+		//m_pUserAPI->RegisterSpi(NULL);
+		_td_api->Release();
+		//_td_api->Join();
+		_td_api = nullptr;
+	}
+	_position_info.clear();
+	_order_info.clear();
+	_trade_info.clear();
 }
 
 bool ctp_trader::init(const boost::property_tree::ptree& config)
@@ -52,18 +69,18 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 	_td_api->RegisterSpi(this);
 	//_td_api->SubscribePrivateTopic(THOST_TERT_RESTART);
 	//_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
-	_td_api->SubscribePrivateTopic(THOST_TERT_QUICK);
-	_td_api->SubscribePublicTopic(THOST_TERT_QUICK);
+	_td_api->SubscribePrivateTopic(THOST_TERT_RESUME);
+	_td_api->SubscribePublicTopic(THOST_TERT_RESUME);
 	_td_api->RegisterFront(const_cast<char*>(_front_addr.c_str()));
 	_td_api->Init();
 	LOG_INFO("ctp_trader init %s ", _td_api->GetApiVersion());
 	_process_signal.wait(_process_mutex);
-	
+	_is_runing = true ;
 	//启动查询线程去同步账户信息
 	if (_work_thread == nullptr)
 	{
 		_work_thread = new std::thread([this]() {
-			while (!_is_runing)
+			while (_is_runing)
 			{
 				if (!_query_queue.empty())
 				{
@@ -86,22 +103,6 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 	}
 	_is_inited = true ;
 	return true;
-}
-
-void ctp_trader::release()
-{
-	_is_runing = false;
-
-	if (_td_api)
-	{
-		//m_pUserAPI->RegisterSpi(NULL);
-		_td_api->Release();
-		_td_api = nullptr;
-	}
-	_position_info.clear();
-	_order_info.clear();
-	_trade_info.clear();
-	_work_thread = nullptr ;
 }
 
 

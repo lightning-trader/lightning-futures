@@ -131,4 +131,9 @@ extern "C"
 	* 获取用户数据指针
 	*/
 	EXPORT_FLAG void* lt_get_userdata(const ltobj& lt, uint32_t index, size_t size);
+
+	/**
+	* 是否在交易中
+	*/
+	EXPORT_FLAG bool lt_is_in_trading(const ltobj& lt);
 }

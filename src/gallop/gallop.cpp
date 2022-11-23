@@ -11,7 +11,7 @@
 
 void start_runtime()
 {
-	auto app = runtime_engine("./runtime.ini");
+	auto app = runtime_engine("./rt_simnow.ini");
 	auto hcc = std::make_shared<hft_1_strategy>(8, 16, 300, 0);
 	app.add_strategy(0,hcc);
 	app.run();
@@ -121,7 +121,7 @@ int main()
 	//start_hft_1_optimize(all_trading_day);
 	//start_demo_optimize(all_trading_day);
 	start_runtime();
-	getchar();
+	
 	/*
 	LOG_DEBUG("123_%d----%s",123,"a");
 	LOG_INFO("123_%d----%s", 123, "a");

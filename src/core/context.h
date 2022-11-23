@@ -16,6 +16,8 @@ struct operational_data
 	time_t last_order_time;
 	order_statistic statistic_info;
 
+	operational_data():last_order_time(0) {}
+
 	void clear()
 	{
 		last_order_time = 0;
@@ -60,7 +62,7 @@ private:
 
 	recorder* _recorder ;
 
-	bool _is_trading ;
+	std::atomic<bool> _is_trading ;
 
 public:
 
@@ -117,6 +119,11 @@ public:
 	const order_statistic& get_order_statistic();
 
 	void* get_userdata(uint32_t index, size_t size);
+
+	bool is_in_trading()
+	{
+		return _is_trading;
+	}
 
 private:
 

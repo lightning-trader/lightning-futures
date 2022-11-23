@@ -15,11 +15,19 @@ context::context():
 	_max_position(1),
 	_chain(nullptr),
 	_trading_filter(nullptr),
-	_userdata_block(10),
+	_userdata_block(16),
 	_userdata_size(1024),
 	_recorder(nullptr),
-	_is_trading(false)
+	_is_trading(false),
+	on_tick(nullptr),
+	on_entrust(nullptr),
+	on_deal(nullptr),
+	on_trade(nullptr),
+	on_cancel(nullptr),
+	_operational_region(nullptr),
+	_operational_data(nullptr)
 {
+
 }
 context::~context()
 {
@@ -48,7 +56,7 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 	if(!localdb_name.empty())
 	{
 		size_t operational_size = localdb.get<size_t>("operational_size",1024);
-		_userdata_block = localdb.get<size_t>("userdata_block", 10);
+		_userdata_block = localdb.get<size_t>("userdata_block", 16);
 		_userdata_size = localdb.get<size_t>("userdata_size", 1024);
 		load_data(localdb_name.c_str(), operational_size);
 	}
@@ -390,8 +398,10 @@ void context::handle_crossday(const std::vector<std::any>& param)
 
 void context::handle_begin(const std::vector<std::any>& param)
 {
-	_is_trading = true ;
-	
+	if (!_is_trading)
+	{
+		while (!_is_trading.exchange(true));
+	}
 	LOG_INFO("begin trading ");
 	if(_operational_data)
 	{
@@ -407,7 +417,11 @@ void context::handle_end(const std::vector<std::any>& param)
 		auto acc = trader->get_account();
 		LOG_INFO("end trading %f %f", acc.money, acc.frozen_monery);
 	}
-	_is_trading = false;
+	if(_is_trading)
+	{
+		while (!_is_trading.exchange(false));
+	}
+	
 }
 
 void context::handle_entrust(const std::vector<std::any>& param)
@@ -415,7 +429,10 @@ void context::handle_entrust(const std::vector<std::any>& param)
 	if (param.size() >= 1)
 	{
 		order_info order = std::any_cast<order_info>(param[0]);
-		this->on_entrust(order);
+		if(this->on_entrust)
+		{
+			this->on_entrust(order);
+		}
 		if(_operational_data)
 		{
 			_operational_data->statistic_info.cancel_amount++;
@@ -435,7 +452,10 @@ void context::handle_deal(const std::vector<std::any>& param)
 		estid_t localid = std::any_cast<estid_t>(param[0]);
 		uint32_t deal_volume = std::any_cast<uint32_t>(param[1]);
 		uint32_t total_volume = std::any_cast<uint32_t>(param[2]);
-		this->on_deal(localid, deal_volume, total_volume);
+		if(this->on_deal)
+		{
+			this->on_deal(localid, deal_volume, total_volume);
+		}
 	}
 }
 
@@ -450,7 +470,10 @@ void context::handle_trade(const std::vector<std::any>& param)
 		direction_type direction = std::any_cast<direction_type>(param[3]);
 		double_t price = std::any_cast<double_t>(param[4]);
 		uint32_t trade_volume = std::any_cast<uint32_t>(param[5]);
-		this->on_trade(localid, code, offset, direction, price, trade_volume);
+		if(this->on_trade)
+		{
+			this->on_trade(localid, code, offset, direction, price, trade_volume);
+		}
 		remove_invalid_condition(localid);
 		if (_operational_data)
 		{
@@ -474,7 +497,10 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		double_t price = std::any_cast<double_t>(param[4]);
 		uint32_t cancel_volume = std::any_cast<uint32_t>(param[5]);
 		uint32_t total_volume = std::any_cast<uint32_t>(param[6]);
-		this->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
+		if(this->on_cancel)
+		{
+			this->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
+		}
 		remove_invalid_condition(localid);
 		if (_operational_data)
 		{
@@ -492,7 +518,10 @@ void context::handle_tick(const std::vector<std::any>& param)
 	if (param.size() >= 1)
 	{
 		const tick_info& tick = std::any_cast<tick_info>(param[0]);
-		this->on_tick(tick);
+		if(this->on_tick)
+		{
+			this->on_tick(tick);
+		}
 		check_order_condition(&tick);
 	}
 	
