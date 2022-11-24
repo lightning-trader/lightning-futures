@@ -3,12 +3,12 @@
 #include<string>
 #include<ctime>
 
-static std::string datetime_to_string(time_t timestamp)
+static std::string datetime_to_string(time_t timestamp,const char* format = "%Y-%m-%d %H:%M:%S")
 {
 	char buffer[64] = { 0 };
 	struct tm info;
 	localtime_s(&info, &timestamp);
-	strftime(buffer, sizeof buffer, "%Y-%m-%d %H:%M:%S", &info);
+	strftime(buffer, sizeof buffer, format, &info);
 	return std::string(buffer);
 }
 

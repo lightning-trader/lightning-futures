@@ -12,7 +12,12 @@ csv_recorder::csv_recorder(const char* basic_path) :_is_dirty(false), _order_lif
 	{
 		file_wapper::create_directories(basic_path);
 	}
-	_basic_path = basic_path;
+	time_t now_time = get_now();
+	_basic_path = std::string(basic_path)+"/"+datetime_to_string(now_time,"%Y-%m-%d");
+	if (!file_wapper::exists(_basic_path.c_str()))
+	{
+		file_wapper::create_directories(_basic_path.c_str());
+	}
 	_order_lifecycle_csv.SetColumnName(0, "code");
 	_order_lifecycle_csv.SetColumnName(1, "last_volume");
 	_order_lifecycle_csv.SetColumnName(2, "total_volume");
