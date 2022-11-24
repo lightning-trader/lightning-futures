@@ -203,7 +203,7 @@ void tick_simulator::handle_submit()
 	if (!_is_submit_return)
 	{
 		while(!_is_submit_return.exchange(true));
-		this->fire_event(ET_BeginTrading);
+		this->fire_event(ET_TradingReady);
 	}
 }
 
@@ -234,10 +234,7 @@ void tick_simulator::publish_tick()
 		}
 		_current_tick_info.emplace_back(tick);
 		this->fire_event(ET_TickReceived, *tick);
-		if(tick->close>0)
-		{
-			this->fire_event(ET_EndTrading);
-		}
+
 		_current_index++;
 		if(_current_index < _pending_tick_info.size())
 		{

@@ -18,6 +18,8 @@ struct ltobj
 	void* obj_ptr;
 
 	context_type obj_type;
+
+	//ltobj(context_type type):obj_type(type), obj_ptr(nullptr) {}
 };
 
 extern "C"
@@ -135,5 +137,10 @@ extern "C"
 	/**
 	* 是否在交易中
 	*/
-	EXPORT_FLAG bool lt_is_in_trading(const ltobj& lt);
+	EXPORT_FLAG bool lt_is_trading_ready(const ltobj& lt);
+
+	/**
+	* 获取交易日
+	*/
+	EXPORT_FLAG uint32_t lt_get_trading_day(const ltobj& lt);
 }

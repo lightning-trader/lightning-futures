@@ -13,7 +13,7 @@ public:
 
 public:
 
-	void back_test(std::shared_ptr<strategy> stra, const std::vector<uint32_t>& trading_days);
+	void back_test(std::vector<std::shared_ptr<strategy>> stra_list, const std::vector<uint32_t>& trading_days);
 
 private:
 

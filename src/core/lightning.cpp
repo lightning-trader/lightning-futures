@@ -8,8 +8,7 @@ extern "C"
 	ltobj lt_create_context(context_type ctx_type, const char* config_path)
 	{
 		ltobj lt;
-		lt.obj_type = CT_INVALID;
-		lt.obj_ptr = nullptr;
+		lt.obj_type = ctx_type;
 		if(ctx_type == CT_RUNTIME)
 		{
 			auto obj = new runtime();
@@ -18,7 +17,7 @@ extern "C"
 				delete obj;
 				obj = nullptr;
 			}
-			lt.obj_type = ctx_type;
+			
 			lt.obj_ptr = obj;
 			return lt;
 		}
@@ -30,10 +29,10 @@ extern "C"
 				delete obj;
 				obj = nullptr;
 			}
-			lt.obj_type = ctx_type;
 			lt.obj_ptr = obj;
 			return lt;
 		}
+		lt.obj_ptr = nullptr;
 		return lt;
 	}
 
@@ -322,7 +321,7 @@ extern "C"
 		return c->get_userdata(index, size);
 	}
 
-	bool lt_is_in_trading(const ltobj& lt)
+	bool lt_is_trading_ready(const ltobj& lt)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -333,6 +332,20 @@ extern "C"
 		{
 			return nullptr;
 		}
-		return c->is_in_trading();
+		return c->is_trading_ready();
+	}
+
+	uint32_t lt_get_trading_day(const ltobj& lt)
+	{
+		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
+		{
+			return 0U;
+		}
+		context* c = (context*)(lt.obj_ptr);
+		if (c == nullptr)
+		{
+			return 0U;
+		}
+		return c->get_trading_day();
 	}
 }

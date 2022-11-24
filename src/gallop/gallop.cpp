@@ -13,7 +13,7 @@ void start_runtime()
 	auto app = runtime_engine("./runtime.ini");
 	auto hcc = std::make_shared<demo_strategy>();
 	app.add_strategy(0,hcc);
-	app.run();
+	app.run("15:05:00");
 	
 }
 
@@ -27,8 +27,12 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 		20220803
 		};
 	*/
-	auto hcc = std::make_shared<demo_strategy>();
-	app.back_test(hcc, all_trading_day);
+	std::vector<std::shared_ptr<strategy>> stra_list;
+	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2304"),2));
+	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2305"), 2));
+	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2307"), 2));
+	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2308"), 2));
+	app.back_test(stra_list, all_trading_day);
 }
 
 

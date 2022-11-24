@@ -12,11 +12,14 @@ evaluate_engine::~evaluate_engine()
 	lt_destory_context(_lt);
 }
 
-void evaluate_engine::back_test(std::shared_ptr<strategy> stra, const std::vector<uint32_t>& trading_days)
+void evaluate_engine::back_test(std::vector<std::shared_ptr<strategy>> stra_list, const std::vector<uint32_t>& trading_days)
 {
 	if(_strategy_manager)
 	{
-		_strategy_manager->regist_strategy(0,stra);
+		for(size_t i=0;i< stra_list.size();i++)
+		{
+			_strategy_manager->regist_strategy((straid_t)i, stra_list[i]);
+		}
 		lt_start_service(_lt);
 		for (auto it : trading_days)
 		{

@@ -18,7 +18,7 @@ context::context():
 	_userdata_block(16),
 	_userdata_size(1024),
 	_recorder(nullptr),
-	_is_trading(false),
+	_is_trading_ready(false),
 	on_tick(nullptr),
 	on_entrust(nullptr),
 	on_deal(nullptr),
@@ -81,11 +81,8 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 		case ET_CrossDay:
 			handle_crossday(param);
 			break;
-		case ET_BeginTrading:
-			handle_begin(param);
-			break;
-		case ET_EndTrading:
-			handle_end(param);
+		case ET_TradingReady:
+			handle_ready(param);
 			break;
 		case ET_TickReceived:
 			handle_tick(param);
@@ -203,7 +200,7 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 		LOG_ERROR("place_order _chain nullptr");
 		return INVALID_ESTID;
 	}
-	if (!_is_trading)
+	if (!_is_trading_ready)
 	{
 		return INVALID_ESTID;
 	}
@@ -334,6 +331,16 @@ void* context::get_userdata(uint32_t index,size_t size)
 	return _userdata_region[index]->get_address();
 }
 
+uint32_t context::get_trading_day()
+{
+	const auto market = get_market();
+	if(market == nullptr)
+	{
+		return 0U;
+	}
+	return market->get_trading_day();
+}
+
 void context::load_data(const char* localdb_name,size_t oper_size)
 {
 	boost::interprocess::shared_memory_object shdmem
@@ -393,36 +400,23 @@ void context::handle_crossday(const std::vector<std::any>& param)
 		LOG_INFO("submit_settlement");
 		trader->submit_settlement();
 	}
-}
-
-
-void context::handle_begin(const std::vector<std::any>& param)
-{
-	if (!_is_trading)
-	{
-		while (!_is_trading.exchange(true));
-	}
-	LOG_INFO("begin trading ");
-	if(_operational_data)
+	if (_operational_data)
 	{
 		_operational_data->clear();
 	}
 }
 
-void context::handle_end(const std::vector<std::any>& param)
+
+void context::handle_ready(const std::vector<std::any>& param)
 {
-	auto trader = get_trader();
-	if(trader)
+	if (!_is_trading_ready)
 	{
-		auto acc = trader->get_account();
-		LOG_INFO("end trading %f %f", acc.money, acc.frozen_monery);
+		_is_trading_ready = true ;
 	}
-	if(_is_trading)
-	{
-		while (!_is_trading.exchange(false));
-	}
+	LOG_INFO("trading ready");
 	
 }
+
 
 void context::handle_entrust(const std::vector<std::any>& param)
 {

@@ -3,8 +3,8 @@
 void demo_strategy::on_init()
 {
 	// 这里设置开平互转，开仓->平仓（开多->平空，开空->平多）
-	set_trading_optimize(16, TO_OPEN_TO_CLOSE,false);
-	subscribe({"SHFF.rb2307"});
+	set_trading_optimize(2, TO_OPEN_TO_CLOSE,false);
+	subscribe(_code);
 	set_trading_filter([this](offset_type offset, direction_type direction)->bool{
 		const auto & statius = get_order_statistic();
 		//限制每日下单数量超过480就不再可以下单了，避免触发交易所警告
@@ -35,9 +35,13 @@ void demo_strategy::on_tick(const tick_info& tick)
 	{
 		return;
 	}
+	if(tick.sell_price() - tick.buy_price()<_offset)
+	{
+		return;
+	}
 	// 同时挂出买卖单（因为设置了开平互转，所以不需要关心平仓问题，只需要无脑开仓）
-	_long_order = buy_for_open(tick.id, 8, tick.buy_price());
-	_short_order = sell_for_open(tick.id, 8, tick.sell_price());
+	_long_order = buy_for_open(tick.id, 1, tick.buy_price());
+	_short_order = sell_for_open(tick.id, 1, tick.sell_price());
 
 }
 

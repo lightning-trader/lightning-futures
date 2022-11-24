@@ -15,7 +15,7 @@ public:
 
 	void add_strategy(straid_t id, std::shared_ptr<strategy> stra);
 
-	void run();
+	void run(const std::string& end_time);
 
 private:
 

@@ -23,9 +23,18 @@ class demo_strategy : public strategy
 
 public:
 
-	demo_strategy():
+	demo_strategy() :
+		_offset(1),
+		_short_order(INVALID_ESTID),
+		_long_order(INVALID_ESTID)
+	{};
+
+	demo_strategy(const code_t& code,uint32_t offset):
+	_code(code),
+	_offset(offset),
 	_short_order(INVALID_ESTID), 
-	_long_order(INVALID_ESTID) {};
+	_long_order(INVALID_ESTID)
+	{};
 	
 	~demo_strategy(){};
 
@@ -70,6 +79,10 @@ public:
 private:
 
 	tick_info _last_tick ;
+
+	uint32_t _offset ;
+
+	code_t _code ;
 
 	// ¿Õ²Ö¶©µ¥
 	estid_t _short_order ;

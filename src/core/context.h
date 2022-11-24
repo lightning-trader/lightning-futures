@@ -62,7 +62,7 @@ private:
 
 	recorder* _recorder ;
 
-	std::atomic<bool> _is_trading ;
+	bool _is_trading_ready ;
 
 public:
 
@@ -120,10 +120,12 @@ public:
 
 	void* get_userdata(uint32_t index, size_t size);
 
-	bool is_in_trading()
+	bool is_trading_ready()
 	{
-		return _is_trading;
+		return _is_trading_ready;
 	}
+
+	uint32_t get_trading_day();
 
 private:
 
@@ -135,7 +137,7 @@ private:
 
 	void handle_crossday(const std::vector<std::any>& param);
 
-	void handle_begin(const std::vector<std::any>& param);
+	void handle_ready(const std::vector<std::any>& param);
 
 	void handle_end(const std::vector<std::any>& param);
 

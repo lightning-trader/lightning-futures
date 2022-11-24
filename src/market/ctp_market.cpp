@@ -157,10 +157,6 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 
 	_last_tick_time = tick.time;
 
-	if(pDepthMarketData->SettlementPrice == tick.close && pDepthMarketData->SettlementPrice == tick.price && pDepthMarketData->SettlementPrice > 0)
-	{
-		this->fire_event(ET_EndTrading);
-	}
 }
 
 void ctp_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
