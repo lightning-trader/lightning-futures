@@ -133,15 +133,6 @@ private:
 		return it->second(tick);
 	}
 
-	static inline std::function<bool(offset_type offset, direction_type direction)> _filter_function = nullptr;
-	static inline bool _filter_callback(offset_type offset, direction_type direction)
-	{
-		if (_filter_function)
-		{
-			return _filter_function(offset, direction);
-		}
-		return true;
-	}
 	
 	
 public:

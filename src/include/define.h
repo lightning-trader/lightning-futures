@@ -116,6 +116,8 @@ public:
 	}
 };
 
+typedef uint32_t straid_t;
+
 typedef uint64_t estid_t;
 
 #define INVALID_ESTID 0x0LLU 

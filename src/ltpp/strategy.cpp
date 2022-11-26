@@ -66,14 +66,6 @@ void strategy::cancel_order(estid_t order_id)
 	lt_cancel_order(_manager->get_lt(), order_id);
 }
 
-void strategy::set_trading_optimize(uint32_t max_position, trading_optimal opt , bool flag )
-{
-	if (_manager == nullptr)
-	{
-		return;
-	}
-	lt_set_trading_optimize(_manager->get_lt(), max_position, opt, flag);
-}
 
 const position_info& strategy::get_position(const code_t& code) const
 {
@@ -141,15 +133,7 @@ void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const ti
 	lt_set_cancel_condition(_manager->get_lt(), order_id, strategy_manager::_condition_callback);
 }
 
-void strategy::set_trading_filter(std::function<bool(offset_type offset, direction_type direction)> callback)
-{
-	if (_manager == nullptr)
-	{
-		return;
-	}
-	strategy_manager::_filter_function = callback;
-	lt_set_trading_filter(_manager->get_lt(), strategy_manager::_filter_callback);
-}
+
 
 time_t strategy::last_order_time()
 {
@@ -160,14 +144,6 @@ time_t strategy::last_order_time()
 	return lt_last_order_time(_manager->get_lt());
 }
 
-const order_statistic& strategy::get_order_statistic()
-{
-	if (_manager == nullptr)
-	{
-		return default_statistic;
-	}
-	return lt_get_order_statistic(_manager->get_lt());
-}
 
 void* strategy::get_username(size_t size)
 {

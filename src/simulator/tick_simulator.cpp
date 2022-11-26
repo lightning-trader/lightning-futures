@@ -540,6 +540,7 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 {
 	
 	auto& pos = _position_info[order.code];
+	pos.id = order.code;
 	if(order.offset == OT_OPEN)
 	{
 		//开仓

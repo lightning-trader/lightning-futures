@@ -1,9 +1,9 @@
 #pragma once
 #include <define.h>
 #include <lightning.h>
-#include <strategy.h>
+#include <engine.h>
 
-class runtime_engine
+class runtime_engine : public engine
 {
 
 public:
@@ -12,16 +12,9 @@ public:
 	virtual ~runtime_engine();
 
 public:
-
-	void add_strategy(straid_t id, std::shared_ptr<strategy> stra);
-
+	
 	void run(const std::string& end_time);
 
-private:
-
-	ltobj _lt;
-
-	std::unique_ptr<class strategy_manager> _strategy_manager ;
 };
 
 

@@ -2,18 +2,7 @@
 
 void demo_strategy::on_init()
 {
-	// 这里设置开平互转，开仓->平仓（开多->平空，开空->平多）
-	set_trading_optimize(2, TO_OPEN_TO_CLOSE,false);
 	subscribe(_code);
-	set_trading_filter([this](offset_type offset, direction_type direction)->bool{
-		const auto & statius = get_order_statistic();
-		//限制每日下单数量超过480就不再可以下单了，避免触发交易所警告
-		if(statius.entrust_amount > 480)
-		{	
-			return false ;
-		}
-		return true ;
-	});
 }
 
 void demo_strategy::on_tick(const tick_info& tick)
