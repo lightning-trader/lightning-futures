@@ -36,7 +36,7 @@ extern "C"
 
 	typedef bool (PORTER_FLAG * condition_callback)(estid_t, const tick_info&);
 
-	typedef bool (PORTER_FLAG* filter_callback)(offset_type offset, direction_type direction);
+	typedef bool (PORTER_FLAG* filter_callback)(const code_t& code, offset_type offset, direction_type direction, order_flag flag);
 
 	EXPORT_FLAG ltobj lt_create_context(context_type ctx_type, const char* config_path);
 	

@@ -9,12 +9,12 @@ class engine
 
 private:
 
-	static inline std::function<bool(offset_type offset, direction_type direction)> _filter_function = nullptr;
-	static inline bool _filter_callback(offset_type offset, direction_type direction)
+	static inline std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> _filter_function = nullptr;
+	static inline bool _filter_callback(const code_t& code, offset_type offset, direction_type direction, order_flag flag)
 	{
 		if (_filter_function)
 		{
-			return _filter_function(offset, direction);
+			return _filter_function(code, offset, direction, flag);
 		}
 		return true;
 	}
@@ -41,7 +41,7 @@ public:
 	/*
 	* 设置交易过滤器
 	*/
-	void set_trading_filter(std::function<bool(offset_type offset, direction_type direction)> callback);
+	void set_trading_filter(std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> callback);
 
 	/**
 	* 获取当前交易日的订单统计

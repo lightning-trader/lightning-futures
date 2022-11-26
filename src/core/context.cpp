@@ -204,7 +204,7 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 	{
 		return INVALID_ESTID;
 	}
-	if (_trading_filter && !_trading_filter(offset, direction))
+	if (_trading_filter && !_trading_filter(code,offset, direction, flag))
 	{
 		LOG_DEBUG("place_order trading filter false");
 		return INVALID_ESTID;
