@@ -69,7 +69,7 @@ void ctp_market::OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, b
 
 void ctp_market::OnFrontConnected()
 {
-	LOG_ERROR("Connected : %s", _front_addr.c_str());
+	LOG_INFO("Connected : %s", _front_addr.c_str());
 	do_userlogin();
 }
 
