@@ -146,7 +146,7 @@ private:
 	boost::posix_time::ptime pt = boost::posix_time::ptime();
 
 	//冻结
-	void frozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price);
+	bool frozen_deduction(estid_t est_id, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price);
 	//解冻
 	void thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price);
 };

@@ -69,7 +69,13 @@ public:
 	 */
 	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume) {}
 
-	
+	/*
+	 *	错误
+	 *	@localid	本地订单id
+	 *	@error 错误代码
+	 */
+	virtual void on_error(estid_t localid, const uint32_t error) {}
+
 
 protected:
 	//功能函数

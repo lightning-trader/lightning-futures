@@ -25,6 +25,7 @@ public:
 			, _deal_callback
 			, _trade_callback
 			, _cancel_callback
+			, _error_callback
 		);
 	}
 
@@ -117,6 +118,23 @@ private:
 			if (it->second)
 			{
 				it->second->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
+			}
+			_self->unregist_estid_strategy(localid);
+		}
+	}
+
+	static inline void _error_callback(estid_t localid, uint32_t error)
+	{
+		if (_self)
+		{
+			auto it = _self->_estid_to_strategy.find(localid);
+			if (it == _self->_estid_to_strategy.end())
+			{
+				return;
+			}
+			if (it->second)
+			{
+				it->second->on_error(localid, error);
 			}
 			_self->unregist_estid_strategy(localid);
 		}

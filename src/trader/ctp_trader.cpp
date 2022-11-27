@@ -516,19 +516,18 @@ void ctp_trader::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTh
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_ERROR("OnRspQryTrade \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
-		return;
 	}
-	/*
 	if(pInputOrder)
 	{
-		estid_t estid = generate_estid(_front_id, _session_id, strtol(pInputOrder->OrderRef,NULL,13));
+		estid_t estid = generate_estid(_front_id, _session_id, strtol(pInputOrder->OrderRef,NULL,10));
 		auto it = _order_info.find(estid);
 		if(it != _order_info.end())
 		{
 			_order_info.erase(it);
 		}
+		this->fire_event(ET_OrderError, estid, (uint32_t)pRspInfo->ErrorID);
 	}
-	*/
+	
 }
 
 

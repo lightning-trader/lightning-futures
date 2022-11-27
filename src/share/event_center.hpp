@@ -17,7 +17,7 @@ typedef enum event_type
 	ET_OrderPlace,
 	ET_OrderDeal,
 	ET_OrderTrade,
-
+	ET_OrderError
 } event_type;
 
 struct event_data

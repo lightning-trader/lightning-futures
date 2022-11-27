@@ -130,3 +130,10 @@ const std::map<estid_t, order_info> order_container::get_all_order()const
 	spin_lock lock(_mutex);
 	return _order_info;
 }
+
+void order_container::clear()
+{
+	spin_lock lock(_mutex);
+	_order_info.clear();
+	_order_match.clear();
+}

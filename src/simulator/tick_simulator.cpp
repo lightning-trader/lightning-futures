@@ -46,6 +46,8 @@ void tick_simulator::play(uint32_t tradeing_day)
 	{
 		load_data(it, tradeing_day);
 	}
+	//模拟跨天时候之前的订单失效
+	_order_info.clear();
 	_is_in_trading = true ;
 	while (_is_in_trading)
 	{
@@ -101,14 +103,7 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 	//boost::posix_time::ptime pt2 = boost::posix_time::microsec_clock::local_time();
 	//std::cout << "place_order : " << pt2 - pt << est_id.to_str() << std::endl;
 	//LOG_DEBUG("tick_simulator::place_order 1 %s \n", est_id.to_str());
-	if (offset == OT_OPEN)
-	{
-		double_t frozen_monery = count * price * _multiple * _margin_rate;
-		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
-		{
-			return INVALID_ESTID;
-		}
-	}
+
 	//spin_lock lock(_mutex);
 	
 
@@ -318,9 +313,9 @@ void tick_simulator::match_entrust(const tick_info* tick)
 		return ;
 	}
 	uint32_t current_volume = tick->volume - last_volume->second ;
-	std::vector<order_match> order_match;
-	_order_info.get_order_match(order_match,tick->id);
-	for(auto it : order_match)
+	std::vector<order_match> match;
+	_order_info.get_order_match(match,tick->id);
+	for(const order_match & it : match)
 	{
 		handle_entrust(tick, it, current_volume);
 	}
@@ -336,11 +331,17 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 	
 	if(match.state == OS_INVALID)
 	{
-		this->fire_event(ET_OrderPlace, order);
-		auto queue_seat = get_front_count(order.code, order.price);
-		_order_info.set_seat(match.est_id,queue_seat);
-		_order_info.set_state(match.est_id, OS_IN_MATCH);
-		frozen_deduction(order.code,order.offset,order.direction,order.last_volume,order.price);
+		if (frozen_deduction(match.est_id,order.code, order.offset, order.direction, order.last_volume, order.price))
+		{
+			this->fire_event(ET_OrderPlace, order);
+			auto queue_seat = get_front_count(order.code, order.price);
+			_order_info.set_seat(match.est_id, queue_seat);
+			_order_info.set_state(match.est_id, OS_IN_MATCH);
+		}
+		else
+		{
+			_order_info.del_order(match.est_id);
+		}
 		return ;
 	}
 	if(match.state == OS_CANELED)
@@ -599,27 +600,46 @@ void tick_simulator::order_cancel(const order_info& order)
 	this->fire_event(ET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
 	_order_info.del_order(order.est_id);
 }
-void tick_simulator::frozen_deduction(const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
+bool tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
 {
 	if (offset == OT_OPEN)
 	{
+		double_t frozen_monery = count * price * _multiple * _margin_rate;
+		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
+		{
+			this->fire_event(ET_OrderError, est_id, 31);
+			return false;
+		}
 		//开仓 冻结保证金
-		_account_info.frozen_monery += count * price * _multiple * _margin_rate;
+		_account_info.frozen_monery += frozen_monery;
 		this->fire_event(ET_AccountChange, _account_info);
+		return true ;
 	}
-	else if (offset == OT_CLOSE)
+	if (offset == OT_CLOSE)
 	{
 		auto& pos = _position_info[code];
 		if (direction == DT_LONG)
 		{
+			if(pos.long_postion< count)
+			{
+				this->fire_event(ET_OrderError, est_id, 30);
+				return false;
+			}
 			pos.long_frozen += count;
 		}
 		else if (direction == DT_SHORT)
 		{
+			if (pos.short_postion < count)
+			{
+				this->fire_event(ET_OrderError, est_id, 30);
+				return false;
+			}
 			pos.short_frozen += count;
 		}
 		this->fire_event(ET_PositionChange, pos);
+		return true ;
 	}
+	return false ;
 }
 void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
 {

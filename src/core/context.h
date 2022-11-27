@@ -76,6 +76,7 @@ public:
 
 	cancel_callback on_cancel ;
 
+	error_callback on_error;
 
 	/*Æô¶¯*/
 	void start() ;
@@ -150,6 +151,8 @@ private:
 	void handle_cancel(const std::vector<std::any>& param);
 
 	void handle_tick(const std::vector<std::any>& param);
+
+	void handle_error(const std::vector<std::any>& param);
 
 	void check_order_condition(const tick_info& tick);
 

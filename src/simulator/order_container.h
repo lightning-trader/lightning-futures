@@ -56,4 +56,6 @@ public:
 	bool get_order_info(order_info& order, estid_t estid)const;
 	
 	const std::map<estid_t, order_info> get_all_order()const;
+
+	void clear();
 };

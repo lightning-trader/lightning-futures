@@ -31,8 +31,6 @@ public:
 
 	bool init(const boost::property_tree::ptree& config);
 
-	void release();
-
 	//////////////////////////////////////////////////////////////////////////
 	//trader_api½Ó¿Ú
 public:

@@ -77,3 +77,16 @@ void demo_strategy::on_cancel(estid_t localid, const code_t& code, offset_type o
 		_short_order = place_order(offset, direction, code, cancel_volume, _last_tick.sell_price());
 	}
 }
+
+void demo_strategy::on_error(estid_t localid, const uint32_t error)
+{
+	LOG_ERROR("on_error tick : %llu %u\n", localid , error);
+	if (localid == _long_order)
+	{
+		_long_order = INVALID_ESTID;
+	}
+	if (localid == _short_order)
+	{
+		_short_order = INVALID_ESTID;
+	}
+}

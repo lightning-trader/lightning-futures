@@ -24,6 +24,7 @@ context::context():
 	on_deal(nullptr),
 	on_trade(nullptr),
 	on_cancel(nullptr),
+	on_error(nullptr),
 	_operational_region(nullptr),
 	_operational_data(nullptr)
 {
@@ -98,6 +99,9 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 			break;
 		case ET_OrderTrade:
 			handle_trade(param);
+			break;
+		case ET_OrderError:
+			handle_error(param);
 			break;
 		}
 		});
@@ -519,6 +523,19 @@ void context::handle_tick(const std::vector<std::any>& param)
 		check_order_condition(tick);
 	}
 	
+}
+
+void context::handle_error(const std::vector<std::any>& param)
+{
+	if (param.size() >= 2)
+	{
+		const estid_t localid = std::any_cast<estid_t>(param[0]);
+		const uint32_t error_code = std::any_cast<uint32_t>(param[1]);
+		if (this->on_error)
+		{
+			this->on_error(localid, error_code);
+		}
+	}
 }
 
 void context::check_order_condition(const tick_info& tick)
