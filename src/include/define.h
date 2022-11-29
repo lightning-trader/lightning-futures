@@ -138,6 +138,8 @@ enum direction_type;
 
 enum event_type;
 
+enum error_type;
+
 typedef enum log_level
 {
 	LLV_TRACE,

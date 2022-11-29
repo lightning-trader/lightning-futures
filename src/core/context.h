@@ -85,11 +85,6 @@ public:
 	void stop();
 
 	/*
-	* 设置交易管线 
-	*/
-	void set_trading_optimize(uint32_t max_position, trading_optimal opt, bool flag);
-
-	/*
 	* 设置撤销条件
 	*/
 	void set_cancel_condition(estid_t order_id, condition_callback callback);
@@ -158,10 +153,11 @@ private:
 
 	void remove_invalid_condition(estid_t order_id);
 
+	class pod_chain * create_chain(trading_optimal opt, bool flag,std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> fliter_callback);
 
 protected:
 
-	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& rcd_config);
+	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& channel, boost::property_tree::ptree& rcd_config);
 
 	virtual class trader_api* get_trader() = 0;
 

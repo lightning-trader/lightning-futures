@@ -51,7 +51,7 @@ context::~context()
 	}
 }
 
-bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& rcd_config)
+bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& channel, boost::property_tree::ptree& rcd_config)
 {
 	auto& localdb_name = localdb.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
@@ -69,7 +69,16 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 	{
 		return false;
 	}
-	_chain = new the_end_chain(trader, _max_position);
+	_max_position = channel.get<uint32_t>("max_position",1U);
+	trading_optimal to_optimal = static_cast<trading_optimal>(channel.get<int32_t>("trading_optimal", TO_INVALID));
+	bool is_to_cancel = channel.get<bool>("is_to_cancel", false);
+	_chain = create_chain(to_optimal, is_to_cancel, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool{
+		if(_trading_filter==nullptr)
+		{
+			return true ;
+		}
+		return _trading_filter(code, offset, direction, flag);
+	});
 	this->add_handle([this](event_type type, const std::vector<std::any>& param)->void {
 		switch (type)
 		{
@@ -140,32 +149,27 @@ void context::stop()
 
 
 
-void context::set_trading_optimize(uint32_t max_position, trading_optimal opt, bool flag)
+pod_chain* context::create_chain(trading_optimal opt, bool flag, std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> fliter_callback)
 {
 
 	auto trader = get_trader();
 	if(trader == nullptr)
 	{
-		return ;
+		return nullptr;
 	}
-	_max_position = max_position;
-	if (_chain)
-	{
-		delete _chain;
-		_chain = nullptr;
-	}
+	pod_chain* chain = nullptr ;
 	if (flag)
 	{
 		switch (opt)
 		{
 		case TO_OPEN_TO_CLOSE:
-			_chain = new price_to_cancel_chain(trader, new open_to_close_chain(trader, new the_end_chain(trader, _max_position)));
+			chain = new price_to_cancel_chain(trader, new open_to_close_chain(trader, new verify_chain(trader, _max_position, fliter_callback)));
 			break;
 		case TO_CLOSE_TO_OPEN:
-			_chain = new price_to_cancel_chain(trader, new close_to_open_chain(trader, _max_position, new the_end_chain(trader, _max_position)));
+			chain = new price_to_cancel_chain(trader, new close_to_open_chain(trader, _max_position, new verify_chain(trader, _max_position, fliter_callback)));
 			break;
 		default:
-			_chain = new price_to_cancel_chain(trader, new the_end_chain(trader, _max_position));
+			chain = new price_to_cancel_chain(trader, new verify_chain(trader, _max_position, fliter_callback));
 			break;
 		}
 	}
@@ -174,16 +178,17 @@ void context::set_trading_optimize(uint32_t max_position, trading_optimal opt, b
 		switch (opt)
 		{
 		case TO_OPEN_TO_CLOSE:
-			_chain = new open_to_close_chain(trader, new the_end_chain(trader, _max_position));
+			chain = new open_to_close_chain(trader, new verify_chain(trader, _max_position, fliter_callback));
 			break;
 		case TO_CLOSE_TO_OPEN:
-			_chain = new close_to_open_chain(trader, _max_position, new the_end_chain(trader, _max_position));
+			chain = new close_to_open_chain(trader, _max_position, new verify_chain(trader, _max_position, fliter_callback));
 			break;
 		default:
-			_chain = new the_end_chain(trader, _max_position);
+			chain = new verify_chain(trader, _max_position, fliter_callback);
 			break;
 		}
 	}
+	return chain;
 }
 
 void context::set_cancel_condition(estid_t order_id, condition_callback callback)
@@ -529,11 +534,12 @@ void context::handle_error(const std::vector<std::any>& param)
 {
 	if (param.size() >= 2)
 	{
-		const estid_t localid = std::any_cast<estid_t>(param[0]);
-		const uint32_t error_code = std::any_cast<uint32_t>(param[1]);
+		const error_type type = std::any_cast<error_type>(param[0]);
+		const estid_t localid = std::any_cast<estid_t>(param[1]);
+		const uint32_t error_code = std::any_cast<uint32_t>(param[2]);
 		if (this->on_error)
 		{
-			this->on_error(localid, error_code);
+			this->on_error(type, localid, error_code);
 		}
 	}
 }

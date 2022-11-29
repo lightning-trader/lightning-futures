@@ -36,7 +36,7 @@ extern "C"
 
 	typedef bool (PORTER_FLAG * condition_callback)(estid_t, const tick_info&);
 
-	typedef void (PORTER_FLAG * error_callback)(estid_t, uint32_t);
+	typedef void (PORTER_FLAG * error_callback)(error_type , estid_t, uint32_t);
 
 	typedef bool (PORTER_FLAG * filter_callback)(const code_t& code, offset_type offset, direction_type direction, order_flag flag);
 
@@ -59,11 +59,6 @@ extern "C"
 	* 撤销订单
 	*/
 	EXPORT_FLAG void lt_cancel_order(const ltobj& ctx,estid_t order_id);
-
-	/*
-	* 设置交易管线
-	*/
-	EXPORT_FLAG void lt_set_trading_optimize(const ltobj& ctx, uint32_t max_position, trading_optimal opt, bool flag);
 
 	/**
 	* 获取仓位信息

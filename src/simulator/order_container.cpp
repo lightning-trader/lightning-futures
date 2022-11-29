@@ -1,12 +1,25 @@
 ﻿#include "order_container.h"
 
+order_container::order_container()
+{}
+
+order_container::~order_container()
+{
+	for (auto it : _order_match)
+	{
+		for (auto mh : it.second)
+		{
+			delete mh;
+		}
+	}
+}
 
 void order_container::add_order(const order_info& order,order_flag flag)
 {
 	spin_lock lock(_mutex);
 	_order_info[order.est_id] = order;
 	LOG_TRACE("order_container add_order  %lld %d ", order.est_id, _order_info.size());
-	_order_match[order.code].emplace_back(order.est_id, flag);
+	_order_match[order.code].emplace_back(new order_match((_order_info[order.est_id]), flag));
 }
 
 void order_container::del_order(estid_t estid)
@@ -18,11 +31,12 @@ void order_container::del_order(estid_t estid)
 		auto match = _order_match.find(odit->second.code);
 		if (match != _order_match.end())
 		{
-			auto mch_odr = std::find_if(match->second.begin(), match->second.end(), [estid](const order_match& p)->bool {
-				return p.est_id == estid;
+			auto mch_odr = std::find_if(match->second.begin(), match->second.end(), [estid](const order_match* p)->bool {
+				return p&&p->order.est_id == estid;
 				});
 			if (mch_odr != match->second.end())
 			{
+				delete *mch_odr;
 				match->second.erase(mch_odr);
 			}
 		}
@@ -40,13 +54,13 @@ void order_container::set_seat(estid_t estid, uint32_t seat)
 		auto it = _order_match.find(odit->second.code);
 		if (it != _order_match.end())
 		{
-			auto od_it = std::find_if(it->second.begin(), it->second.end(), [estid](const order_match& cur) ->bool {
-
-				return cur.est_id == estid;
+			auto od_it = std::find_if(it->second.begin(), it->second.end(), [estid](const order_match* cur) ->bool {
+				
+				return cur&&cur->order.est_id == estid;
 				});
 			if (od_it != it->second.end())
 			{
-				od_it->queue_seat = seat;
+				(*od_it)->queue_seat = seat;
 			}
 		}
 	}
@@ -61,13 +75,13 @@ void order_container::set_state(estid_t estid, order_state state)
 		auto it = _order_match.find(odit->second.code);
 		if (it != _order_match.end())
 		{
-			auto od_it = std::find_if(it->second.begin(), it->second.end(), [estid](const order_match& cur) ->bool {
+			auto od_it = std::find_if(it->second.begin(), it->second.end(), [estid](const order_match* cur) ->bool {
 
-				return cur.est_id == estid;
+				return cur&&cur->order.est_id == estid;
 				});
 			if (od_it != it->second.end())
 			{
-				od_it->state = state;
+				(*od_it)->state = state;
 			}
 		}
 		
@@ -105,9 +119,31 @@ void order_container::get_order_match(std::vector<order_match>& match_list, cons
 	{
 		for (auto& od_it : it->second)
 		{
-			match_list.emplace_back(od_it);
+			match_list.emplace_back(*od_it);
 		}
 	}
+}
+
+const order_match* order_container::get_order_match(estid_t estid)const
+{
+	spin_lock lock(_mutex);
+	auto& odit = _order_info.find(estid);
+	if (odit != _order_info.end())
+	{
+		auto it = _order_match.find(odit->second.code);
+		if (it != _order_match.end())
+		{
+			auto od_it = std::find_if(it->second.begin(), it->second.end(), [estid](const order_match* cur) ->bool {
+
+				return cur && cur->order.est_id == estid;
+				});
+			if (od_it != it->second.end())
+			{
+				return (*od_it);
+			}
+		}
+	}
+	return nullptr ;
 }
 
 bool order_container::get_order_info(order_info& order, estid_t estid)const
@@ -124,16 +160,31 @@ bool order_container::get_order_info(order_info& order, estid_t estid)const
 	LOG_TRACE("order_container get_order_info false");
 	return false;
 }
-
-const std::map<estid_t, order_info> order_container::get_all_order()const
+void order_container::get_all_order(std::vector<order_info>& order)const
 {
 	spin_lock lock(_mutex);
-	return _order_info;
+	for (auto it : _order_match)
+	{
+		for (auto mh : it.second)
+		{
+			if(mh->state != OS_CANELED&& mh->state != OS_INVALID)
+			{
+				order.emplace_back(mh->order);
+			}
+		}
+	}
 }
 
 void order_container::clear()
 {
 	spin_lock lock(_mutex);
 	_order_info.clear();
+	for(auto it : _order_match)
+	{
+		for(auto mh : it.second)
+		{
+			delete mh;
+		}
+	}
 	_order_match.clear();
 }

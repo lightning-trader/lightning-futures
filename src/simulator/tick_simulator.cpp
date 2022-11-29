@@ -132,7 +132,20 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 
 void tick_simulator::cancel_order(estid_t order_id)
 {
-	_order_info.set_state(order_id,OS_CANELED);
+	LOG_DEBUG("tick_simulator cancel_order %lld", order_id);
+	auto match = _order_info.get_order_match(order_id);
+	if(match)
+	{
+		if(match->state == OS_INVALID)
+		{
+			return;
+		}
+		if(match->state != OS_CANELED)
+		{
+			_order_info.set_state(order_id, OS_CANELED);
+		}
+	}
+	
 }
 
 const account_info& tick_simulator::get_account() const
@@ -160,12 +173,13 @@ const order_info& tick_simulator::get_order(estid_t order_id) const
 
 void tick_simulator::find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const
 {
-	auto&& all_order = _order_info.get_all_order();
+	std::vector<order_info> all_order;
+	_order_info.get_all_order(all_order);
 	for (auto& it : all_order)
 	{
-		if (func(it.second))
+		if (func(it))
 		{
-			order_result.emplace_back(it.second);
+			order_result.emplace_back(it);
 		}
 	}
 }
@@ -306,17 +320,23 @@ void tick_simulator::compulsory_closing()
 				pos.short_frozen -= pos.short_postion;
 				_account_info.money -= pos.short_postion * _service_charge;
 				_account_info.frozen_monery -= pos.short_postion * pos.sell_price * _multiple * _margin_rate;
+				//强平 以后所有平仓订单失效
+				std::vector<order_match> match_list;
+				_order_info.get_order_match(match_list, pos.id);
+				for (auto& mh_it : match_list)
+				{
+					if (mh_it.state == OS_IN_MATCH)
+					{
+						order_cancel(mh_it.order);
+					}
+					else
+					{
+						order_error(ET_ORDER_MATCH,mh_it.order.est_id, 30U);
+					}
+				}
 			}
 		}
-		//强平 以后所有平仓订单失效
-		std::vector<order_info> order_list;
-		find_orders(order_list, [](const order_info& order)->bool {
-			return order.offset == OT_CLOSE;
-			});
-		for (auto& it : order_list)
-		{
-			order_cancel(it);
-		}
+		
 	}
 }
 
@@ -384,24 +404,20 @@ void tick_simulator::match_entrust(const tick_info* tick)
 
 void tick_simulator::handle_entrust(const tick_info* tick, const order_match& match, uint32_t max_volume)
 {
-	order_info order ;
-	if(!_order_info.get_order_info(order, match.est_id))
-	{
-		return ;
-	}
-	
+	order_info& order = match.order;
 	if(match.state == OS_INVALID)
 	{
-		if (frozen_deduction(match.est_id,order.code, order.offset, order.direction, order.last_volume, order.price))
+		uint32_t err = frozen_deduction(order.est_id, order.code, order.offset, order.direction, order.last_volume, order.price);
+		if (err == 0U)
 		{
 			this->fire_event(ET_OrderPlace, order);
 			auto queue_seat = get_front_count(order.code, order.price);
-			_order_info.set_seat(match.est_id, queue_seat);
-			_order_info.set_state(match.est_id, OS_IN_MATCH);
+			_order_info.set_seat(order.est_id, queue_seat);
+			_order_info.set_state(order.est_id, OS_IN_MATCH);
 		}
 		else
 		{
-			_order_info.del_order(match.est_id);
+			order_error(ET_ORDER_MATCH,order.est_id, err);
 		}
 		return ;
 	}
@@ -416,11 +432,11 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 	{	
 		if(order.offset == OT_OPEN)
 		{
-			handle_buy(tick, order,match, max_volume);
+			handle_buy(tick, match, max_volume);
 		}
 		else if (order.offset == OT_CLOSE)
 		{
-			handle_sell(tick, order, match, max_volume);
+			handle_sell(tick, match, max_volume);
 		}
 		
 	}
@@ -428,21 +444,21 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 	{
 		if (order.offset == OT_CLOSE)
 		{
-			handle_buy(tick, order, match, max_volume);
+			handle_buy(tick, match, max_volume);
 		}
 		else
 		{
-			handle_sell(tick, order, match, max_volume);
+			handle_sell(tick, match, max_volume);
 		}
 	}
 }
-void tick_simulator::handle_sell(const tick_info* tick, order_info& order, const order_match& match, uint32_t max_volume)
+void tick_simulator::handle_sell(const tick_info* tick,const order_match& match, uint32_t max_volume)
 {
-
+	order_info& order = match.order;
 	if (order.price == 0)
 	{
 		//市价单直接成交(暂时先不考虑一次成交不完的情况)
-		order.price = _order_info.set_price(match.est_id,tick->buy_price());
+		order.price = _order_info.set_price(order.est_id,tick->buy_price());
 	}
 	if (match.flag == OF_FOK)
 	{
@@ -498,7 +514,7 @@ void tick_simulator::handle_sell(const tick_info* tick, order_info& order, const
 			{
 				//排队到了，有成交了
 				//deal_count = - new_seat
-				_order_info.set_seat(match.est_id,0);
+				_order_info.set_seat(order.est_id,0);
 				uint32_t can_deal_volume = static_cast<uint32_t>(-new_seat);
 				uint32_t deal_volume = order.last_volume > can_deal_volume ? can_deal_volume : order.last_volume;
 				if (deal_volume > 0U)
@@ -508,7 +524,7 @@ void tick_simulator::handle_sell(const tick_info* tick, order_info& order, const
 			}
 			else
 			{
-				_order_info.set_seat(match.est_id, new_seat);
+				_order_info.set_seat(order.est_id, new_seat);
 			}
 		}
 	}
@@ -517,13 +533,13 @@ void tick_simulator::handle_sell(const tick_info* tick, order_info& order, const
 
 }
 
-void tick_simulator::handle_buy(const tick_info* tick, order_info& order, const order_match& match, uint32_t max_volume)
+void tick_simulator::handle_buy(const tick_info* tick, const order_match& match, uint32_t max_volume)
 {
-
+	order_info& order = match.order;
 	if (order.price == 0)
 	{
 		//市价单直接成交
-		order.price = _order_info.set_price(match.est_id,tick->sell_price());
+		order.price = _order_info.set_price(order.est_id,tick->sell_price());
 	}
 	if (match.flag == OF_FOK)
 	{
@@ -582,7 +598,7 @@ void tick_simulator::handle_buy(const tick_info* tick, order_info& order, const 
 			{
 				//排队到了，有成交了
 				//deal_count = - new_seat
-				_order_info.set_seat(match.est_id, 0);
+				_order_info.set_seat(order.est_id, 0);
 				uint32_t can_deal_volume = static_cast<uint32_t>(-new_seat);
 				uint32_t deal_volume = order.last_volume > can_deal_volume ? can_deal_volume : order.last_volume;
 				if (deal_volume > 0)
@@ -592,7 +608,7 @@ void tick_simulator::handle_buy(const tick_info* tick, order_info& order, const 
 			}
 			else
 			{
-				_order_info.set_seat(match.est_id, new_seat);
+				_order_info.set_seat(order.est_id, new_seat);
 			}
 		}
 	}
@@ -654,27 +670,30 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 	this->fire_event(ET_PositionChange, pos);
 	this->fire_event(ET_AccountChange,_account_info);
 }
-
+void tick_simulator::order_error(error_type type,estid_t estid,uint32_t err)
+{
+	this->fire_event(ET_OrderError, type, estid, err);
+	_order_info.del_order(estid);
+}
 void tick_simulator::order_cancel(const order_info& order)
 {
 	thawing_deduction(order.code,order.offset,order.direction,order.last_volume, order.price);
 	this->fire_event(ET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
 	_order_info.del_order(order.est_id);
 }
-bool tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
+uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
 {
 	if (offset == OT_OPEN)
 	{
 		double_t frozen_monery = count * price * _multiple * _margin_rate;
 		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
 		{
-			this->fire_event(ET_OrderError, est_id, 31U);
-			return false;
+			return 31U;
 		}
 		//开仓 冻结保证金
 		_account_info.frozen_monery += frozen_monery;
 		this->fire_event(ET_AccountChange, _account_info);
-		return true ;
+		return 0U ;
 	}
 	if (offset == OT_CLOSE)
 	{
@@ -683,8 +702,7 @@ bool tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_t
 		{
 			if(pos.long_postion - pos.long_frozen < count)
 			{
-				this->fire_event(ET_OrderError, est_id, 30U);
-				return false;
+				return 30U;
 			}
 			pos.long_frozen += count;
 		}
@@ -692,15 +710,14 @@ bool tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_t
 		{
 			if (pos.short_postion - pos.short_frozen < count)
 			{
-				this->fire_event(ET_OrderError, est_id, 30U);
-				return false;
+				return 30U;
 			}
 			pos.short_frozen += count;
 		}
 		this->fire_event(ET_PositionChange, pos);
-		return true ;
+		return 0U;
 	}
-	return false ;
+	return 23U;
 }
 void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
 {

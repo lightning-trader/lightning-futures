@@ -74,7 +74,7 @@ public:
 	 *	@localid	本地订单id
 	 *	@error 错误代码
 	 */
-	virtual void on_error(estid_t localid, const uint32_t error) {}
+	virtual void on_error(error_type type, estid_t localid, const uint32_t error) {}
 
 
 protected:

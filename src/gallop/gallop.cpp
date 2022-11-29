@@ -13,8 +13,7 @@ void start_runtime()
 	auto app = std::make_shared<runtime_engine>("./runtime.ini");
 	auto hcc = std::make_shared<demo_strategy>();
 	app->add_strategy(0,hcc);
-	// 这里设置开平互转，开仓->平仓（开多->平空，开空->平多）
-	app->set_trading_optimize(2, TO_OPEN_TO_CLOSE, false);
+	
 	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool {
 		const auto& statius = app->get_order_statistic();
 		//限制每日下单数量超过480就不再可以下单了，避免触发交易所警告
@@ -44,8 +43,7 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2305"), 2));
 	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2307"), 2));
 	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2308"), 2));
-	// 这里设置开平互转，开仓->平仓（开多->平空，开空->平多）
-	app->set_trading_optimize(2, TO_OPEN_TO_CLOSE, false);
+	
 	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool {
 		const auto& statius = app->get_order_statistic();
 		//限制每日下单数量超过480就不再可以下单了，避免触发交易所警告

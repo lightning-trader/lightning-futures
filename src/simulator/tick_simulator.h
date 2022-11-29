@@ -138,18 +138,20 @@ private:
 
 	void handle_entrust(const tick_info* tick, const order_match& match, uint32_t max_volume);
 
-	void handle_sell(const tick_info* tick, order_info& order, const order_match& match, uint32_t deal_volume);
+	void handle_sell(const tick_info* tick, const order_match& match, uint32_t deal_volume);
 	
-	void handle_buy(const tick_info* tick, order_info& order, const order_match& match, uint32_t deal_volume);
+	void handle_buy(const tick_info* tick, const order_match& match, uint32_t deal_volume);
 
 	void order_deal(order_info& order, uint32_t deal_volume);
+
+	void order_error(error_type type, estid_t estid, uint32_t err);
 
 	void order_cancel(const order_info& order);
 
 	boost::posix_time::ptime pt = boost::posix_time::ptime();
 
 	//冻结
-	bool frozen_deduction(estid_t est_id, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price);
+	uint32_t frozen_deduction(estid_t est_id, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price);
 	//解冻
 	void thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price);
 };

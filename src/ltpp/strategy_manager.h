@@ -123,7 +123,7 @@ private:
 		}
 	}
 
-	static inline void _error_callback(estid_t localid, uint32_t error)
+	static inline void _error_callback(error_type type, estid_t localid, uint32_t error)
 	{
 		if (_self)
 		{
@@ -134,7 +134,7 @@ private:
 			}
 			if (it->second)
 			{
-				it->second->on_error(localid, error);
+				it->second->on_error(type,localid, error);
 			}
 			_self->unregist_estid_strategy(localid);
 		}

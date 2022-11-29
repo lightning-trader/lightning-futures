@@ -34,6 +34,7 @@ bool runtime::init_from_file(const std::string& config_path)
 	boost::property_tree::ptree	trader_config;
 	boost::property_tree::ptree  recorder_config;
 	boost::property_tree::ptree  localdb_config;
+	boost::property_tree::ptree  channel_config;
 
 	if (!file_wapper::exists(config_path.c_str()))
 	{
@@ -48,6 +49,7 @@ bool runtime::init_from_file(const std::string& config_path)
 		trader_config = config_root.get_child("trader_api");
 		recorder_config = config_root.get_child("recorder");
 		localdb_config = config_root.get_child("localdb");
+		channel_config = config_root.get_child("channel");
 	}
 	catch (...)
 	{
@@ -69,7 +71,7 @@ bool runtime::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
 		return false;
 	}
-	return this->init(localdb_config, recorder_config);
+	return this->init(localdb_config, channel_config, recorder_config);
 }
 
 trader_api* runtime::get_trader()

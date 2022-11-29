@@ -1,6 +1,7 @@
 #pragma once
 #include <define.h>
 #include <data_types.hpp>
+#include <functional>
 
 /***  
 * 
@@ -86,16 +87,18 @@ public:
 
 };
 
-class the_end_chain : public pod_chain
+class verify_chain : public pod_chain
 {
 private:
 	uint32_t _max_position ;
+
+	std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> _filter_callback;
 public:
 	
-	the_end_chain(class trader_api* trader,uint32_t max_position) :pod_chain(trader, nullptr), _max_position(max_position)
+	verify_chain(class trader_api* trader,uint32_t max_position, std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> filter_callback) :pod_chain(trader, nullptr), _max_position(max_position), _filter_callback(filter_callback)
 	{}
 
-	virtual ~the_end_chain()
+	virtual ~verify_chain()
 	{}
 
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;

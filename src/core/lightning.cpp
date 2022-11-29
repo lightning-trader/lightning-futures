@@ -112,22 +112,6 @@ extern "C"
 		c->cancel_order(order_id);
 	}
 
-	
-	void lt_set_trading_optimize(const ltobj& lt, uint32_t max_position, trading_optimal opt, bool flag)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return;
-		}
-		c->set_trading_optimize(max_position, opt, flag);
-	}
-
-	
 	const position_info& lt_get_position(const ltobj& lt, const code_t& code)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)

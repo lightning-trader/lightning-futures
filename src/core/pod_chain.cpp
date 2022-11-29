@@ -106,7 +106,7 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 }
 
 
-estid_t the_end_chain::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
+estid_t verify_chain::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	if(offset == OT_OPEN)
 	{
@@ -128,6 +128,10 @@ estid_t the_end_chain::place_order(offset_type offset, direction_type direction,
 		{
 			return INVALID_ESTID;
 		}
+	}
+	if(!_filter_callback(code, offset, direction, flag))
+	{
+		return INVALID_ESTID;
 	}
 	return _trader->place_order(offset, direction, code, count, price, flag);
 }

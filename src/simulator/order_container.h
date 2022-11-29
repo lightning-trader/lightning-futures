@@ -15,13 +15,12 @@ enum order_state
 
 struct order_match
 {
-	estid_t		est_id;
 	uint32_t	queue_seat; //队列前面有多少个
 	order_state		state;
 	order_flag		flag;
+	order_info& order ;
 
-
-	order_match(estid_t id, order_flag flg):est_id(id), queue_seat(0), state(OS_INVALID), flag(flg)
+	order_match(order_info& ord, order_flag flg):order(ord), queue_seat(0), state(OS_INVALID), flag(flg)
 	{}
 };
 
@@ -34,10 +33,14 @@ private:
 
 	std::map<estid_t, order_info> _order_info;
 
-	std::map<code_t, std::vector<order_match>> _order_match;
+	std::map<code_t, std::vector<order_match*>> _order_match;
 
 	
 public:
+
+	order_container();
+
+	~order_container();
 
 	void add_order(const order_info& order_info, order_flag flag);
 
@@ -53,9 +56,11 @@ public:
 
 	void get_order_match(std::vector<order_match>& match_list, const code_t& code)const;
 
+	const order_match* get_order_match(estid_t estid)const;
+
 	bool get_order_info(order_info& order, estid_t estid)const;
 	
-	const std::map<estid_t, order_info> get_all_order()const;
+	void get_all_order(std::vector<order_info>& order)const;
 
 	void clear();
 
