@@ -58,4 +58,5 @@ public:
 	const std::map<estid_t, order_info> get_all_order()const;
 
 	void clear();
+
 };

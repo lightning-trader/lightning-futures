@@ -55,6 +55,7 @@ private:
 	double_t	_service_charge ;	//手续费
 	uint32_t	_multiple ;			//资金倍数
 	double_t	_margin_rate ;		//保证金率
+	double_t	_compulsory_factor; //低于现有资金比例以后触发强平
 
 public:
 
@@ -126,6 +127,8 @@ private:
 	void publish_tick();
 
 	void handle_order();
+
+	void compulsory_closing();
 
 	estid_t make_estid();
 

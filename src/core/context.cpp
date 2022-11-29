@@ -506,7 +506,7 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		}
 		if (_recorder)
 		{
-			_recorder->record_order_cancel(get_last_time(), localid, total_volume-cancel_volume);
+			_recorder->record_order_cancel(get_last_time(), localid, cancel_volume);
 		}
 	}
 }

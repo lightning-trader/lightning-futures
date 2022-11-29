@@ -92,6 +92,7 @@ void evaluate::update()
 	{
 		_simulator->update();
 	}
+	std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
 
 void evaluate::add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle)

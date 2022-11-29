@@ -15,6 +15,7 @@ bool tick_simulator::init(const boost::property_tree::ptree& config)
 		_multiple = config.get<uint32_t>("multiple");
 		_margin_rate = config.get<double_t>("margin_rate");
 		_interval = config.get<uint32_t>("interval",1);
+		_compulsory_factor = config.get<double_t>("compulsory_factor", 0.8);
 		loader_type = config.get<std::string>("loader_type");
 		csv_data_path = config.get<std::string>("csv_data_path");
 	}
@@ -55,8 +56,16 @@ void tick_simulator::play(uint32_t tradeing_day)
 		//先触发tick，再进行撮合
 		publish_tick();
 		handle_order();
+		//处理强平
+		compulsory_closing();
 		//std::chrono::milliseconds(_interval)
 		std::this_thread::sleep_for(std::chrono::microseconds(_interval));
+
+		_last_frame_volume.clear();
+		for (const auto& tick : _current_tick_info)
+		{
+			_last_frame_volume[tick->id] = tick->volume;
+		}
 	}
 }
 
@@ -252,10 +261,62 @@ void tick_simulator::handle_order()
 	{
 		match_entrust(tick);
 	}
-	_last_frame_volume.clear();
-	for (const auto& tick : _current_tick_info)
+	
+}
+
+void tick_simulator::compulsory_closing()
+{
+	double_t delta_money = .0F;
+	for(auto& it : _position_info)
 	{
-		_last_frame_volume[tick->id] = tick->volume;
+		auto& pos = it.second;
+		auto tick_it = std::find_if(_current_tick_info.begin(), _current_tick_info.end(),[it](const tick_info* p)->bool{
+			return p->id == it.first;
+		});
+		if(tick_it != _current_tick_info.end())
+		{
+			double_t current_price = (*tick_it)->price;
+			delta_money += pos.long_postion * (current_price - pos.buy_price) * _multiple;
+			delta_money += pos.short_postion * (pos.sell_price - current_price) * _multiple;
+		}
+	}
+	//权益资金小于现有资金的20%触发强平
+	if(_account_info.money + delta_money< _account_info.money * _compulsory_factor)
+	{
+		for (auto& it : _position_info)
+		{
+			auto& pos = it.second;
+			auto tick_it = std::find_if(_current_tick_info.begin(), _current_tick_info.end(), [it](const tick_info* p)->bool {
+				return p->id == it.first;
+				});
+			if (tick_it != _current_tick_info.end())
+			{
+				double_t buy_price = (*tick_it)->buy_price();
+				double_t sell_price = (*tick_it)->sell_price();
+				//假定市价单全部能成交，暂时不考虑穿仓情况
+				//强平多仓
+				_account_info.money += pos.long_postion * (sell_price - pos.buy_price) * _multiple;
+				pos.long_postion -= pos.long_postion;
+				pos.long_frozen -= pos.long_postion;
+				_account_info.money -= pos.long_postion * _service_charge;
+				_account_info.frozen_monery -= pos.long_postion * sell_price * _multiple * _margin_rate;
+				//强平空仓
+				_account_info.money += pos.short_postion * (pos.sell_price - buy_price) * _multiple;
+				pos.short_postion -= pos.short_postion;
+				pos.short_frozen -= pos.short_postion;
+				_account_info.money -= pos.short_postion * _service_charge;
+				_account_info.frozen_monery -= pos.short_postion * pos.sell_price * _multiple * _margin_rate;
+			}
+		}
+		//强平 以后所有平仓订单失效
+		std::vector<order_info> order_list;
+		find_orders(order_list, [](const order_info& order)->bool {
+			return order.offset == OT_CLOSE;
+			});
+		for (auto& it : order_list)
+		{
+			order_cancel(it);
+		}
 	}
 }
 
@@ -563,7 +624,7 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		//平仓
 		if (order.direction == DT_LONG)
 		{
-			_account_info.money += (order.price - pos.buy_price)* _multiple;
+			_account_info.money += deal_volume*(order.price - pos.buy_price)* _multiple;
 			pos.long_postion -= deal_volume;
 			pos.long_frozen -= deal_volume;
 			_account_info.money -= deal_volume * _service_charge;
@@ -571,7 +632,7 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		}
 		else if (order.direction == DT_SHORT)
 		{
-			_account_info.money += (pos.sell_price - order.price) * _multiple;
+			_account_info.money += deal_volume*(pos.sell_price - order.price) * _multiple;
 			pos.short_postion -= deal_volume;
 			pos.short_frozen -= deal_volume;
 			_account_info.money -= deal_volume * _service_charge;
@@ -607,7 +668,7 @@ bool tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_t
 		double_t frozen_monery = count * price * _multiple * _margin_rate;
 		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
 		{
-			this->fire_event(ET_OrderError, est_id, 31);
+			this->fire_event(ET_OrderError, est_id, 31U);
 			return false;
 		}
 		//开仓 冻结保证金
@@ -620,18 +681,18 @@ bool tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_t
 		auto& pos = _position_info[code];
 		if (direction == DT_LONG)
 		{
-			if(pos.long_postion< count)
+			if(pos.long_postion - pos.long_frozen < count)
 			{
-				this->fire_event(ET_OrderError, est_id, 30);
+				this->fire_event(ET_OrderError, est_id, 30U);
 				return false;
 			}
 			pos.long_frozen += count;
 		}
 		else if (direction == DT_SHORT)
 		{
-			if (pos.short_postion < count)
+			if (pos.short_postion - pos.short_frozen < count)
 			{
-				this->fire_event(ET_OrderError, est_id, 30);
+				this->fire_event(ET_OrderError, est_id, 30U);
 				return false;
 			}
 			pos.short_frozen += count;
