@@ -106,6 +106,16 @@ struct position_info
 		return long_postion + short_postion + long_yestoday + short_yestoday;
 	}
 
+	uint32_t get_short()const
+	{
+		return short_postion + short_yestoday;
+	}
+
+	uint32_t get_long()const
+	{
+		return long_postion + long_yestoday ;
+	}
+
 	/**  
 	* 正数表示多仓，复数表示空仓
 	*/
@@ -124,6 +134,8 @@ struct position_info
 		short_postion(0),
 		long_frozen(0),
 		short_frozen(0),
+		buy_price(.0F),
+		sell_price(.0F),
 		long_yestoday(0),
 		short_yestoday(0)
 	{}

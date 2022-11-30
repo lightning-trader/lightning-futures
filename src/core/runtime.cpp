@@ -56,19 +56,20 @@ bool runtime::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file read_ini error : %s", config_path.c_str());
 		return false;
 	}
-	//market
-	
-	_market_api = create_market_api(market_config);
-	if (_market_api == nullptr)
-	{
-		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
-		return false;
-	}
+
 	//trader
 	_trader_api = create_trader_api(trader_config);
 	if (_trader_api == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
+		return false;
+	}
+
+	//market
+	_market_api = create_market_api(market_config);
+	if (_market_api == nullptr)
+	{
+		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
 		return false;
 	}
 	return this->init(localdb_config, channel_config, recorder_config);

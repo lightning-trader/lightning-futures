@@ -11,7 +11,7 @@ void start_runtime()
 {
 	//auto app = runtime_engine("./rt_simnow.ini");
 	auto app = std::make_shared<runtime_engine>("./runtime.ini");
-	auto hcc = std::make_shared<demo_strategy>("SHFE.rb2304",5);
+	auto hcc = std::make_shared<demo_strategy>("SHFE.rb2301",0);
 	app->add_strategy(0,hcc);
 	
 	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool {

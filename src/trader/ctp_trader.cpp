@@ -329,7 +329,7 @@ void ctp_trader::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingA
 	if (bIsLast&& pTradingAccount)
 	{
 		_account_info.money = pTradingAccount->Balance;
-		_account_info.frozen_monery = pTradingAccount->FrozenCash;
+		_account_info.frozen_monery = pTradingAccount->FrozenCommission+ pTradingAccount->FrozenMargin+ pTradingAccount->CurrMargin;
 		this->fire_event(ET_AccountChange, _account_info);
 	}
 	if (bIsLast && !_is_inited)
@@ -353,21 +353,20 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 	
 	if (pInvestorPosition)
 	{	
-		
-		auto& position = _position_info[pInvestorPosition->InstrumentID];
-		
-		position.id = pInvestorPosition->InstrumentID;
+		code_t code(pInvestorPosition->InstrumentID, pInvestorPosition->ExchangeID);
+		position_info& position = _position_info[code];
+		position.id = code;
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
-			position.long_postion = pInvestorPosition->Position;
-			position.long_frozen = pInvestorPosition->LongFrozen;
-			position.long_yestoday = pInvestorPosition->YdPosition;
+			position.long_postion += pInvestorPosition->Position;
+			position.long_frozen += pInvestorPosition->LongFrozen;
+			position.long_yestoday += pInvestorPosition->YdPosition;
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
-			position.short_postion = pInvestorPosition->Position;
-			position.short_frozen = pInvestorPosition->ShortFrozen;
-			position.short_yestoday = pInvestorPosition->YdPosition;
+			position.short_postion += pInvestorPosition->Position;
+			position.short_frozen += pInvestorPosition->ShortFrozen;
+			position.short_yestoday += pInvestorPosition->YdPosition;
 		}
 	}
 	if (bIsLast && !_is_inited)
@@ -407,11 +406,11 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		while (!_is_in_query.exchange(false));
 		_order_info.clear();
 	}
-	if (pOrder)
+	if (pOrder&& pOrder->VolumeTotal>0)
 	{
 		estid_t estid = generate_estid(pOrder->FrontID, pOrder->SessionID,strtoul(pOrder->OrderRef,NULL,10));
 		auto& order = _order_info[estid];
-		order.code = pOrder->InstrumentID ;
+		order.code = code_t(pOrder->InstrumentID , pOrder->ExchangeID);
 		order.create_time = make_datetime(pOrder->InsertDate, pOrder->InsertTime);
 		order.est_id = estid;
 		order.direction = wrap_position_direction(pOrder->Direction);
@@ -712,7 +711,7 @@ const account_info& ctp_trader::get_account() const
 
 const position_info& ctp_trader::get_position(const code_t& code) const
 {
-	auto it = _position_info.find(code);
+	const auto& it = _position_info.find(code);
 	if (it != _position_info.end())
 	{
 		return (it->second);

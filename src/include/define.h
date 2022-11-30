@@ -48,18 +48,18 @@ public:
 			}
 			if(ed==0)
 			{
-				_data[i] = cd[i];
+				_data[i + CODE_DATA_LEN / 2] = cd[i];
 			}
 			else
 			{
-				_data[i-ed-1 + CODE_DATA_LEN / 2] = cd[i];
+				_data[i - ed - 1] = cd[i];
 			}
 		}
 	}
 
 	code_t()
 	{
-	memset(&_data, 0, sizeof(_data));
+		memset(&_data, 0, sizeof(_data));
 	}
 
 	code_t(const code_t& obj)
@@ -69,42 +69,26 @@ public:
 	code_t(const char* id, const char* excg_id)
 	{
 		memset(&_data, 0, sizeof(_data));
-		strcpy_s(_data + CODE_DATA_LEN/2, CODE_DATA_LEN/2,id);
-		strcpy_s(_data, CODE_DATA_LEN/2, excg_id);
+		strcpy_s(_data, CODE_DATA_LEN / 2, id);
+		strcpy_s(_data + CODE_DATA_LEN/2, CODE_DATA_LEN / 2, excg_id);
 	}
 
 	bool operator < (const code_t& other)const
 	{
-		if (strcmp(get_excg(), other.get_excg())<0)
-		{
-			return true;
-		}
-		if (strcmp(get_id(), other.get_id())<0)
-		{
-			return true;
-		}
-		return false;
+		return memcmp(_data, other._data, CODE_DATA_LEN)<0;
 	}
 	bool operator == (const code_t& other)const
 	{
-		if (strcmp(get_excg(), other.get_excg()) != 0)
-		{
-			return false;
-		}
-		if (strcmp(get_id(), other.get_id()) != 0)
-		{
-			return false;
-		}
-		return true;
+		return memcmp(_data, other._data, CODE_DATA_LEN) == 0;
 	}
 
 	const char* get_id()const
 	{
-		return _data + CODE_DATA_LEN / 2;
+		return _data;
 	}
 	const char* get_excg()const
 	{
-		return _data ;
+		return _data + CODE_DATA_LEN / 2;
 	}
 	bool is_excg(const char * excg)
 	{

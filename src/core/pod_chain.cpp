@@ -53,7 +53,7 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 		if(direction == DT_LONG)
 		{
 			auto position = _trader->get_position(code);
-			if (position.short_postion >= count)
+			if (position.get_short() >= count)
 			{
 				//开多转平空
 				return _next->place_order(OT_CLOSE, DT_SHORT, code, count, price, flag);
@@ -62,7 +62,7 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 		if (direction == DT_SHORT)
 		{
 			auto position = _trader->get_position(code);
-			if (position.long_postion >= count)
+			if (position.get_long() >= count)
 			{
 				//开空转平多
 				return _next->place_order(OT_CLOSE, DT_LONG, code, count, price, flag);
@@ -120,11 +120,11 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 	else if (offset == OT_CLOSE)
 	{
 		const auto pos = _trader->get_position(code);
-		if (direction == DT_LONG && pos.long_postion - pos.long_frozen < count)
+		if (direction == DT_LONG && pos.get_long() - pos.long_frozen < count)
 		{
 			return INVALID_ESTID;
 		}
-		else if (direction == DT_SHORT && pos.short_postion - pos.short_frozen < count)
+		else if (direction == DT_SHORT && pos.get_short() - pos.short_frozen < count)
 		{
 			return INVALID_ESTID;
 		}
