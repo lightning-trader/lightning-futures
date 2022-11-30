@@ -159,27 +159,25 @@ private:
 		}
 		else if (OT_CLOSE == offset)
 		{
-			auto it = _yestoday_position_info.find(code);
-			if (it != _yestoday_position_info.end())
+			auto it = _position_info.find(code);
+			if (it != _position_info.end())
 			{
 				//TODO 先不处理分仓
 				if (direction == DT_LONG)
 				{
-					if (it->second.long_postion > volume)
+					if (it->second.long_yestoday >= volume)
 					{
 						return THOST_FTDC_OF_CloseYesterday;
 					}
 				}
 				else
 				{
-					if (it->second.short_postion > volume)
+					if (it->second.short_yestoday >= volume)
 					{
 						return THOST_FTDC_OF_CloseYesterday;
 					}
-					
 				}
 			}
-			
 		}
 		
 		return THOST_FTDC_OF_CloseToday;
@@ -260,8 +258,7 @@ protected:
 	//
 	typedef std::map<code_t,position_info, std::less<code_t>, boost::fast_pool_allocator<std::pair<code_t const, position_info>>> position_map;
 	position_map			_position_info;
-	position_map			_yestoday_position_info;
-
+	
 	//
 	typedef std::map<estid_t, order_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, order_info>>> entrust_map;
 	entrust_map				_order_info;

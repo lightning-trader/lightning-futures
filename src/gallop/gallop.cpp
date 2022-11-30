@@ -11,7 +11,7 @@ void start_runtime()
 {
 	//auto app = runtime_engine("./rt_simnow.ini");
 	auto app = std::make_shared<runtime_engine>("./runtime.ini");
-	auto hcc = std::make_shared<demo_strategy>();
+	auto hcc = std::make_shared<demo_strategy>("SHFE.rb2304",5);
 	app->add_strategy(0,hcc);
 	
 	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool {
@@ -112,10 +112,10 @@ int main()
 	*/
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	start_evaluate(all_trading_day);
+	//start_evaluate(all_trading_day);
 	//start_hft_1_optimize(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	//start_runtime();
+	start_runtime();
 	
 	/*
 	LOG_DEBUG("123_%d----%s",123,"a");

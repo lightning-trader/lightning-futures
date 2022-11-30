@@ -101,6 +101,12 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 			});
 		//_work_thread->join();
 	}
+	query_positions();
+	_process_signal.wait(_process_mutex);
+	query_orders();
+	_process_signal.wait(_process_mutex);
+	query_account();
+	_process_signal.wait(_process_mutex);
 	_is_inited = true ;
 	return true;
 }
@@ -322,9 +328,13 @@ void ctp_trader::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingA
 	
 	if (bIsLast&& pTradingAccount)
 	{
-		_account_info.money = pTradingAccount->CurrMargin;
-		_account_info.frozen_monery = pTradingAccount->FrozenMargin;
+		_account_info.money = pTradingAccount->Balance;
+		_account_info.frozen_monery = pTradingAccount->FrozenCash;
 		this->fire_event(ET_AccountChange, _account_info);
+	}
+	if (bIsLast && !_is_inited)
+	{
+		_process_signal.notify_all();
 	}
 }
 
@@ -334,7 +344,6 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 	{
 		while (!_is_in_query.exchange(false));
 		_position_info.clear();
-		_yestoday_position_info.clear();
 	}
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
@@ -346,23 +355,25 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 	{	
 		
 		auto& position = _position_info[pInvestorPosition->InstrumentID];
-		auto& yestoday_position = _yestoday_position_info[pInvestorPosition->InstrumentID];
-
+		
 		position.id = pInvestorPosition->InstrumentID;
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
 			position.long_postion = pInvestorPosition->Position;
 			position.long_frozen = pInvestorPosition->LongFrozen;
-			yestoday_position.long_postion = pInvestorPosition->YdPosition;
+			position.long_yestoday = pInvestorPosition->YdPosition;
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
 			position.short_postion = pInvestorPosition->Position;
 			position.short_frozen = pInvestorPosition->ShortFrozen;
-			yestoday_position.short_postion = pInvestorPosition->YdPosition;
+			position.short_yestoday = pInvestorPosition->YdPosition;
 		}
 	}
-
+	if (bIsLast && !_is_inited)
+	{
+		_process_signal.notify_all();
+	}
 }
 
 
@@ -410,9 +421,9 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		order.price = pOrder->LimitPrice;
 	}
 
-	if (bIsLast)
+	if (bIsLast && !_is_inited)
 	{
-		
+		_process_signal.notify_all();
 	}
 }
 

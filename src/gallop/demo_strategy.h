@@ -23,12 +23,6 @@ class demo_strategy : public strategy
 
 public:
 
-	demo_strategy() :
-		_offset(1),
-		_short_order(INVALID_ESTID),
-		_long_order(INVALID_ESTID)
-	{};
-
 	demo_strategy(const code_t& code,uint32_t offset):
 	_code(code),
 	_offset(offset),
