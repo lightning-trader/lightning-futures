@@ -35,6 +35,12 @@ private:
 	virtual void on_init() {};
 
 public:
+	
+	/*
+	*	交易日初始化完成
+	*/
+	virtual void on_ready() {};
+
 	/*
 	 *	tick推送
 	 */
@@ -190,6 +196,10 @@ protected:
 	*/
 	uint32_t get_trading_day()const;
 
+	/**
+	*	是否准备就绪
+	*/
+	bool is_trading_ready()const;
 };
 
 

@@ -78,6 +78,8 @@ public:
 
 	error_callback on_error;
 
+	ready_callback on_ready;
+
 	/*Æô¶¯*/
 	void start() ;
 

@@ -229,7 +229,7 @@ extern "C"
 	}
 
 	void lt_bind_callback(const ltobj& lt, tick_callback tick_cb, entrust_callback entrust_cb, deal_callback deal_cb
-		, trade_callback trade_cb, cancel_callback cancel_cb, error_callback error_cb)
+		, trade_callback trade_cb, cancel_callback cancel_cb, error_callback error_cb, ready_callback ready_cb)
 	{
 		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
 		{
@@ -246,6 +246,7 @@ extern "C"
 		c->on_trade = trade_cb;
 		c->on_cancel = cancel_cb;
 		c->on_error = error_cb;
+		c->on_ready = ready_cb;
 	}
 
 	void lt_playback_history(const ltobj& lt, uint32_t trading_day)

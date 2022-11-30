@@ -351,22 +351,24 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 		return;
 	}
 	
-	if (pInvestorPosition)
+	if (pInvestorPosition&& pInvestorPosition->Position>0)
 	{	
 		code_t code(pInvestorPosition->InstrumentID, pInvestorPosition->ExchangeID);
 		position_info& position = _position_info[code];
 		position.id = code;
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
-			position.long_postion += pInvestorPosition->Position;
-			position.long_frozen += pInvestorPosition->LongFrozen;
-			position.long_yestoday += pInvestorPosition->YdPosition;
+			position.long_postion = pInvestorPosition->Position ;
+			position.long_frozen = pInvestorPosition->ShortFrozen;
+			position.long_yestoday = pInvestorPosition->YdPosition;
+			position.buy_price = pInvestorPosition->SettlementPrice;
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
-			position.short_postion += pInvestorPosition->Position;
-			position.short_frozen += pInvestorPosition->ShortFrozen;
-			position.short_yestoday += pInvestorPosition->YdPosition;
+			position.short_postion = pInvestorPosition->Position;
+			position.short_frozen = pInvestorPosition->LongFrozen;
+			position.short_yestoday = pInvestorPosition->YdPosition;
+			position.sell_price = pInvestorPosition->SettlementPrice;
 		}
 	}
 	if (bIsLast && !_is_inited)

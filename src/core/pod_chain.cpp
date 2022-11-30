@@ -1,11 +1,11 @@
 #include "pod_chain.h"
 #include <trader_api.h>
 
-uint32_t pod_chain::get_pending_position(const code_t& code) const
+uint32_t pod_chain::get_open_pending(const code_t& code) const
 {
 	std::vector<order_info> order_list;
 	_trader->find_orders(order_list, [code](const order_info& order)->bool {
-		return order.code == code;
+		return order.code == code&&order.offset==OT_OPEN;
 		});
 	uint32_t res = 0;
 	for (auto& it : order_list)
@@ -21,7 +21,7 @@ estid_t close_to_open_chain::place_order(offset_type offset, direction_type dire
 	{
 		uint32_t total_position = 0;
 		auto position = _trader->get_position(code);
-		total_position = position.get_total() + get_pending_position(code);
+		total_position = position.get_total() + get_open_pending(code);
 		if (direction == DT_LONG)
 		{
 			
@@ -53,7 +53,7 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 		if(direction == DT_LONG)
 		{
 			auto position = _trader->get_position(code);
-			if (position.get_short() >= count)
+			if (position.short_postion >= count)
 			{
 				//开多转平空
 				return _next->place_order(OT_CLOSE, DT_SHORT, code, count, price, flag);
@@ -62,7 +62,7 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 		if (direction == DT_SHORT)
 		{
 			auto position = _trader->get_position(code);
-			if (position.get_long() >= count)
+			if (position.long_postion >= count)
 			{
 				//开空转平多
 				return _next->place_order(OT_CLOSE, DT_LONG, code, count, price, flag);
@@ -111,7 +111,7 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 	if(offset == OT_OPEN)
 	{
 		auto position = _trader->get_position(code);
-		auto pending = get_pending_position(code);
+		auto pending = get_open_pending(code);
 		if (position.get_total()+ pending + count > _max_position)
 		{
 			return INVALID_ESTID;
@@ -120,11 +120,11 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 	else if (offset == OT_CLOSE)
 	{
 		const auto pos = _trader->get_position(code);
-		if (direction == DT_LONG && pos.get_long() - pos.long_frozen < count)
+		if (direction == DT_LONG && pos.long_postion - pos.long_frozen < count)
 		{
 			return INVALID_ESTID;
 		}
-		else if (direction == DT_SHORT && pos.get_short() - pos.short_frozen < count)
+		else if (direction == DT_SHORT && pos.short_postion - pos.short_frozen < count)
 		{
 			return INVALID_ESTID;
 		}

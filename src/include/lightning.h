@@ -38,6 +38,8 @@ extern "C"
 
 	typedef void (PORTER_FLAG * error_callback)(error_type , estid_t, uint32_t);
 
+	typedef void (PORTER_FLAG * ready_callback)();
+
 	typedef bool (PORTER_FLAG * filter_callback)(const code_t& code, offset_type offset, direction_type direction, order_flag flag);
 
 	EXPORT_FLAG ltobj lt_create_context(context_type ctx_type, const char* config_path);
@@ -106,7 +108,7 @@ extern "C"
 	* 绑定回调 
 	*/
 	EXPORT_FLAG void lt_bind_callback(const ltobj& ctx, tick_callback tick_cb, entrust_callback entrust_cb, deal_callback deal_cb
-	, trade_callback trade_cb, cancel_callback cancel_cb,error_callback error_cb);
+	, trade_callback trade_cb, cancel_callback cancel_cb,error_callback error_cb, ready_callback ready_cb);
 
 	/**
 	* 播放历史数据

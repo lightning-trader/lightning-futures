@@ -422,6 +422,10 @@ void context::handle_ready(const std::vector<std::any>& param)
 	{
 		_is_trading_ready = true ;
 	}
+	if(on_ready)
+	{
+		on_ready();
+	}
 	LOG_INFO("trading ready");
 	
 }
@@ -518,6 +522,10 @@ void context::handle_cancel(const std::vector<std::any>& param)
 
 void context::handle_tick(const std::vector<std::any>& param)
 {
+	if(!_is_trading_ready)
+	{
+		return ;
+	}
 	if (param.size() >= 1)
 	{
 		const tick_info& tick = std::any_cast<tick_info>(param[0]);

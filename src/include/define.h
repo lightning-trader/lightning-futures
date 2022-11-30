@@ -69,8 +69,8 @@ public:
 	code_t(const char* id, const char* excg_id)
 	{
 		memset(&_data, 0, sizeof(_data));
-		strcpy_s(_data, CODE_DATA_LEN / 2, id);
-		strcpy_s(_data + CODE_DATA_LEN/2, CODE_DATA_LEN / 2, excg_id);
+		strcpy_s(_data, strnlen_s(id, CODE_DATA_LEN / 2-1)+1, id);
+		strcpy_s(_data + CODE_DATA_LEN/2, strnlen_s(excg_id, CODE_DATA_LEN / 2-1)+1, excg_id);
 	}
 
 	bool operator < (const code_t& other)const

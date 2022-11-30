@@ -89,6 +89,7 @@ struct position_info
 {
 	code_t id; //合约ID
 
+	//包括昨仓和今仓
 	uint32_t long_postion;
 	uint32_t short_postion;
 
@@ -98,35 +99,27 @@ struct position_info
 	uint32_t long_frozen;
 	uint32_t short_frozen;
 
+	//昨仓
 	uint32_t long_yestoday;
 	uint32_t short_yestoday;
 
 	uint32_t get_total()const 
 	{
-		return long_postion + short_postion + long_yestoday + short_yestoday;
+		return long_postion + short_postion ;
 	}
 
-	uint32_t get_short()const
-	{
-		return short_postion + short_yestoday;
-	}
-
-	uint32_t get_long()const
-	{
-		return long_postion + long_yestoday ;
-	}
 
 	/**  
 	* 正数表示多仓，复数表示空仓
 	*/
 	int32_t get_real()const
 	{
-		return long_postion + long_yestoday - short_postion - short_yestoday;
+		return long_postion  - short_postion ;
 	}
 
 	uint32_t is_mepty()const
 	{
-		return long_postion == 0 && short_postion == 0&& long_yestoday==0&& short_yestoday==0;
+		return long_postion == 0 && short_postion == 0;
 	}
 
 	position_info() :

@@ -162,3 +162,12 @@ uint32_t strategy::get_trading_day()const
 	}
 	return lt_get_trading_day(_manager->get_lt());
 }
+
+bool strategy::is_trading_ready()const
+{
+	if (_manager == nullptr)
+	{
+		return false;
+	}
+	return lt_is_trading_ready(_manager->get_lt());
+}

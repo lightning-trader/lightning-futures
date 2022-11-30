@@ -26,6 +26,7 @@ public:
 			, _trade_callback
 			, _cancel_callback
 			, _error_callback
+			, _ready_callback
 		);
 	}
 
@@ -137,6 +138,17 @@ private:
 				it->second->on_error(type,localid, error);
 			}
 			_self->unregist_estid_strategy(localid);
+		}
+	}
+
+	static inline void _ready_callback()
+	{
+		if (_self)
+		{
+			for(auto& it : _self->_strategy_map)
+			{
+				it.second->on_ready();
+			}
 		}
 	}
 
