@@ -153,3 +153,12 @@ void* strategy::get_username(size_t size)
 	}
 	return lt_get_userdata(_manager->get_lt(), _id, size);;
 }
+
+uint32_t strategy::get_trading_day()const
+{
+	if (_manager == nullptr)
+	{
+		return 0;
+	}
+	return lt_get_trading_day(_manager->get_lt());
+}

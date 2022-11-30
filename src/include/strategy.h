@@ -184,7 +184,11 @@ protected:
 	*/
 
 	void* get_username(size_t size);
-	
+
+	/**
+	* 获取交易日
+	*/
+	uint32_t get_trading_day()const;
 
 };
 
