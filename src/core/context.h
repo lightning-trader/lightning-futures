@@ -64,8 +64,6 @@ private:
 
 	bool _is_trading_ready ;
 
-	std::set<code_t> _in_trading_code ;
-
 public:
 
 	tick_callback on_tick ;

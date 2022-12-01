@@ -118,6 +118,14 @@ public:
 
 	virtual void submit_settlement() override;
 
+	virtual void load_instrument(const code_t& code) override;
+
+	virtual void unload_instrument(const code_t& code) override;
+
+	virtual bool get_instrument(const code_t& code) override;
+
+	virtual bool is_in_trading(const code_t& code) override;
+
 private:
 
 	void load_data(const code_t& code,uint32_t trading_day);

@@ -52,6 +52,13 @@ public:
 
 	virtual void submit_settlement() override;
 
+	virtual void load_instrument(const code_t& codes) override;
+
+	virtual void unload_instrument(const code_t& codes) override;
+
+	virtual bool get_instrument(const code_t& codes) override;
+
+	virtual bool is_in_trading(const code_t& code) override;
 	//////////////////////////////////////////////////////////////////////////
 	//CTP交易接口实现
 public:
@@ -91,6 +98,8 @@ public:
 	virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo) override;
 
 	virtual void OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo) override;
+
+	virtual void OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus) override;
 
 
 private:
@@ -268,6 +277,9 @@ protected:
 	//
 	typedef std::map<estid_t, trade_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, trade_info>>> trade_map;
 	trade_map				_trade_info;
+
+	//查询状态和计算 合约保证金时候使用
+	std::map<std::string,bool> _instrument_state;
 
 	account_info			_account_info ;
 

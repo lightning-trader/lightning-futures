@@ -53,6 +53,26 @@ public:
 	 */
 	virtual void submit_settlement() = 0 ;
 
+	/*
+	*	加载合约信息
+	*/
+	virtual void load_instrument(const code_t& code) = 0;
+
+	/*
+	*	卸载合约信息
+	*/
+	virtual void unload_instrument(const code_t& code) = 0;
+
+	/*
+	*	获取合约信息
+	* */
+	virtual bool get_instrument(const code_t& code) = 0;
+
+	/*
+	*	是否在交易中
+	* */
+	virtual bool is_in_trading(const code_t& code) = 0;
+
 };
 
 class futures_trader : public trader_api, public event_source

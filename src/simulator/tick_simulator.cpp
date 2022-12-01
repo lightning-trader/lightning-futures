@@ -189,6 +189,26 @@ void tick_simulator::submit_settlement()
 	while (!_is_submit_return.exchange(false));
 }
 
+void tick_simulator::load_instrument(const code_t& codes)
+{
+
+}
+
+void tick_simulator::unload_instrument(const code_t& codes)
+{
+
+}
+
+bool tick_simulator::get_instrument(const code_t& codes)
+{
+	return false ;
+}
+
+bool tick_simulator::is_in_trading(const code_t& code)
+{
+	return true ;
+}
+
 void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
 {
 	if(_loader)

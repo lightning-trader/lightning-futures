@@ -70,7 +70,7 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 	//_td_api->SubscribePrivateTopic(THOST_TERT_RESTART);
 	//_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
 	_td_api->SubscribePrivateTopic(THOST_TERT_RESUME);
-	_td_api->SubscribePublicTopic(THOST_TERT_RESUME);
+	_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
 	_td_api->RegisterFront(const_cast<char*>(_front_addr.c_str()));
 	_td_api->Init();
 	LOG_INFO("ctp_trader init %s ", _td_api->GetApiVersion());
@@ -559,6 +559,15 @@ void ctp_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, C
 	}
 }
 
+void ctp_trader::OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus)
+{
+	if (pInstrumentStatus)
+	{
+		LOG_DEBUG("OnRtnInstrumentStatus %s = [%d]\n", pInstrumentStatus->InstrumentID, pInstrumentStatus->InstrumentStatus);
+		_instrument_state[pInstrumentStatus->InstrumentID] = (pInstrumentStatus->InstrumentStatus== THOST_FTDC_IS_Continous);
+	}
+}
+
 bool ctp_trader::do_auth()
 {
 	if (_td_api == nullptr)
@@ -685,7 +694,7 @@ void ctp_trader::cancel_order(estid_t order_id)
 		return ;
 	}
 	auto order = get_order(order_id);
-	if(order.est_id == INVALID_ESTID)
+	if (!order.is_valid())
 	{
 		return;
 	}
@@ -778,8 +787,33 @@ void ctp_trader::submit_settlement()
 	{
 		LOG_ERROR("ctp_trader submit_settlement request failed: %d", iResult);
 	}
+}
+
+void ctp_trader::load_instrument(const code_t& code)
+{
+	
+}
+
+void ctp_trader::unload_instrument(const code_t& code)
+{
 
 }
+
+bool ctp_trader::get_instrument(const code_t& code)
+{
+	return false ;
+}
+
+bool ctp_trader::is_in_trading(const code_t& code)
+{
+	auto it = _instrument_state.find(code.get_id());
+	if(it == _instrument_state.end())
+	{
+		return false ;
+	}
+	return it->second;
+}
+
 
 void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, offset_type offset_type,uint32_t volume)
 {

@@ -213,8 +213,12 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 	{
 		return INVALID_ESTID;
 	}
-	auto it = _in_trading_code.find(code);
-	if (it == _in_trading_code.end())
+	auto trader = get_trader();
+	if (!trader)
+	{
+		return INVALID_ESTID;
+	}
+	if(!trader->is_in_trading(code))
 	{
 		LOG_DEBUG("place_order code in trading %s", code.get_id());
 		return INVALID_ESTID;
@@ -241,8 +245,23 @@ void context::cancel_order(estid_t order_id)
 	{
 		return ;
 	}
-	LOG_DEBUG("cancel_order : %llu\n", order_id);
 	auto trader = get_trader();
+	if (!trader)
+	{
+		return;
+	}
+	auto order = trader->get_order(order_id);
+	if(!order.is_valid())
+	{
+		return;
+	}
+	if (!trader->is_in_trading(order.code))
+	{
+		LOG_DEBUG("cancel_order code in trading %s", order.code.get_id());
+		return ;
+	}
+	LOG_DEBUG("cancel_order : %llu\n", order_id);
+	
 	if (trader)
 	{
 		trader->cancel_order(order_id);
@@ -527,10 +546,6 @@ void context::handle_cancel(const std::vector<std::any>& param)
 
 void context::handle_tick(const std::vector<std::any>& param)
 {
-	if(!_is_trading_ready)
-	{
-		return ;
-	}
 	if (param.size() >= 1)
 	{
 		const tick_info& tick = std::any_cast<tick_info>(param[0]);

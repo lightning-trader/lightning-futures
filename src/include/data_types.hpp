@@ -218,6 +218,10 @@ struct order_info
 		price(.0f)
 	{}
 
+	bool is_valid()
+	{
+		return est_id != est_id;
+	}
 };
 const order_info default_order ;
 
