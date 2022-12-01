@@ -302,7 +302,11 @@ void ctp_trader::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThost
 	{
 		LOG_ERROR("OnRspOrderInsert \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
-	
+	if (pInputOrder && pRspInfo)
+	{
+		estid_t estid = generate_estid(_front_id, _session_id, strtol(pInputOrder->OrderRef, NULL, 10));
+		this->fire_event(ET_OrderError, ET_ORDER_PLACE, estid, (uint32_t)pRspInfo->ErrorID);
+	}
 }
 
 void ctp_trader::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
@@ -311,7 +315,11 @@ void ctp_trader::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAc
 	{
 		LOG_ERROR("OnRspOrderAction \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
-	
+	if (pInputOrderAction && pRspInfo)
+	{
+		estid_t estid = generate_estid(pInputOrderAction->FrontID, pInputOrderAction->SessionID, strtol(pInputOrderAction->OrderRef, NULL, 10));
+		this->fire_event(ET_OrderError, ET_ORDER_CANCEL, estid, (uint32_t)pRspInfo->ErrorID);
+	}
 }
 
 void ctp_trader::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
@@ -390,15 +398,7 @@ void ctp_trader::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoFi
 		LOG_ERROR("OnRspQryTrade \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 		return;
 	}
-	if(pTrade)
-	{
-		//auto& trade = _trade_info[pTrade->TradeID];
-	}
 	
-	if (bIsLast)
-	{
-		
-	}
 }
 
 void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
@@ -431,6 +431,11 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 void ctp_trader::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	LOG_ERROR("OnRspError \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+	if (pRspInfo)
+	{
+		this->fire_event(ET_OrderError, ET_OTHER_ERROR, INVALID_ESTID, (uint32_t)pRspInfo->ErrorID);
+	}
+
 }
 
 void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
@@ -449,18 +454,16 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 	{
 		if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
 		{
-			LOG_INFO("[%s][订单撤销] UserID:%s SessionID:%d 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n"
-				, datetime_to_string(get_now()).c_str(), pOrder->UserID, pOrder->SessionID
-				, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->CombHedgeFlag[0], pOrder->LimitPrice, pOrder->VolumeTotal);
+			LOG_INFO("[订单撤销] SessionID:%u 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n",
+				pOrder->SessionID, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->Direction, pOrder->LimitPrice, pOrder->VolumeTotal);
 			//撤销解冻仓位
 			thawing_deduction(code, direction, pOrder->VolumeTotal + pOrder->VolumeTraded);
 			this->fire_event(ET_OrderCancel, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 		}
 		if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
 		{
-			LOG_INFO("[%s][订单成交] UserID:%s SessionID:%d 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n"
-				, datetime_to_string(get_now()).c_str(), pOrder->UserID, pOrder->SessionID
-				, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->Direction, pOrder->LimitPrice, pOrder->VolumeTraded);
+			LOG_INFO("[订单成交] SessionID:%u 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n"
+				, pOrder->SessionID, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->Direction, pOrder->LimitPrice, pOrder->VolumeTraded);
 			calculate_position(code, direction, offset, pOrder->VolumeTotal + pOrder->VolumeTraded);
 			this->fire_event(ET_OrderTrade, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 		}
@@ -476,6 +479,8 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		auto order = _order_info.find(estid);
 		if (order == _order_info.end())
 		{
+			LOG_INFO("[订单委托] SessionID:%u 合约:%s 开平标记:%c 方向:%c 价格:%f 数量:%d\n",
+				pOrder->SessionID, pOrder->InstrumentID, pOrder->CombOffsetFlag[0], pOrder->Direction, pOrder->LimitPrice, pOrder->VolumeTotal);
 			order_info entrust;
 			entrust.code = code;
 			entrust.create_time = make_datetime(pOrder->InsertDate, pOrder->InsertTime);

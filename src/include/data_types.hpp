@@ -275,7 +275,8 @@ const order_statistic default_statistic;
 
 typedef enum error_type
 {
+	ET_ORDER_PLACE,
 	ET_ORDER_MATCH,
-	ET_CANCEL_ORDER,
+	ET_ORDER_CANCEL,
 	ET_OTHER_ERROR
 }error_type;

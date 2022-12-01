@@ -417,7 +417,7 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 		}
 		else
 		{
-			order_error(ET_ORDER_MATCH,order.est_id, err);
+			order_error(ET_ORDER_PLACE,order.est_id, err);
 		}
 		return ;
 	}

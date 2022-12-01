@@ -81,7 +81,7 @@ void demo_strategy::on_cancel(estid_t localid, const code_t& code, offset_type o
 void demo_strategy::on_error(error_type type,estid_t localid, const uint32_t error)
 {
 	LOG_ERROR("on_error tick : %llu %u\n", localid , error);
-	if(type != ET_ORDER_MATCH)
+	if(type != ET_ORDER_MATCH && type != ET_ORDER_PLACE)
 	{
 		return ;
 	}
