@@ -213,9 +213,10 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 	{
 		return INVALID_ESTID;
 	}
-	if (_trading_filter && !_trading_filter(code,offset, direction, flag))
+	auto it = _in_trading_code.find(code);
+	if (it == _in_trading_code.end())
 	{
-		LOG_DEBUG("place_order trading filter false");
+		LOG_DEBUG("place_order code in trading %s", code.get_id());
 		return INVALID_ESTID;
 	}
 	if(_operational_data)
@@ -233,6 +234,10 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 void context::cancel_order(estid_t order_id)
 {
 	if(order_id == INVALID_ESTID)
+	{
+		return ;
+	}
+	if (!_is_trading_ready)
 	{
 		return ;
 	}
