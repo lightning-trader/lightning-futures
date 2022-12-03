@@ -13,7 +13,7 @@ public:
 
 public:
 	
-	void run(const std::string& end_time);
+	void run_to_close();
 
 };
 

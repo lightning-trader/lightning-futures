@@ -220,7 +220,7 @@ struct order_info
 
 	bool is_valid()
 	{
-		return est_id != est_id;
+		return est_id != INVALID_ESTID;
 	}
 };
 const order_info default_order ;

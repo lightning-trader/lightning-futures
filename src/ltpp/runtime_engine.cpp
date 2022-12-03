@@ -14,7 +14,7 @@ runtime_engine::~runtime_engine()
 }
 
 
-void runtime_engine::run(const std::string& end_time)
+void runtime_engine::run_to_close()
 {
 	lt_start_service(_lt);
 	bool is_trading_ready = lt_is_trading_ready(_lt);
@@ -24,9 +24,12 @@ void runtime_engine::run(const std::string& end_time)
 		is_trading_ready = lt_is_trading_ready(_lt);
 	}
 	LOG_INFO("runtime_engine run in trading ready");
-	uint32_t trading_day = lt_get_trading_day(_lt);
-	time_t close_time = make_datetime(trading_day, end_time.c_str());
+	time_t close_time = lt_get_close_time(_lt);
 	time_t now_time = get_now();
-	std::this_thread::sleep_for(std::chrono::seconds(close_time - now_time));
+	time_t delta_seconds = close_time - now_time;
+	if(delta_seconds>0)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(delta_seconds));
+	}
 	lt_stop_service(_lt);
 }

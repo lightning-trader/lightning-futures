@@ -214,25 +214,7 @@ void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
 	if(_loader)
 	{
 		_loader->load_tick(_pending_tick_info,code, trading_day);
-		std::sort(_pending_tick_info.begin(), _pending_tick_info.end(),[](const auto& lh, const auto& rh)->bool{
-			if(lh.time < rh.time)
-			{
-				return true ;
-			}
-			if (lh.time > rh.time)
-			{
-				return false;
-			}
-			if (lh.tick < rh.tick)
-			{
-				return true;
-			}
-			if (lh.tick > rh.tick)
-			{
-				return false;
-			}
-			return lh.id < rh.id;
-		});
+		
 	}
 }
 

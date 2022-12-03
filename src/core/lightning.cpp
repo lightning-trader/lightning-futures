@@ -5,6 +5,7 @@
 
 extern "C"
 {
+
 	ltobj lt_create_context(context_type ctx_type, const char* config_path)
 	{
 		ltobj lt;
@@ -55,191 +56,35 @@ extern "C"
 		}
 	}
 
-
-	void lt_start_service(const ltobj& lt)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return;
-		}
-		c->start();
-	}
-
-	void lt_stop_service(const ltobj& lt)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return ;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return ;
-		}
-		c->stop();
-	}
-
-	estid_t lt_place_order(const ltobj& lt, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return INVALID_ESTID;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return INVALID_ESTID;
-		}
-		return c->place_order(offset, direction, code, count, price, flag);
-	}
-
-	void lt_cancel_order(const ltobj& lt, estid_t order_id)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return;
-		}
-		c->cancel_order(order_id);
-	}
-
-	const position_info& lt_get_position(const ltobj& lt, const code_t& code)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return default_position;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return default_position;
-		}
-		return c->get_position(code);
-	}
-
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, start_service, (const ltobj& lt),());
 	
-	const account_info& lt_get_account(const ltobj& lt)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return default_account;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return default_account;
-		}
-		return c->get_account();
-	}
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, stop_service, (const ltobj& lt), ());
 
+	LT_INTERFACE_IMPLEMENTATION(estid_t, INVALID_ESTID, context, place_order, (const ltobj& lt, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag), (offset, direction, code, count, price, flag));
+	
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, cancel_order, (const ltobj& lt, estid_t est_id), (est_id));
+	
+	LT_INTERFACE_IMPLEMENTATION(const position_info&, default_position, context, get_position, (const ltobj& lt, const code_t& code), (code));
+	
+	LT_INTERFACE_IMPLEMENTATION(const account_info&, default_account, context, get_account, (const ltobj& lt), ());
 
-	const order_info& lt_get_order(const ltobj& lt, estid_t order_id)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return default_order;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return default_order;
-		}
-		return c->get_order(order_id);
-	}
+	LT_INTERFACE_IMPLEMENTATION(const order_info&, default_order, context, get_order, (const ltobj& lt, estid_t est_id), (est_id));
 
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, subscribe, (const ltobj& lt, const code_t& code), ({ code }));
 
-	void lt_subscribe(const ltobj& lt, const code_t& code)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return;
-		}
-		c->subscribe({ code });
-	}
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, unsubscribe, (const ltobj& lt, const code_t& code), ({ code }));
 
-	void lt_unsubscribe(const ltobj& lt, const code_t& code)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return ;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return ;
-		}
-		c->unsubscribe({ code });
-		
-	}
+	LT_INTERFACE_IMPLEMENTATION(time_t, 0, context, get_last_time, (const ltobj& lt), ());
 
-	time_t lt_get_last_time(const ltobj& lt)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return -1;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return -1;
-		}
-		return c->get_last_time();
-	}
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, set_cancel_condition, (const ltobj& lt, estid_t est_id, condition_callback callback), (est_id, callback));
 
-	void lt_set_cancel_condition(const ltobj& lt, estid_t order_id, condition_callback callback)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return ;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return ;
-		}
-		c->set_cancel_condition(order_id, callback);
-	}
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, set_trading_filter, (const ltobj& lt, filter_callback callback), (callback));
 
-	void lt_set_trading_filter(const ltobj& lt, filter_callback callback)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return;
-		}
-		c->set_trading_filter(callback);
-	}
 
 	void lt_bind_callback(const ltobj& lt, tick_callback tick_cb, entrust_callback entrust_cb, deal_callback deal_cb
 		, trade_callback trade_cb, cancel_callback cancel_cb, error_callback error_cb, ready_callback ready_cb)
 	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return;
-		}
+		LT_INTERFACE_CHECK(context, VOID_DEFAULT)
 		c->on_tick = tick_cb;
 		c->on_entrust = entrust_cb;
 		c->on_deal = deal_cb;
@@ -249,89 +94,18 @@ extern "C"
 		c->on_ready = ready_cb;
 	}
 
-	void lt_playback_history(const ltobj& lt, uint32_t trading_day)
-	{
-		if (lt.obj_type != CT_EVALUATE)
-		{
-			return;
-		}
-		evaluate* c = (evaluate*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return;
-		}
-		c->play(trading_day);
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, playback_history, (const ltobj& lt, uint32_t trading_day), (trading_day));
 
-	}
+	LT_INTERFACE_IMPLEMENTATION(time_t, 0, context, last_order_time, (const ltobj& lt), ());
 
-	time_t lt_last_order_time(const ltobj& lt)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return -1;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return -1;
-		}
-		return c->last_order_time();
-	}
+	LT_INTERFACE_IMPLEMENTATION(const order_statistic&, default_statistic, context, get_order_statistic, (const ltobj& lt), ());
 
+	LT_INTERFACE_IMPLEMENTATION(void*, nullptr, context, get_userdata, (const ltobj& lt, uint32_t index, size_t size), (index, size));
 
-	const order_statistic& lt_get_order_statistic(const ltobj& lt)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return default_statistic;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return default_statistic;
-		}
-		return c->get_order_statistic();
-	}
+	LT_INTERFACE_IMPLEMENTATION(bool, false, context, is_trading_ready, (const ltobj& lt), ());
 
-	void* lt_get_userdata(const ltobj& lt, uint32_t index,size_t size)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return nullptr;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return nullptr;
-		}
-		return c->get_userdata(index, size);
-	}
+	LT_INTERFACE_IMPLEMENTATION(uint32_t, 0U, context, get_trading_day, (const ltobj& lt), ());
 
-	bool lt_is_trading_ready(const ltobj& lt)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return nullptr;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return nullptr;
-		}
-		return c->is_trading_ready();
-	}
+	LT_INTERFACE_IMPLEMENTATION(time_t, 0, context, get_close_time, (const ltobj& lt), ());
 
-	uint32_t lt_get_trading_day(const ltobj& lt)
-	{
-		if (lt.obj_type != CT_RUNTIME && lt.obj_type != CT_EVALUATE)
-		{
-			return 0U;
-		}
-		context* c = (context*)(lt.obj_ptr);
-		if (c == nullptr)
-		{
-			return 0U;
-		}
-		return c->get_trading_day();
-	}
 }

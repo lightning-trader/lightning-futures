@@ -25,8 +25,10 @@ context::context():
 	on_trade(nullptr),
 	on_cancel(nullptr),
 	on_error(nullptr),
+	on_ready(nullptr),
 	_operational_region(nullptr),
-	_operational_data(nullptr)
+	_operational_data(nullptr),
+	_section(nullptr)
 {
 
 }
@@ -51,7 +53,7 @@ context::~context()
 	}
 }
 
-bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& channel, boost::property_tree::ptree& rcd_config)
+bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config)
 {
 	auto& localdb_name = localdb.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
@@ -69,9 +71,13 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 	{
 		return false;
 	}
-	_max_position = channel.get<uint32_t>("max_position",1U);
-	trading_optimal to_optimal = static_cast<trading_optimal>(channel.get<int32_t>("trading_optimal", TO_INVALID));
-	bool is_to_cancel = channel.get<bool>("is_to_cancel", false);
+
+	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
+	_section = std::make_shared<trading_section>(section_config);
+
+	_max_position = 2;
+	trading_optimal to_optimal = TO_OPEN_TO_CLOSE;
+	bool is_to_cancel = false;
 	_chain = create_chain(to_optimal, is_to_cancel, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool{
 		if(_trading_filter==nullptr)
 		{
@@ -117,7 +123,7 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 	return true ;
 }
 
-void context::start()
+void context::start_service()
 {
 	_is_runing = true;
 	_strategy_thread = new std::thread([this]()->void{
@@ -129,14 +135,16 @@ void context::start()
 		while (_is_runing)
 		{
 			this->update();
-			//LOG_DEBUG("context update \n");
-			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			if (!_section->is_in_trading(get_last_time()))
+			{
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+			}
 		}
 	});
 	//_strategy_thread->detach();
 }
 
-void context::stop()
+void context::stop_service()
 {
 	_is_runing = false ;
 	if(_strategy_thread)
@@ -213,12 +221,7 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 	{
 		return INVALID_ESTID;
 	}
-	auto trader = get_trader();
-	if (!trader)
-	{
-		return INVALID_ESTID;
-	}
-	if(!trader->is_in_trading(code))
+	if(!_section->is_in_trading(get_last_time()))
 	{
 		LOG_DEBUG("place_order code in trading %s", code.get_id());
 		return INVALID_ESTID;
@@ -250,14 +253,10 @@ void context::cancel_order(estid_t order_id)
 	{
 		return;
 	}
-	auto order = trader->get_order(order_id);
-	if(!order.is_valid())
+	
+	if (!_section->is_in_trading(get_last_time()))
 	{
-		return;
-	}
-	if (!trader->is_in_trading(order.code))
-	{
-		LOG_DEBUG("cancel_order code in trading %s", order.code.get_id());
+		LOG_DEBUG("cancel_order code in trading %lld", order_id);
 		return ;
 	}
 	LOG_DEBUG("cancel_order : %llu\n", order_id);
@@ -374,6 +373,15 @@ uint32_t context::get_trading_day()
 	return market->get_trading_day();
 }
 
+time_t context::get_close_time()
+{
+	if(_section == nullptr)
+	{
+		return 0;
+	}
+	return _section->get_clase_time();
+}
+
 void context::load_data(const char* localdb_name,size_t oper_size)
 {
 	boost::interprocess::shared_memory_object shdmem
@@ -446,6 +454,7 @@ void context::handle_ready(const std::vector<std::any>& param)
 	{
 		_is_trading_ready = true ;
 	}
+	_section->init(get_trading_day(),get_last_time());
 	if(on_ready)
 	{
 		on_ready();
@@ -548,12 +557,12 @@ void context::handle_tick(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
-		const tick_info& tick = std::any_cast<tick_info>(param[0]);
+		_last_tick_info = std::any_cast<tick_info>(param[0]);
 		if(this->on_tick)
 		{
-			this->on_tick(tick);
+			this->on_tick(_last_tick_info);
 		}
-		check_order_condition(tick);
+		check_order_condition(_last_tick_info);
 	}
 	
 }

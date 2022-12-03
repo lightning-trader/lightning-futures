@@ -3,22 +3,16 @@
 #include<string>
 #include<ctime>
 
-#define ONE_DAY_SECONDS 86400
-#define ONE_MINUTE_SECONDS 60
-#define ONE_HOUR_SECONDS 3600
-
-
-
-static std::string datetime_to_string(time_t timestamp,const char* format = "%Y-%m-%d %H:%M:%S")
+static std::string datetime_to_string(time_t timestamp)
 {
 	char buffer[64] = { 0 };
 	struct tm info;
 	localtime_s(&info, &timestamp);
-	strftime(buffer, sizeof buffer, format, &info);
+	strftime(buffer, sizeof buffer, "%Y-%m-%d %H:%M:%S", &info);
 	return std::string(buffer);
 }
 
-static time_t make_datetime(int year, int month, int day, int hour=0, int minute=0, int second=0)
+static time_t make_datetime(int year, int month, int day, int hour, int minute, int second)
 {
 	tm t;
 	t.tm_year = year - 1900;
@@ -59,23 +53,16 @@ static time_t make_datetime(uint32_t date, const char* time)
 	return -1;
 }
 
+
 static time_t make_time(const char* time)
 {
 	int hour, minute, second;
 	sscanf_s(time, "%2d:%2d:%2d", &hour, &minute, &second);
-	return hour * ONE_HOUR_SECONDS + minute * ONE_MINUTE_SECONDS + second;
+	return hour*3600 + minute*60+ second;
 }
 static time_t make_datetime(time_t date_begin, const char* time)
 {
 	return date_begin + make_time(time);
-}
-static time_t make_date(uint32_t date)
-{
-	int year, month, day;
-	year = date / 10000;
-	month = date % 10000 / 100;
-	day = date % 100;
-	return make_datetime(year, month, day);
 }
 
 static time_t get_now()
@@ -87,23 +74,12 @@ static time_t get_now()
 
 static time_t get_day_begin(time_t cur)
 {
-	if (cur < ONE_DAY_SECONDS)
+	if (cur < 86400)
 		return 0;
-	int _0 = (int)cur / ONE_DAY_SECONDS * ONE_DAY_SECONDS - 28800;
-	if (_0 <= (cur - ONE_DAY_SECONDS))
-		_0 += ONE_DAY_SECONDS;
+	int _0 = (int)cur / 86400 * 86400 - 28800;
+	if (_0 <= (cur - 86400))
+		_0 += 86400;
 	return _0;
-}
-
-static time_t get_next_time(time_t cur,const char* time)
-{
-	time_t day_begin = get_day_begin(cur);
-	time_t next = day_begin + make_time(time);
-	if(next < cur)
-	{
-		next = next+ ONE_DAY_SECONDS;
-	}
-	return next;
 }
 
 static std::string datetime_to_string(const char* date, const char* time)

@@ -1,12 +1,23 @@
 #pragma once
 #include "strategy.h"
-#include <list>
 
-class demo_strategy : public strategy
+class hft_2_strategy : public strategy
 {
 public:
-	demo_strategy(int lose_offset,int open_delta):_lose_offset(lose_offset), _open_delta(open_delta), _highest_price(0), _lowest_price(0) {};
-	~demo_strategy(){};
+	
+	hft_2_strategy(const code_t& code,double open_delta):
+		strategy(),
+		_code(code),
+		_sell_order(INVALID_ESTID),
+		_buy_order(INVALID_ESTID),
+		_open_delta(open_delta),
+		_history_count(1200),
+		_history_ma(0),
+		_coming_to_close(0)
+		{};
+
+
+	~hft_2_strategy(){};
 
 
 public:
@@ -17,6 +28,11 @@ public:
 	 *	生命周期中只会回调一次
 	 */
 	virtual void on_init() override ;
+
+	/*
+	*	交易日初始化完成
+	*/
+	virtual void on_ready() override;
 
 	/*
 	 *	tick推送
@@ -45,24 +61,36 @@ public:
 	 */
 	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type directionv, double_t price, uint32_t cancel_volume, uint32_t total_volume)  override;
 
+	/*
+	 *	错误
+	 *	@localid	本地订单id
+	 *	@error 错误代码
+	 */
+	virtual void on_error(error_type type,estid_t localid, const uint32_t error) override;
+
+
 private:
 
-	bool check_lose(const tick_info& tick);
+	void add_to_history(double_t price);
 
 private:
+	
+	code_t _code ;
 
-	int _lose_offset;
-
-	int _open_delta;
+	double _open_delta;
 
 	estid_t _sell_order ;
 
 	estid_t _buy_order ;
 
-	double _highest_price; //止损价
-	double _lowest_price; //止损价
+	tick_info _last_tick;
 
-	std::list<double_t> _history_list ;
+	size_t _history_count ;
 
+	time_t _coming_to_close;
+
+	double_t _history_ma ;
+
+	std::list<double_t> _history_price ;
 };
 

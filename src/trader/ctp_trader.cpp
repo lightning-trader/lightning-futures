@@ -70,7 +70,7 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 	//_td_api->SubscribePrivateTopic(THOST_TERT_RESTART);
 	//_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
 	_td_api->SubscribePrivateTopic(THOST_TERT_RESUME);
-	_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
+	_td_api->SubscribePublicTopic(THOST_TERT_RESUME);
 	_td_api->RegisterFront(const_cast<char*>(_front_addr.c_str()));
 	_td_api->Init();
 	LOG_INFO("ctp_trader init %s ", _td_api->GetApiVersion());
@@ -806,12 +806,7 @@ bool ctp_trader::get_instrument(const code_t& code)
 
 bool ctp_trader::is_in_trading(const code_t& code)
 {
-	auto it = _instrument_state.find(code.get_id());
-	if(it == _instrument_state.end())
-	{
-		return false ;
-	}
-	return it->second;
+	return true;
 }
 
 

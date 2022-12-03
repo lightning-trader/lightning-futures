@@ -1,30 +1,22 @@
 ﻿#include "gallop.h"
 #include <define.h>
 #include "demo_strategy.h"
-
+#include "hcc_strategy.h"
+#include "hft_1_strategy.h"
+#include "hft_2_strategy.h"
 #include "runtime_engine.h"
 #include "evaluate_engine.h"
 
 #pragma comment (lib,"lightning.lib")
+#pragma comment (lib,"libltpp.lib")
 
 void start_runtime()
 {
-	//auto app = runtime_engine("./rt_simnow.ini");
-	auto app = std::make_shared<runtime_engine>("./runtime.ini");
-	auto hcc = std::make_shared<demo_strategy>("SHFE.rb2301",0);
-	app->add_strategy(0,hcc);
-	
-	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool {
-		const auto& statius = app->get_order_statistic();
-		//限制每日下单数量超过480就不再可以下单了，避免触发交易所警告
-		if (statius.entrust_amount > 480)
-		{
-			return false;
-		}
-		return true;
-		});
-
-	app->run("15:05:00");
+	auto app = std::make_shared<runtime_engine>("./rt_hx_zjh.ini");
+	//auto app = std::make_shared<runtime_engine>("./rt_hx_zjh.ini");
+	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2301", 16));
+	app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 16));
+	app->run_to_close();
 	
 }
 
@@ -39,25 +31,56 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 		};
 	*/
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2304"),2));
-	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2305"), 2));
-	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2307"), 2));
-	stra_list.emplace_back(std::make_shared<demo_strategy>(code_t("SHFE.rb2308"), 2));
-	
-	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool {
-		const auto& statius = app->get_order_statistic();
-		//限制每日下单数量超过480就不再可以下单了，避免触发交易所警告
-		if (statius.entrust_amount > 480)
-		{
-			return false;
-		}
-		return true;
-		});
-
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 16));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2210", 16));
+	app->back_test(stra_list, all_trading_day);
+}
+void start_hft1_evaluate(const std::vector<uint32_t>& all_trading_day)
+{
+	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
+	/*
+	std::vector<uint32_t> trading_day = {
+		20220801,
+		20220802,
+		20220803
+		};
+	*/
+	std::vector<std::shared_ptr<strategy>> stra_list;
+	stra_list.emplace_back(new hft_1_strategy("SHFE.rb2301", 8, 16, 300, 0));
+	stra_list.emplace_back(new hft_1_strategy("SHFE.rb2210", 8, 16, 300, 0));
 	app->back_test(stra_list, all_trading_day);
 }
 
 
+void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
+{
+/*
+	//max money : 99890.400000 i:[1] j:[6]
+	double max_monery = 0;
+	for (int i = 1; i <= 15; i++)
+	{
+		for (int j = 2; j <= 20; j++)
+		{
+			for(int k=50;k<=200;k+=50)
+			{
+				double_t current_monery = 0;
+				auto app = evaluate_engine("./evaluate.ini");
+				hft_1_strategy hcc(i, j, k, 0);
+				app.start(hcc, all_trading_day);
+				if (current_monery > max_monery)
+				{
+					max_monery = current_monery;
+				}
+				if (current_monery > 2100000)
+				{
+					LOG_OPTIMIZE("max money : %f i:[%d] j:[%d] k:%d\n", current_monery, i, j, k);
+				}
+			}
+			
+		}
+	}
+*/
+}
 
 int main()
 {
@@ -112,10 +135,10 @@ int main()
 	*/
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	//start_evaluate(all_trading_day);
-	//start_hft_1_optimize(all_trading_day);
+	start_evaluate(all_trading_day);
+	//start_hft1_evaluate(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	start_runtime();
+	//start_runtime();
 	
 	/*
 	LOG_DEBUG("123_%d----%s",123,"a");

@@ -279,7 +279,7 @@ protected:
 	trade_map				_trade_info;
 
 	//查询状态和计算 合约保证金时候使用
-	std::map<std::string,bool> _instrument_state;
+	std::unordered_map<std::string,bool> _instrument_state;
 
 	account_info			_account_info ;
 

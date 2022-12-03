@@ -24,7 +24,7 @@ bool evaluate::init_from_file(const std::string& config_path)
 	boost::property_tree::ptree	simulator_config;
 	boost::property_tree::ptree  recorder_config;
 	boost::property_tree::ptree  localdb_config;
-	boost::property_tree::ptree  channel_config;
+	boost::property_tree::ptree  include_config;
 
 	if (!file_wapper::exists(config_path.c_str()))
 	{
@@ -38,7 +38,7 @@ bool evaluate::init_from_file(const std::string& config_path)
 		simulator_config = config_root.get_child("simulator");
 		recorder_config = config_root.get_child("recorder");
 		localdb_config = config_root.get_child("localdb");
-		channel_config = config_root.get_child("channel");
+		include_config = config_root.get_child("include");
 	}
 	catch (...)
 	{
@@ -53,7 +53,7 @@ bool evaluate::init_from_file(const std::string& config_path)
 		LOG_ERROR("evaluate_driver init_from_file create_simulator error : %s", config_path.c_str());
 		return false;
 	}
-	return this->init(localdb_config, channel_config, recorder_config);
+	return this->init(localdb_config, include_config, recorder_config);
 	
 }
 
@@ -69,7 +69,7 @@ double evaluate::get_money()
 	return 0;
 }
 
-void evaluate::play(uint32_t tradeing_day)
+void evaluate::playback_history(uint32_t tradeing_day)
 {
 	if(_simulator)
 	{
@@ -93,7 +93,6 @@ void evaluate::update()
 	{
 		_simulator->update();
 	}
-	std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
 
 void evaluate::add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle)

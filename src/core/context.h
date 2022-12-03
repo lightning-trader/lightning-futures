@@ -10,6 +10,7 @@
 #include "trader_api.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include "trading_section.h"
 
 struct operational_data
 {
@@ -64,6 +65,10 @@ private:
 
 	bool _is_trading_ready ;
 
+	tick_info _last_tick_info ;
+
+	std::shared_ptr<trading_section> _section ;
+
 public:
 
 	tick_callback on_tick ;
@@ -81,10 +86,10 @@ public:
 	ready_callback on_ready;
 
 	/*启动*/
-	void start() ;
+	void start_service() ;
 
 	/*停止*/
-	void stop();
+	void stop_service();
 
 	/*
 	* 设置撤销条件
@@ -125,6 +130,8 @@ public:
 
 	uint32_t get_trading_day();
 
+	time_t get_close_time();
+
 private:
 
 	void load_data(const char* localdb_name, size_t oper_size);
@@ -159,7 +166,7 @@ private:
 
 protected:
 
-	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& channel, boost::property_tree::ptree& rcd_config);
+	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config);
 
 	virtual class trader_api* get_trader() = 0;
 

@@ -17,7 +17,7 @@ public:
 
 	double get_money();
 
-	void play(uint32_t tradeing_day);
+	void playback_history(uint32_t tradeing_day);
 
 protected:
 	
