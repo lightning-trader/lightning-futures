@@ -13,7 +13,7 @@ trading_section::~trading_section()
 
 void trading_section::init(uint32_t trading_day, time_t last_time)
 {
-	LOG_INFO("trading_section init %u %s", trading_day,datetime_to_string(last_time));
+	LOG_INFO("trading_section init %u %s", trading_day,datetime_to_string(last_time).c_str());
 	_trading_section.clear();
 	time_t trading_day_time = make_date(trading_day);
 	time_t last_day_time = get_day_begin(last_time);
@@ -29,14 +29,14 @@ void trading_section::init(uint32_t trading_day, time_t last_time)
 			{
 				time_t begin_time = make_datetime(trading_day_time, begin_time_str.c_str());
 				_trading_section[begin_time] = get_next_time(begin_time, end_time_str.c_str());
-				LOG_DEBUG("trading_section : %s %s", datetime_to_string(begin_time), datetime_to_string(_trading_section[begin_time]));
+				LOG_DEBUG("trading_section : %s %s", datetime_to_string(begin_time).c_str(), datetime_to_string(_trading_section[begin_time]).c_str());
 			}
 			else
 			{
 				//夜盘用当前时间计算
 				time_t begin_time = make_datetime(last_day_time, begin_time_str.c_str());
 				_trading_section[begin_time] = get_next_time(begin_time, end_time_str.c_str());
-				LOG_DEBUG("trading_section : %s %s", datetime_to_string(begin_time), datetime_to_string(_trading_section[begin_time]));
+				LOG_DEBUG("trading_section : %s %s", datetime_to_string(begin_time).c_str(), datetime_to_string(_trading_section[begin_time]).c_str());
 			}
 		}
 	}
@@ -52,7 +52,7 @@ void trading_section::init(uint32_t trading_day, time_t last_time)
 			{
 				time_t begin_time = make_datetime(trading_day_time, begin_time_str.c_str());
 				_trading_section[begin_time] = get_next_time(begin_time, end_time_str.c_str());
-				LOG_DEBUG("trading_section : %s %s", datetime_to_string(begin_time), datetime_to_string(_trading_section[begin_time]));
+				LOG_DEBUG("trading_section : %s %s", datetime_to_string(begin_time).c_str(), datetime_to_string(_trading_section[begin_time]).c_str());
 			}
 		}
 		
@@ -61,6 +61,8 @@ void trading_section::init(uint32_t trading_day, time_t last_time)
 
 bool trading_section::is_in_trading(time_t last_time)
 {
+	LOG_TRACE("trading_section is_in_trading : %s ", datetime_to_string(last_time).c_str());
+
 	for(auto it: _trading_section)
 	{
 		if(it.first <= last_time && last_time < it.second)
