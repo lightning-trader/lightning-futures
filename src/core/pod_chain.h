@@ -39,7 +39,7 @@ public:
 
 protected:
 
-	uint32_t get_open_pending(const code_t& code)const;
+	uint32_t get_open_pending()const;
 	
 };
 

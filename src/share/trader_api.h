@@ -54,14 +54,9 @@ public:
 	virtual void submit_settlement() = 0 ;
 
 	/*
-	*	加载合约信息
+	*	获取所有仓位
 	*/
-	virtual void load_instrument(const code_t& code) = 0;
-
-	/*
-	*	卸载合约信息
-	*/
-	virtual void unload_instrument(const code_t& code) = 0;
+	virtual uint32_t get_total_position() const  = 0;
 
 	/*
 	*	获取合约信息

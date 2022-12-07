@@ -112,15 +112,13 @@ public:
 
 	virtual const position_info& get_position(const code_t& code) const override;
 
+	virtual uint32_t get_total_position() const override;
+
 	virtual const order_info& get_order(estid_t order_id) const override;
 
 	virtual void find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const override;
 
 	virtual void submit_settlement() override;
-
-	virtual void load_instrument(const code_t& code) override;
-
-	virtual void unload_instrument(const code_t& code) override;
 
 	virtual bool get_instrument(const code_t& code) override;
 

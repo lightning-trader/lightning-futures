@@ -17,32 +17,52 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 {
 	_last_tick = tick ; 
 	add_to_history(tick.price);
-	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
+	LOG_TRACE("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
 	if(_buy_order != INVALID_ESTID || _sell_order != INVALID_ESTID)
 	{
+		LOG_TRACE("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _buy_order, _sell_order);
 		return ;
+	}
+	if (!is_trading_ready())
+	{
+		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
+		return;
 	}
 	if (tick.time > _coming_to_close)
 	{
+		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
 		return;
 	}
-	if(!is_trading_ready())
-	{
-		return;
-	}
+	
 	double_t ma_delta = tick.price - _history_ma ;
 	double_t buy_price = tick.buy_price() - _open_delta - ma_delta;
 	double_t sell_price = tick.sell_price() + _open_delta - ma_delta;
 	buy_price = buy_price < tick.buy_price()? buy_price : tick.buy_price();
 	sell_price = sell_price > tick.sell_price() ? sell_price : tick.sell_price();
-	if(buy_price > tick.low_limit)
+	if(tick.price >= tick.standard)
 	{
-		_buy_order = buy_for_open(tick.id, 1, buy_price);
+		if (buy_price > tick.low_limit)
+		{
+			_buy_order = buy_for_open(tick.id, 1, buy_price);
+		}
+		if (sell_price < tick.high_limit)
+		{
+			_sell_order = sell_for_open(tick.id, 1, sell_price);
+		}
 	}
-	if(sell_price < tick.high_limit)
+	else
 	{
-		_sell_order = sell_for_open(tick.id, 1, sell_price);
+		if (sell_price < tick.high_limit)
+		{
+			_sell_order = sell_for_open(tick.id, 1, sell_price);
+		}
+		if (buy_price > tick.low_limit)
+		{
+			_buy_order = buy_for_open(tick.id, 1, buy_price);
+		}
+		
 	}
+	
 }
 
 

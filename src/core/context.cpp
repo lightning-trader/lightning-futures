@@ -75,7 +75,7 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
 
-	_max_position = 2;
+	_max_position = 4;
 	trading_optimal to_optimal = TO_OPEN_TO_CLOSE;
 	bool is_to_cancel = false;
 	_chain = create_chain(to_optimal, is_to_cancel, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool{
@@ -201,7 +201,7 @@ pod_chain* context::create_chain(trading_optimal opt, bool flag, std::function<b
 
 void context::set_cancel_condition(estid_t order_id, condition_callback callback)
 {
-	LOG_DEBUG("set_timeout_cancel : %llu\n", order_id);
+	LOG_DEBUG("context set_cancel_condition : %llu\n", order_id);
 	_need_check_condition[order_id] = callback;
 }
 
@@ -219,6 +219,7 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 	}
 	if (!_is_trading_ready)
 	{
+		LOG_DEBUG("place_order _is_trading_ready");
 		return INVALID_ESTID;
 	}
 	if(!_section->is_in_trading(get_last_time()))
@@ -248,19 +249,13 @@ void context::cancel_order(estid_t order_id)
 	{
 		return ;
 	}
-	auto trader = get_trader();
-	if (!trader)
-	{
-		return;
-	}
-	
 	if (!_section->is_in_trading(get_last_time()))
 	{
 		LOG_DEBUG("cancel_order code in trading %lld", order_id);
 		return ;
 	}
-	LOG_DEBUG("cancel_order : %llu\n", order_id);
-	
+	LOG_DEBUG("context cancel_order : %llu\n", order_id);
+	auto trader = get_trader();
 	if (trader)
 	{
 		trader->cancel_order(order_id);

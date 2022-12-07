@@ -163,6 +163,16 @@ const position_info& tick_simulator::get_position(const code_t& code) const
 	return default_position;
 }
 
+uint32_t tick_simulator::get_total_position()const
+{
+	uint32_t total = 0;
+	for (const auto& it : _position_info)
+	{
+		total += it.second.get_total();
+	}
+	return total;
+}
+
 const order_info& tick_simulator::get_order(estid_t order_id) const
 {
 	static order_info order ;
@@ -187,16 +197,6 @@ void tick_simulator::find_orders(std::vector<order_info>& order_result, std::fun
 void tick_simulator::submit_settlement()
 {
 	while (!_is_submit_return.exchange(false));
-}
-
-void tick_simulator::load_instrument(const code_t& codes)
-{
-
-}
-
-void tick_simulator::unload_instrument(const code_t& codes)
-{
-
 }
 
 bool tick_simulator::get_instrument(const code_t& codes)

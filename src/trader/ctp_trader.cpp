@@ -408,7 +408,7 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		while (!_is_in_query.exchange(false));
 		_order_info.clear();
 	}
-	if (pOrder&& pOrder->VolumeTotal>0)
+	if (pOrder&& pOrder->VolumeTotal>0&& pOrder->OrderStatus!= THOST_FTDC_OST_Canceled&& pOrder->OrderStatus != THOST_FTDC_OST_AllTraded)
 	{
 		estid_t estid = generate_estid(pOrder->FrontID, pOrder->SessionID,strtoul(pOrder->OrderRef,NULL,10));
 		auto& order = _order_info[estid];
@@ -561,11 +561,7 @@ void ctp_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, C
 
 void ctp_trader::OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus)
 {
-	if (pInstrumentStatus)
-	{
-		LOG_DEBUG("OnRtnInstrumentStatus %s = [%d]\n", pInstrumentStatus->InstrumentID, pInstrumentStatus->InstrumentStatus);
-		_instrument_state[pInstrumentStatus->InstrumentID] = (pInstrumentStatus->InstrumentStatus== THOST_FTDC_IS_Continous);
-	}
+	
 }
 
 bool ctp_trader::do_auth()
@@ -612,8 +608,7 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 		return INVALID_ESTID;
 	}
 	estid_t est_id = generate_estid();
-	//LOG_INFO("place_order : %s", est_id);
-
+	
 	CThostFtdcInputOrderField req;
 	memset(&req, 0, sizeof(req));
 	strcpy_s(req.BrokerID, _broker_id.c_str());
@@ -683,6 +678,7 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 		LOG_ERROR("ctp_trader order_insert request failed: %d", iResult);
 		return INVALID_ESTID;
 	}
+	LOG_INFO("ctp_trader place_order : %llu", est_id);
 	return est_id;
 
 }
@@ -691,11 +687,13 @@ void ctp_trader::cancel_order(estid_t order_id)
 {
 	if (_td_api == nullptr)
 	{
+		LOG_ERROR("ctp_trader cancel_order _td_api nullptr : %llu", order_id);
 		return ;
 	}
 	auto order = get_order(order_id);
 	if (!order.is_valid())
 	{
+		LOG_ERROR("ctp_trader cancel_order order invalid : %llu", order_id);
 		return;
 	}
 	uint32_t frontid = 0, sessionid = 0, orderref = 0;
@@ -746,6 +744,16 @@ const position_info& ctp_trader::get_position(const code_t& code) const
 	return default_position;
 }
 
+uint32_t ctp_trader::get_total_position()const
+{
+	uint32_t total = 0 ;
+	for(const auto& it : _position_info)
+	{
+		total+=it.second.get_total();
+	}
+	return total;
+}
+
 const order_info& ctp_trader::get_order(estid_t order_id) const
 {
 	auto it = _order_info.find(order_id);
@@ -789,15 +797,6 @@ void ctp_trader::submit_settlement()
 	}
 }
 
-void ctp_trader::load_instrument(const code_t& code)
-{
-	
-}
-
-void ctp_trader::unload_instrument(const code_t& code)
-{
-
-}
 
 bool ctp_trader::get_instrument(const code_t& code)
 {

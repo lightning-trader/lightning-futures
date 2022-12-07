@@ -43,8 +43,10 @@ estid_t strategy::buy_for_close(const code_t& code, uint32_t count, double_t pri
 
 estid_t strategy::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
+	LOG_DEBUG("place_order : %s , %d, %d, %f\n", code.get_id(), offset, direction, price);
 	if (_manager == nullptr)
 	{
+		LOG_ERROR("strategy place_order _manager is nullptr");
 		return INVALID_ESTID;
 	}
 	estid_t estid = lt_place_order(_manager->get_lt(), offset, direction, code, count, price, flag);
@@ -61,6 +63,7 @@ void strategy::cancel_order(estid_t order_id)
 	LOG_DEBUG("cancel_order : %llu\n", order_id);
 	if (_manager == nullptr)
 	{
+		LOG_ERROR("strategy cancel_order _manager is nullptr");
 		return;
 	}
 	lt_cancel_order(_manager->get_lt(), order_id);
@@ -124,7 +127,7 @@ time_t strategy::get_last_time() const
 
 void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const tick_info&)> callback)
 {
-	LOG_DEBUG("set_timeout_cancel : %llu\n", order_id);
+	LOG_DEBUG("set_cancel_condition : %llu\n", order_id);
 	if (_manager == nullptr)
 	{
 		return;

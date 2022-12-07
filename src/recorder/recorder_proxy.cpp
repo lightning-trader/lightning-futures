@@ -71,7 +71,7 @@ recorder_proxy::~recorder_proxy()
 
 void recorder_proxy::record_order_entrust(time_t time, const order_info& order)
 {
-	LOG_DEBUG("recorder_proxy record_order_entrust %d %lld", time, order.est_id);
+	LOG_DEBUG("recorder_proxy record_order_entrust %d %llu", time, order.est_id);
 	std::tuple<time_t, order_info> order_action_data = std::make_tuple(time, order);
 	std::pair<order_action_type, std::any> order_lifecycle_data = std::make_pair(OAT_ENTRUST, order_action_data);
 	while (!_order_lifecycle_queue.push(order_lifecycle_data));
@@ -79,14 +79,14 @@ void recorder_proxy::record_order_entrust(time_t time, const order_info& order)
 
 void recorder_proxy::record_order_trade(time_t time, estid_t localid)
 {
-	LOG_DEBUG("recorder_proxy record_order_trade %d %lld", time, localid);
+	LOG_DEBUG("recorder_proxy record_order_trade %d %llu", time, localid);
 	std::tuple<time_t, estid_t> order_action_data = std::make_tuple(time, localid);
 	std::pair<order_action_type, std::any> order_lifecycle_data = std::make_pair(OAT_TRADE, order_action_data);
 	while (!_order_lifecycle_queue.push(order_lifecycle_data));
 }
 void recorder_proxy::record_order_cancel(time_t time, estid_t localid, uint32_t last_volume)
 {
-	LOG_DEBUG("recorder_proxy record_order_cancel %d %lld", time, localid);
+	LOG_DEBUG("recorder_proxy record_order_cancel %d %llu", time, localid);
 	std::tuple<time_t, estid_t, uint32_t> order_action_data = std::make_tuple(time, localid, last_volume);
 	std::pair<order_action_type, std::any> order_lifecycle_data = std::make_pair(OAT_CANCEL, order_action_data);
 	while (!_order_lifecycle_queue.push(order_lifecycle_data));
