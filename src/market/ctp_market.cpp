@@ -148,10 +148,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	tick.sell_order[3] = std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4);
 	tick.sell_order[4] = std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5);
 	tick.trading_day = std::atoi(pDepthMarketData->TradingDay);
-	if (_last_tick_time < tick.time)
-	{
-		_last_tick_time = tick.time;
-	}
+	_last_tick_time = tick.time;
 	if (_current_trading_day != tick.trading_day)
 	{
 		_current_trading_day = tick.trading_day;
