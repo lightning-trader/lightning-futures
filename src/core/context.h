@@ -132,6 +132,8 @@ public:
 
 	time_t get_close_time();
 
+	void clear_position(const code_t& code, bool real);
+
 private:
 
 	void load_data(const char* localdb_name, size_t oper_size);

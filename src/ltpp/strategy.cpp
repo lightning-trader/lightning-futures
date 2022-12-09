@@ -174,3 +174,12 @@ bool strategy::is_trading_ready()const
 	}
 	return lt_is_trading_ready(_manager->get_lt());
 }
+
+void strategy::clear_position(const code_t& code,bool real)const
+{
+	if (_manager == nullptr)
+	{
+		return ;
+	}
+	return lt_clear_position(_manager->get_lt(), code, real);
+}

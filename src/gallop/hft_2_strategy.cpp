@@ -11,12 +11,23 @@ void hft_2_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
+	_clear_position = false ;
 }
 
 void hft_2_strategy::on_tick(const tick_info& tick)
 {
 	_last_tick = tick ; 
 	add_to_history(tick.price);
+	if (tick.time > _coming_to_close)
+	{
+		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
+		if(!_clear_position)
+		{
+			_clear_position = true ;
+			clear_position(_code);
+		}
+		return;
+	}
 	LOG_TRACE("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
 	if(_buy_order != INVALID_ESTID || _sell_order != INVALID_ESTID)
 	{
@@ -28,11 +39,7 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
 		return;
 	}
-	if (tick.time > _coming_to_close)
-	{
-		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
-		return;
-	}
+
 	
 	double_t ma_delta = tick.price - _history_ma ;
 	double_t buy_price = tick.buy_price() - _open_delta - ma_delta;
@@ -108,16 +115,14 @@ void hft_2_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
 {
 	LOG_DEBUG("on_cancel : %llu\n", localid);
-
+	
 	if(localid == _buy_order)
 	{
 		_buy_order = INVALID_ESTID;
-		return ;
 	}
 	if (localid == _sell_order)
 	{
 		_sell_order = INVALID_ESTID;
-		return;
 	}
 	
 }

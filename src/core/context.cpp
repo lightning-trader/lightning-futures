@@ -377,6 +377,42 @@ time_t context::get_close_time()
 	return _section->get_clase_time();
 }
 
+void context::clear_position(const code_t& code, bool real)
+{
+	auto trader = get_trader();
+	if (trader == nullptr)
+	{
+		LOG_ERROR("cancel_order error _trader nullptr");
+		return ;
+	}
+	const auto& pos = trader->get_position(code);
+	if(real)
+	{
+		if (pos.long_postion > 0)
+		{
+			trader->place_order(OT_CLOSE, DT_LONG, code, pos.long_postion, 0, OF_FAK);
+
+		}
+		if (pos.short_postion > 0)
+		{
+			trader->place_order(OT_CLOSE, DT_SHORT, code, pos.short_postion, 0, OF_FAK);
+		}
+	}
+	else
+	{
+		int32_t volume = pos.get_real();
+		if (volume > 0)
+		{
+			trader->place_order(OT_CLOSE, DT_LONG,code,volume,0, OF_FAK);
+		}
+		else if (volume < 0)
+		{
+			trader->place_order(OT_CLOSE, DT_SHORT, code, -volume, 0, OF_FAK);
+		}
+	}
+	
+}
+
 void context::load_data(const char* localdb_name,size_t oper_size)
 {
 	boost::interprocess::shared_memory_object shdmem

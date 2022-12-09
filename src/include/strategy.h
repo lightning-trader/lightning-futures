@@ -200,6 +200,11 @@ protected:
 	*	是否准备就绪
 	*/
 	bool is_trading_ready()const;
+
+	/**
+	*	清仓
+	*/
+	void clear_position(const code_t& code, bool real=false)const;
 };
 
 
