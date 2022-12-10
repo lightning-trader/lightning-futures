@@ -13,8 +13,7 @@ public:
 		_open_delta(open_delta),
 		_history_count(1200),
 		_history_ma(0),
-		_coming_to_close(0),
-		_clear_position(false)
+		_coming_to_close(0)
 		{};
 
 
@@ -93,7 +92,5 @@ private:
 	double_t _history_ma ;
 
 	std::list<double_t> _history_price ;
-
-	bool _clear_position ;
 };
 
