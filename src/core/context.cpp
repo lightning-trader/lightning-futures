@@ -390,12 +390,12 @@ void context::clear_position(const code_t& code, bool real)
 	{
 		if (pos.long_postion > 0)
 		{
-			trader->place_order(OT_CLOSE, DT_LONG, code, pos.long_postion, 0, OF_FAK);
+			trader->place_order(OT_CLOSE, DT_LONG, code, pos.long_postion, 0, OF_FOK);
 
 		}
 		if (pos.short_postion > 0)
 		{
-			trader->place_order(OT_CLOSE, DT_SHORT, code, pos.short_postion, 0, OF_FAK);
+			trader->place_order(OT_CLOSE, DT_SHORT, code, pos.short_postion, 0, OF_FOK);
 		}
 	}
 	else
@@ -403,11 +403,11 @@ void context::clear_position(const code_t& code, bool real)
 		int32_t volume = pos.get_real();
 		if (volume > 0)
 		{
-			trader->place_order(OT_CLOSE, DT_LONG,code,volume,0, OF_FAK);
+			trader->place_order(OT_CLOSE, DT_LONG,code,volume,0, OF_FOK);
 		}
 		else if (volume < 0)
 		{
-			trader->place_order(OT_CLOSE, DT_SHORT, code, -volume, 0, OF_FAK);
+			trader->place_order(OT_CLOSE, DT_SHORT, code, -volume, 0, OF_FOK);
 		}
 	}
 	
