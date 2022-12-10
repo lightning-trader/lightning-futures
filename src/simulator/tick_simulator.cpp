@@ -297,7 +297,7 @@ void tick_simulator::compulsory_closing()
 		}
 	}
 	//权益资金小于现有资金的20%触发强平
-	if(_account_info.money + delta_money< _account_info.money * _compulsory_factor)
+	if(_account_info.money + delta_money< _account_info.frozen_monery * _compulsory_factor)
 	{
 		for (auto& it : _position_info)
 		{
@@ -312,16 +312,16 @@ void tick_simulator::compulsory_closing()
 				//假定市价单全部能成交，暂时不考虑穿仓情况
 				//强平多仓
 				_account_info.money += pos.long_postion * (sell_price - pos.buy_price) * _multiple;
-				pos.long_postion -= pos.long_postion;
-				pos.long_frozen -= pos.long_postion;
 				_account_info.money -= pos.long_postion * _service_charge;
 				_account_info.frozen_monery -= pos.long_postion * sell_price * _multiple * _margin_rate;
+				pos.long_postion -= pos.long_postion;
+				pos.long_frozen -= pos.long_postion;
 				//强平空仓
 				_account_info.money += pos.short_postion * (pos.sell_price - buy_price) * _multiple;
-				pos.short_postion -= pos.short_postion;
-				pos.short_frozen -= pos.short_postion;
 				_account_info.money -= pos.short_postion * _service_charge;
 				_account_info.frozen_monery -= pos.short_postion * pos.sell_price * _multiple * _margin_rate;
+				pos.short_postion -= pos.short_postion;
+				pos.short_frozen -= pos.short_postion;
 				//强平 以后所有平仓订单失效
 				std::vector<order_match> match_list;
 				_order_info.get_order_match(match_list, pos.id);

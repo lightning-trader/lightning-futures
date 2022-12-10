@@ -15,7 +15,7 @@ void start_runtime()
 	//auto app = std::make_shared<runtime_engine>("./runtime.ini");
 	auto app = std::make_shared<runtime_engine>("./rt_hx_zjh.ini");
 	//app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2301", 16));
-	app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 3));
+	app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 2));
 	app->run_to_close();
 	
 }
@@ -31,7 +31,7 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 		};
 	*/
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 3));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 4));
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 16));
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2210", 4));
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2211", 16));
@@ -87,7 +87,7 @@ void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
 
 int main()
 {
-	
+	/*
 	std::vector<uint32_t> all_trading_day = {
 		20220901,
 		20220902,
@@ -111,7 +111,7 @@ int main()
 		20220928,
 		20220930
 	};
-	/*
+	*/
 	std::vector<uint32_t> all_trading_day = {
 		20220801,
 		20220802,
@@ -135,7 +135,7 @@ int main()
 		20220826
 
 	};
-	*/
+	
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
 	start_evaluate(all_trading_day);
