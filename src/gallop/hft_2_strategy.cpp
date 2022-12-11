@@ -11,11 +11,13 @@ void hft_2_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
+	
 }
 
 void hft_2_strategy::on_tick(const tick_info& tick)
 {
 	_last_tick = tick ; 
+	
 	add_to_history(tick.price);
 	if (tick.time > _coming_to_close)
 	{
@@ -34,11 +36,10 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
 		return;
 	}
-
-	
+	double_t delta = std::round(tick.standard * _open_delta);
 	double_t ma_delta = tick.price - _history_ma ;
-	double_t buy_price = tick.buy_price() - _open_delta - ma_delta;
-	double_t sell_price = tick.sell_price() + _open_delta - ma_delta;
+	double_t buy_price = tick.buy_price() - delta - ma_delta;
+	double_t sell_price = tick.sell_price() + delta - ma_delta;
 	buy_price = buy_price < tick.buy_price()? buy_price : tick.buy_price();
 	sell_price = sell_price > tick.sell_price() ? sell_price : tick.sell_price();
 	if(tick.price >= tick.standard)

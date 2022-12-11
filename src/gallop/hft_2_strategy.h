@@ -5,13 +5,13 @@ class hft_2_strategy : public strategy
 {
 public:
 	
-	hft_2_strategy(const code_t& code,double open_delta):
+	hft_2_strategy(const code_t& code,double open_delta,uint32_t history):
 		strategy(),
 		_code(code),
 		_sell_order(INVALID_ESTID),
 		_buy_order(INVALID_ESTID),
 		_open_delta(open_delta),
-		_history_count(1200),
+		_history_count(history),
 		_history_ma(0),
 		_coming_to_close(0)
 		{};
