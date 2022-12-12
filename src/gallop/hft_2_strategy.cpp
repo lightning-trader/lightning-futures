@@ -17,8 +17,12 @@ void hft_2_strategy::on_ready()
 void hft_2_strategy::on_tick(const tick_info& tick)
 {
 	_last_tick = tick ; 
-	
 	add_to_history(tick.price);
+	if (!is_trading_ready())
+	{
+		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
+		return;
+	}
 	if (tick.time > _coming_to_close)
 	{
 		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
@@ -31,11 +35,7 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		LOG_TRACE("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _buy_order, _sell_order);
 		return ;
 	}
-	if (!is_trading_ready())
-	{
-		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
-		return;
-	}
+
 	double_t delta = std::round(tick.standard * _open_delta);
 	double_t ma_delta = tick.price - _history_ma ;
 	double_t buy_price = tick.buy_price() - delta - ma_delta;
