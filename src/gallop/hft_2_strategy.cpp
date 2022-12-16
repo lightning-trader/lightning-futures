@@ -11,7 +11,7 @@ void hft_2_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
-	
+	_coming_to_clear = make_datetime(trading_day, "14:59:00");
 }
 
 void hft_2_strategy::on_tick(const tick_info& tick)
@@ -23,10 +23,15 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
 		return;
 	}
+	if(tick.time > _coming_to_clear)
+	{
+		LOG_DEBUG("time > _coming_to_clear %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_clear);
+		clear_position(_code);
+		return;
+	}
 	if (tick.time > _coming_to_close)
 	{
 		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
-		clear_position(_code);
 		return;
 	}
 	LOG_TRACE("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);

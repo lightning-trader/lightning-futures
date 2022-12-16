@@ -176,6 +176,7 @@ typedef enum offset_type
 {
 	OT_OPEN = '0',	//开仓
 	OT_CLOSE,		//平仓,上期为平昨
+	OT_CLOSE_TODAY  //平今
 } offset_type;
 
 /*

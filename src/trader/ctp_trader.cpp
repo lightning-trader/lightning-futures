@@ -359,7 +359,7 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 		return;
 	}
 	
-	if (pInvestorPosition&& pInvestorPosition->Position>0)
+	if (pInvestorPosition&& (pInvestorPosition->Position>0|| pInvestorPosition->YdPosition>0))
 	{	
 		code_t code(pInvestorPosition->InstrumentID, pInvestorPosition->ExchangeID);
 		position_info& position = _position_info[code];
@@ -821,14 +821,27 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 		}
 		else
 		{
-			if (p.short_postion >= volume)
+			if (p.long_postion >= volume)
 			{
-				p.short_postion -= volume;
-				p.short_frozen -= volume;
+				p.long_postion -= volume;
+				p.long_frozen -= volume;
 			}
 			else
 			{
-				p.short_postion = 0;
+				p.long_postion = 0;
+				p.long_frozen = 0;
+			}
+			if(offset_type == OT_CLOSE)
+			{
+				if(p.long_yestoday > volume)
+				{
+					p.long_yestoday -= volume;
+				}
+				else
+				{
+					p.long_yestoday = 0;
+				}
+				
 			}
 		}
 	}
@@ -840,15 +853,29 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 		}
 		else
 		{
-			if (p.long_postion >= volume)
+			if (p.short_postion >= volume)
 			{
-				p.long_postion -= volume;
-				p.long_frozen -= volume;
+				p.short_postion -= volume;
+				p.short_frozen -= volume;
 			}
 			else
 			{
-				p.long_postion = 0;
+				p.short_postion = 0;
+				p.short_frozen = 0;
 			}
+			if (offset_type == OT_CLOSE)
+			{
+				if(p.short_yestoday > volume)
+				{
+					p.short_yestoday -= volume;
+				}
+				else
+				{
+					p.short_yestoday = 0;
+				}
+				
+			}
+
 		}
 	}
 	this->fire_event(ET_PositionChange, p);

@@ -196,6 +196,8 @@ private:
 	{
 		if (THOST_FTDC_OF_Open == offset_type)
 			return OT_OPEN;
+		else if (THOST_FTDC_OF_CloseToday == offset_type)
+			return OT_CLOSE_TODAY;
 		else
 			return OT_CLOSE;
 	}

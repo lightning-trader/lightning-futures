@@ -13,7 +13,8 @@ public:
 		_open_delta(open_delta),
 		_history_count(history),
 		_history_ma(0),
-		_coming_to_close(0)
+		_coming_to_close(0),
+		_coming_to_clear(0)
 		{};
 
 
@@ -88,6 +89,8 @@ private:
 	size_t _history_count ;
 
 	time_t _coming_to_close;
+
+	time_t _coming_to_clear;
 
 	double_t _history_ma ;
 
