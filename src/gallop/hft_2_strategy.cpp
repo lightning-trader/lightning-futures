@@ -1,6 +1,7 @@
 #include "hft_2_strategy.h"
 #include "time_utils.hpp"
 
+
 void hft_2_strategy::on_init()
 {
 	subscribe(_code);
@@ -11,7 +12,8 @@ void hft_2_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
-	_coming_to_clear = make_datetime(trading_day, "14:59:00");
+	_history_ma = 0;
+	_history_price.clear();
 }
 
 void hft_2_strategy::on_tick(const tick_info& tick)
@@ -21,12 +23,6 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	if (!is_trading_ready())
 	{
 		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
-		return;
-	}
-	if(tick.time > _coming_to_clear)
-	{
-		LOG_DEBUG("time > _coming_to_clear %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_clear);
-		clear_position(_code);
 		return;
 	}
 	if (tick.time > _coming_to_close)
@@ -40,13 +36,21 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		LOG_TRACE("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _buy_order, _sell_order);
 		return ;
 	}
-
+	int32_t direction = 0 ;
+	if(tick.price > tick.standard)
+	{
+		direction = 1;
+	}
+	else if(tick.price < tick.standard)
+	{
+		direction = -1;
+	}
 	double_t delta = std::round(tick.standard * _open_delta);
-	double_t ma_delta = tick.price - _history_ma ;
-	double_t buy_price = tick.buy_price() - delta - ma_delta;
-	double_t sell_price = tick.sell_price() + delta - ma_delta;
-	buy_price = buy_price < tick.buy_price()? buy_price : tick.buy_price();
-	sell_price = sell_price > tick.sell_price() ? sell_price : tick.sell_price();
+	double_t ma_delta = tick.price - std::round(_history_ma);
+	double_t buy_price = tick.buy_price() - delta - direction * (ma_delta) - _random(_random_engine);
+	double_t sell_price = tick.sell_price() + delta + direction * (ma_delta) + _random(_random_engine);
+	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
+	sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
 	if(tick.price >= tick.standard)
 	{
 		if (buy_price > tick.low_limit)
@@ -163,7 +167,7 @@ void hft_2_strategy::add_to_history(double_t price)
 	{
 		double_t frist = _history_price.front();
 		double_t delta = (price - frist)/ _history_count;
-		_history_ma = std::round(delta + _history_ma);
+		_history_ma = (delta + _history_ma);
 		_history_price.pop_front();
 	}
 	

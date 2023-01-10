@@ -1,11 +1,12 @@
 #pragma once
 #include "strategy.h"
+#include <random>
 
 class hft_2_strategy : public strategy
 {
 public:
 	
-	hft_2_strategy(const code_t& code,double open_delta,uint32_t history):
+	hft_2_strategy(const code_t& code,double open_delta,uint32_t history, int32_t protection,int32_t random_offset):
 		strategy(),
 		_code(code),
 		_sell_order(INVALID_ESTID),
@@ -14,8 +15,10 @@ public:
 		_history_count(history),
 		_history_ma(0),
 		_coming_to_close(0),
-		_coming_to_clear(0)
-		{};
+		_random(-random_offset, random_offset),
+		_protection(protection)
+		{
+		};
 
 
 	~hft_2_strategy(){};
@@ -78,6 +81,8 @@ private:
 	
 	code_t _code ;
 
+	int32_t _protection;
+
 	double _open_delta;
 
 	estid_t _sell_order ;
@@ -90,10 +95,12 @@ private:
 
 	time_t _coming_to_close;
 
-	time_t _coming_to_clear;
-
 	double_t _history_ma ;
 
 	std::list<double_t> _history_price ;
+
+	std::default_random_engine _random_engine;
+
+	std::uniform_int_distribution<int> _random;
 };
 
