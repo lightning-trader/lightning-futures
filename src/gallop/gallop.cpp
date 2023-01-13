@@ -14,13 +14,14 @@ void start_runtime()
 {
 	//auto app = std::make_shared<runtime_engine>("./runtime.ini");
 	auto app = std::make_shared<runtime_engine>("./rt_hx_zjh.ini");
-	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120,5,2));
-	app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0042F, 120,8,3));
+	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2307", 0.0042F, 120,8,3));
+	app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2306", 0.0028F, 120,5,2));
+	app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0014F, 120, 3, 1));
 	app->run_to_close();
 	
 }
 
-void start_evaluate(const std::vector<uint32_t>& all_trading_day)
+void start_evaluate(const char* code,const std::vector<uint32_t>& all_trading_day)
 {
 	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
 	/*
@@ -31,11 +32,12 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 		};
 	*/
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0028F, 120, 5, 2));
-	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0042F, 120, 8, 3));
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 16));
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2210", 0.0058F, 120));
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2211", 16));
+	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 0.0014F, 120, 3, 1));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 0.0028F, 120, 5, 2));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 0.0058F, 120, 8, 3));
+	//stra_list.emplace_back(new hft_2_strategy(code, 0.0014F, 120, 3, 1));
+	//stra_list.emplace_back(new hft_2_strategy(code, 0.0098F, 120,16,5));
+	//stra_list.emplace_back(new hft_2_strategy(code, 0.0126F,120,24,6));
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2212", 16));
 	app->back_test(stra_list, all_trading_day);
 }
@@ -89,7 +91,8 @@ void start_hft_1_optimize(const std::vector<uint32_t>& all_trading_day)
 int main()
 {
 
-	std::vector<uint32_t> all_trading_day = {
+	std::vector<uint32_t> trading_day_2210 = {
+		//2210
 		20220801,
 		20220802,
 		20220803,
@@ -112,7 +115,10 @@ int main()
 		20220826,
 		20220829,
 		20220830,
-		20220831,
+		20220831
+	};
+	std::vector<uint32_t> trading_day_2301 = {
+		//2301
 		20220901,
 		20220902,
 		20220905,
@@ -133,16 +139,79 @@ int main()
 		20220927,
 		20220928,
 		20220928,
-		20220930
-
+		20220930,
+		20221010,
+		20221011,
+		20221012,
+		20221013,
+		20221014,
+		20221017,
+		20221018,
+		20221019,
+		20221020,
+		20221021,
+		20221024,
+		20221025,
+		20221026,
+		20221027,
+		20221028,
+		20221031,
+		20221101,
+		20221102,
+		20221103,
+		20221104,
+		20221107,
+		20221108,
+		20221109,
+		20221110,
+		20221111,
+		20221114,
+		20221115,
+		20221116,
+		20221117,
+		20221118,
+		20221121,
+		20221122,
+		20221123,
+		20221124,
+		20221125,
+		20221128,
+		20221129,
+		20221130
+	};
+	std::vector<uint32_t> trading_day_2305 = {
+		//2305
+		20221201,
+		20221202,
+		20221205,
+		20221206,
+		20221207,
+		20221208,
+		20221209,
+		20221212,
+		20221213,
+		20221214,
+		20221215,
+		20221216,
+		20221219,
+		20221220,
+		20221221,
+		20221222,
+		20221223,
+		20221226,
+		20221227,
+		20221228,
+		20221229,
+		20221230
+			
 	};
 
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	//start_evaluate(all_trading_day);
+	start_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_hft1_evaluate(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	start_runtime();
+	//start_runtime();
 	
 	/*
 	LOG_DEBUG("123_%d----%s",123,"a");

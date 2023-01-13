@@ -39,7 +39,8 @@ csv_recorder::csv_recorder(const char* basic_path) :_is_dirty(false), _order_lif
 	_account_flow_csv.SetColumnName(0, "time");
 	_account_flow_csv.SetColumnName(1, "money");
 	_account_flow_csv.SetColumnName(2, "frozen");
-
+	
+	_account_save_time = now_time;
 }
 
 void csv_recorder::record_order_entrust(time_t time, const order_info& order)
@@ -145,6 +146,8 @@ void csv_recorder::record_position_flow(time_t time, const position_info& positi
 
 void csv_recorder::record_account_flow(time_t time, const account_info& account)
 {
+
+	_account_save_time = get_now();
 	try
 	{
 		size_t count = _account_flow_csv.GetRowCount();

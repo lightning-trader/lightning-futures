@@ -108,6 +108,15 @@ struct position_info
 		return long_postion + short_postion ;
 	}
 
+	uint32_t long_usable()
+	{
+		return long_postion - long_frozen;
+	}
+
+	uint32_t short_usable()
+	{
+		return short_postion - short_frozen;
+	}
 
 	/**  
 	* 正数表示多仓，复数表示空仓
@@ -120,6 +129,11 @@ struct position_info
 	uint32_t is_mepty()const
 	{
 		return long_postion == 0 && short_postion == 0;
+	}
+
+	double_t get_profit(double_t price, double multiple)const
+	{
+		return long_postion * (price - buy_price) * multiple + short_postion * (sell_price - price) * multiple;
 	}
 
 	position_info() :
@@ -142,8 +156,9 @@ struct account_info
 	double frozen_monery;
 
 	account_info() :
-		money(0),
-		frozen_monery(0)
+		money(.0F),
+		frozen_monery(.0F)
+		
 	{}
 };
 const account_info default_account;
@@ -223,6 +238,8 @@ struct order_info
 	{
 		return est_id != INVALID_ESTID;
 	}
+
+	
 };
 const order_info default_order ;
 

@@ -59,7 +59,7 @@ void tick_simulator::play(uint32_t tradeing_day)
 		//处理强平
 		compulsory_closing();
 		//std::chrono::milliseconds(_interval)
-		std::this_thread::sleep_for(std::chrono::milliseconds(_interval));
+		std::this_thread::sleep_for(std::chrono::microseconds(_interval));
 
 		_last_frame_volume.clear();
 		for (const auto& tick : _current_tick_info)
@@ -744,3 +744,4 @@ void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 		this->fire_event(ET_PositionChange, pos);
 	}
 }
+

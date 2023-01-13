@@ -97,6 +97,7 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 					_last_query_time = get_now();
 				}
 				std::this_thread::sleep_for(std::chrono::seconds(1));
+				query_account();
 			}
 			});
 		//_work_thread->join();
@@ -336,9 +337,13 @@ void ctp_trader::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingA
 	
 	if (bIsLast&& pTradingAccount)
 	{
-		_account_info.money = pTradingAccount->Balance;
-		_account_info.frozen_monery = pTradingAccount->FrozenCommission+ pTradingAccount->FrozenMargin+ pTradingAccount->CurrMargin;
-		this->fire_event(ET_AccountChange, _account_info);
+		double_t frozen = pTradingAccount->FrozenCommission + pTradingAccount->FrozenMargin + pTradingAccount->CurrMargin;
+		if(_account_info.money != pTradingAccount->Balance || _account_info.frozen_monery != frozen)
+		{
+			_account_info.money = pTradingAccount->Balance;
+			_account_info.frozen_monery = frozen;
+			this->fire_event(ET_AccountChange, _account_info);
+		}
 	}
 	if (bIsLast && !_is_inited)
 	{
@@ -821,14 +826,20 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 		}
 		else
 		{
-			if (p.long_postion >= volume)
+			if (p.long_postion > volume)
 			{
 				p.long_postion -= volume;
-				p.long_frozen -= volume;
 			}
 			else
 			{
 				p.long_postion = 0;
+			}
+			if (p.long_frozen > volume)
+			{
+				p.long_frozen -= volume;
+			}
+			else
+			{
 				p.long_frozen = 0;
 			}
 			if(offset_type == OT_CLOSE)
@@ -853,14 +864,20 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 		}
 		else
 		{
-			if (p.short_postion >= volume)
+			if (p.short_postion > volume)
 			{
 				p.short_postion -= volume;
-				p.short_frozen -= volume;
 			}
 			else
 			{
 				p.short_postion = 0;
+			}
+			if (p.short_frozen > volume)
+			{
+				p.short_frozen -= volume;
+			}
+			else
+			{
 				p.short_frozen = 0;
 			}
 			if (offset_type == OT_CLOSE)

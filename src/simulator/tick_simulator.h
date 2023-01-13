@@ -160,4 +160,5 @@ private:
 	uint32_t frozen_deduction(estid_t est_id, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price);
 	//解冻
 	void thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price);
+
 };

@@ -28,7 +28,8 @@ context::context():
 	on_ready(nullptr),
 	_operational_region(nullptr),
 	_operational_data(nullptr),
-	_section(nullptr)
+	_section(nullptr),
+	_profit_limit(-8000)
 {
 
 }
@@ -588,12 +589,13 @@ void context::handle_tick(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
-		_last_tick_info = std::any_cast<tick_info>(param[0]);
+		tick_info last_tick = std::any_cast<tick_info>(param[0]);
 		if(this->on_tick)
 		{
-			this->on_tick(_last_tick_info);
+			this->on_tick(last_tick);
 		}
-		check_order_condition(_last_tick_info);
+		check_order_condition(last_tick);
+		check_profit_limit(last_tick);
 	}
 	
 }
@@ -640,5 +642,26 @@ void context::remove_invalid_condition(estid_t order_id)
 	if (odit != _need_check_condition.end())
 	{
 		_need_check_condition.erase(odit);
+	}
+}
+
+void context::check_profit_limit(const tick_info& tick)
+{
+	auto trader = get_trader();
+	if (trader)
+	{
+		auto pos = trader->get_position(tick.id);
+		if(pos.get_profit(tick.price,10) <_profit_limit)
+		{
+			//´¥·¢×î´ó¿÷Ëð
+			if(pos.long_usable() > pos.short_usable())
+			{
+				trader->place_order(OT_CLOSE, DT_LONG, tick.id, 1, tick.buy_price(), OF_NOR);
+			}
+			else if (pos.long_usable() < pos.short_usable())
+			{
+				trader->place_order(OT_CLOSE, DT_SHORT, tick.id, 1, tick.sell_price(), OF_NOR);
+			}
+		}
 	}
 }

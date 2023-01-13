@@ -15,6 +15,8 @@ private:
 
 	rapidcsv::Document _account_flow_csv;
 
+	time_t _account_save_time ;
+
 public :
 
 	csv_recorder(const char* basic_path) ;

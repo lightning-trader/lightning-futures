@@ -65,9 +65,9 @@ private:
 
 	bool _is_trading_ready ;
 
-	tick_info _last_tick_info ;
-
 	std::shared_ptr<trading_section> _section ;
+
+	double_t _profit_limit;
 
 public:
 
@@ -166,6 +166,7 @@ private:
 
 	class pod_chain * create_chain(trading_optimal opt, bool flag,std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> fliter_callback);
 
+	void check_profit_limit(const tick_info& tick);
 protected:
 
 	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config);
