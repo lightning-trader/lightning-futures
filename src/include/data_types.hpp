@@ -108,12 +108,12 @@ struct position_info
 		return long_postion + short_postion ;
 	}
 
-	uint32_t long_usable()
+	uint32_t long_usable()const
 	{
 		return long_postion - long_frozen;
 	}
 
-	uint32_t short_usable()
+	uint32_t short_usable()const
 	{
 		return short_postion - short_frozen;
 	}

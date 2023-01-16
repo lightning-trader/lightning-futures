@@ -37,18 +37,19 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		return ;
 	}
 	int32_t direction = 0 ;
-	if(tick.price > tick.standard+5)
+	if(tick.price > tick.standard+15)
 	{
 		direction = 1;
 	}
-	else if(tick.price < tick.standard-5)
+	else if(tick.price < tick.standard-15)
 	{
 		direction = -1;
 	}
+	//direction = 1;
 	double_t delta = std::round(tick.standard * _open_delta);
 	double_t ma_delta = tick.price - std::round(_history_ma);
-	double_t buy_price = tick.buy_price() - delta + direction * ma_delta + _random(_random_engine);
-	double_t sell_price = tick.sell_price() + delta - direction * ma_delta - _random(_random_engine);
+	double_t buy_price = tick.buy_price() - delta + direction * (ma_delta) + _random(_random_engine);
+	double_t sell_price = tick.sell_price() + delta - direction * (ma_delta) - _random(_random_engine);
 	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
 	sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
 	if(tick.price >= tick.standard)
