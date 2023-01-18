@@ -6,7 +6,7 @@ class hft_3_strategy : public strategy
 {
 public:
 	
-	hft_3_strategy(const code_t& code,double open_delta,int32_t protection,int32_t random_offset):
+	hft_3_strategy(const code_t& code, int32_t open_delta,int32_t protection,int32_t random_offset):
 		strategy(),
 		_code(code),
 		_close_long_order(INVALID_ESTID),
@@ -15,6 +15,7 @@ public:
 		_open_short_order(INVALID_ESTID),
 		_open_delta(open_delta),
 		_coming_to_close(0),
+		_coming_to_clear(0),
 		_random(0, random_offset),
 		_protection(protection)
 		{
@@ -79,7 +80,7 @@ private:
 
 	int32_t _protection;
 
-	double _open_delta;
+	int32_t _open_delta;
 
 	estid_t _close_long_order ;
 
@@ -92,6 +93,8 @@ private:
 	tick_info _last_tick;
 
 	time_t _coming_to_close;
+
+	time_t _coming_to_clear;
 
 	std::default_random_engine _random_engine;
 

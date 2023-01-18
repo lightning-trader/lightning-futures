@@ -49,6 +49,21 @@ void tick_simulator::play(uint32_t tradeing_day)
 	}
 	//模拟跨天时候之前的订单失效
 	_order_info.clear();
+	/*
+	for(auto it : _position_info)
+	{
+		double_t standard_price = _standard_price[it.first];
+		double_t delta_long_monery = (standard_price - it.second.buy_price) *  _multiple * it.second.long_postion;
+		double_t delta_short_monery = (it.second.sell_price - standard_price) * _multiple * it.second.short_postion;
+		double_t delta_long_margin = (it.second.buy_price - standard_price) * _multiple * it.second.long_postion * _margin_rate;
+		double_t delta_short_margin = (it.second.sell_price - standard_price) * _multiple * it.second.short_postion * _margin_rate;
+		it.second.buy_price = standard_price;
+		it.second.sell_price = standard_price;
+		_account_info.money += (delta_long_monery + delta_short_monery);
+		_account_info.frozen_monery -= (delta_long_margin + delta_short_margin);
+	}
+	*/
+
 	_is_in_trading = true ;
 	while (_is_in_trading)
 	{
@@ -214,7 +229,10 @@ void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
 	if(_loader)
 	{
 		_loader->load_tick(_pending_tick_info,code, trading_day);
-		
+		if(!_pending_tick_info.empty())
+		{
+			_standard_price[code] = _pending_tick_info[0].standard;
+		}
 	}
 }
 

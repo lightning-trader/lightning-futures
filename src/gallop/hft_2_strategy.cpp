@@ -46,32 +46,34 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		direction = -1;
 	}
 	//direction = 1;
+	const position_info& pos = get_position(tick.id);
 	double_t delta = std::round(tick.standard * _open_delta);
 	double_t ma_delta = tick.price - std::round(_history_ma);
-	double_t buy_price = tick.buy_price() - delta + direction * (ma_delta) + _random(_random_engine);
-	double_t sell_price = tick.sell_price() + delta - direction * (ma_delta) - _random(_random_engine);
+	double_t buy_price = tick.buy_price() - (pos.get_total() + 1) * delta + direction * (ma_delta)+_random(_random_engine);
+	double_t sell_price = tick.sell_price() + (pos.get_total() + 1) * delta - direction * (ma_delta)-_random(_random_engine);
 	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
 	sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
+	uint32_t once = std::round((pos.get_total() + 1) * 0.5);
 	if(tick.price >= tick.standard)
 	{
 		if (buy_price > tick.low_limit)
 		{
-			_buy_order = buy_for_open(tick.id, 1, buy_price);
+			_buy_order = buy_for_open(tick.id, once, buy_price);
 		}
 		if (sell_price < tick.high_limit)
 		{
-			_sell_order = sell_for_open(tick.id, 1, sell_price);
+			_sell_order = sell_for_open(tick.id, once, sell_price);
 		}
 	}
 	else
 	{
 		if (sell_price < tick.high_limit)
 		{
-			_sell_order = sell_for_open(tick.id, 1, sell_price);
+			_sell_order = sell_for_open(tick.id, once, sell_price);
 		}
 		if (buy_price > tick.low_limit)
 		{
-			_buy_order = buy_for_open(tick.id, 1, buy_price);
+			_buy_order = buy_for_open(tick.id, once, buy_price);
 		}
 		
 	}

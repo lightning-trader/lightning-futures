@@ -24,6 +24,8 @@ private:
 
 	std::vector<tick_info> _pending_tick_info ;
 
+	std::map<code_t,double_t> _standard_price ;
+
 	time_t _current_time ;
 
 	uint32_t _current_tick ;

@@ -12,6 +12,7 @@ void hft_3_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
+	_coming_to_clear = make_datetime(trading_day, "14:59:00");
 }
 
 void hft_3_strategy::on_tick(const tick_info& tick)
@@ -22,47 +23,53 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
 		return;
 	}
+	if (tick.time > _coming_to_clear)
+	{
+		//clear_position(tick.id);
+		return ;
+	}
 	if (tick.time > _coming_to_close)
 	{
 		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
 		return;
 	}
 	LOG_TRACE("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _open_short_order, _open_long_order);
-	if(_open_long_order != INVALID_ESTID || _open_short_order != INVALID_ESTID)
-	{
-		LOG_TRACE("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _open_short_order, _open_long_order);
-		return ;
-	}
 
-	const position_info& pos = get_position(tick.id);
-	double_t delta = std::round(tick.standard * _open_delta);
-	double_t buy_price = tick.buy_price() + _random(_random_engine) - (pos.long_postion + 1) * delta;
-	double_t sell_price = tick.sell_price() - _random(_random_engine) + (pos.short_postion + 1) * delta;;
-	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
-	sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
-	if(tick.price >= tick.standard)
+	if(_open_long_order == INVALID_ESTID && _close_long_order == INVALID_ESTID)
 	{
+		const position_info& pos = get_position(tick.id);
+		uint32_t once = std::round(pos.long_postion + 1) ;
+		double_t buy_price = tick.buy_price() + _random(_random_engine) - (pos.long_postion + 1) * _open_delta;
+		buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
 		if (buy_price > tick.low_limit)
 		{
-			_open_long_order = buy_for_open(tick.id, 1, buy_price);
+			_open_long_order = buy_for_open(tick.id, once, buy_price);
 		}
-		if (sell_price < tick.high_limit)
+		if (pos.long_usable() > 0)
 		{
-			_open_short_order = sell_for_open(tick.id, 1, sell_price);
+			double_t sell_price = pos.buy_price - _random(_random_engine) + _open_delta;
+			sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
+			_close_long_order = sell_for_close(tick.id, pos.long_usable(), sell_price);
 		}
 	}
-	else
+	if (_open_short_order == INVALID_ESTID && _close_short_order == INVALID_ESTID)
 	{
+		const position_info& pos = get_position(tick.id);
+		uint32_t once = std::round(pos.short_postion + 1);
+		double_t sell_price = tick.sell_price() - _random(_random_engine) + (pos.short_postion + 1) * _open_delta;;
+		sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
 		if (sell_price < tick.high_limit)
 		{
-			_open_short_order = sell_for_open(tick.id, 1, sell_price);
+			_open_short_order = sell_for_open(tick.id, once, sell_price);
 		}
-		if (buy_price > tick.low_limit)
+		if (pos.short_usable() > 0)
 		{
-			_open_long_order = buy_for_open(tick.id, 1, buy_price);
+			double_t buy_price = pos.sell_price + _random(_random_engine) - _open_delta;
+			buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
+			_close_short_order = buy_for_close(tick.id, pos.short_usable(), buy_price);
 		}
-		
 	}
+	
 	
 }
 
@@ -86,28 +93,6 @@ void hft_3_strategy::on_entrust(const order_info& order)
 			return false;
 			});
 	}
-	if(order.est_id == _open_long_order)
-	{
-		const position_info& pos = get_position(order.code);
-		if (pos.long_usable() > 0)
-		{
-			double_t delta = std::round(_last_tick.standard * _open_delta);
-			double_t sell_price = pos.buy_price - _random(_random_engine) + delta;;
-			sell_price = sell_price > _last_tick.sell_price() + _protection ? sell_price : _last_tick.sell_price() + _protection;
-			_close_long_order = sell_for_close(order.code, pos.long_usable(), sell_price);
-		}
-	}
-	if (order.est_id == _open_short_order)
-	{
-		const position_info& pos = get_position(order.code);
-		if (pos.short_usable() > 0)
-		{
-			double_t delta = std::round(_last_tick.standard * _open_delta);
-			double_t buy_price = pos.sell_price + _random(_random_engine) - delta;
-			buy_price = buy_price < _last_tick.buy_price() - _protection ? buy_price : _last_tick.buy_price() - _protection;
-			_close_short_order = buy_for_close(order.code, pos.short_usable(), buy_price);
-		}
-	}
 	
 }
 
@@ -117,24 +102,20 @@ void hft_3_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 	if(localid == _open_long_order)
 	{
 		cancel_order(_close_long_order);
-		cancel_order(_open_short_order);
 		_open_long_order = INVALID_ESTID;
 	}
 	if(localid == _open_short_order)
 	{
 		cancel_order(_close_short_order);
-		cancel_order(_open_long_order);
 		_open_short_order = INVALID_ESTID;
 	}
 	if (localid == _close_long_order)
 	{
 		cancel_order(_open_long_order);
-		cancel_order(_open_short_order);
 		_close_long_order = INVALID_ESTID;
 	}
 	if (localid == _close_short_order)
 	{
-		cancel_order(_open_long_order);
 		cancel_order(_open_short_order);
 		_close_short_order = INVALID_ESTID;
 	}

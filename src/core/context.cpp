@@ -29,7 +29,7 @@ context::context():
 	_operational_region(nullptr),
 	_operational_data(nullptr),
 	_section(nullptr),
-	_profit_limit(-8000)
+	_profit_limit(-8000000)
 {
 
 }
@@ -76,8 +76,8 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
 
-	_max_position = 30;
-	trading_optimal to_optimal = TO_OPEN_TO_CLOSE;
+	_max_position = 1600;
+	trading_optimal to_optimal = TO_INVALID;
 	bool is_to_cancel = false;
 	_chain = create_chain(to_optimal, is_to_cancel, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool{
 		if(_trading_filter==nullptr)
