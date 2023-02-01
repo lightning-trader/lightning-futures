@@ -57,7 +57,6 @@ protected:
 
 private:
 
-	bool check_lose(const tick_info& tick);
 	void on_price_change(const tick_info& tick, bool is_up);
 	
 private:

@@ -8,10 +8,7 @@ void demo_strategy::on_init()
 
 void demo_strategy::on_tick(const tick_info& tick)
 {
-	if(check_lose(tick))
-	{
-		return ;
-	}
+
 	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
 	if (INVALID_ESTID != _buy_order|| INVALID_ESTID != _sell_order)
 	{
@@ -72,36 +69,3 @@ void demo_strategy::on_cancel(estid_t localid, const code_t& code, offset_type o
 }
 
 
-bool demo_strategy::check_lose(const tick_info& tick)
-{
-	//Ö¹Ëð
-	auto& position = get_position(tick.id);
-
-	if (position.long_postion > 0)
-	{
-		if (_highest_price < tick.price)
-		{
-			_highest_price = tick.price;
-		}
-		if (tick.price < _highest_price - _lose_offset)
-		{
-			sell_for_close(tick.id, position.long_postion);
-		}
-
-		return true;
-	}
-	if (position.short_postion > 0)
-	{
-		//³ÖÓÐ¿Õµ¥
-		if (_lowest_price > tick.price)
-		{
-			_lowest_price = tick.price;
-		}
-		if (tick.price > _lowest_price + _lose_offset)
-		{
-			buy_for_close(tick.id, position.short_postion);
-		}
-		return true;
-	}
-	return false;
-}

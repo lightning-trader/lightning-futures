@@ -52,41 +52,6 @@ void hcc_strategy::on_tick(const tick_info& tick)
 	}
 }
 
-bool hcc_strategy::check_lose(const tick_info& tick)
-{
-	//Ö¹Ëð
-	auto position = get_position(_code);
-
-	if(position.long_postion>0)
-	{
-		if (tick.price < _long_lose_price)
-		{
-			_order_id = sell_for_close(_code, position.long_postion,tick.price);
-			_last_order_time = tick.time;
-		}
-		if(_long_lose_price < tick.price - _lose_offset)
-		{
-			_long_lose_price = tick.price - _lose_offset;
-		}
-		return true;
-	}
-	if(position.short_postion > 0)
-	{
-		//³ÖÓÐ¿Õµ¥
-		if(tick.price > _short_lose_price)
-		{
-			_order_id = buy_for_close(_code, position.short_postion, tick.price);
-			_last_order_time = tick.time;
-		}
-		if (_short_lose_price > tick.price + _lose_offset)
-		{
-			_short_lose_price = tick.price + _lose_offset;
-		}
-		return true;
-	}
-	return false ;
-}
-
 
 void hcc_strategy::on_price_change(const tick_info& tick, bool is_up)
 {
@@ -143,13 +108,13 @@ void hcc_strategy::on_trade(estid_t localid, const code_t& code, offset_type off
 	auto& acc = get_account();
 	auto& pos = get_position(_code);
 
-	LOG_INFO("on_trade %llu %f %f [%d %d %d %d]\n", localid, acc.money, acc.frozen_monery, pos.long_postion, pos.short_postion, pos.long_frozen, pos.short_frozen);
+	//LOG_INFO("on_trade %llu %f %f [%d %d %d %d]\n", localid, acc.money, acc.frozen_monery, pos.long_postion, pos.short_postion, pos.long_frozen, pos.short_frozen);
 	_order_id = INVALID_ESTID;
 }
 
 void hcc_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
 	auto& pos = get_position(_code);
-	LOG_INFO("on_cancel tick : %llu [%d %d %d %d]\n", localid, pos.long_postion, pos.short_postion, pos.long_frozen, pos.short_frozen);
+	//LOG_INFO("on_cancel tick : %llu [%d %d %d %d]\n", localid, pos.long_postion, pos.short_postion, pos.long_frozen, pos.short_frozen);
 	_order_id = INVALID_ESTID;
 }

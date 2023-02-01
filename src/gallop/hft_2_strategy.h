@@ -15,7 +15,7 @@ public:
 		_history_count(history),
 		_history_ma(0),
 		_coming_to_close(0),
-		_random(-random_offset, random_offset),
+		_random(0, random_offset),
 		_protection(protection)
 		{
 		};

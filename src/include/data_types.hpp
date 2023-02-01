@@ -85,66 +85,71 @@ struct tick_info
 	}
 };
 
+struct position_item
+{
+	//仓位
+	uint32_t	postion;
+	//价格
+	double_t	price;
+	//冻结
+	uint32_t	frozen;
+
+	position_item() :
+		postion(0),
+		price(.0F),
+		frozen(0)
+	{}
+
+	uint32_t usable()const
+	{
+		return postion - frozen;
+	}
+
+	void clear()
+	{
+		postion = 0;
+		price = .0F;
+		frozen = 0 ;
+	}
+};
+
 struct position_info
 {
 	code_t id; //合约ID
 
-	//包括昨仓和今仓
-	uint32_t long_postion;
-	uint32_t short_postion;
+	//今仓
+	position_item today_long;
+	position_item today_short;
 
-	double_t	buy_price;
-	double_t	sell_price;
-
-	uint32_t long_frozen;
-	uint32_t short_frozen;
 
 	//昨仓
-	uint32_t long_yestoday;
-	uint32_t short_yestoday;
+	position_item yestoday_long;
+	position_item yestoday_short;
 
 	uint32_t get_total()const 
 	{
-		return long_postion + short_postion ;
+		return today_long.postion + today_short.postion + yestoday_long.postion + yestoday_short.postion;
 	}
 
-	uint32_t long_usable()const
+	uint32_t get_long_position()const
 	{
-		return long_postion - long_frozen;
+		return today_long.postion+ yestoday_long.postion;
 	}
 
-	uint32_t short_usable()const
+	uint32_t get_short_position()const
 	{
-		return short_postion - short_frozen;
+		return today_short.postion + yestoday_short.postion;
 	}
-
-	/**  
-	* 正数表示多仓，复数表示空仓
-	*/
-	int32_t get_real()const
+	uint32_t get_long_frozen()const
 	{
-		return long_postion  - short_postion ;
+		return today_long.frozen + yestoday_long.frozen;
 	}
 
-	uint32_t is_mepty()const
+	uint32_t get_short_frozen()const
 	{
-		return long_postion == 0 && short_postion == 0;
+		return today_short.frozen + yestoday_short.frozen;
 	}
-
-	double_t get_profit(double_t price, double multiple)const
-	{
-		return long_postion * (price - buy_price) * multiple + short_postion * (sell_price - price) * multiple;
-	}
-
-	position_info() :
-		long_postion(0),
-		short_postion(0),
-		long_frozen(0),
-		short_frozen(0),
-		buy_price(.0F),
-		sell_price(.0F),
-		long_yestoday(0),
-		short_yestoday(0)
+	position_info()
 	{}
 };
 const position_info default_position;
@@ -190,8 +195,7 @@ typedef enum order_flag
 typedef enum offset_type
 {
 	OT_OPEN = '0',	//开仓
-	OT_CLOSE,		//平仓,上期为平昨
-	OT_CLOSE_TODAY  //平今
+	OT_CLOSE		//平仓,上期为平昨
 } offset_type;
 
 /*

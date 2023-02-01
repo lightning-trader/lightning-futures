@@ -47,7 +47,7 @@ public:
 
 private:
 
-	bool check_lose(const tick_info& tick);
+
 
 private:
 

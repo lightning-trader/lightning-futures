@@ -170,8 +170,5 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	*/
 	LT_INTERFACE_DECLARE(time_t, get_close_time, (const ltobj&));
 
-	/**
-	* Çå²Ö
-	*/
-	LT_INTERFACE_DECLARE(void, clear_position, (const ltobj&, const code_t&, bool));
+
 }

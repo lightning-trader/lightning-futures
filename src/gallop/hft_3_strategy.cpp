@@ -12,7 +12,19 @@ void hft_3_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
-	_coming_to_clear = make_datetime(trading_day, "14:59:00");
+	const position_info& pos = get_position(_code);
+	if (pos.yestoday_long.usable() > 0)
+	{
+		double_t sell_price = pos.yestoday_long.price - _random(_random_engine) + _delta * _gamma;
+		sell_price = std::round(sell_price);
+		_close_long_order = sell_for_close(_code, pos.yestoday_long.usable(), sell_price);
+	}
+	if (pos.yestoday_short.usable() > 0)
+	{
+		double_t buy_price = pos.yestoday_short.price + _random(_random_engine) - _delta * _gamma;
+		buy_price = std::round(buy_price);
+		_close_short_order = buy_for_close(_code, pos.yestoday_short.usable(), buy_price);
+	}
 }
 
 void hft_3_strategy::on_tick(const tick_info& tick)
@@ -22,11 +34,6 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 	{
 		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
 		return;
-	}
-	if (tick.time > _coming_to_clear)
-	{
-		//clear_position(tick.id);
-		return ;
 	}
 	if (tick.time > _coming_to_close)
 	{
@@ -38,35 +45,39 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 	if(_open_long_order == INVALID_ESTID && _close_long_order == INVALID_ESTID)
 	{
 		const position_info& pos = get_position(tick.id);
-		uint32_t once = std::round(pos.long_postion + 1) ;
-		double_t buy_price = tick.buy_price() + _random(_random_engine) - (pos.long_postion + 1) * _open_delta;
-		buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
+		uint32_t once = static_cast<uint32_t>(std::round(pos.today_long.usable() * _beta + 1));
+		double_t buy_price = tick.buy_price() + _random(_random_engine) - (pos.today_long.usable() * _alpha + 1) * _delta;
+		buy_price = buy_price < tick.buy_price() ? buy_price : tick.buy_price() ;
+		buy_price = std::round(buy_price);
 		if (buy_price > tick.low_limit)
 		{
 			_open_long_order = buy_for_open(tick.id, once, buy_price);
 		}
-		if (pos.long_usable() > 0)
+		if (pos.today_long.usable() > 0)
 		{
-			double_t sell_price = pos.buy_price - _random(_random_engine) + _open_delta;
-			sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
-			_close_long_order = sell_for_close(tick.id, pos.long_usable(), sell_price);
+			double_t sell_price = pos.today_long.price - _random(_random_engine) + _delta * _gamma;
+			sell_price = sell_price > tick.sell_price() ? sell_price : tick.sell_price() ;
+			sell_price = std::round(sell_price);
+			_close_long_order = sell_for_close(tick.id, pos.today_long.usable(), sell_price);
 		}
 	}
 	if (_open_short_order == INVALID_ESTID && _close_short_order == INVALID_ESTID)
 	{
 		const position_info& pos = get_position(tick.id);
-		uint32_t once = std::round(pos.short_postion + 1);
-		double_t sell_price = tick.sell_price() - _random(_random_engine) + (pos.short_postion + 1) * _open_delta;;
-		sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
+		uint32_t once = static_cast<uint32_t>(std::round(pos.today_short.usable() * _beta + 1));
+		double_t sell_price = tick.sell_price() - _random(_random_engine) + (pos.today_short.usable() * _alpha + 1) * _delta;;
+		sell_price = sell_price > tick.sell_price() ? sell_price : tick.sell_price() ;
+		sell_price = std::round(sell_price);
 		if (sell_price < tick.high_limit)
 		{
 			_open_short_order = sell_for_open(tick.id, once, sell_price);
 		}
-		if (pos.short_usable() > 0)
+		if (pos.today_short.usable() > 0)
 		{
-			double_t buy_price = pos.sell_price + _random(_random_engine) - _open_delta;
-			buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
-			_close_short_order = buy_for_close(tick.id, pos.short_usable(), buy_price);
+			double_t buy_price = pos.today_short.price + _random(_random_engine) - _delta * _gamma;
+			buy_price = buy_price < tick.buy_price() ? buy_price : tick.buy_price();
+			buy_price = std::round(buy_price);
+			_close_short_order = buy_for_close(tick.id, pos.today_short.usable(), buy_price);
 		}
 	}
 	

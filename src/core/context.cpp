@@ -28,8 +28,7 @@ context::context():
 	on_ready(nullptr),
 	_operational_region(nullptr),
 	_operational_data(nullptr),
-	_section(nullptr),
-	_profit_limit(-8000000)
+	_section(nullptr)
 {
 
 }
@@ -76,8 +75,8 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
 
-	_max_position = 1600;
-	trading_optimal to_optimal = TO_INVALID;
+	_max_position = 20;
+	trading_optimal to_optimal = TO_OPEN_TO_CLOSE;
 	bool is_to_cancel = false;
 	_chain = create_chain(to_optimal, is_to_cancel, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool{
 		if(_trading_filter==nullptr)
@@ -378,41 +377,6 @@ time_t context::get_close_time()
 	return _section->get_clase_time();
 }
 
-void context::clear_position(const code_t& code, bool real)
-{
-	auto trader = get_trader();
-	if (trader == nullptr)
-	{
-		LOG_ERROR("cancel_order error _trader nullptr");
-		return ;
-	}
-	const auto& pos = trader->get_position(code);
-	if(real)
-	{
-		if (pos.long_postion > 0)
-		{
-			trader->place_order(OT_CLOSE, DT_LONG, code, pos.long_postion, 0, OF_FOK);
-
-		}
-		if (pos.short_postion > 0)
-		{
-			trader->place_order(OT_CLOSE, DT_SHORT, code, pos.short_postion, 0, OF_FOK);
-		}
-	}
-	else
-	{
-		int32_t volume = pos.get_real();
-		if (volume > 0)
-		{
-			trader->place_order(OT_CLOSE, DT_LONG,code,volume,0, OF_FOK);
-		}
-		else if (volume < 0)
-		{
-			trader->place_order(OT_CLOSE, DT_SHORT, code, -volume, 0, OF_FOK);
-		}
-	}
-	
-}
 
 void context::load_data(const char* localdb_name,size_t oper_size)
 {
@@ -595,7 +559,6 @@ void context::handle_tick(const std::vector<std::any>& param)
 			this->on_tick(last_tick);
 		}
 		check_order_condition(last_tick);
-		check_profit_limit(last_tick);
 	}
 	
 }
@@ -642,26 +605,5 @@ void context::remove_invalid_condition(estid_t order_id)
 	if (odit != _need_check_condition.end())
 	{
 		_need_check_condition.erase(odit);
-	}
-}
-
-void context::check_profit_limit(const tick_info& tick)
-{
-	auto trader = get_trader();
-	if (trader)
-	{
-		auto pos = trader->get_position(tick.id);
-		if(pos.get_profit(tick.price,10) <_profit_limit)
-		{
-			//´¥·¢×î´ó¿÷Ëð
-			if(pos.long_usable() > pos.short_usable())
-			{
-				trader->place_order(OT_CLOSE, DT_LONG, tick.id, 1, tick.buy_price(), OF_NOR);
-			}
-			else if (pos.long_usable() < pos.short_usable())
-			{
-				trader->place_order(OT_CLOSE, DT_SHORT, tick.id, 1, tick.sell_price(), OF_NOR);
-			}
-		}
 	}
 }

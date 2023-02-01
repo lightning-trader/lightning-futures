@@ -49,20 +49,36 @@ void tick_simulator::play(uint32_t tradeing_day)
 	}
 	//模拟跨天时候之前的订单失效
 	_order_info.clear();
-	/*
+	
 	for(auto it : _position_info)
 	{
-		double_t standard_price = _standard_price[it.first];
-		double_t delta_long_monery = (standard_price - it.second.buy_price) *  _multiple * it.second.long_postion;
-		double_t delta_short_monery = (it.second.sell_price - standard_price) * _multiple * it.second.short_postion;
-		double_t delta_long_margin = (it.second.buy_price - standard_price) * _multiple * it.second.long_postion * _margin_rate;
-		double_t delta_short_margin = (it.second.sell_price - standard_price) * _multiple * it.second.short_postion * _margin_rate;
-		it.second.buy_price = standard_price;
-		it.second.sell_price = standard_price;
-		_account_info.money += (delta_long_monery + delta_short_monery);
-		_account_info.frozen_monery -= (delta_long_margin + delta_short_margin);
+		auto pit = _standard_price.find(it.first);
+		if(pit != _standard_price.end())
+		{
+			double_t standard_price = pit->second;
+			double_t delta_today_long_monery = (standard_price - it.second.today_long.price) * _multiple * it.second.today_long.postion;
+			double_t delta_today_short_monery = (it.second.today_short.price - standard_price) * _multiple * it.second.today_short.postion;
+			double_t delta_yestoday_long_monery = (standard_price - it.second.yestoday_long.price) * _multiple * it.second.yestoday_long.postion;
+			double_t delta_yestoday_short_monery = (it.second.yestoday_short.price - standard_price) * _multiple * it.second.yestoday_short.postion;
+			double_t delta_today_long_margin = (it.second.today_long.price - standard_price) * _multiple * it.second.today_long.postion * _margin_rate;
+			double_t delta_today_short_margin = (it.second.today_short.price - standard_price) * _multiple * it.second.today_short.postion * _margin_rate;
+			double_t delta_yestoday_long_margin = (it.second.yestoday_long.price - standard_price) * _multiple * it.second.yestoday_long.postion * _margin_rate;
+			double_t delta_yestoday_short_margin = (it.second.today_short.price - standard_price) * _multiple * it.second.yestoday_long.postion * _margin_rate;
+			it.second.yestoday_long.postion = it.second.today_long.postion;
+			it.second.yestoday_long.price = standard_price;
+			it.second.yestoday_long.frozen = 0;
+			it.second.yestoday_short.postion = it.second.today_short.postion;
+			it.second.yestoday_short.price = standard_price;
+			it.second.yestoday_short.frozen = 0;
+			it.second.today_long.clear();
+			it.second.today_short.clear();
+
+			_account_info.money += (delta_today_long_monery + delta_today_short_monery + delta_yestoday_long_monery + delta_yestoday_short_monery);
+			_account_info.frozen_monery -= (delta_today_long_margin + delta_today_short_margin+ delta_yestoday_long_margin + delta_yestoday_short_margin);
+		}
+		
 	}
-	*/
+	
 
 	_is_in_trading = true ;
 	while (_is_in_trading)
@@ -300,6 +316,7 @@ void tick_simulator::handle_order()
 
 void tick_simulator::compulsory_closing()
 {
+	/*
 	double_t delta_money = .0F;
 	for(auto& it : _position_info)
 	{
@@ -358,6 +375,7 @@ void tick_simulator::compulsory_closing()
 		}
 		
 	}
+	*/
 }
 
 estid_t tick_simulator::make_estid()
@@ -644,15 +662,23 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		//开仓
 		if(order.direction == DT_LONG)
 		{
-			pos.buy_price = (pos.buy_price * pos.long_postion + order.price * deal_volume)/(pos.long_postion + deal_volume);
-			pos.long_postion += deal_volume;
-			_account_info.money -= deal_volume * _service_charge;
+			
+			if(_account_info.money >= deal_volume * _service_charge)
+			{
+				pos.today_long.price = (pos.today_long.price * pos.today_long.postion + order.price * deal_volume) / (pos.today_long.postion + deal_volume);
+				pos.today_long.postion += deal_volume;
+				_account_info.money -=  deal_volume * _service_charge;
+			}
+			
 		}
 		else if (order.direction == DT_SHORT)
 		{
-			pos.sell_price = (pos.sell_price * pos.short_postion + order.price * deal_volume) / (pos.short_postion + deal_volume);
-			pos.short_postion += deal_volume;
-			_account_info.money -= deal_volume * _service_charge;
+			if(_account_info.money >= deal_volume * _service_charge)
+			{
+				pos.today_short.price = (pos.today_short.price * pos.today_short.postion + order.price * deal_volume) / (pos.today_short.postion + deal_volume);
+				pos.today_short.postion += deal_volume;
+				_account_info.money -= (deal_volume * _service_charge);
+			}
 		}
 	}
 	else
@@ -660,19 +686,26 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		//平仓
 		if (order.direction == DT_LONG)
 		{
-			_account_info.money += deal_volume*(order.price - pos.buy_price)* _multiple;
-			pos.long_postion -= deal_volume;
-			pos.long_frozen -= deal_volume;
-			_account_info.money -= deal_volume * _service_charge;
-			_account_info.frozen_monery -= deal_volume * pos.buy_price * _multiple * _margin_rate;
+			if(pos.today_long.postion >= deal_volume&& pos.today_long.frozen >= deal_volume&& _account_info.money >= deal_volume * _service_charge&& _account_info.frozen_monery >= deal_volume * pos.today_long.price * _multiple * _margin_rate)
+			{
+				_account_info.money += (deal_volume * (order.price - pos.today_long.price) * _multiple);
+				pos.today_long.postion -= deal_volume;
+				pos.today_long.frozen -= deal_volume;
+				_account_info.money -= (deal_volume * _service_charge);
+				_account_info.frozen_monery -= (deal_volume * pos.today_long.price * _multiple * _margin_rate);
+			}
+			
 		}
 		else if (order.direction == DT_SHORT)
 		{
-			_account_info.money += deal_volume*(pos.sell_price - order.price) * _multiple;
-			pos.short_postion -= deal_volume;
-			pos.short_frozen -= deal_volume;
-			_account_info.money -= deal_volume * _service_charge;
-			_account_info.frozen_monery -= deal_volume * pos.sell_price * _multiple * _margin_rate;
+			if(pos.today_short.postion >= deal_volume&& pos.today_short.frozen >= deal_volume&& _account_info.money >= (deal_volume * _service_charge)&& _account_info.frozen_monery >= std::round(deal_volume * pos.today_short.price * _multiple * _margin_rate))
+			{
+				_account_info.money += (deal_volume * (pos.today_short.price - order.price) * _multiple);
+				pos.today_short.postion -= deal_volume;
+				pos.today_short.frozen -= deal_volume;
+				_account_info.money -= deal_volume * _service_charge;
+				_account_info.frozen_monery -= (deal_volume * pos.today_short.price * _multiple * _margin_rate);
+			}
 		}
 	}
 	order.last_volume =_order_info.set_last_volume(order.est_id,order.last_volume - deal_volume);
@@ -697,15 +730,24 @@ void tick_simulator::order_error(error_type type,estid_t estid,uint32_t err)
 }
 void tick_simulator::order_cancel(const order_info& order)
 {
-	thawing_deduction(order.code,order.offset,order.direction,order.last_volume, order.price);
-	this->fire_event(ET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
-	_order_info.del_order(order.est_id);
+	if(order.last_volume>0)
+	{
+		if(thawing_deduction(order.code, order.offset, order.direction, order.last_volume, order.price))
+		{
+			this->fire_event(ET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
+			_order_info.del_order(order.est_id);
+		}
+		else
+		{
+			LOG_ERROR("order_cancel error");
+		}
+	}
 }
 uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
 {
 	if (offset == OT_OPEN)
 	{
-		double_t frozen_monery = count * price * _multiple * _margin_rate;
+		double_t frozen_monery = (count * price * _multiple * _margin_rate);
 		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
 		{
 			return 31U;
@@ -720,32 +762,38 @@ uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offs
 		auto& pos = _position_info[code];
 		if (direction == DT_LONG)
 		{
-			if(pos.long_postion - pos.long_frozen < count)
+			if(pos.today_long.postion - pos.today_long.frozen < count)
 			{
 				return 30U;
 			}
-			pos.long_frozen += count;
+			pos.today_long.frozen += count;
 		}
 		else if (direction == DT_SHORT)
 		{
-			if (pos.short_postion - pos.short_frozen < count)
+			if (pos.today_short.postion - pos.today_short.frozen < count)
 			{
 				return 30U;
 			}
-			pos.short_frozen += count;
+			pos.today_short.frozen += count;
 		}
 		this->fire_event(ET_PositionChange, pos);
 		return 0U;
 	}
 	return 23U;
 }
-void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
+bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
 {
 
 	if (offset == OT_OPEN)
 	{
+		double_t delta = (last_volume * price * _multiple * _margin_rate);
 		//撤单 取消冻结保证金
-		_account_info.frozen_monery -= last_volume * price * _multiple * _margin_rate;
+		if(_account_info.frozen_monery < delta)
+		{
+			LOG_ERROR("thawing_deduction error");
+			return false ;
+		}
+		_account_info.frozen_monery -= delta;
 		this->fire_event(ET_AccountChange, _account_info);
 	}
 	else if (offset == OT_CLOSE)
@@ -753,13 +801,24 @@ void tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 		auto& pos = _position_info[code];
 		if (direction == DT_LONG)
 		{
-			pos.long_frozen -= last_volume;
+			if(pos.today_long.frozen < last_volume)
+			{
+				LOG_ERROR("thawing_deduction error today_long frozen < last_volume %d %d" , pos.today_long.frozen, last_volume);
+				return false ;
+			}
+			pos.today_long.frozen -= last_volume;
 		}
 		else if (direction == DT_SHORT)
 		{
-			pos.short_frozen -= last_volume;
+			if(pos.today_short.frozen < last_volume)
+			{
+				LOG_ERROR("thawing_deduction error today_short frozen < last_volume %d %d", pos.today_long.frozen, last_volume);
+				return false ;
+			}
+			pos.today_short.frozen -= last_volume;
 		}
 		this->fire_event(ET_PositionChange, pos);
 	}
+	return true;
 }
 

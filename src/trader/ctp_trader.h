@@ -117,9 +117,9 @@ private:
 
 	void query_trades();
 
-	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
-	void frozen_deduction(const code_t& code, direction_type dir_type, uint32_t volume);
-	void thawing_deduction(const code_t& code, direction_type dir_type, uint32_t volume);
+	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price, bool is_today);
+	void frozen_deduction(const code_t& code, direction_type dir_type, uint32_t volume, bool is_today);
+	void thawing_deduction(const code_t& code, direction_type dir_type, uint32_t volume, bool is_today);
 
 private:
 	
@@ -174,14 +174,14 @@ private:
 				//TODO 先不处理分仓
 				if (direction == DT_LONG)
 				{
-					if (it->second.long_yestoday >= volume)
+					if (it->second.yestoday_long.usable() >= volume)
 					{
 						return THOST_FTDC_OF_CloseYesterday;
 					}
 				}
 				else
 				{
-					if (it->second.short_yestoday >= volume)
+					if (it->second.yestoday_short.usable() >= volume)
 					{
 						return THOST_FTDC_OF_CloseYesterday;
 					}
@@ -196,8 +196,6 @@ private:
 	{
 		if (THOST_FTDC_OF_Open == offset_type)
 			return OT_OPEN;
-		else if (THOST_FTDC_OF_CloseToday == offset_type)
-			return OT_CLOSE_TODAY;
 		else
 			return OT_CLOSE;
 	}

@@ -201,10 +201,6 @@ protected:
 	*/
 	bool is_trading_ready()const;
 
-	/**
-	*	Çå²Ö
-	*/
-	void clear_position(const code_t& code, bool real=false)const;
 };
 
 

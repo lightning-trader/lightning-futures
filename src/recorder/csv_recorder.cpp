@@ -129,10 +129,10 @@ void csv_recorder::record_position_flow(time_t time, const position_info& positi
 		std::vector<std::string> row_data;
 		row_data.emplace_back(datetime_to_string(time));
 		row_data.emplace_back(position.id.get_id());
-		row_data.emplace_back(boost::lexical_cast<std::string>(position.long_postion));
-		row_data.emplace_back(boost::lexical_cast<std::string>(position.short_postion));
-		row_data.emplace_back(boost::lexical_cast<std::string>(position.long_frozen));
-		row_data.emplace_back(boost::lexical_cast<std::string>(position.short_frozen));
+		row_data.emplace_back(boost::lexical_cast<std::string>(position.get_long_position()));
+		row_data.emplace_back(boost::lexical_cast<std::string>(position.get_short_position()));
+		row_data.emplace_back(boost::lexical_cast<std::string>(position.get_long_frozen()));
+		row_data.emplace_back(boost::lexical_cast<std::string>(position.get_short_frozen()));
 
 		_position_flow_csv.InsertRow<std::string>(count, row_data);
 		_position_flow_csv.Save(_basic_path + "/position_flow.csv");
