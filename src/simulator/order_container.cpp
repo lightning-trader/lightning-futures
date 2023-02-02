@@ -14,12 +14,14 @@ order_container::~order_container()
 	}
 }
 
-void order_container::add_order(const order_info& order,order_flag flag)
+void order_container::add_order(const order_info& order,order_flag flag,bool is_today)
 {
 	spin_lock lock(_mutex);
 	_order_info[order.est_id] = order;
 	LOG_TRACE("order_container add_order  %lld %d ", order.est_id, _order_info.size());
-	_order_match[order.code].emplace_back(new order_match((_order_info[order.est_id]), flag));
+	auto omh = new order_match((_order_info[order.est_id]), flag);
+	omh->is_today = is_today;
+	_order_match[order.code].emplace_back(omh);
 }
 
 void order_container::del_order(estid_t estid)

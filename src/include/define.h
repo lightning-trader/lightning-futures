@@ -24,8 +24,9 @@
 #endif
 #endif
  
-#define CODE_DATA_LEN 16
-
+#define CODE_DATA_LEN 24
+#define EXCG_OFFSET_LEN	8
+#define EXCG_BEGIN_INDEX	CODE_DATA_LEN-EXCG_OFFSET_LEN
 struct code_t
 {
 private:
@@ -48,7 +49,7 @@ public:
 			}
 			if(ed==0)
 			{
-				_data[i + CODE_DATA_LEN / 2] = cd[i];
+				_data[i + EXCG_BEGIN_INDEX] = cd[i];
 			}
 			else
 			{
@@ -69,8 +70,8 @@ public:
 	code_t(const char* id, const char* excg_id)
 	{
 		memset(&_data, 0, sizeof(_data));
-		strcpy_s(_data, strnlen_s(id, CODE_DATA_LEN / 2-1)+1, id);
-		strcpy_s(_data + CODE_DATA_LEN/2, strnlen_s(excg_id, CODE_DATA_LEN / 2-1)+1, excg_id);
+		strcpy_s(_data, strnlen_s(id, EXCG_BEGIN_INDEX - 1) + 1, id);
+		strcpy_s(_data + EXCG_BEGIN_INDEX, strnlen_s(excg_id, EXCG_BEGIN_INDEX - 1)+1, excg_id);
 	}
 
 	bool operator < (const code_t& other)const
@@ -88,7 +89,7 @@ public:
 	}
 	const char* get_excg()const
 	{
-		return _data + CODE_DATA_LEN / 2;
+		return _data + EXCG_BEGIN_INDEX;
 	}
 	bool is_excg(const char * excg)
 	{

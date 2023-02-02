@@ -181,7 +181,7 @@ void ctp_trader::query_positions()
 	}
 
 	_query_mutex.lock();
-
+	
 	_query_queue.push([this]() {
 		
 		CThostFtdcQryInvestorPositionField req;
@@ -190,6 +190,16 @@ void ctp_trader::query_positions()
 		strcpy_s(req.InvestorID, _userid.c_str());
 		_td_api->ReqQryInvestorPosition(&req, genreqid());
 	});
+	/*
+	_query_queue.push([this]() {
+
+		CThostFtdcQryInvestorPositionDetailField req;
+		memset(&req, 0, sizeof(req));
+		strcpy_s(req.BrokerID, _broker_id.c_str());
+		strcpy_s(req.InvestorID, _userid.c_str());
+		_td_api->ReqQryInvestorPositionDetail(&req, genreqid());
+		});
+	*/
 	_query_mutex.unlock();
 }
 
@@ -364,47 +374,108 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 		return;
 	}
 	
-	if (pInvestorPosition&& (pInvestorPosition->Position>0))
+	if (pInvestorPosition)
 	{	
 		code_t code(pInvestorPosition->InstrumentID, pInvestorPosition->ExchangeID);
 		position_info& position = _position_info[code];
 		position.id = code;
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
-			position.today_long.postion = pInvestorPosition->TodayPosition ;
-			position.today_long.frozen = pInvestorPosition->ShortFrozen;
-			position.today_long.price = pInvestorPosition->SettlementPrice;
+			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
+			{
+				position.today_long.postion = pInvestorPosition->TodayPosition;
+				position.today_long.frozen = pInvestorPosition->ShortFrozen;
+				position.today_long.price = pInvestorPosition->SettlementPrice;
+			}else
+			{
+				position.yestoday_long.postion = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
+				position.yestoday_long.frozen = pInvestorPosition->ShortFrozen;
+				position.yestoday_long.price = pInvestorPosition->SettlementPrice;
+			}
+			
+
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
-			position.today_short.postion = pInvestorPosition->TodayPosition;
-			position.today_short.frozen = pInvestorPosition->ShortFrozen;
-			position.today_short.price = pInvestorPosition->SettlementPrice;
+			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
+			{
+				position.today_short.postion = pInvestorPosition->TodayPosition;
+				position.today_short.frozen = pInvestorPosition->LongFrozen;
+				position.today_short.price = pInvestorPosition->SettlementPrice;
+			}
+			else
+			{
+				position.yestoday_short.postion = pInvestorPosition->Position - pInvestorPosition->TodayPosition;;
+				position.yestoday_short.frozen = pInvestorPosition->LongFrozen;
+				position.yestoday_short.price = pInvestorPosition->SettlementPrice;
+			}
 		}
-	}else if (pInvestorPosition && ( pInvestorPosition->YdPosition > 0))
-	{
-		code_t code(pInvestorPosition->InstrumentID, pInvestorPosition->ExchangeID);
-		position_info& position = _position_info[code];
-		position.id = code;
-		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
-		{
-			position.yestoday_long.postion = pInvestorPosition->YdPosition;
-			position.yestoday_long.frozen = pInvestorPosition->ShortFrozen;
-			position.yestoday_long.price = pInvestorPosition->SettlementPrice;
-		}
-		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
-		{
-			position.yestoday_short.postion = pInvestorPosition->YdPosition;
-			position.yestoday_short.frozen = pInvestorPosition->ShortFrozen;
-			position.yestoday_short.price = pInvestorPosition->SettlementPrice;
-		}
+		_position_info[code] = position;
 	}
+	
 	if (bIsLast && !_is_inited)
 	{
 		_process_signal.notify_all();
 	}
 }
 
+void ctp_trader::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField* pInvestorPositionDetail, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
+{
+	if (_is_in_query)
+	{
+		while (!_is_in_query.exchange(false));
+		_position_info.clear();
+	}
+	if (pRspInfo && pRspInfo->ErrorID != 0)
+	{
+		LOG_ERROR("OnRspQryInvestorPositionDetail \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		return;
+	}
+	if(!pInvestorPositionDetail)
+	{
+		return ;
+	}
+	code_t code(pInvestorPositionDetail->InstrumentID, pInvestorPositionDetail->ExchangeID);
+	position_info position = _position_info[code];
+	position.id = code;
+	if(strcmp(pInvestorPositionDetail->OpenDate ,pInvestorPositionDetail->TradingDay)==0)
+	{
+		//ЅсІЦ
+		if (pInvestorPositionDetail->Direction == THOST_FTDC_D_Buy)
+		{
+			position.today_long.postion += pInvestorPositionDetail->Volume;
+			position.today_long.frozen += pInvestorPositionDetail->Volume - pInvestorPositionDetail->TimeFirstVolume;
+			position.today_long.price = pInvestorPositionDetail->SettlementPrice;
+		}
+		else if (pInvestorPositionDetail->Direction == THOST_FTDC_D_Sell)
+		{
+			position.today_short.postion += pInvestorPositionDetail->Volume;
+			position.today_short.frozen += pInvestorPositionDetail->Volume - pInvestorPositionDetail->TimeFirstVolume;;
+			position.today_short.price = pInvestorPositionDetail->SettlementPrice;
+		}
+	}
+	else
+	{
+		//ЧтІЦ
+		if (pInvestorPositionDetail->Direction == THOST_FTDC_D_Buy)
+		{
+			position.yestoday_long.postion += pInvestorPositionDetail->Volume;
+			position.yestoday_long.frozen += pInvestorPositionDetail->Volume - pInvestorPositionDetail->TimeFirstVolume;;
+			position.yestoday_long.price = pInvestorPositionDetail->SettlementPrice;
+		}
+		else if (pInvestorPositionDetail->Direction == THOST_FTDC_D_Sell)
+		{
+			position.yestoday_short.postion += pInvestorPositionDetail->Volume;
+			position.yestoday_short.frozen += pInvestorPositionDetail->Volume - pInvestorPositionDetail->TimeFirstVolume;;
+			position.yestoday_short.price = pInvestorPositionDetail->SettlementPrice;
+		}
+	}
+	_position_info[code] = position;
+	if (bIsLast && !_is_inited)
+	{
+		_process_signal.notify_all();
+	}
+};
 
 void ctp_trader::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
@@ -617,6 +688,7 @@ bool ctp_trader::is_usable()const
 
 estid_t ctp_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
 {
+	LOG_INFO("ctp_trader place_order %s %f",code.get_id(), volume);
 
 	if (_td_api == nullptr)
 	{

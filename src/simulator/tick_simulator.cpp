@@ -157,7 +157,22 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 	order.total_volume = count;
 	order.last_volume = count;
 	order.price = price;
-	_order_info.add_order(order,flag);
+	
+	bool is_today = true ;
+	if(offset== OT_CLOSE)
+	{
+		auto& pos = get_position(code);
+		if(direction == DT_LONG)
+		{
+			is_today = (pos.yestoday_long.usable() < count) ;
+		}
+		else
+		{
+			is_today = (pos.yestoday_short.usable() < count) ;
+		}
+		
+	}
+	_order_info.add_order(order,flag, is_today);
 	return order.est_id;
 }
 
@@ -445,7 +460,7 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 	order_info& order = match.order;
 	if(match.state == OS_INVALID)
 	{
-		uint32_t err = frozen_deduction(order.est_id, order.code, order.offset, order.direction, order.last_volume, order.price);
+		uint32_t err = frozen_deduction(order.est_id, order.code, order.offset, order.direction, order.last_volume, order.price, match.is_today);
 		if (err == 0U)
 		{
 			this->fire_event(ET_OrderPlace, order);
@@ -462,7 +477,7 @@ void tick_simulator::handle_entrust(const tick_info* tick, const order_match& ma
 	if(match.state == OS_CANELED)
 	{
 		//撤单
-		order_cancel(order);
+		order_cancel(order, match.is_today);
 		return;
 	}
 
@@ -503,12 +518,12 @@ void tick_simulator::handle_sell(const tick_info* tick,const order_match& match,
 		if (order.last_volume <= max_volume && order.price <= tick->buy_price())
 		{
 			//全成
-			order_deal(order, order.last_volume);
+			order_deal(order, order.last_volume, match.is_today);
 		}
 		else
 		{
 			//全撤
-			order_cancel(order);
+			order_cancel(order, match.is_today);
 		}
 	}
 	else if (match.flag == OF_FAK)
@@ -519,18 +534,18 @@ void tick_simulator::handle_sell(const tick_info* tick,const order_match& match,
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				order_deal(order, deal_volume);
+				order_deal(order, deal_volume, match.is_today);
 			}
 			uint32_t cancel_volume = order.last_volume - max_volume;
 			if (cancel_volume > 0)
 			{
 				//部撤
-				order_cancel(order);
+				order_cancel(order, match.is_today);
 			}
 		}
 		else
 		{
-			order_cancel(order);
+			order_cancel(order, match.is_today);
 		}
 	}
 	else
@@ -541,7 +556,7 @@ void tick_simulator::handle_sell(const tick_info* tick,const order_match& match,
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				order_deal(order, deal_volume);
+				order_deal(order, deal_volume, match.is_today);
 			}
 		}
 		else if (order.price <= tick->price)
@@ -557,7 +572,7 @@ void tick_simulator::handle_sell(const tick_info* tick,const order_match& match,
 				uint32_t deal_volume = order.last_volume > can_deal_volume ? can_deal_volume : order.last_volume;
 				if (deal_volume > 0U)
 				{
-					order_deal(order, deal_volume);
+					order_deal(order, deal_volume, match.is_today);
 				}
 			}
 			else
@@ -584,12 +599,12 @@ void tick_simulator::handle_buy(const tick_info* tick, const order_match& match,
 		if (order.last_volume <= max_volume&& order.price >= tick->sell_price())
 		{
 			//全成
-			order_deal(order, order.last_volume);
+			order_deal(order, order.last_volume, match.is_today);
 		}
 		else
 		{
 			//全撤
-			order_cancel(order);
+			order_cancel(order, match.is_today);
 		}
 	}
 	else if (match.flag == OF_FAK)
@@ -600,18 +615,18 @@ void tick_simulator::handle_buy(const tick_info* tick, const order_match& match,
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0U)
 			{
-				order_deal(order, deal_volume);
+				order_deal(order, deal_volume, match.is_today);
 			}
 			uint32_t cancel_volume = order.last_volume - max_volume;
 			if (cancel_volume > 0)
 			{
 				//部撤
-				order_cancel(order);
+				order_cancel(order, match.is_today);
 			}
 		}
 		else
 		{
-			order_cancel(order);
+			order_cancel(order, match.is_today);
 		}
 		
 	}
@@ -624,7 +639,7 @@ void tick_simulator::handle_buy(const tick_info* tick, const order_match& match,
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				order_deal(order, deal_volume);
+				order_deal(order, deal_volume, match.is_today);
 			}
 		}
 		else if (order.price >= tick->price)
@@ -641,7 +656,7 @@ void tick_simulator::handle_buy(const tick_info* tick, const order_match& match,
 				uint32_t deal_volume = order.last_volume > can_deal_volume ? can_deal_volume : order.last_volume;
 				if (deal_volume > 0)
 				{
-					order_deal(order, deal_volume);
+					order_deal(order, deal_volume, match.is_today);
 				}
 			}
 			else
@@ -652,7 +667,7 @@ void tick_simulator::handle_buy(const tick_info* tick, const order_match& match,
 	}
 }
 
-void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
+void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_today)
 {
 	
 	auto& pos = _position_info[order.code];
@@ -686,26 +701,42 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		//平仓
 		if (order.direction == DT_LONG)
 		{
-			if(pos.today_long.postion >= deal_volume&& pos.today_long.frozen >= deal_volume&& _account_info.money >= deal_volume * _service_charge&& _account_info.frozen_monery >= deal_volume * pos.today_long.price * _multiple * _margin_rate)
+			
+			if (is_today)
 			{
 				_account_info.money += (deal_volume * (order.price - pos.today_long.price) * _multiple);
 				pos.today_long.postion -= deal_volume;
 				pos.today_long.frozen -= deal_volume;
-				_account_info.money -= (deal_volume * _service_charge);
 				_account_info.frozen_monery -= (deal_volume * pos.today_long.price * _multiple * _margin_rate);
 			}
+			else
+			{
+				_account_info.money += (deal_volume * (order.price - pos.yestoday_long.price) * _multiple);
+				pos.yestoday_long.postion -= deal_volume;
+				pos.yestoday_long.frozen -= deal_volume;
+				_account_info.frozen_monery -= (deal_volume * pos.yestoday_long.price * _multiple * _margin_rate);
+			}
+			_account_info.money -= (deal_volume * _service_charge);
 			
 		}
 		else if (order.direction == DT_SHORT)
 		{
-			if(pos.today_short.postion >= deal_volume&& pos.today_short.frozen >= deal_volume&& _account_info.money >= (deal_volume * _service_charge)&& _account_info.frozen_monery >= std::round(deal_volume * pos.today_short.price * _multiple * _margin_rate))
+			
+			if (is_today)
 			{
 				_account_info.money += (deal_volume * (pos.today_short.price - order.price) * _multiple);
 				pos.today_short.postion -= deal_volume;
 				pos.today_short.frozen -= deal_volume;
-				_account_info.money -= deal_volume * _service_charge;
 				_account_info.frozen_monery -= (deal_volume * pos.today_short.price * _multiple * _margin_rate);
 			}
+			else
+			{
+				_account_info.money += (deal_volume * (pos.yestoday_short.price - order.price) * _multiple);
+				pos.yestoday_short.postion -= deal_volume;
+				pos.yestoday_short.frozen -= deal_volume;
+				_account_info.frozen_monery -= (deal_volume * pos.yestoday_short.price * _multiple * _margin_rate);
+			}
+			_account_info.money -= deal_volume * _service_charge;
 		}
 	}
 	order.last_volume =_order_info.set_last_volume(order.est_id,order.last_volume - deal_volume);
@@ -728,11 +759,11 @@ void tick_simulator::order_error(error_type type,estid_t estid,uint32_t err)
 	this->fire_event(ET_OrderError, type, estid, err);
 	_order_info.del_order(estid);
 }
-void tick_simulator::order_cancel(const order_info& order)
+void tick_simulator::order_cancel(const order_info& order,bool is_today)
 {
 	if(order.last_volume>0)
 	{
-		if(thawing_deduction(order.code, order.offset, order.direction, order.last_volume, order.price))
+		if(thawing_deduction(order.code, order.offset, order.direction, order.last_volume, order.price, is_today))
 		{
 			this->fire_event(ET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
 			_order_info.del_order(order.est_id);
@@ -743,7 +774,7 @@ void tick_simulator::order_cancel(const order_info& order)
 		}
 	}
 }
-uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
+uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price,bool is_today)
 {
 	if (offset == OT_OPEN)
 	{
@@ -762,37 +793,58 @@ uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offs
 		auto& pos = _position_info[code];
 		if (direction == DT_LONG)
 		{
-			if(pos.today_long.postion - pos.today_long.frozen < count)
+			if(is_today)
 			{
-				return 30U;
+				if (pos.today_long.postion - pos.today_long.frozen < count)
+				{
+					return 30U;
+				}
+				pos.today_long.frozen += count;
+				
 			}
-			pos.today_long.frozen += count;
+			else
+			{
+				if (pos.yestoday_long.postion - pos.yestoday_long.frozen < count)
+				{
+					return 30U;
+				}
+				pos.yestoday_long.frozen += count;
+			}
+			
 		}
 		else if (direction == DT_SHORT)
 		{
-			if (pos.today_short.postion - pos.today_short.frozen < count)
+			if(is_today)
 			{
-				return 30U;
+				if (pos.today_short.postion - pos.today_short.frozen < count)
+				{
+					return 30U;
+				}
+				pos.today_short.frozen += count;
+				
 			}
-			pos.today_short.frozen += count;
+			else
+			{
+				if (pos.yestoday_short.postion - pos.yestoday_short.frozen < count)
+				{
+					return 30U;
+				}
+				pos.yestoday_short.frozen += count;
+			}
+			
 		}
 		this->fire_event(ET_PositionChange, pos);
 		return 0U;
 	}
 	return 23U;
 }
-bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
+bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price,bool is_today)
 {
 
 	if (offset == OT_OPEN)
 	{
 		double_t delta = (last_volume * price * _multiple * _margin_rate);
 		//撤单 取消冻结保证金
-		if(_account_info.frozen_monery < delta)
-		{
-			LOG_ERROR("thawing_deduction error");
-			return false ;
-		}
 		_account_info.frozen_monery -= delta;
 		this->fire_event(ET_AccountChange, _account_info);
 	}
@@ -801,21 +853,24 @@ bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 		auto& pos = _position_info[code];
 		if (direction == DT_LONG)
 		{
-			if(pos.today_long.frozen < last_volume)
+			if(is_today)
 			{
-				LOG_ERROR("thawing_deduction error today_long frozen < last_volume %d %d" , pos.today_long.frozen, last_volume);
-				return false ;
+				pos.today_long.frozen -= last_volume;
+			}else
+			{
+				pos.yestoday_long.frozen -= last_volume;
 			}
-			pos.today_long.frozen -= last_volume;
+			
 		}
 		else if (direction == DT_SHORT)
 		{
-			if(pos.today_short.frozen < last_volume)
+			if (is_today)
 			{
-				LOG_ERROR("thawing_deduction error today_short frozen < last_volume %d %d", pos.today_long.frozen, last_volume);
-				return false ;
+				pos.today_short.frozen -= last_volume;
+			}else
+			{
+				pos.yestoday_short.frozen -= last_volume;
 			}
-			pos.today_short.frozen -= last_volume;
 		}
 		this->fire_event(ET_PositionChange, pos);
 	}

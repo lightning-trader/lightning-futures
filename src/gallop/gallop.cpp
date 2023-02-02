@@ -15,10 +15,10 @@ void start_runtime()
 {
 	//auto app = std::make_shared<runtime_engine>("./runtime.ini");
 	auto app = std::make_shared<runtime_engine>("./rt_hx_zjh.ini");
-	//app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2306", 0.0058F, 120, 10, 3));
-	//app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5, 2));
-	app->add_strategy(2, std::make_shared<hft_3_strategy>("SHFE.rb2305", 12, 0.58F, 1.28F, 1.5F, 3));
-	app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 9, 0.58F, 1.28F, 1.5F, 2));
+	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2306", 0.0058F, 120, 8, 3));
+	app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5, 2));
+	//app->add_strategy(2, std::make_shared<hft_3_strategy>("SHFE.rb2305", 12, 0.58F, 1.28F, 1.5F, 3));
+	//app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2305", 9, 0.88F, 0.28F, 1.5F, 2));
 	app->run_to_close();
 	
 }
@@ -35,14 +35,11 @@ void start_evaluate(const char* code,const std::vector<uint32_t>& all_trading_da
 	*/
 	std::vector<std::shared_ptr<strategy>> stra_list;
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 0.0014F, 120, 3, 1));
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0028F, 120, 5, 2));
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 0.0058F, 120, 8, 3));
-	stra_list.emplace_back(new hft_3_strategy("SHFE.rb2301", 9, 0.58F, 0.88F, 1.58F, 3));
-	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 9, 0.58F, 1.28F, 2));
-	//stra_list.emplace_back(new hft_2_strategy(code, 0.0014F, 120, 3, 1));
-	//stra_list.emplace_back(new hft_2_strategy(code, 0.0098F, 120,16,5));
-	//stra_list.emplace_back(new hft_2_strategy(code, 0.0126F,120,24,6));
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2212", 16));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0028F, 120, 5, 2));
+	///stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 0.0058F, 120, 8, 3));
+	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2301", 8, 0.88F, 0.58F, 1.58F, 3));
+	stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 9, 0.58F, 1.28F, 1.58F, 2));
+
 	app->back_test(stra_list, all_trading_day);
 }
 
@@ -232,12 +229,12 @@ int main()
 
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	start_evaluate("SHFE.rb2301", trading_day_2301);
+	//start_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_hft3_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_hft3_evaluate("SHFE.rb2305", trading_day_2305);
 	//start_hft1_evaluate(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	//start_runtime();
+	start_runtime();
 
 	
 	return 0;

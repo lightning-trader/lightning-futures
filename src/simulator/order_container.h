@@ -19,8 +19,9 @@ struct order_match
 	order_state		state;
 	order_flag		flag;
 	order_info& order ;
+	bool is_today;
 
-	order_match(order_info& ord, order_flag flg):order(ord), queue_seat(0), state(OS_INVALID), flag(flg)
+	order_match(order_info& ord, order_flag flg):order(ord), queue_seat(0), state(OS_INVALID), flag(flg), is_today(true)
 	{}
 };
 
@@ -42,7 +43,7 @@ public:
 
 	~order_container();
 
-	void add_order(const order_info& order_info, order_flag flag);
+	void add_order(const order_info& order_info, order_flag flag, bool is_today);
 
 	void del_order(estid_t estid);
 
