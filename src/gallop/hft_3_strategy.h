@@ -13,6 +13,8 @@ public:
 		_close_short_order(INVALID_ESTID),
 		_open_long_order(INVALID_ESTID),
 		_open_short_order(INVALID_ESTID),
+		_yestoday_long_order(INVALID_ESTID),
+		_yestoday_short_order(INVALID_ESTID),
 		_delta(delta),
 		_alpha(alpha),
 		_beta(beta),
@@ -95,6 +97,10 @@ private:
 	estid_t _open_long_order ;
 
 	estid_t _open_short_order;
+
+	estid_t _yestoday_long_order;
+
+	estid_t _yestoday_short_order;
 
 	tick_info _last_tick;
 

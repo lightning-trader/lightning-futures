@@ -50,7 +50,7 @@ void tick_simulator::play(uint32_t tradeing_day)
 	//模拟跨天时候之前的订单失效
 	_order_info.clear();
 	
-	for(auto it : _position_info)
+	for(auto& it : _position_info)
 	{
 		auto pit = _standard_price.find(it.first);
 		if(pit != _standard_price.end())
@@ -60,21 +60,18 @@ void tick_simulator::play(uint32_t tradeing_day)
 			double_t delta_today_short_monery = (it.second.today_short.price - standard_price) * _multiple * it.second.today_short.postion;
 			double_t delta_yestoday_long_monery = (standard_price - it.second.yestoday_long.price) * _multiple * it.second.yestoday_long.postion;
 			double_t delta_yestoday_short_monery = (it.second.yestoday_short.price - standard_price) * _multiple * it.second.yestoday_short.postion;
-			double_t delta_today_long_margin = (it.second.today_long.price - standard_price) * _multiple * it.second.today_long.postion * _margin_rate;
-			double_t delta_today_short_margin = (it.second.today_short.price - standard_price) * _multiple * it.second.today_short.postion * _margin_rate;
-			double_t delta_yestoday_long_margin = (it.second.yestoday_long.price - standard_price) * _multiple * it.second.yestoday_long.postion * _margin_rate;
-			double_t delta_yestoday_short_margin = (it.second.today_short.price - standard_price) * _multiple * it.second.yestoday_long.postion * _margin_rate;
-			it.second.yestoday_long.postion = it.second.today_long.postion;
+
+			it.second.yestoday_long.postion += it.second.today_long.postion;
 			it.second.yestoday_long.price = standard_price;
 			it.second.yestoday_long.frozen = 0;
-			it.second.yestoday_short.postion = it.second.today_short.postion;
+			it.second.yestoday_short.postion += it.second.today_short.postion;
 			it.second.yestoday_short.price = standard_price;
 			it.second.yestoday_short.frozen = 0;
 			it.second.today_long.clear();
 			it.second.today_short.clear();
 
 			_account_info.money += (delta_today_long_monery + delta_today_short_monery + delta_yestoday_long_monery + delta_yestoday_short_monery);
-			_account_info.frozen_monery -= (delta_today_long_margin + delta_today_short_margin+ delta_yestoday_long_margin + delta_yestoday_short_margin);
+			_account_info.frozen_monery = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.yestoday_short.postion * it.second.yestoday_short.price) * _margin_rate *_multiple;
 		}
 		
 	}

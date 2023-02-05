@@ -11,6 +11,8 @@ public:
 		_code(code),
 		_sell_order(INVALID_ESTID),
 		_buy_order(INVALID_ESTID),
+		_yestoday_sell_order(INVALID_ESTID),
+		_yestoday_buy_order(INVALID_ESTID),
 		_open_delta(open_delta),
 		_history_count(history),
 		_history_ma(0),
@@ -88,6 +90,10 @@ private:
 	estid_t _sell_order ;
 
 	estid_t _buy_order ;
+
+	estid_t _yestoday_sell_order;
+
+	estid_t _yestoday_buy_order;
 
 	tick_info _last_tick;
 

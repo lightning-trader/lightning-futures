@@ -14,6 +14,18 @@ void hft_2_strategy::on_ready()
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
 	_history_ma = 0;
 	_history_price.clear();
+
+	const position_info& pos = get_position(_code);
+	if (pos.yestoday_long.usable() > 0)
+	{
+		double_t sell_price = std::round(pos.yestoday_long.price * (1 + _open_delta * pos.yestoday_long.usable() / 3 ));
+		_yestoday_sell_order = sell_for_close(_code, pos.yestoday_long.usable() , sell_price);
+	}
+	if (pos.yestoday_short.usable() > 0)
+	{
+		double_t buy_price = std::round(pos.yestoday_short.price * (1 - _open_delta * pos.yestoday_short.usable() / 3));
+		_yestoday_buy_order = buy_for_close(_code, pos.yestoday_short.usable(), buy_price);
+	}
 }
 
 void hft_2_strategy::on_tick(const tick_info& tick)
@@ -89,7 +101,7 @@ void hft_2_strategy::on_entrust(const order_info& order)
 	{
 		return;
 	}
-	if (order.est_id == _buy_order || order.est_id == _sell_order)
+	if (order.est_id == _buy_order || order.est_id == _sell_order|| order.est_id == _yestoday_buy_order|| order.est_id == _yestoday_sell_order)
 	{
 		double_t current_price = _last_tick.price;
 		set_cancel_condition(order.est_id, [this, current_price](const tick_info& tick)->bool {
@@ -118,7 +130,14 @@ void hft_2_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 		cancel_order(_buy_order);
 		_sell_order = INVALID_ESTID;
 	}
-
+	if (localid == _yestoday_buy_order)
+	{
+		_yestoday_buy_order = INVALID_ESTID;
+	}
+	if (localid == _yestoday_sell_order)
+	{
+		_yestoday_sell_order = INVALID_ESTID;
+	}
 }
 
 void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
@@ -133,7 +152,15 @@ void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 	{
 		_sell_order = INVALID_ESTID;
 	}
-	
+	if (localid == _yestoday_buy_order)
+	{
+		_yestoday_buy_order = INVALID_ESTID;
+	}
+	if (localid == _yestoday_sell_order)
+	{
+		_yestoday_sell_order = INVALID_ESTID;
+	}
+
 }
 
 void hft_2_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
@@ -145,12 +172,18 @@ void hft_2_strategy::on_error(error_type type, estid_t localid, const uint32_t e
 	if (localid == _buy_order)
 	{
 		_buy_order = INVALID_ESTID;
-		return;
 	}
 	if (localid == _sell_order)
 	{
 		_sell_order = INVALID_ESTID;
-		return;
+	}
+	if (localid == _yestoday_buy_order)
+	{
+		_yestoday_buy_order = INVALID_ESTID;
+	}
+	if (localid == _yestoday_sell_order)
+	{
+		_yestoday_sell_order = INVALID_ESTID;
 	}
 }
 

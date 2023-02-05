@@ -15,15 +15,15 @@ void hft_3_strategy::on_ready()
 	const position_info& pos = get_position(_code);
 	if (pos.yestoday_long.usable() > 0)
 	{
-		double_t sell_price = pos.yestoday_long.price - _random(_random_engine) + _delta * _gamma;
+		double_t sell_price = pos.yestoday_long.price - _random(_random_engine) + _delta * _gamma * pos.yestoday_long.usable() / 2;
 		sell_price = std::round(sell_price);
-		_close_long_order = sell_for_close(_code, pos.yestoday_long.usable(), sell_price);
+		_yestoday_long_order = sell_for_close(_code, pos.yestoday_long.usable(), sell_price);
 	}
 	if (pos.yestoday_short.usable() > 0)
 	{
-		double_t buy_price = pos.yestoday_short.price + _random(_random_engine) - _delta * _gamma;
+		double_t buy_price = pos.yestoday_short.price + _random(_random_engine) - _delta * _gamma * pos.yestoday_short.usable() / 2;
 		buy_price = std::round(buy_price);
-		_close_short_order = buy_for_close(_code, pos.yestoday_short.usable(), buy_price);
+		_yestoday_short_order = buy_for_close(_code, pos.yestoday_short.usable(), buy_price);
 	}
 }
 
@@ -93,7 +93,7 @@ void hft_3_strategy::on_entrust(const order_info& order)
 	{
 		return;
 	}
-	if (order.est_id == _open_short_order || order.est_id == _open_long_order || order.est_id == _close_long_order || order.est_id == _close_short_order)
+	if (order.est_id == _open_short_order || order.est_id == _open_long_order || order.est_id == _close_long_order || order.est_id == _close_short_order || order.est_id == _yestoday_long_order || order.est_id == _yestoday_short_order)
 	{
 		set_cancel_condition(order.est_id, [this](const tick_info& tick)->bool {
 
@@ -130,6 +130,14 @@ void hft_3_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 		cancel_order(_open_short_order);
 		_close_short_order = INVALID_ESTID;
 	}
+	if (localid == _yestoday_long_order)
+	{
+		_yestoday_long_order = INVALID_ESTID;
+	}
+	if (localid == _yestoday_short_order)
+	{
+		_yestoday_short_order = INVALID_ESTID;
+	}
 }
 
 void hft_3_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
@@ -152,6 +160,14 @@ void hft_3_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 	{
 		_close_short_order = INVALID_ESTID;
 	}
+	if (localid == _yestoday_long_order)
+	{
+		_yestoday_long_order = INVALID_ESTID;
+	}
+	if (localid == _yestoday_short_order)
+	{
+		_yestoday_short_order = INVALID_ESTID;
+	}
 }
 
 void hft_3_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
@@ -163,22 +179,26 @@ void hft_3_strategy::on_error(error_type type, estid_t localid, const uint32_t e
 	if (localid == _open_long_order)
 	{
 		_open_long_order = INVALID_ESTID;
-		return;
 	}
 	if (localid == _open_short_order)
 	{
 		_open_short_order = INVALID_ESTID;
-		return;
 	}
 	if (localid == _close_long_order)
 	{
 		_close_long_order = INVALID_ESTID;
-		return;
 	}
 	if (localid == _close_short_order)
 	{
 		_close_short_order = INVALID_ESTID;
-		return;
+	}
+	if (localid == _yestoday_long_order)
+	{
+		_yestoday_long_order = INVALID_ESTID;
+	}
+	if (localid == _yestoday_short_order)
+	{
+		_yestoday_short_order = INVALID_ESTID;
 	}
 }
 
