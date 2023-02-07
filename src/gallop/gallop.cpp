@@ -15,8 +15,8 @@ void start_runtime()
 {
 	//auto app = std::make_shared<runtime_engine>("./runtime.ini");
 	auto app = std::make_shared<runtime_engine>("./rt_hx_zjh.ini");
-	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2306", 0.0058F, 120, 8, 3));
-	app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5, 2));
+	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2306", 0.0028F, 120, 5, 2));
+	//app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5, 2));
 	//app->add_strategy(2, std::make_shared<hft_3_strategy>("SHFE.rb2305", 12, 0.58F, 1.28F, 1.5F, 3));
 	//app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 9, 1.88F, 0.28F, 1.28F, 2));
 	app->run_to_close();
