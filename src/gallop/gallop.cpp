@@ -34,10 +34,10 @@ void start_evaluate(const char* code,const std::vector<uint32_t>& all_trading_da
 		};
 	*/
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 0.0014F, 120, 3, 1));
-	///stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0028F, 120, 5, 2));
-	///stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 0.0058F, 120, 8, 3));
-	stra_list.emplace_back(new hft_3_strategy("SHFE.rb2301", 8, 0.88F, 0.58F, 1.58F, 3));
+	///stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0018F, 120, 3, 1));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0028F, 120, 5, 2));
+	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0058F, 120, 8, 3));
+	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2301", 8, 0.88F, 0.58F, 1.58F, 3));
 	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 9, 1.88F, 0.28F, 0.58F, 2));
 
 	app->back_test(stra_list, all_trading_day);

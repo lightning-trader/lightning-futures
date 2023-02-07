@@ -25,7 +25,7 @@
 #endif
  
 #define CODE_DATA_LEN 24
-#define EXCG_OFFSET_LEN	8
+#define EXCG_OFFSET_LEN	6
 #define EXCG_BEGIN_INDEX	CODE_DATA_LEN-EXCG_OFFSET_LEN
 struct code_t
 {

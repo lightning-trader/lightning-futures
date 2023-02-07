@@ -14,7 +14,7 @@ void hft_2_strategy::on_ready()
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
 	_history_ma = 0;
 	_history_price.clear();
-
+	/*
 	const position_info& pos = get_position(_code);
 	if (pos.yestoday_long.usable() > 0)
 	{
@@ -26,6 +26,7 @@ void hft_2_strategy::on_ready()
 		double_t buy_price = std::round(pos.yestoday_short.price * (1 - _open_delta * pos.yestoday_short.usable() / 3));
 		_yestoday_buy_order = buy_for_close(_code, pos.yestoday_short.usable(), buy_price);
 	}
+	*/
 }
 
 void hft_2_strategy::on_tick(const tick_info& tick)
@@ -61,33 +62,44 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	const position_info& pos = get_position(tick.id);
 	double_t delta = std::round(tick.standard * _open_delta);
 	double_t ma_delta = tick.price - std::round(_history_ma);
-	double_t buy_price = tick.buy_price() -  delta + direction * (ma_delta)+_random(_random_engine);
-	double_t sell_price = tick.sell_price() +  delta - direction * (ma_delta)-_random(_random_engine);
+	double_t buy_price = tick.buy_price() -  delta - direction * (ma_delta)+_random(_random_engine);
+	double_t sell_price = tick.sell_price() +  delta + direction * (ma_delta)-_random(_random_engine);
+	uint32_t sell_once = 1;
+	if (pos.yestoday_long.usable() > 0)
+	{
+		sell_once = pos.yestoday_long.usable() > 3 ? 3: pos.yestoday_long.usable();
+		sell_price += sell_once * delta / 2;
+	}
+	uint32_t buy_once = 1;
+	if (pos.yestoday_short.usable() > 0)
+	{
+		buy_once = pos.yestoday_short.usable() > 3 ? 3 : pos.yestoday_short.usable();
+		buy_price -= buy_once * delta / 2;
+	}
 	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
 	sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
-	uint32_t once = 1;
+
 	if(tick.price >= tick.standard)
 	{
 		if (buy_price > tick.low_limit)
 		{
-			_buy_order = buy_for_open(tick.id, once, buy_price);
+			_buy_order = buy_for_open(tick.id, buy_once, buy_price);
 		}
 		if (sell_price < tick.high_limit)
 		{
-			_sell_order = sell_for_open(tick.id, once, sell_price);
+			_sell_order = sell_for_open(tick.id, sell_once, sell_price);
 		}
 	}
 	else
 	{
 		if (sell_price < tick.high_limit)
 		{
-			_sell_order = sell_for_open(tick.id, once, sell_price);
+			_sell_order = sell_for_open(tick.id, sell_once, sell_price);
 		}
 		if (buy_price > tick.low_limit)
 		{
-			_buy_order = buy_for_open(tick.id, once, buy_price);
+			_buy_order = buy_for_open(tick.id, buy_once, buy_price);
 		}
-		
 	}
 	
 }

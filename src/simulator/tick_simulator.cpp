@@ -49,7 +49,8 @@ void tick_simulator::play(uint32_t tradeing_day)
 	}
 	//模拟跨天时候之前的订单失效
 	_order_info.clear();
-	
+	_account_info.frozen_monery = .0F;
+	bool is_change = false ;
 	for(auto& it : _position_info)
 	{
 		auto pit = _standard_price.find(it.first);
@@ -71,12 +72,17 @@ void tick_simulator::play(uint32_t tradeing_day)
 			it.second.today_short.clear();
 
 			_account_info.money += (delta_today_long_monery + delta_today_short_monery + delta_yestoday_long_monery + delta_yestoday_short_monery);
-			_account_info.frozen_monery = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.yestoday_short.postion * it.second.yestoday_short.price) * _margin_rate *_multiple;
-		}
+			_account_info.frozen_monery += (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.yestoday_short.postion * it.second.yestoday_short.price) * _margin_rate *_multiple;
 		
+			this->fire_event(ET_PositionChange, it.second);
+			is_change = true ;
+		}
+	}
+	if(is_change)
+	{
+		this->fire_event(ET_AccountChange, _account_info);
 	}
 	
-
 	_is_in_trading = true ;
 	while (_is_in_trading)
 	{
@@ -837,13 +843,12 @@ uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offs
 }
 bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price,bool is_today)
 {
-
+	_account_info.money+= last_volume * _service_charge;
 	if (offset == OT_OPEN)
 	{
 		double_t delta = (last_volume * price * _multiple * _margin_rate);
 		//撤单 取消冻结保证金
 		_account_info.frozen_monery -= delta;
-		this->fire_event(ET_AccountChange, _account_info);
 	}
 	else if (offset == OT_CLOSE)
 	{
@@ -871,6 +876,7 @@ bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 		}
 		this->fire_event(ET_PositionChange, pos);
 	}
+	this->fire_event(ET_AccountChange, _account_info);
 	return true;
 }
 
