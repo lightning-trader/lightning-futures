@@ -6,14 +6,16 @@ class hft_2_strategy : public strategy
 {
 public:
 	
-	hft_2_strategy(const code_t& code,double open_delta,uint32_t history, int32_t protection,int32_t random_offset):
+	hft_2_strategy(const code_t& code,double open_delta,uint32_t history, int32_t protection,int32_t open_once, int32_t yestoday_multiple,int32_t random_offset):
 		strategy(),
 		_code(code),
 		_sell_order(INVALID_ESTID),
 		_buy_order(INVALID_ESTID),
 		_yestoday_sell_order(INVALID_ESTID),
 		_yestoday_buy_order(INVALID_ESTID),
+		_open_once(open_once),
 		_open_delta(open_delta),
+		_yestoday_multiple(yestoday_multiple),
 		_history_count(history),
 		_history_ma(0),
 		_coming_to_close(0),
@@ -86,6 +88,10 @@ private:
 	int32_t _protection;
 
 	double _open_delta;
+
+	uint32_t _open_once;
+
+	uint32_t _yestoday_multiple;
 
 	estid_t _sell_order ;
 

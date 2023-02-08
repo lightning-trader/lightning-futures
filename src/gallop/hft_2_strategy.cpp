@@ -4,8 +4,7 @@
 
 void hft_2_strategy::on_init()
 {
-	subscribe(_code);
-	
+	subscribe(_code);	
 }
 
 void hft_2_strategy::on_ready() 
@@ -64,16 +63,16 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	double_t ma_delta = tick.price - std::round(_history_ma);
 	double_t buy_price = tick.buy_price() -  delta - direction * (ma_delta)+_random(_random_engine);
 	double_t sell_price = tick.sell_price() +  delta + direction * (ma_delta)-_random(_random_engine);
-	uint32_t sell_once = 1;
+	uint32_t sell_once = _open_once;
 	if (pos.yestoday_long.usable() > 0)
 	{
-		sell_once = pos.yestoday_long.usable() > 5 ? 5: pos.yestoday_long.usable();
+		sell_once = pos.yestoday_long.usable() > _yestoday_multiple ? _yestoday_multiple : pos.yestoday_long.usable();
 		sell_price += sell_once * (1+delta) / 2;
 	}
-	uint32_t buy_once = 1;
+	uint32_t buy_once = _open_once;
 	if (pos.yestoday_short.usable() > 0)
 	{
-		buy_once = pos.yestoday_short.usable() > 5 ? 5 : pos.yestoday_short.usable();
+		buy_once = pos.yestoday_short.usable() > _yestoday_multiple ? _yestoday_multiple : pos.yestoday_short.usable();
 		buy_price -= buy_once * (1+delta) / 2;
 	}
 	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;

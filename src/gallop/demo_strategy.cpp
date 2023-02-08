@@ -2,22 +2,23 @@
 
 void demo_strategy::on_init()
 {
-	subscribe({"SHFF.ag2212"});
+	subscribe("DCE.SP c2303&c2305");
+	//subscribe("SHFE.rb2305");
 	//add_condition(std::make_shared<fall_back_cds>());
 }
 
 void demo_strategy::on_tick(const tick_info& tick)
 {
 
-	//LOG_INFO("on_tick time : %d tick : %d\n", tick->time,tick->tick);
+	LOG_INFO("on_tick time : %d tick : %d\n", tick.time,tick.tick);
 	if (INVALID_ESTID != _buy_order|| INVALID_ESTID != _sell_order)
 	{
 		return ;
 	}
-
+	/*
 	_buy_order = buy_for_open(tick.id, 1, tick.buy_price()- _open_delta);
 	_sell_order = sell_for_open(tick.id, 1, tick.sell_price()+ _open_delta);
-
+	*/
 }
 
 

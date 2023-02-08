@@ -709,7 +709,7 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 	///报单引用
 	sprintf_s(req.OrderRef, "%u", order_ref);
 
-	if(price > 0)
+	if(price != .0F)
 	{
 		///报单价格条件: 限价
 		req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
