@@ -901,16 +901,25 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 	LOG_INFO("calculate_position %s %d %d %d %f %d", code.get_id(), dir_type, offset_type, volume, price, is_today);
 	auto& p = _position_info[code];
 	p.id = code;
-	if(is_today)
+
+	if (offset_type == OT_OPEN)
 	{
 		if (dir_type == DT_LONG)
 		{
-			if (offset_type == OT_OPEN)
-			{
-				p.today_long.price = (p.today_long.price * p.today_long.postion + volume* price)/(p.today_long.postion + volume);
-				p.today_long.postion += volume;
-			}
-			else
+			p.today_long.price = (p.today_long.price * p.today_long.postion + volume * price) / (p.today_long.postion + volume);
+			p.today_long.postion += volume;
+
+		}else
+		{
+			p.today_short.price = (p.today_short.price * p.today_short.postion + volume * price) / (p.today_short.postion + volume);
+			p.today_short.postion += volume;
+		}
+	}
+	else
+	{
+		if (is_today)
+		{
+			if (dir_type == DT_LONG)
 			{
 				if (p.today_long.postion > volume)
 				{
@@ -928,17 +937,8 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 				{
 					p.today_long.frozen = 0;
 				}
-
 			}
-		}
-		else if (dir_type == DT_SHORT)
-		{
-			if (offset_type == OT_OPEN)
-			{
-				p.today_short.price = (p.today_short.price * p.today_short.postion + volume * price) / (p.today_short.postion + volume);
-				p.today_short.postion += volume;
-			}
-			else
+			else if (dir_type == DT_SHORT)
 			{
 				if (p.today_short.postion > volume)
 				{
@@ -958,12 +958,9 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 				}
 			}
 		}
-	}
-	else
-	{
-		if (dir_type == DT_LONG)
+		else
 		{
-			if (offset_type == OT_CLOSE)
+			if (dir_type == DT_LONG)
 			{
 				if (p.yestoday_long.postion > volume)
 				{
@@ -981,12 +978,8 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 				{
 					p.yestoday_long.frozen = 0;
 				}
-
 			}
-		}
-		else if (dir_type == DT_SHORT)
-		{
-			if (offset_type == OT_CLOSE)
+			else if (dir_type == DT_SHORT)
 			{
 				if (p.yestoday_short.postion > volume)
 				{
@@ -1006,7 +999,11 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 				}
 			}
 		}
+	
 	}
+
+
+	
 	LOG_INFO("calculate_position %s today %d %d %f yestoday %d %d %f", code.get_id(), p.today_long.postion, p.today_long.frozen, p.today_long.price, p.yestoday_long.postion, p.yestoday_long.frozen, p.yestoday_long.price);
 	this->fire_event(ET_PositionChange, p);
 }

@@ -65,7 +65,7 @@ void hft_2a_strategy::on_entrust(const order_info& order)
 	if (order.est_id == _buy_order || order.est_id == _sell_order)
 	{
 		double_t current_price = _last_tick.price;
-		set_cancel_condition(order.est_id, [this, current_price](const tick_info& tick)->bool {
+		set_cancel_condition(order.est_id, [this](const tick_info& tick)->bool {
 
 			if (tick.time > _coming_to_close)
 			{

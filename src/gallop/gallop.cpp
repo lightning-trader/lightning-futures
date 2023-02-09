@@ -20,23 +20,14 @@ void start_runtime()
 	//app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5, 2));
 	//app->add_strategy(2, std::make_shared<hft_3_strategy>("SHFE.rb2305", 12, 0.58F, 1.28F, 1.5F, 3));
 	//app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 9, 1.88F, 0.28F, 1.28F, 2));
-	app->add_strategy(10, std::make_shared<hft_2a_strategy>("DCE.SP c2305&c2309", 3, 1));
+	app->add_strategy(10, std::make_shared<hft_2a_strategy>("DCE.SP c2305&c2309", 2, 1));
+	app->add_strategy(11, std::make_shared<hft_2a_strategy>("DCE.SP c2305&c2307", 2, 1));
+	app->add_strategy(12, std::make_shared<hft_2a_strategy>("DCE.SP c2307&c2309", 2, 1));
 
 	app->run_to_close();
 	
 }
 
-void start_runtime_test()
-{
-	//auto app = std::make_shared<runtime_engine>("./runtime.ini");
-	auto app = std::make_shared<runtime_engine>("./rt_hx_zjh.ini");
-	app->add_strategy(0, std::make_shared<demo_strategy>( 3, 2));
-	//app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5, 2));
-	//app->add_strategy(2, std::make_shared<hft_3_strategy>("SHFE.rb2305", 12, 0.58F, 1.28F, 1.5F, 3));
-	//app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 9, 1.88F, 0.28F, 1.28F, 2));
-	app->run_to_close();
-
-}
 
 void start_evaluate(const char* code,const std::vector<uint32_t>& all_trading_day)
 {
@@ -246,12 +237,12 @@ int main()
 
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	//start_evaluate("SHFE.rb2301", trading_day_2301);
+	start_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_hft3_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_hft3_evaluate("SHFE.rb2305", trading_day_2305);
 	//start_hft1_evaluate(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	start_runtime();
-	//start_runtime_test();
+	//start_runtime();
+	
 	return 0;
 }
