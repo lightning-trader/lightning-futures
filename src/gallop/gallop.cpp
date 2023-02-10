@@ -237,12 +237,12 @@ int main()
 
 	
 //max money : 99915.800000 i:[0] j:[3] k:[4] x:[2] y:[0]
-	start_evaluate("SHFE.rb2301", trading_day_2301);
+	//start_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_hft3_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_hft3_evaluate("SHFE.rb2305", trading_day_2305);
 	//start_hft1_evaluate(all_trading_day);
 	//start_demo_optimize(all_trading_day);
-	//start_runtime();
+	start_runtime();
 	
 	return 0;
 }

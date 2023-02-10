@@ -199,6 +199,15 @@ void ctp_trader::query_positions()
 		strcpy_s(req.InvestorID, _userid.c_str());
 		_td_api->ReqQryInvestorPositionDetail(&req, genreqid());
 		});
+	
+	_query_queue.push([this]() {
+
+		CThostFtdcQryInvestorPositionCombineDetailField req;
+		memset(&req, 0, sizeof(req));
+		strcpy_s(req.BrokerID, _broker_id.c_str());
+		strcpy_s(req.InvestorID, _userid.c_str());
+		_td_api->ReqQryInvestorPositionCombineDetail(&req, genreqid());
+		});
 	*/
 	_query_mutex.unlock();
 }
@@ -376,38 +385,48 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 	
 	if (pInvestorPosition)
 	{	
+		LOG_DEBUG("OnRspQryInvestorPosition %s %d %d %d\n", pInvestorPosition->InstrumentID, pInvestorPosition->TodayPosition, pInvestorPosition->Position, pInvestorPosition->TodayPosition);
 		code_t code(pInvestorPosition->InstrumentID, pInvestorPosition->ExchangeID);
-		position_info& position = _position_info[code];
+		position_info position;
 		position.id = code;
+		auto it = _position_info.find(code);
+		if(it != _position_info.end())
+		{
+			//如果是大商所这种不区分昨仓今仓这种，第一次发过来的认为是今仓，后面的为昨仓
+			//pInvestorPosition->PositionDate = THOST_FTDC_PSD_History;
+			position = it->second;
+		}
+		
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
 			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				position.today_long.postion = pInvestorPosition->TodayPosition;
-				position.today_long.frozen = pInvestorPosition->ShortFrozen;
-				position.today_long.price = pInvestorPosition->SettlementPrice;
+				position.today_long.price = (position.today_long.postion * position.today_long.price + pInvestorPosition->SettlementPrice * pInvestorPosition->TodayPosition) / ( position.today_long.postion+ pInvestorPosition->TodayPosition);
+				position.today_long.postion += pInvestorPosition->TodayPosition;
+				position.today_long.frozen += pInvestorPosition->ShortFrozen;
+				
 			}else
 			{
-				position.yestoday_long.postion = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-				position.yestoday_long.frozen = pInvestorPosition->ShortFrozen;
-				position.yestoday_long.price = pInvestorPosition->SettlementPrice;
+				position.yestoday_long.price = (position.yestoday_long.price* position.yestoday_long.postion + pInvestorPosition->SettlementPrice *(pInvestorPosition->Position - pInvestorPosition->TodayPosition)) / (position.yestoday_long.postion + pInvestorPosition->Position - pInvestorPosition->TodayPosition);
+				position.yestoday_long.postion += pInvestorPosition->Position - pInvestorPosition->TodayPosition;
+				position.yestoday_long.frozen += pInvestorPosition->ShortFrozen;
 			}
-			
-
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
 			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				position.today_short.postion = pInvestorPosition->TodayPosition;
-				position.today_short.frozen = pInvestorPosition->LongFrozen;
-				position.today_short.price = pInvestorPosition->SettlementPrice;
+				position.today_short.price = (position.today_short.price * position.today_short.postion+ pInvestorPosition->TodayPosition * pInvestorPosition->SettlementPrice) / (position.today_short.postion + pInvestorPosition->TodayPosition);
+				position.today_short.postion += pInvestorPosition->TodayPosition;
+				position.today_short.frozen += pInvestorPosition->LongFrozen;
+				
 			}
 			else
 			{
-				position.yestoday_short.postion = pInvestorPosition->Position - pInvestorPosition->TodayPosition;;
-				position.yestoday_short.frozen = pInvestorPosition->LongFrozen;
-				position.yestoday_short.price = pInvestorPosition->SettlementPrice;
+				position.yestoday_short.price = (position.yestoday_short.price * position.yestoday_short.postion + pInvestorPosition->SettlementPrice * (pInvestorPosition->Position - pInvestorPosition->TodayPosition)) / (position.yestoday_short.postion + pInvestorPosition->Position - pInvestorPosition->TodayPosition);
+				position.yestoday_short.postion += pInvestorPosition->Position - pInvestorPosition->TodayPosition;;
+				position.yestoday_short.frozen += pInvestorPosition->LongFrozen;
+				
 			}
 		}
 		_position_info[code] = position;
@@ -476,6 +495,12 @@ void ctp_trader::OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetail
 		_process_signal.notify_all();
 	}
 };
+
+void ctp_trader::OnRspQryInvestorPositionCombineDetail(CThostFtdcInvestorPositionCombineDetailField* pInvestorPositionCombineDetail, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
+{
+	LOG_DEBUG("OnRspQryInvestorPosition %s %f %f\n", pInvestorPositionCombineDetail->InstrumentID, pInvestorPositionCombineDetail->TotalAmt, pInvestorPositionCombineDetail->CombInstrumentID);
+}
+
 
 void ctp_trader::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
