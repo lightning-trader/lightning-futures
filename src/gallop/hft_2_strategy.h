@@ -6,7 +6,7 @@ class hft_2_strategy : public strategy
 {
 public:
 	
-	hft_2_strategy(const code_t& code,double open_delta,uint32_t history, int32_t protection,int32_t open_once, int32_t yestoday_multiple,int32_t random_offset):
+	hft_2_strategy(const code_t& code, uint32_t open_once, double open_delta,uint32_t history, int32_t protection, int32_t yestoday_multiple,int32_t random_offset):
 		strategy(),
 		_code(code),
 		_sell_order(INVALID_ESTID),

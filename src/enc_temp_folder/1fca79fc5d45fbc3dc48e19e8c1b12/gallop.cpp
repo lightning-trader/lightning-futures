@@ -15,11 +15,11 @@
 void start_runtime(const char * config_file) 
 {
 	auto app = std::make_shared<runtime_engine>(config_file);
-	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 1, 0.0028F, 120, 5,3, 2));
+	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5,1,3, 2));
 	//app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5, 2));
 	//app->add_strategy(2, std::make_shared<hft_3_strategy>("SHFE.rb2305", 12, 0.58F, 1.28F, 1.5F, 3));
 	//app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 9, 1.88F, 0.28F, 1.28F, 2));
-	app->add_strategy(10, std::make_shared<hft_3_strategy>("SHFE.rb2305",1, 9, 0.88F, 0.58F, 3));
+	app->add_strategy(10, std::make_shared<hft_3_strategy>("SHFE.rb2305", 9, 0.88F, 0.58F, 3));
 	//app->add_strategy(11, std::make_shared<hft_2a_strategy>("DCE.SP c2305&c2307", 2, 1));
 	//app->add_strategy(12, std::make_shared<hft_2a_strategy>("DCE.SP c2307&c2309", 2, 1));
 
@@ -40,9 +40,9 @@ void start_evaluate(const char* code,const std::vector<uint32_t>& all_trading_da
 	*/
 	std::vector<std::shared_ptr<strategy>> stra_list;
 	///stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0018F, 120, 3, 1));
-	stra_list.emplace_back(new hft_2_strategy(code, 1, 0.0028F, 120, 5, 3, 2));
+	stra_list.emplace_back(new hft_2_strategy(code, 0.0028F, 120, 5, 1, 3, 2));
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0058F, 120, 8, 3));
-	stra_list.emplace_back(new hft_3_strategy(code, 1, 9, 0.88F, 0.58F, 3));
+	stra_list.emplace_back(new hft_3_strategy(code, 9, 0.88F, 0.58F, 3));
 	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 9, 1.88F, 0.28F, 2));
 
 	app->back_test(stra_list, all_trading_day);

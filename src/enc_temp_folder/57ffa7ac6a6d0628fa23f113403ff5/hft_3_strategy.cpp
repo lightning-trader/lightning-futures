@@ -33,8 +33,8 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 	if(_open_long_order == INVALID_ESTID && _close_long_order == INVALID_ESTID)
 	{
 		const position_info& pos = get_position(tick.id);
-		uint32_t once = static_cast<uint32_t>(std::round(pos.today_long.usable() * _beta + _open_once));
-		double_t buy_price = tick.buy_price() - _random(_random_engine) - (pos.today_long.usable() * _alpha + _open_once) * _delta;
+		uint32_t once = static_cast<uint32_t>(std::round(pos.today_long.usable() * _beta + 1));
+		double_t buy_price = tick.buy_price() - _random(_random_engine) - (pos.today_long.usable() * _alpha + 1) * _delta;
 		buy_price = buy_price < tick.buy_price() ? buy_price : tick.buy_price() ;
 		buy_price = std::round(buy_price);
 		if (buy_price > tick.low_limit)
@@ -52,8 +52,8 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 	if (_open_short_order == INVALID_ESTID && _close_short_order == INVALID_ESTID)
 	{
 		const position_info& pos = get_position(tick.id);
-		uint32_t once = static_cast<uint32_t>(std::round(pos.today_short.usable() * _beta + _open_once));
-		double_t sell_price = tick.sell_price() + _random(_random_engine) + (pos.today_short.usable() * _alpha + _open_once) * _delta;;
+		uint32_t once = static_cast<uint32_t>(std::round(pos.today_short.usable() * _beta + 1));
+		double_t sell_price = tick.sell_price() + _random(_random_engine) + (pos.today_short.usable() * _alpha + 1) * _delta;;
 		sell_price = sell_price > tick.sell_price() ? sell_price : tick.sell_price() ;
 		sell_price = std::round(sell_price);
 		if (sell_price < tick.high_limit)

@@ -74,7 +74,7 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
-	_max_position = 30;
+	_max_position = 40;
 	trading_optimal to_optimal = TO_OPEN_TO_CLOSE;
 	bool is_to_cancel = false;
 	_chain = create_chain(to_optimal, is_to_cancel, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool{
@@ -126,18 +126,17 @@ void context::start_service()
 {
 	_is_runing = true;
 	_strategy_thread = new std::thread([this]()->void{
+		/*
 		int core = cpu_helper::get_cpu_cores();
 		if (!cpu_helper::bind_core(core - 1))
 		{
 			LOG_ERROR("Binding to core {%d} failed", core);
 		}
+		*/
 		while (_is_runing)
 		{
 			this->update();
-			if (!_section->is_in_trading(get_last_time()))
-			{
-				std::this_thread::sleep_for(std::chrono::seconds(1));
-			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 	});
 	//_strategy_thread->detach();

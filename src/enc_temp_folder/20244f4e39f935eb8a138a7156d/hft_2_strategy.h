@@ -2,29 +2,30 @@
 #include "strategy.h"
 #include <random>
 
-class hft_3_strategy : public strategy
+class hft_2_strategy : public strategy
 {
 public:
 	
-	hft_3_strategy(const code_t& code, uint32_t open_once, int32_t delta,double_t alpha, double_t beta, int32_t random_offset):
+	hft_2_strategy(const code_t& code,double open_delta,uint32_t history, int32_t protection,int32_t open_once, int32_t yestoday_multiple,int32_t random_offset):
 		strategy(),
 		_code(code),
+		_sell_order(INVALID_ESTID),
+		_buy_order(INVALID_ESTID),
+		_yestoday_sell_order(INVALID_ESTID),
+		_yestoday_buy_order(INVALID_ESTID),
 		_open_once(open_once),
-		_close_long_order(INVALID_ESTID),
-		_close_short_order(INVALID_ESTID),
-		_open_long_order(INVALID_ESTID),
-		_open_short_order(INVALID_ESTID),
-		_delta(delta),
-		_alpha(alpha),
-		_beta(beta),
+		_open_delta(open_delta),
+		_yestoday_multiple(yestoday_multiple),
+		_history_count(history),
+		_history_ma(0),
 		_coming_to_close(0),
-		_random(0, random_offset)
-		
+		_random(0, random_offset),
+		_protection(protection)
 		{
 		};
 
 
-	~hft_3_strategy(){};
+	~hft_2_strategy(){};
 
 
 public:
@@ -77,29 +78,38 @@ public:
 
 
 private:
+
+	void add_to_history(double_t price);
+
+private:
 	
 	code_t _code ;
 
+	int32_t _protection;
+
+	double _open_delta;
+
 	uint32_t _open_once;
 
-	int32_t _delta;
+	uint32_t _yestoday_multiple;
 
-	double_t _alpha;
+	estid_t _sell_order ;
 
-	double_t _beta;
+	estid_t _buy_order ;
 
-	estid_t _close_long_order ;
+	estid_t _yestoday_sell_order;
 
-	estid_t _close_short_order;
-
-	estid_t _open_long_order ;
-
-	estid_t _open_short_order;
-
+	estid_t _yestoday_buy_order;
 
 	tick_info _last_tick;
 
+	size_t _history_count ;
+
 	time_t _coming_to_close;
+
+	double_t _history_ma ;
+
+	std::list<double_t> _history_price ;
 
 	std::default_random_engine _random_engine;
 
