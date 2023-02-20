@@ -15,7 +15,7 @@ recorder* create_recorder(const boost::property_tree::ptree& config)
 	return nullptr;
 }
 
-void destory_recorder(recorder* rcd)
+void destory_recorder(recorder*& rcd)
 {
 	if(rcd != nullptr)
 	{

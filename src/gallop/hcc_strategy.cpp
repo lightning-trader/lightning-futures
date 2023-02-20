@@ -105,8 +105,8 @@ void hcc_strategy::on_trade(estid_t localid, const code_t& code, offset_type off
 {
 	//LOG_INFO("on_trade tick : %s\n", localid.id.c_str());
 
-	auto& acc = get_account();
-	auto& pos = get_position(_code);
+	//auto& acc = get_account();
+	//auto& pos = get_position(_code);
 
 	//LOG_INFO("on_trade %llu %f %f [%d %d %d %d]\n", localid, acc.money, acc.frozen_monery, pos.long_postion, pos.short_postion, pos.long_frozen, pos.short_frozen);
 	_order_id = INVALID_ESTID;
@@ -114,7 +114,7 @@ void hcc_strategy::on_trade(estid_t localid, const code_t& code, offset_type off
 
 void hcc_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
-	auto& pos = get_position(_code);
+	//auto& pos = get_position(_code);
 	//LOG_INFO("on_cancel tick : %llu [%d %d %d %d]\n", localid, pos.long_postion, pos.short_postion, pos.long_frozen, pos.short_frozen);
 	_order_id = INVALID_ESTID;
 }

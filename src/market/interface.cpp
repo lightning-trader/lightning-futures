@@ -20,7 +20,7 @@ futures_market* create_market_api(const boost::property_tree::ptree& config)
 	return nullptr;
 }
 
-void destory_market_api(futures_market* api)
+void destory_market_api(futures_market*& api)
 {
 	if (nullptr != api)
 	{

@@ -7,16 +7,16 @@
 
 futures_market* create_market_api(const boost::property_tree::ptree& config);
 
-void destory_market_api(futures_market* api);
+void destory_market_api(futures_market*& api);
 
 futures_trader* create_trader_api(const boost::property_tree::ptree& config);
 
-void destory_trader_api(futures_trader* api);
+void destory_trader_api(futures_trader*& api);
 
 simulator* create_simulator(const boost::property_tree::ptree& config);
 
-void destory_simulator(simulator* smlt);
+void destory_simulator(simulator*& smlt);
 
 recorder* create_recorder(const boost::property_tree::ptree& config);
 
-void destory_recorder(recorder* rcd);
+void destory_recorder(recorder*& rcd);

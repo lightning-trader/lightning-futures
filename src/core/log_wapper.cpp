@@ -94,5 +94,5 @@ void log_format(log_level lv, const char* format, ...)
 			BOOST_LOG_TRIVIAL(fatal) << formatted_string;
 			break;
 	}
-	
+	va_end(arg_list);
 }

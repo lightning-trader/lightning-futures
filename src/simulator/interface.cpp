@@ -11,7 +11,7 @@ simulator* create_simulator(const boost::property_tree::ptree& config)
 	return nullptr;
 }
 
-void destory_simulator(simulator* smlt)
+void destory_simulator(simulator*& smlt)
 {
 	if (nullptr != smlt)
 	{

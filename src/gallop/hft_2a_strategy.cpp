@@ -33,8 +33,6 @@ void hft_2a_strategy::on_tick(const tick_info& tick)
 		LOG_TRACE("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _buy_order, _sell_order);
 		return ;
 	}
-	
-	const position_info& pos = get_position(tick.id);
 
 	double_t buy_price = tick.buy_price() - _open_delta;
 	double_t sell_price = tick.sell_price() + _open_delta;
@@ -64,7 +62,7 @@ void hft_2a_strategy::on_entrust(const order_info& order)
 	}
 	if (order.est_id == _buy_order || order.est_id == _sell_order)
 	{
-		double_t current_price = _last_tick.price;
+
 		set_cancel_condition(order.est_id, [this](const tick_info& tick)->bool {
 
 			if (tick.time > _coming_to_close)

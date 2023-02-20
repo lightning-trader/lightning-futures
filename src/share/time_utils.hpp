@@ -32,7 +32,7 @@ static time_t make_datetime(int year, int month, int day, int hour=0, int minute
 
 static time_t make_datetime(const char* date, const char* time)
 {
-	if (date != nullptr && time != nullptr && date != "" && time != "")
+	if (date != nullptr && time != nullptr)
 	{
 		int year, month, day;
 		sscanf_s(date, "%4d%2d%2d", &year, &month, &day);

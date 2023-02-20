@@ -12,14 +12,41 @@
 #pragma comment (lib,"lightning.lib")
 #pragma comment (lib,"libltpp.lib")
 
-void start_runtime(const char * config_file) 
+void start_runtime(const char * config_file,int account_type)
 {
 	auto app = std::make_shared<runtime_engine>(config_file);
-	app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 1, 0.0028F, 120, 5,3, 2));
+	switch(account_type)
+	{
+		case 0:
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 2));
+			break;
+		case 10:
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 2, 9, 0.88F, 0.58F, 1));
+			break;
+		case 20:
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 2, 9, 0.88F, 0.58F, 1));
+			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2306", 1, 0.0028F, 120, 5, 3, 2));
+			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 2, 9, 0.88F, 0.58F, 2));
+			break;
+		
+		case 100:
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 3, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 6, 9, 0.88F, 0.58F, 1));
+			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2306", 2, 0.0028F, 120, 5, 3, 2));
+			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 4, 9, 0.88F, 0.58F, 2));
+			app->add_strategy(4, std::make_shared<hft_2_strategy>("SHFE.rb2307", 1, 0.0028F, 120, 5, 3, 3));
+			app->add_strategy(5, std::make_shared<hft_3_strategy>("SHFE.rb2307", 2, 9, 0.88F, 0.58F, 3));
+			break;
+	}
+
+	
+	
 	//app->add_strategy(1, std::make_shared<hft_2_strategy>("SHFE.rb2305", 0.0028F, 120, 5, 2));
 	//app->add_strategy(2, std::make_shared<hft_3_strategy>("SHFE.rb2305", 12, 0.58F, 1.28F, 1.5F, 3));
 	//app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 9, 1.88F, 0.28F, 1.28F, 2));
-	app->add_strategy(10, std::make_shared<hft_3_strategy>("SHFE.rb2305",1, 9, 0.88F, 0.58F, 3));
+	
 	//app->add_strategy(11, std::make_shared<hft_2a_strategy>("DCE.SP c2305&c2307", 2, 1));
 	//app->add_strategy(12, std::make_shared<hft_2a_strategy>("DCE.SP c2307&c2309", 2, 1));
 
@@ -31,25 +58,19 @@ void start_runtime(const char * config_file)
 void start_evaluate(const char* code,const std::vector<uint32_t>& all_trading_day)
 {
 	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
-	/*
-	std::vector<uint32_t> trading_day = { 
-		20220801,
-		20220802,
-		20220803
-		};
-	*/
+	//20w
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	///stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0018F, 120, 3, 1));
-	stra_list.emplace_back(new hft_2_strategy(code, 1, 0.0028F, 120, 5, 3, 2));
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 0.0058F, 120, 8, 3));
-	stra_list.emplace_back(new hft_3_strategy(code, 1, 9, 0.88F, 0.58F, 3));
-	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 9, 1.88F, 0.28F, 2));
+	stra_list.emplace_back(new hft_2_strategy(code, 1, 0.0028F, 120, 5, 3, 1));
+	stra_list.emplace_back(new hft_3_strategy(code, 2, 9, 0.88F, 0.58F, 1));
+	
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 2));
+	stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 2, 9, 0.88F, 0.58F, 2));
 
 	app->back_test(stra_list, all_trading_day);
 }
 
 
-int main()
+int main(int argc,char* argv[])
 {
 
 	std::vector<uint32_t> trading_day_2210 = {
@@ -170,9 +191,17 @@ int main()
 	};
 
 	
-	//start_evaluate("SHFE.rb2301", trading_day_2301);
+	start_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_evaluate("SHFE.rb2305", trading_day_2305);
-	//start_runtime("./rt_hx_zjh.ini");
-	start_runtime("./runtime.ini");
+	
+	//获取参数
+	if(argc < 3)
+	{
+		LOG_ERROR("arg error \n");
+		return -1;
+	}
+	const char* config = argv[1];
+	int	account_type = std::atoi(argv[2]);
+	start_runtime(config, account_type);
 	return 0;
 }

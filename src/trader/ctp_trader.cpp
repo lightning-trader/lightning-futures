@@ -265,7 +265,7 @@ void ctp_trader::OnFrontDisconnected(int nReason)
 
 void ctp_trader::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-	if (!pRspInfo)
+	if (pRspInfo)
 	{
 		LOG_ERROR("ctp_trader OnRspAuthenticate Error : %d", pRspInfo->ErrorID);
 	}
@@ -274,7 +274,7 @@ void ctp_trader::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthentic
 
 void ctp_trader::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-	if (!pRspInfo)
+	if (pRspInfo)
 	{
 		LOG_ERROR("ctp_trader OnRspAuthenticate Error : %d", pRspInfo->ErrorID);
 	}
@@ -546,9 +546,9 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 
 void ctp_trader::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-	LOG_ERROR("OnRspError \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	if (pRspInfo)
 	{
+		LOG_ERROR("OnRspError \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 		this->fire_event(ET_OrderError, ET_OTHER_ERROR, INVALID_ESTID, (uint32_t)pRspInfo->ErrorID);
 	}
 

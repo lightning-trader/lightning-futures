@@ -19,7 +19,7 @@ futures_trader* create_trader_api(const boost::property_tree::ptree& config)
 	return nullptr;
 }
 
-void destory_trader_api(futures_trader* api)
+void destory_trader_api(futures_trader*& api)
 {
 	if (nullptr != api)
 	{
