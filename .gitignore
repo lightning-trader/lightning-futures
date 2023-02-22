@@ -12,3 +12,4 @@ _deps
 .vs/
 bin/
 out/
+run/

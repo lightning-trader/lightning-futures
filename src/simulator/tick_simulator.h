@@ -72,6 +72,7 @@ public:
 		_margin_rate(0),
 		_multiple(0),
 		_interval(1),
+		_compulsory_factor(1),
 		_is_submit_return(true)
 	{}
 	virtual ~tick_simulator()

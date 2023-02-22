@@ -59,8 +59,8 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	}
 	//direction = 1;
 	const position_info& pos = get_position(tick.id);
-	double_t delta = std::round(tick.standard * _open_delta);
-	double_t ma_delta = tick.price - std::round(_history_ma);
+	double_t delta = (tick.standard * _open_delta);
+	double_t ma_delta = tick.price - _history_ma;
 	double_t buy_price = tick.buy_price() -  delta - direction * (ma_delta)+_random(_random_engine);
 	double_t sell_price = tick.sell_price() +  delta + direction * (ma_delta)-_random(_random_engine);
 	uint32_t sell_once = _open_once;
@@ -78,7 +78,8 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	}
 	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
 	sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
-
+	buy_price = std::round(buy_price);
+	sell_price = std::round(sell_price);
 	if(tick.price >= tick.standard)
 	{
 		if (buy_price > tick.low_limit)

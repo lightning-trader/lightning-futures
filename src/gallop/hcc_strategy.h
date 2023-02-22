@@ -79,7 +79,6 @@ private:
 	float _record_ratio ;
 	int _lose_offset ;
 	int _drag_limit ;
-	int _interval ;
 	int _cancel_seconds;
 
 };
