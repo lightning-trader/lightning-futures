@@ -924,19 +924,32 @@ bool ctp_trader::is_in_trading(const code_t& code)
 void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, offset_type offset_type,uint32_t volume,double_t price,bool is_today)
 {
 	LOG_INFO("calculate_position %s %d %d %d %f %d", code.get_id(), dir_type, offset_type, volume, price, is_today);
-	auto& p = _position_info[code];
-	p.id = code;
-
+	position_info p ;
+	auto it = _position_info.find(code);
+	if(it != _position_info.end())
+	{
+		p = it->second;
+	}
+	else
+	{
+		p.id = code;
+	}
 	if (offset_type == OT_OPEN)
 	{
 		if (dir_type == DT_LONG)
 		{
-			p.today_long.price = (p.today_long.price * p.today_long.postion + volume * price) / (p.today_long.postion + volume);
+			if(p.today_long.postion + volume > 0)
+			{
+				p.today_long.price = (p.today_long.price * p.today_long.postion + volume * price) / (p.today_long.postion + volume);
+			}
 			p.today_long.postion += volume;
 
 		}else
 		{
-			p.today_short.price = (p.today_short.price * p.today_short.postion + volume * price) / (p.today_short.postion + volume);
+			if(p.today_short.postion + volume>0)
+			{
+				p.today_short.price = (p.today_short.price * p.today_short.postion + volume * price) / (p.today_short.postion + volume);
+			}
 			p.today_short.postion += volume;
 		}
 	}
@@ -1026,9 +1039,7 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 		}
 	
 	}
-
-
-	
+	_position_info[code] = p ;	
 	LOG_INFO("calculate_position %s today %d %d %f yestoday %d %d %f", code.get_id(), p.today_long.postion, p.today_long.frozen, p.today_long.price, p.yestoday_long.postion, p.yestoday_long.frozen, p.yestoday_long.price);
 	this->fire_event(ET_PositionChange, p);
 }
