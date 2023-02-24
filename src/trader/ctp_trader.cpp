@@ -397,31 +397,48 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			position = it->second;
 		}
 		double_t avg_price = .0F;
-		if(pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit!=0)
-		{
-			avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit);
-		}
+		
+		
+
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
+			if (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit != 0)
+			{
+				avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit);
+			}
 			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				position.today_long.price = (position.today_long.postion * position.today_long.price + avg_price * pInvestorPosition->TodayPosition) / ( position.today_long.postion + pInvestorPosition->TodayPosition);
+				if(position.today_long.postion + pInvestorPosition->TodayPosition!=0)
+				{
+					position.today_long.price = (position.today_long.postion * position.today_long.price + avg_price * pInvestorPosition->TodayPosition) / (position.today_long.postion + pInvestorPosition->TodayPosition);
+				}
 				position.today_long.postion += pInvestorPosition->TodayPosition;
 				position.today_long.frozen += pInvestorPosition->ShortFrozen;
 				
 			}else
 			{
 				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-				position.yestoday_long.price = (position.yestoday_long.price* position.yestoday_long.postion + avg_price * yestoday_position) / (position.yestoday_long.postion + yestoday_position);
+				//double_t r = (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit) / (pInvestorPosition->SettlementPrice * yestoday_position);
+				if (position.yestoday_long.postion + yestoday_position != 0)
+				{
+					position.yestoday_long.price = (position.yestoday_long.price * position.yestoday_long.postion + avg_price * yestoday_position) / (position.yestoday_long.postion + yestoday_position);
+				}
 				position.yestoday_long.postion += yestoday_position;
 				position.yestoday_long.frozen += pInvestorPosition->ShortFrozen;
 			}
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
+			if (pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit != 0)
+			{
+				avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit);
+			}
 			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				position.today_short.price = (position.today_short.price * position.today_short.postion+ pInvestorPosition->TodayPosition * avg_price) / (position.today_short.postion + pInvestorPosition->TodayPosition);
+				if(position.today_short.postion + pInvestorPosition->TodayPosition!=0)
+				{
+					position.today_short.price = (position.today_short.price * position.today_short.postion + pInvestorPosition->TodayPosition * avg_price) / (position.today_short.postion + pInvestorPosition->TodayPosition);
+				}
 				position.today_short.postion += pInvestorPosition->TodayPosition;
 				position.today_short.frozen += pInvestorPosition->LongFrozen;
 				
@@ -429,7 +446,10 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			else
 			{
 				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-				position.yestoday_short.price = (position.yestoday_short.price * position.yestoday_short.postion + avg_price * yestoday_position) / (position.yestoday_short.postion + yestoday_position);
+				if(position.yestoday_short.postion + yestoday_position!=0)
+				{
+					position.yestoday_short.price = (position.yestoday_short.price * position.yestoday_short.postion + avg_price * yestoday_position) / (position.yestoday_short.postion + yestoday_position);
+				}
 				position.yestoday_short.postion += yestoday_position;
 				position.yestoday_short.frozen += pInvestorPosition->LongFrozen;
 				
