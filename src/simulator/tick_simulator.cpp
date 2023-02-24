@@ -48,40 +48,7 @@ void tick_simulator::play(uint32_t tradeing_day)
 		load_data(it, tradeing_day);
 	}
 	//模拟跨天时候之前的订单失效
-	_order_info.clear();
-	_account_info.frozen_monery = .0F;
-	bool is_change = false ;
-	for(auto& it : _position_info)
-	{
-		auto pit = _standard_price.find(it.first);
-		if(pit != _standard_price.end())
-		{
-			double_t standard_price = pit->second;
-			double_t delta_today_long_monery = (standard_price - it.second.today_long.price) * _multiple * it.second.today_long.postion;
-			double_t delta_today_short_monery = (it.second.today_short.price - standard_price) * _multiple * it.second.today_short.postion;
-			double_t delta_yestoday_long_monery = (standard_price - it.second.yestoday_long.price) * _multiple * it.second.yestoday_long.postion;
-			double_t delta_yestoday_short_monery = (it.second.yestoday_short.price - standard_price) * _multiple * it.second.yestoday_short.postion;
-
-			it.second.yestoday_long.postion += it.second.today_long.postion;
-			it.second.yestoday_long.price = standard_price;
-			it.second.yestoday_long.frozen = 0;
-			it.second.yestoday_short.postion += it.second.today_short.postion;
-			it.second.yestoday_short.price = standard_price;
-			it.second.yestoday_short.frozen = 0;
-			it.second.today_long.clear();
-			it.second.today_short.clear();
-
-			_account_info.money += (delta_today_long_monery + delta_today_short_monery + delta_yestoday_long_monery + delta_yestoday_short_monery);
-			_account_info.frozen_monery += (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.yestoday_short.postion * it.second.yestoday_short.price) * _margin_rate *_multiple;
-		
-			this->fire_event(ET_PositionChange, it.second);
-			is_change = true ;
-		}
-	}
-	if(is_change)
-	{
-		this->fire_event(ET_AccountChange, _account_info);
-	}
+	crossday_settlement();
 	
 	_is_in_trading = true ;
 	while (_is_in_trading)
@@ -263,10 +230,6 @@ void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
 	if(_loader)
 	{
 		_loader->load_tick(_pending_tick_info,code, trading_day);
-		if(!_pending_tick_info.empty())
-		{
-			_standard_price[code] = _pending_tick_info[0].standard;
-		}
 	}
 }
 
@@ -880,3 +843,32 @@ bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 	return true;
 }
 
+void tick_simulator::crossday_settlement()
+{
+	_order_info.clear();
+	_account_info.frozen_monery = .0F;
+	bool is_change = false;
+	for (auto& it : _position_info)
+	{
+		if(it.second.yestoday_long.postion + it.second.today_long.postion>0)
+		{
+			it.second.yestoday_long.price = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.today_long.postion * it.second.today_long.price) / (it.second.yestoday_long.postion + it.second.today_long.postion);
+			it.second.yestoday_long.postion += it.second.today_long.postion;
+			it.second.yestoday_long.frozen = 0;
+		}
+		if(it.second.yestoday_short.postion + it.second.today_short.postion>0)
+		{
+			it.second.yestoday_short.price = (it.second.yestoday_short.postion * it.second.yestoday_short.price + it.second.today_short.postion * it.second.today_short.price) / (it.second.yestoday_short.postion + it.second.today_short.postion);
+			it.second.yestoday_short.postion += it.second.today_short.postion;
+			it.second.yestoday_short.frozen = 0;
+		}
+		it.second.today_long.clear();
+		it.second.today_short.clear();
+		this->fire_event(ET_PositionChange, it.second);
+		is_change = true;
+	}
+	if (is_change)
+	{
+		this->fire_event(ET_AccountChange, _account_info);
+	}
+}

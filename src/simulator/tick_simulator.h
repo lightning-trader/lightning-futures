@@ -24,8 +24,6 @@ private:
 
 	std::vector<tick_info> _pending_tick_info ;
 
-	std::map<code_t,double_t> _standard_price ;
-
 	time_t _current_time ;
 
 	uint32_t _current_tick ;
@@ -163,5 +161,7 @@ private:
 	uint32_t frozen_deduction(estid_t est_id, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, bool is_today);
 	//解冻
 	bool thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price, bool is_today);
+
+	void crossday_settlement();
 
 };

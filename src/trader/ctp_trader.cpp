@@ -396,8 +396,11 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			//pInvestorPosition->PositionDate = THOST_FTDC_PSD_History;
 			position = it->second;
 		}
-		
-		double_t avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit);
+		double_t avg_price = .0F;
+		if(pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit!=0)
+		{
+			avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit);
+		}
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
 			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
