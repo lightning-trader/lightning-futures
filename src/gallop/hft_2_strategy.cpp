@@ -68,13 +68,13 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	if (pos.yestoday_long.usable() > 0)
 	{
 		sell_once = pos.yestoday_long.usable() > yestoday_once ? yestoday_once : pos.yestoday_long.usable();
-		sell_price += sell_once * (1+delta) / 2;
+		sell_price += sell_once * ( 1 + delta ) / 2 /_open_once ;
 	}
 	uint32_t buy_once = _open_once;
 	if (pos.yestoday_short.usable() > 0)
 	{
 		buy_once = pos.yestoday_short.usable() > yestoday_once ? yestoday_once : pos.yestoday_short.usable();
-		buy_price -= buy_once * (1+delta) / 2;
+		buy_price -= buy_once * ( 1 + delta ) / 2 / _open_once ;
 	}
 	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
 	sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;

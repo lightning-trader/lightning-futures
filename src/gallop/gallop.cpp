@@ -26,20 +26,20 @@ void start_runtime(const char * config_file,int account_type)
 			break;
 		case 30:
 			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 1));
-			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 2, 9, 0.88F, 0.58F, 1));
-			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.ag2306", 1, 0.0028F, 120, 5, 3, 2));
-			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.ag2306", 2, 12, 0.98F, 0.68F, 2));
+			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 2, 9, 0.88F, 0.58F, 2));
+			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.ag2306", 1, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.ag2306", 2, 12, 0.88F, 0.88F, 2));
 			break;
 		
-		case 100:
-			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 1));
-			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 2, 9, 0.88F, 0.58F, 1));
-			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2306", 1, 0.0028F, 120, 5, 3, 2));
-			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 2, 9, 0.88F, 0.58F, 2));
-			app->add_strategy(4, std::make_shared<hft_2_strategy>("SHFE.ag2306", 1, 0.0028F, 120, 5, 3, 3));
-			app->add_strategy(5, std::make_shared<hft_3_strategy>("SHFE.ag2306", 2, 12, 0.98F, 0.68F, 3));
-			app->add_strategy(6, std::make_shared<hft_2_strategy>("SHFE.ag2305", 1, 0.0028F, 120, 5, 3, 3));
-			app->add_strategy(7, std::make_shared<hft_3_strategy>("SHFE.ag2305", 2, 12, 0.98F, 0.68F, 3));
+		case 500:
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 10, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 20, 9, 0.88F, 0.58F, 2));
+			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2306", 5, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 10, 9, 0.98F, 0.68F, 2));
+			app->add_strategy(4, std::make_shared<hft_2_strategy>("SHFE.ag2306", 10, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(5, std::make_shared<hft_3_strategy>("SHFE.ag2306", 20, 12, 0.88F, 0.58F, 2));
+			app->add_strategy(6, std::make_shared<hft_2_strategy>("SHFE.ag2305", 5, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(7, std::make_shared<hft_3_strategy>("SHFE.ag2305", 10, 12, 0.98F, 0.68F, 2));
 			break;
 	}
 
@@ -57,16 +57,22 @@ void start_runtime(const char * config_file,int account_type)
 }
 
 
-void start_evaluate(const char* code,const std::vector<uint32_t>& all_trading_day)
+void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 {
 	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
 	//20w
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	stra_list.emplace_back(new hft_2_strategy(code, 1, 0.0028F, 120, 5, 3, 1));
-	stra_list.emplace_back(new hft_3_strategy(code, 2, 9, 0.88F, 0.58F, 1));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 1, 0.0028F, 120, 5, 3, 1));
+	stra_list.emplace_back(new hft_3_strategy("SHFE.rb2301", 2, 9, 0.88F, 0.58F, 2));
 	
-	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2306", 1, 0.0028F, 120, 5, 3, 2));
-	stra_list.emplace_back(new hft_3_strategy("SHFE.rb2306", 2, 12, 0.98F, 0.68F, 2));
+	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 1));
+	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 2, 6, 0.98F, 0.68F, 2));
+
+	stra_list.emplace_back(new hft_2_strategy("SHFE.ag2212", 1, 0.0028F, 120, 5, 3, 1));
+	stra_list.emplace_back(new hft_3_strategy("SHFE.ag2212", 2, 12, 0.88F, 0.58F, 2));
+
+	//stra_list.emplace_back(new hft_2_strategy("SHFE.ag2301", 1, 0.0028F, 120, 5, 3, 1));
+	//stra_list.emplace_back(new hft_3_strategy("SHFE.ag2301", 2, 8, 0.98F, 0.68F, 2));
 
 	app->back_test(stra_list, all_trading_day);
 }
@@ -142,6 +148,7 @@ int main(int argc,char* argv[])
 		20221027,
 		20221028,
 		20221031,
+		
 		20221101,
 		20221102,
 		20221103,
@@ -193,9 +200,9 @@ int main(int argc,char* argv[])
 	};
 
 	
-	//start_evaluate("SHFE.rb2301", trading_day_2301);
+	start_evaluate( trading_day_2301);
 	//start_evaluate("SHFE.rb2305", trading_day_2305);
-	//return 0;
+	return 0;
 	const char* config_file = "rt_hx_zjh.ini";
 	int account_type = 0;
 	//获取参数

@@ -846,8 +846,6 @@ bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 void tick_simulator::crossday_settlement()
 {
 	_order_info.clear();
-	_account_info.frozen_monery = .0F;
-	bool is_change = false;
 	for (auto& it : _position_info)
 	{
 		if(it.second.yestoday_long.postion + it.second.today_long.postion>0)
@@ -865,10 +863,5 @@ void tick_simulator::crossday_settlement()
 		it.second.today_long.clear();
 		it.second.today_short.clear();
 		this->fire_event(ET_PositionChange, it.second);
-		is_change = true;
-	}
-	if (is_change)
-	{
-		this->fire_event(ET_AccountChange, _account_info);
 	}
 }

@@ -38,7 +38,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 			once = static_cast<uint32_t>(std::round(pos.today_long.usable() * _beta + _open_once));
 			once = pos.today_long.usable() < once ? pos.today_long.usable() : once;
 		}
-		double_t buy_price = tick.buy_price() - _random(_random_engine) - (pos.today_long.usable() * _alpha + _open_once) * _delta;
+		double_t buy_price = tick.buy_price() - _random(_random_engine) - (pos.today_long.usable() * _alpha / _open_once + _open_once) * _delta;
 		buy_price = buy_price < tick.buy_price() ? buy_price : tick.buy_price() ;
 		buy_price = std::round(buy_price);
 		if (buy_price > tick.low_limit)
@@ -61,7 +61,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 			once = static_cast<uint32_t>(std::round(pos.today_short.usable() * _beta + _open_once));
 			once = pos.today_short.usable() < once ? pos.today_short.usable() : once;
 		}
-		double_t sell_price = tick.sell_price() + _random(_random_engine) + (pos.today_short.usable() * _alpha + _open_once) * _delta;;
+		double_t sell_price = tick.sell_price() + _random(_random_engine) + (pos.today_short.usable() * _alpha / _open_once + _open_once) * _delta;;
 		sell_price = sell_price > tick.sell_price() ? sell_price : tick.sell_price() ;
 		sell_price = std::round(sell_price);
 		if (sell_price < tick.high_limit)
