@@ -193,9 +193,9 @@ int main(int argc,char* argv[])
 	};
 
 	
-	start_evaluate("SHFE.rb2301", trading_day_2301);
+	//start_evaluate("SHFE.rb2301", trading_day_2301);
 	//start_evaluate("SHFE.rb2305", trading_day_2305);
-	return 0;
+	//return 0;
 	const char* config_file = "rt_hx_zjh.ini";
 	int account_type = 0;
 	//获取参数

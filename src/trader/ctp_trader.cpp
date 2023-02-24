@@ -397,18 +397,20 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			position = it->second;
 		}
 		
+		double_t avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit);
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
 			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				position.today_long.price = (position.today_long.postion * position.today_long.price + pInvestorPosition->SettlementPrice * pInvestorPosition->TodayPosition) / ( position.today_long.postion+ pInvestorPosition->TodayPosition);
+				position.today_long.price = (position.today_long.postion * position.today_long.price + avg_price * pInvestorPosition->TodayPosition) / ( position.today_long.postion + pInvestorPosition->TodayPosition);
 				position.today_long.postion += pInvestorPosition->TodayPosition;
 				position.today_long.frozen += pInvestorPosition->ShortFrozen;
 				
 			}else
 			{
-				position.yestoday_long.price = (position.yestoday_long.price* position.yestoday_long.postion + pInvestorPosition->SettlementPrice *(pInvestorPosition->Position - pInvestorPosition->TodayPosition)) / (position.yestoday_long.postion + pInvestorPosition->Position - pInvestorPosition->TodayPosition);
-				position.yestoday_long.postion += pInvestorPosition->Position - pInvestorPosition->TodayPosition;
+				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
+				position.yestoday_long.price = (position.yestoday_long.price* position.yestoday_long.postion + avg_price * yestoday_position) / (position.yestoday_long.postion + yestoday_position);
+				position.yestoday_long.postion += yestoday_position;
 				position.yestoday_long.frozen += pInvestorPosition->ShortFrozen;
 			}
 		}
@@ -416,15 +418,16 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 		{
 			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				position.today_short.price = (position.today_short.price * position.today_short.postion+ pInvestorPosition->TodayPosition * pInvestorPosition->SettlementPrice) / (position.today_short.postion + pInvestorPosition->TodayPosition);
+				position.today_short.price = (position.today_short.price * position.today_short.postion+ pInvestorPosition->TodayPosition * avg_price) / (position.today_short.postion + pInvestorPosition->TodayPosition);
 				position.today_short.postion += pInvestorPosition->TodayPosition;
 				position.today_short.frozen += pInvestorPosition->LongFrozen;
 				
 			}
 			else
 			{
-				position.yestoday_short.price = (position.yestoday_short.price * position.yestoday_short.postion + pInvestorPosition->SettlementPrice * (pInvestorPosition->Position - pInvestorPosition->TodayPosition)) / (position.yestoday_short.postion + pInvestorPosition->Position - pInvestorPosition->TodayPosition);
-				position.yestoday_short.postion += pInvestorPosition->Position - pInvestorPosition->TodayPosition;;
+				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
+				position.yestoday_short.price = (position.yestoday_short.price * position.yestoday_short.postion + avg_price * yestoday_position) / (position.yestoday_short.postion + yestoday_position);
+				position.yestoday_short.postion += yestoday_position;
 				position.yestoday_short.frozen += pInvestorPosition->LongFrozen;
 				
 			}
