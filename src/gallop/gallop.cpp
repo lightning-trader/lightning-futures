@@ -62,14 +62,14 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
 	//20w
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 1, 0.0028F, 120, 5, 3, 1));
-	stra_list.emplace_back(new hft_3_strategy("SHFE.rb2301", 2, 9, 0.88F, 0.58F, 2));
+	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 1, 0.0028F, 120, 6, 4, 1));
+	stra_list.emplace_back(new hft_3_strategy("SHFE.rb2301", 1, 9, 0.88F, 0.58F, 2));
 	
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 1));
 	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 2, 6, 0.98F, 0.68F, 2));
 
-	stra_list.emplace_back(new hft_2_strategy("SHFE.ag2212", 1, 0.0028F, 120, 5, 3, 1));
-	stra_list.emplace_back(new hft_3_strategy("SHFE.ag2212", 2, 12, 0.88F, 0.58F, 2));
+	//stra_list.emplace_back(new hft_2_strategy("SHFE.ag2212", 1, 0.0028F, 120, 6, 4, 1));
+	//stra_list.emplace_back(new hft_3_strategy("SHFE.ag2212", 1, 12, 0.88F, 0.58F, 2));
 
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.ag2301", 1, 0.0028F, 120, 5, 3, 1));
 	//stra_list.emplace_back(new hft_3_strategy("SHFE.ag2301", 2, 8, 0.98F, 0.68F, 2));

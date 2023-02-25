@@ -9,6 +9,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/pool/object_pool.hpp>
 #include "order_container.h"
+#include "contract_parser.h"
 
 
 class tick_simulator : public simulator
@@ -52,9 +53,8 @@ private:
 
 	uint32_t	_interval;			//间隔毫秒数
 	
-	double_t	_service_charge ;	//手续费
-	uint32_t	_multiple ;			//资金倍数
-	double_t	_margin_rate ;		//保证金率
+	contract_parser	_contract_parser;	//合约信息配置
+	
 	double_t	_compulsory_factor; //低于现有资金比例以后触发强平
 
 public:
@@ -66,9 +66,6 @@ public:
 		_current_tick(0),
 		_current_index(0),
 		_order_ref(0),
-		_service_charge(0),
-		_margin_rate(0),
-		_multiple(0),
 		_interval(1),
 		_compulsory_factor(1),
 		_is_submit_return(true)

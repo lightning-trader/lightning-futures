@@ -1,6 +1,7 @@
 ﻿#include "tick_simulator.h"
 #include <data_types.hpp>
 #include <event_center.hpp>
+#include "contract_parser.h"
 #include "./tick_loader/csv_tick_loader.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -11,9 +12,8 @@ bool tick_simulator::init(const boost::property_tree::ptree& config)
 	try
 	{
 		_account_info.money = config.get<double_t>("initial_capital");
-		_service_charge = config.get<double_t>("service_charge");
-		_multiple = config.get<uint32_t>("multiple");
-		_margin_rate = config.get<double_t>("margin_rate");
+		auto contract_file = config.get<std::string>("contract_config");
+		_contract_parser.init(contract_file);
 		_interval = config.get<uint32_t>("interval",1);
 		_compulsory_factor = config.get<double_t>("compulsory_factor", 0.8);
 		loader_type = config.get<std::string>("loader_type");
@@ -638,27 +638,34 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 	
 	auto& pos = _position_info[order.code];
 	pos.id = order.code;
+	auto contract_info = _contract_parser.get_contract_info(order.code);
+	if(contract_info == nullptr)
+	{
+		LOG_ERROR("tick_simulator order_deal cant find the contract_info for %s", order.code.get_id());
+		return;
+	}
+	double_t service_charge = contract_info->get_service_charge(order.price, order.offset, is_today);
 	if(order.offset == OT_OPEN)
 	{
 		//开仓
 		if(order.direction == DT_LONG)
 		{
 			
-			if(_account_info.money >= deal_volume * _service_charge)
+			if(_account_info.money >= deal_volume * service_charge)
 			{
 				pos.today_long.price = (pos.today_long.price * pos.today_long.postion + order.price * deal_volume) / (pos.today_long.postion + deal_volume);
 				pos.today_long.postion += deal_volume;
-				_account_info.money -=  deal_volume * _service_charge;
+				_account_info.money -=  deal_volume * service_charge;
 			}
 			
 		}
 		else if (order.direction == DT_SHORT)
 		{
-			if(_account_info.money >= deal_volume * _service_charge)
+			if(_account_info.money >= deal_volume * service_charge)
 			{
 				pos.today_short.price = (pos.today_short.price * pos.today_short.postion + order.price * deal_volume) / (pos.today_short.postion + deal_volume);
 				pos.today_short.postion += deal_volume;
-				_account_info.money -= (deal_volume * _service_charge);
+				_account_info.money -= (deal_volume * service_charge);
 			}
 		}
 	}
@@ -670,19 +677,19 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 			
 			if (is_today)
 			{
-				_account_info.money += (deal_volume * (order.price - pos.today_long.price) * _multiple);
+				_account_info.money += (deal_volume * (order.price - pos.today_long.price) * contract_info->multiple);
 				pos.today_long.postion -= deal_volume;
 				pos.today_long.frozen -= deal_volume;
-				_account_info.frozen_monery -= (deal_volume * pos.today_long.price * _multiple * _margin_rate);
+				_account_info.frozen_monery -= (deal_volume * pos.today_long.price * contract_info->multiple * contract_info->margin_rate);
 			}
 			else
 			{
-				_account_info.money += (deal_volume * (order.price - pos.yestoday_long.price) * _multiple);
+				_account_info.money += (deal_volume * (order.price - pos.yestoday_long.price) * contract_info->multiple);
 				pos.yestoday_long.postion -= deal_volume;
 				pos.yestoday_long.frozen -= deal_volume;
-				_account_info.frozen_monery -= (deal_volume * pos.yestoday_long.price * _multiple * _margin_rate);
+				_account_info.frozen_monery -= (deal_volume * pos.yestoday_long.price * contract_info->multiple * contract_info->margin_rate);
 			}
-			_account_info.money -= (deal_volume * _service_charge);
+			_account_info.money -= (deal_volume * service_charge);
 			
 		}
 		else if (order.direction == DT_SHORT)
@@ -690,19 +697,19 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 			
 			if (is_today)
 			{
-				_account_info.money += (deal_volume * (pos.today_short.price - order.price) * _multiple);
+				_account_info.money += (deal_volume * (pos.today_short.price - order.price) * contract_info->multiple);
 				pos.today_short.postion -= deal_volume;
 				pos.today_short.frozen -= deal_volume;
-				_account_info.frozen_monery -= (deal_volume * pos.today_short.price * _multiple * _margin_rate);
+				_account_info.frozen_monery -= (deal_volume * pos.today_short.price * contract_info->multiple * contract_info->margin_rate);
 			}
 			else
 			{
-				_account_info.money += (deal_volume * (pos.yestoday_short.price - order.price) * _multiple);
+				_account_info.money += (deal_volume * (pos.yestoday_short.price - order.price) * contract_info->multiple);
 				pos.yestoday_short.postion -= deal_volume;
 				pos.yestoday_short.frozen -= deal_volume;
-				_account_info.frozen_monery -= (deal_volume * pos.yestoday_short.price * _multiple * _margin_rate);
+				_account_info.frozen_monery -= (deal_volume * pos.yestoday_short.price * contract_info->multiple * contract_info->margin_rate);
 			}
-			_account_info.money -= deal_volume * _service_charge;
+			_account_info.money -= deal_volume * service_charge;
 		}
 	}
 	order.last_volume =_order_info.set_last_volume(order.est_id,order.last_volume - deal_volume);
@@ -742,9 +749,15 @@ void tick_simulator::order_cancel(const order_info& order,bool is_today)
 }
 uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price,bool is_today)
 {
+	auto contract_info = _contract_parser.get_contract_info(code);
+	if (contract_info == nullptr)
+	{
+		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for %s", code.get_id());
+		return 10000U;
+	}
 	if (offset == OT_OPEN)
 	{
-		double_t frozen_monery = (count * price * _multiple * _margin_rate);
+		double_t frozen_monery = (count * price * contract_info->multiple * contract_info->margin_rate);
 		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
 		{
 			return 31U;
@@ -806,10 +819,17 @@ uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offs
 }
 bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price,bool is_today)
 {
-	_account_info.money+= last_volume * _service_charge;
+	auto contract_info = _contract_parser.get_contract_info(code);
+	if (contract_info == nullptr)
+	{
+		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for %s", code.get_id());
+		return false;
+	}
+	double_t service_charge = contract_info->get_service_charge(price, offset, is_today);
+	_account_info.money+= last_volume * service_charge;
 	if (offset == OT_OPEN)
 	{
-		double_t delta = (last_volume * price * _multiple * _margin_rate);
+		double_t delta = (last_volume * price * contract_info->multiple * contract_info->margin_rate);
 		//撤单 取消冻结保证金
 		_account_info.frozen_monery -= delta;
 	}
