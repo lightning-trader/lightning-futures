@@ -49,7 +49,7 @@ estid_t strategy::place_order(offset_type offset, direction_type direction, cons
 		LOG_ERROR("strategy place_order _manager is nullptr");
 		return INVALID_ESTID;
 	}
-	estid_t estid = lt_place_order(_manager->get_lt(), offset, direction, code, count, price, flag);
+	estid_t estid = lt_place_order(_manager->get_lt(),get_id(), offset, direction, code, count, price, flag);
 	if(estid != INVALID_ESTID)
 	{
 		_manager->regist_estid_strategy(estid,this);
@@ -123,6 +123,15 @@ time_t strategy::get_last_time() const
 		return -1;
 	}
 	return lt_get_last_time(_manager->get_lt());
+}
+
+void strategy::use_custom_chain(trading_optimal opt, bool flag)
+{
+	if (_manager == nullptr)
+	{
+		return ;
+	}
+	return lt_use_custom_chain(_manager->get_lt(),get_id(),opt,flag);
 }
 
 void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const tick_info&)> callback)

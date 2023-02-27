@@ -78,7 +78,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	/*
 	下单
 	*/
-	LT_INTERFACE_DECLARE(estid_t, place_order, (const ltobj&, offset_type, direction_type, const code_t&, uint32_t, double_t, order_flag));
+	LT_INTERFACE_DECLARE(estid_t, place_order, (const ltobj&, untid_t, offset_type, direction_type, const code_t&, uint32_t, double_t, order_flag));
 	
 	/*
 	* 撤销订单
@@ -170,5 +170,8 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	*/
 	LT_INTERFACE_DECLARE(time_t, get_close_time, (const ltobj&));
 
-
+	/**
+	* 使用自定义交易通道
+	*/
+	LT_INTERFACE_DECLARE(void, use_custom_chain, (const ltobj&, untid_t, trading_optimal, bool));
 }

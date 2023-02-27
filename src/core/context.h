@@ -45,7 +45,9 @@ private:
 
 	uint32_t _max_position;
 	
-	class pod_chain* _chain;
+	class pod_chain* _default_chain;
+
+	std::unordered_map<untid_t, pod_chain*> _custom_chain;
 	
 	std::map<estid_t, condition_callback> _need_check_condition;
 
@@ -66,6 +68,8 @@ private:
 	bool _is_trading_ready ;
 
 	std::shared_ptr<trading_section> _section ;
+
+	bool _fast_mode ;
 
 
 public:
@@ -100,7 +104,7 @@ public:
 	*/
 	void set_trading_filter(filter_callback callback);
 
-	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
+	estid_t place_order(untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
 	
 	void cancel_order(estid_t order_id);
 	
@@ -131,6 +135,7 @@ public:
 
 	time_t get_close_time();
 
+	void use_custom_chain(untid_t untid, trading_optimal opt, bool flag);
 
 private:
 
@@ -143,8 +148,6 @@ private:
 	void handle_crossday(const std::vector<std::any>& param);
 
 	void handle_ready(const std::vector<std::any>& param);
-
-	void handle_end(const std::vector<std::any>& param);
 
 	void handle_entrust(const std::vector<std::any>& param);
 
@@ -163,6 +166,8 @@ private:
 	void remove_invalid_condition(estid_t order_id);
 
 	class pod_chain * create_chain(trading_optimal opt, bool flag,std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> fliter_callback);
+
+	pod_chain * get_chain(untid_t untid);
 
 protected:
 

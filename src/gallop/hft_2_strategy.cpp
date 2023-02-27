@@ -4,7 +4,8 @@
 
 void hft_2_strategy::on_init()
 {
-	subscribe(_code);	
+	subscribe(_code);
+	use_custom_chain(TO_OPEN_TO_CLOSE,false);
 }
 
 void hft_2_strategy::on_ready() 

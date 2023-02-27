@@ -12,8 +12,8 @@
 context::context():
 	_is_runing(false),
 	_strategy_thread(nullptr),
-	_max_position(1),
-	_chain(nullptr),
+	_max_position(10000),
+	_default_chain(nullptr),
 	_trading_filter(nullptr),
 	_userdata_block(16),
 	_userdata_size(1024),
@@ -28,7 +28,8 @@ context::context():
 	on_ready(nullptr),
 	_operational_region(nullptr),
 	_operational_data(nullptr),
-	_section(nullptr)
+	_section(nullptr),
+	_fast_mode(false)
 {
 
 }
@@ -42,28 +43,34 @@ context::~context()
 	{
 		it->flush();
 	}
-	if(_chain)
+	if(_default_chain)
 	{
-		delete _chain ;
-		_chain = nullptr ;
+		delete _default_chain;
+		_default_chain = nullptr ;
 	}
+	for(auto it : _custom_chain)
+	{
+		delete it.second;
+	}
+	_custom_chain.clear();
 	if(_recorder)
 	{
 		destory_recorder(_recorder);
 	}
 }
 
-bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config)
+bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config)
 {
-	auto& localdb_name = localdb.get<std::string>("localdb_name");
+	auto& localdb_name = ctrl.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
 	{
-		size_t operational_size = localdb.get<size_t>("operational_size",1024);
-		_userdata_block = localdb.get<size_t>("userdata_block", 16);
-		_userdata_size = localdb.get<size_t>("userdata_size", 1024);
+		size_t operational_size = ctrl.get<size_t>("operational_size",1024);
+		_userdata_block = ctrl.get<size_t>("userdata_block", 16);
+		_userdata_size = ctrl.get<size_t>("userdata_size", 1024);
 		load_data(localdb_name.c_str(), operational_size);
 	}
-
+	_max_position = ctrl.get<uint16_t>("position_limit", 10000);
+	_fast_mode = ctrl.get<bool>("fast_mode", false);
 	_recorder = create_recorder(rcd_config);
 
 	auto trader = get_trader();
@@ -74,10 +81,9 @@ bool context::init(boost::property_tree::ptree& localdb, boost::property_tree::p
 
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
-	_max_position = 200;
-	trading_optimal to_optimal = TO_OPEN_TO_CLOSE;
-	bool is_to_cancel = false;
-	_chain = create_chain(to_optimal, is_to_cancel, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool{
+	
+
+	_default_chain = create_chain(TO_INVALID, false, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool{
 		if(_trading_filter==nullptr)
 		{
 			return true ;
@@ -126,17 +132,21 @@ void context::start_service()
 {
 	_is_runing = true;
 	_strategy_thread = new std::thread([this]()->void{
-		/*
-		int core = cpu_helper::get_cpu_cores();
-		if (!cpu_helper::bind_core(core - 1))
+		if(_fast_mode)
 		{
-			LOG_ERROR("Binding to core {%d} failed", core);
+			int core = cpu_helper::get_cpu_cores();
+			if (!cpu_helper::bind_core(core - 1))
+			{
+				LOG_ERROR("Binding to core {%d} failed", core);
+			}
 		}
-		*/
 		while (_is_runing)
 		{
 			this->update();
-			std::this_thread::sleep_for(std::chrono::microseconds(1));
+			if (!_fast_mode)
+			{
+				std::this_thread::sleep_for(std::chrono::microseconds(1));
+			}
 		}
 	});
 	//_strategy_thread->detach();
@@ -197,6 +207,16 @@ pod_chain* context::create_chain(trading_optimal opt, bool flag, std::function<b
 	return chain;
 }
 
+pod_chain* context::get_chain(untid_t untid)
+{
+	auto it = _custom_chain.find(untid );
+	if(it != _custom_chain.end())
+	{
+		return it->second;
+	}
+	return _default_chain;
+}
+
 void context::set_cancel_condition(estid_t order_id, condition_callback callback)
 {
 	LOG_DEBUG("context set_cancel_condition : %llu\n", order_id);
@@ -208,13 +228,9 @@ void context::set_trading_filter(filter_callback callback)
 	_trading_filter = callback;
 }
 
-estid_t context::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
+estid_t context::place_order(untid_t untid,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
-	if (_chain == nullptr)
-	{
-		LOG_ERROR("place_order _chain nullptr");
-		return INVALID_ESTID;
-	}
+	
 	if (!_is_trading_ready)
 	{
 		LOG_DEBUG("place_order _is_trading_ready");
@@ -223,6 +239,13 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 	if(!_section->is_in_trading(get_last_time()))
 	{
 		LOG_DEBUG("place_order code in trading %s", code.get_id());
+		return INVALID_ESTID;
+	}
+
+	auto chain = get_chain(untid);
+	if (chain == nullptr)
+	{
+		LOG_ERROR("place_order _chain nullptr");
 		return INVALID_ESTID;
 	}
 	if(_operational_data)
@@ -234,7 +257,7 @@ estid_t context::place_order(offset_type offset, direction_type direction, const
 		}
 		_operational_data->statistic_info.place_order_amount++;
 	}
-	return _chain->place_order(offset, direction, code, count, price, flag);
+	return chain->place_order(offset, direction, code, count, price, flag);
 }
 
 void context::cancel_order(estid_t order_id)
@@ -375,6 +398,22 @@ time_t context::get_close_time()
 	return _section->get_clase_time();
 }
 
+void context::use_custom_chain(untid_t untid,trading_optimal opt, bool flag)
+{
+	auto it = _custom_chain.find(untid);
+	if(it != _custom_chain.end())
+	{
+		delete it->second;
+	}
+	auto chain = create_chain(opt, flag, [this](const code_t& code, offset_type offset, direction_type direction, order_flag flag)->bool {
+		if (_trading_filter == nullptr)
+		{
+			return true;
+		}
+		return _trading_filter(code, offset, direction, flag);
+		});
+	_custom_chain[untid] = chain;
+}
 
 void context::load_data(const char* localdb_name,size_t oper_size)
 {

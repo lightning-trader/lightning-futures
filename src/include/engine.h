@@ -4,6 +4,7 @@
 #include <functional>
 #include <strategy.h>
 
+
 class engine
 {
 

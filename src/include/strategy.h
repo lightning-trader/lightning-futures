@@ -4,6 +4,7 @@
 #include <lightning.h>
 #include <functional>
 
+typedef untid_t straid_t;
 
 class strategy
 {
@@ -163,6 +164,11 @@ protected:
 	* 
 	*/
 	time_t get_last_time() const ;
+
+	/**
+	* 使用自定义交易通道
+	*/
+	void use_custom_chain(trading_optimal opt, bool flag);
 
 	/*
 	* 设置撤销条件(返回true时候撤销)

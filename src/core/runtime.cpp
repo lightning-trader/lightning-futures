@@ -33,7 +33,7 @@ bool runtime::init_from_file(const std::string& config_path)
 	boost::property_tree::ptree	market_config;
 	boost::property_tree::ptree	trader_config;
 	boost::property_tree::ptree  recorder_config;
-	boost::property_tree::ptree  localdb_config;
+	boost::property_tree::ptree  control_config;
 	boost::property_tree::ptree  include_config;
 
 	if (!file_wapper::exists(config_path.c_str()))
@@ -48,7 +48,7 @@ bool runtime::init_from_file(const std::string& config_path)
 		market_config = config_root.get_child("market_api");
 		trader_config = config_root.get_child("trader_api");
 		recorder_config = config_root.get_child("recorder");
-		localdb_config = config_root.get_child("localdb");
+		control_config = config_root.get_child("control");
 		include_config = config_root.get_child("include");
 	}
 	catch (...)
@@ -72,7 +72,7 @@ bool runtime::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
 		return false;
 	}
-	return this->init(localdb_config, include_config, recorder_config);
+	return this->init(control_config, include_config, recorder_config);
 }
 
 trader_api* runtime::get_trader()

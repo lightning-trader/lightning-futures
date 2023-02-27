@@ -100,8 +100,7 @@ public:
 		return true ;
 	}
 };
-
-typedef uint32_t straid_t;
+typedef uint8_t untid_t;
 
 typedef uint64_t estid_t;
 
