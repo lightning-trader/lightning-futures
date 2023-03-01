@@ -35,6 +35,7 @@ csv_recorder::csv_recorder(const char* basic_path) :_is_dirty(false), _order_lif
 	_position_flow_csv.SetColumnName(3, "short_postion");
 	_position_flow_csv.SetColumnName(4, "long_frozen");
 	_position_flow_csv.SetColumnName(5, "short_frozen");
+	_position_flow_csv.SetColumnName(6, "absolute_position");
 
 	_account_flow_csv.SetColumnName(0, "time");
 	_account_flow_csv.SetColumnName(1, "money");
@@ -133,7 +134,8 @@ void csv_recorder::record_position_flow(time_t time, const position_info& positi
 		row_data.emplace_back(boost::lexical_cast<std::string>(position.get_short_position()));
 		row_data.emplace_back(boost::lexical_cast<std::string>(position.get_long_frozen()));
 		row_data.emplace_back(boost::lexical_cast<std::string>(position.get_short_frozen()));
-
+		int absolute_position = position.get_long_position() - position.get_short_position();
+		row_data.emplace_back(boost::lexical_cast<std::string>(absolute_position));
 		_position_flow_csv.InsertRow<std::string>(count, row_data);
 		_position_flow_csv.Save(_basic_path + "/position_flow.csv");
 	}

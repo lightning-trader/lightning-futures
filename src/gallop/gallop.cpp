@@ -27,18 +27,18 @@ void start_runtime(const char * config_file,int account_type,int multiple)
 		case 30:
 			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 2 * multiple, 0.0028F, 120, 6, 5, 1));
 			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", multiple, 9, 0.88F, 0.58F, 2));
-			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.ag2306", 2 * multiple, 0.0038F, 120, 8, 6, 1));
-			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.ag2306", multiple, 12, 0.98F, 0.88F, 2));
+			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.ag2306", multiple, 0.0028F, 120, 8, 6, 1));
+			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.ag2306", multiple, 10, 0.98F, 0.88F, 2));
 			break;
 		
 		case 200:
 			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 12 * multiple, 0.0028F, 120, 6, 5, 1));
 			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 6 * multiple, 9, 0.88F, 0.58F, 2));
-			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2306", 2 * multiple, 0.0028F, 120, 5, 3, 1));
-			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", multiple, 8, 0.98F, 0.68F, 2));
-			app->add_strategy(4, std::make_shared<hft_2_strategy>("SHFE.ag2306", 12 * multiple, 0.0038F, 120, 8, 6, 1));
-			app->add_strategy(5, std::make_shared<hft_3_strategy>("SHFE.ag2306", 6 * multiple, 12, 0.98F, 0.88F, 2));
-			app->add_strategy(6, std::make_shared<hft_2_strategy>("SHFE.ag2305", 2 * multiple, 0.0038F, 120, 6, 5, 1));
+			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2306", 2 * multiple, 0.0028F, 120, 6, 5, 1));
+			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", multiple, 9, 0.88F, 0.58F, 2));
+			app->add_strategy(4, std::make_shared<hft_2_strategy>("SHFE.ag2306", 6 * multiple, 0.0028F, 120, 8, 6, 1));
+			app->add_strategy(5, std::make_shared<hft_3_strategy>("SHFE.ag2306", 6 * multiple, 10, 0.98F, 0.88F, 2));
+			app->add_strategy(6, std::make_shared<hft_2_strategy>("SHFE.ag2305", multiple, 0.0028F, 120, 8, 6, 1));
 			app->add_strategy(7, std::make_shared<hft_3_strategy>("SHFE.ag2305", multiple, 10, 0.98F, 0.88F, 2));
 			break;
 	}
@@ -52,6 +52,7 @@ void start_runtime(const char * config_file,int account_type,int multiple)
 void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 {
 	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
+	
 	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction ,double_t price, order_flag flag)->bool{
 		if(offset == OT_OPEN)
 		{
@@ -68,7 +69,7 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 		
 		return true;
 	});
-
+	
 	//20w
 	std::vector<std::shared_ptr<strategy>> stra_list;
 	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 2, 0.0028F, 120, 6, 5, 1));
@@ -77,11 +78,11 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 2, 0.0028F, 120, 5, 3, 1));
 	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 1, 8, 0.98F, 0.68F, 2));
 
-	stra_list.emplace_back(new hft_2_strategy("SHFE.ag2212", 1, 0.0028F, 120, 8, 7, 1));
-	stra_list.emplace_back(new hft_3_strategy("SHFE.ag2212", 1, 12, 0.98F, 0.88F, 2));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.ag2212", 1, 0.0028F, 120, 8, 6, 1));
+	stra_list.emplace_back(new hft_3_strategy("SHFE.ag2212", 1, 10, 0.98F, 0.88F, 2));
 
-	//stra_list.emplace_back(new hft_2_strategy("SHFE.ag2301", 1, 0.0038F, 120, 6, 5, 1));
-	//stra_list.emplace_back(new hft_3_strategy("SHFE.ag2301", 1, 10, 0.98F, 0.88F, 2));
+	//stra_list.emplace_back(new hft_2_strategy("SHFE.ag2301", 1, 0.0028F, 120, 6, 5, 1));
+	//stra_list.emplace_back(new hft_3_strategy("SHFE.ag2301", 1, 9, 0.98F, 0.88F, 2));
 
 	app->back_test(stra_list, all_trading_day);
 }
