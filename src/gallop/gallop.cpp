@@ -12,34 +12,34 @@
 #pragma comment (lib,"lightning.lib")
 #pragma comment (lib,"libltpp.lib")
 
-void start_runtime(const char * config_file,int account_type)
+void start_runtime(const char * config_file,int account_type,int multiple)
 {
 	auto app = std::make_shared<runtime_engine>(config_file);
 	switch(account_type)
 	{
 		case 0:
-			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 1, 0.0028F, 120, 5, 3, 2));
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", multiple, 0.0028F, 120, 5, 3, 2));
 			break;
 		case 10:
-			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 2, 0.0028F, 120, 6, 5, 1));
-			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 1, 9, 0.88F, 0.58F, 2));
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 2 * multiple, 0.0028F, 120, 6, 5, 1));
+			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", multiple, 9, 0.88F, 0.58F, 2));
 			break;
 		case 30:
-			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 2, 0.0028F, 120, 6, 5, 1));
-			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 1, 9, 0.88F, 0.58F, 2));
-			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.ag2306", 1, 0.0038F, 120, 8, 7, 1));
-			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.ag2306", 1, 12, 0.98F, 0.88F, 2));
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 2 * multiple, 0.0028F, 120, 6, 5, 1));
+			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", multiple, 9, 0.88F, 0.58F, 2));
+			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.ag2306", 2 * multiple, 0.0038F, 120, 8, 6, 1));
+			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.ag2306", multiple, 12, 0.98F, 0.88F, 2));
 			break;
 		
-		case 500:
-			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 20, 0.0028F, 120, 6, 5, 1));
-			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 10, 9, 0.88F, 0.58F, 2));
-			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2306", 20, 0.0028F, 120, 5, 3, 1));
-			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", 10, 8, 0.98F, 0.68F, 2));
-			app->add_strategy(4, std::make_shared<hft_2_strategy>("SHFE.ag2306", 10, 0.0038F, 120, 8, 7, 1));
-			app->add_strategy(5, std::make_shared<hft_3_strategy>("SHFE.ag2306", 10, 12, 0.98F, 0.88F, 2));
-			app->add_strategy(6, std::make_shared<hft_2_strategy>("SHFE.ag2305", 10, 0.0038F, 120, 6, 5, 1));
-			app->add_strategy(7, std::make_shared<hft_3_strategy>("SHFE.ag2305", 10, 10, 0.98F, 0.88F, 2));
+		case 200:
+			app->add_strategy(0, std::make_shared<hft_2_strategy>("SHFE.rb2305", 12 * multiple, 0.0028F, 120, 6, 5, 1));
+			app->add_strategy(1, std::make_shared<hft_3_strategy>("SHFE.rb2305", 6 * multiple, 9, 0.88F, 0.58F, 2));
+			app->add_strategy(2, std::make_shared<hft_2_strategy>("SHFE.rb2306", 2 * multiple, 0.0028F, 120, 5, 3, 1));
+			app->add_strategy(3, std::make_shared<hft_3_strategy>("SHFE.rb2306", multiple, 8, 0.98F, 0.68F, 2));
+			app->add_strategy(4, std::make_shared<hft_2_strategy>("SHFE.ag2306", 12 * multiple, 0.0038F, 120, 8, 6, 1));
+			app->add_strategy(5, std::make_shared<hft_3_strategy>("SHFE.ag2306", 6 * multiple, 12, 0.98F, 0.88F, 2));
+			app->add_strategy(6, std::make_shared<hft_2_strategy>("SHFE.ag2305", 2 * multiple, 0.0038F, 120, 6, 5, 1));
+			app->add_strategy(7, std::make_shared<hft_3_strategy>("SHFE.ag2305", multiple, 10, 0.98F, 0.88F, 2));
 			break;
 	}
 
@@ -52,6 +52,23 @@ void start_runtime(const char * config_file,int account_type)
 void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 {
 	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
+	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction ,double_t price, order_flag flag)->bool{
+		if(offset == OT_OPEN)
+		{
+			auto pos = app->get_position(code);
+			if (direction == DT_LONG && pos.today_long.postion > 0 && price > pos.today_long.price)
+			{
+				return false;
+			}
+			if (direction == DT_SHORT && pos.today_short.postion > 0 && price < pos.today_short.price)
+			{
+				return false;
+			}
+		}
+		
+		return true;
+	});
+
 	//20w
 	std::vector<std::shared_ptr<strategy>> stra_list;
 	stra_list.emplace_back(new hft_2_strategy("SHFE.rb2301", 2, 0.0028F, 120, 6, 5, 1));
@@ -60,7 +77,7 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day)
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.rb2305", 2, 0.0028F, 120, 5, 3, 1));
 	//stra_list.emplace_back(new hft_3_strategy("SHFE.rb2305", 1, 8, 0.98F, 0.68F, 2));
 
-	stra_list.emplace_back(new hft_2_strategy("SHFE.ag2212", 1, 0.0038F, 120, 8, 7, 1));
+	stra_list.emplace_back(new hft_2_strategy("SHFE.ag2212", 1, 0.0028F, 120, 8, 7, 1));
 	stra_list.emplace_back(new hft_3_strategy("SHFE.ag2212", 1, 12, 0.98F, 0.88F, 2));
 
 	//stra_list.emplace_back(new hft_2_strategy("SHFE.ag2301", 1, 0.0038F, 120, 6, 5, 1));
@@ -197,13 +214,22 @@ int main(int argc,char* argv[])
 	return 0;
 	const char* config_file = "rt_hx_zjh.ini";
 	int account_type = 0;
+	int multiple = 1;
 	//获取参数
-	if(argc >= 3)
+	if(argc >= 2)
 	{
 		config_file = argv[1];
+	}
+	if (argc >= 3)
+	{
 		account_type = std::atoi(argv[2]);
 	}
-	LOG_INFO("start runtime %s for %d", config_file, account_type);
-	start_runtime(config_file, account_type);
+	if (argc >= 4)
+	{
+		multiple = std::atoi(argv[3]);
+	}
+
+	LOG_INFO("start runtime %s for %d % d", config_file, account_type);
+	start_runtime(config_file, account_type, multiple);
 	return 0;
 }

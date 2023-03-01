@@ -11,6 +11,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include "trading_section.h"
+#include "pod_chain.h"
 
 struct operational_data
 {
@@ -45,7 +46,7 @@ private:
 
 	uint32_t _max_position;
 	
-	class pod_chain* _default_chain;
+	pod_chain* _default_chain;
 
 	std::unordered_map<untid_t, pod_chain*> _custom_chain;
 	
@@ -166,7 +167,7 @@ private:
 
 	void remove_invalid_condition(estid_t order_id);
 
-	class pod_chain * create_chain(trading_optimal opt, bool flag,std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> fliter_callback);
+	pod_chain * create_chain(trading_optimal opt, bool flag, filter_callback_function fliter_callback);
 
 	pod_chain * get_chain(untid_t untid);
 

@@ -126,7 +126,7 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 			return INVALID_ESTID;
 		}
 	}
-	if(!_filter_callback(code, offset, direction, flag))
+	if(!_filter_callback(code, offset, direction, price, flag))
 	{
 		return INVALID_ESTID;
 	}

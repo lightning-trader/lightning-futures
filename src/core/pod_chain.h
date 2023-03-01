@@ -87,15 +87,17 @@ public:
 
 };
 
+typedef std::function<bool(const code_t& code, offset_type offset, direction_type direction, double_t price, order_flag flag)> filter_callback_function;
+
 class verify_chain : public pod_chain
 {
 private:
 	uint32_t _max_position ;
 
-	std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> _filter_callback;
+	filter_callback_function _filter_callback;
 public:
 	
-	verify_chain(class trader_api* trader,uint32_t max_position, std::function<bool(const code_t& code, offset_type offset, direction_type direction, order_flag flag)> filter_callback) :pod_chain(trader, nullptr), _max_position(max_position), _filter_callback(filter_callback)
+	verify_chain(class trader_api* trader,uint32_t max_position, filter_callback_function filter_callback) :pod_chain(trader, nullptr), _max_position(max_position), _filter_callback(filter_callback)
 	{}
 
 	virtual ~verify_chain()
