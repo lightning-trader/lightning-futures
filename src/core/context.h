@@ -71,6 +71,7 @@ private:
 
 	bool _fast_mode ;
 
+	uint32_t _loop_interval ;
 
 public:
 

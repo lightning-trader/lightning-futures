@@ -29,7 +29,8 @@ context::context():
 	_operational_region(nullptr),
 	_operational_data(nullptr),
 	_section(nullptr),
-	_fast_mode(false)
+	_fast_mode(false),
+	_loop_interval(1)
 {
 
 }
@@ -71,6 +72,8 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 	}
 	_max_position = ctrl.get<uint16_t>("position_limit", 10000);
 	_fast_mode = ctrl.get<bool>("fast_mode", false);
+	_loop_interval = ctrl.get<uint32_t>("loop_interval", 1);
+
 	_recorder = create_recorder(rcd_config);
 
 	auto trader = get_trader();
@@ -142,10 +145,17 @@ void context::start_service()
 		}
 		while (_is_runing)
 		{
+
+			auto begin = std::chrono::system_clock::now();
 			this->update();
 			if (!_fast_mode)
 			{
-				std::this_thread::sleep_for(std::chrono::microseconds(1));
+				auto use_time =  std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
+				auto duration = std::chrono::microseconds(_loop_interval);
+				if(use_time < duration)
+				{
+					std::this_thread::sleep_for(duration - use_time);
+				}
 			}
 		}
 	});

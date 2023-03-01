@@ -53,6 +53,7 @@ void tick_simulator::play(uint32_t tradeing_day)
 	_is_in_trading = true ;
 	while (_is_in_trading)
 	{
+		auto begin = std::chrono::system_clock::now();
 		handle_submit();
 		//先触发tick，再进行撮合
 		publish_tick();
@@ -60,8 +61,16 @@ void tick_simulator::play(uint32_t tradeing_day)
 		//处理强平
 		compulsory_closing();
 		//std::chrono::milliseconds(_interval)
-		std::this_thread::sleep_for(std::chrono::microseconds(_interval));
-
+		auto use_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
+		auto duration = std::chrono::microseconds(_interval);
+		if (use_time < duration)
+		{
+			std::this_thread::sleep_for(duration - use_time);
+		}
+		else
+		{
+			std::this_thread::sleep_for(std::chrono::microseconds(0));
+		}
 		_last_frame_volume.clear();
 		for (const auto& tick : _current_tick_info)
 		{
