@@ -6,7 +6,7 @@ class hft_3_strategy : public strategy
 {
 public:
 	
-	hft_3_strategy(const code_t& code, uint32_t open_once, int32_t delta,double_t alpha, double_t beta, int32_t random_offset):
+	hft_3_strategy(const code_t& code, uint32_t open_once, int32_t delta,double_t alpha, double_t beta, uint32_t yestoday_ratio, int32_t random_offset):
 		strategy(),
 		_code(code),
 		_open_once(open_once),
@@ -17,6 +17,7 @@ public:
 		_delta(delta),
 		_alpha(alpha),
 		_beta(beta),
+		_yestoday_ratio(yestoday_ratio),
 		_coming_to_close(0),
 		_random(0, random_offset)
 		
@@ -87,6 +88,8 @@ private:
 	double_t _alpha;
 
 	double_t _beta;
+
+	uint32_t _yestoday_ratio;
 
 	estid_t _close_long_order ;
 

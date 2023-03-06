@@ -273,10 +273,7 @@ protected:
 	//
 	typedef std::map<estid_t, order_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, order_info>>> entrust_map;
 	entrust_map				_order_info;
-	
-	//
-	typedef std::map<estid_t, trade_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, trade_info>>> trade_map;
-	trade_map				_trade_info;
+
 
 	//查询状态和计算 合约保证金时候使用
 	std::unordered_map<std::string,bool> _instrument_state;

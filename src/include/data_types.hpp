@@ -247,34 +247,6 @@ struct order_info
 };
 const order_info default_order ;
 
-struct trade_info
-{
-public:
-	trade_info()
-	
-	{}
-	
-	virtual ~trade_info() {}
-
-
-
-protected:
-
-	std::string		est_id;
-
-	code_t			code;
-
-	std::string		unit_id;
-
-	time_t	trade_time;
-	
-	int		volume;
-	
-	double		price;
-	
-	double		amount;
-
-};
 
 //订单统计数据
 struct order_statistic

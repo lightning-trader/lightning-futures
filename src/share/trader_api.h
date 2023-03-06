@@ -70,7 +70,7 @@ public:
 
 };
 
-class futures_trader : public trader_api, public event_source
+class futures_trader : public trader_api, public event_source<32>
 {
 
 };

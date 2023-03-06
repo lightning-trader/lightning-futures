@@ -38,7 +38,6 @@ ctp_trader::~ctp_trader()
 	}
 	_position_info.clear();
 	_order_info.clear();
-	_trade_info.clear();
 }
 
 bool ctp_trader::init(const boost::property_tree::ptree& config)
@@ -533,7 +532,6 @@ void ctp_trader::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoFi
 	if (_is_in_query)
 	{
 		while (!_is_in_query.exchange(false));
-		_trade_info.clear();
 	}
 	if (pRspInfo&& pRspInfo->ErrorID != 0)
 	{

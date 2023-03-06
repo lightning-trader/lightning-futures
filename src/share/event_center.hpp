@@ -26,11 +26,12 @@ struct event_data
 	std::vector<std::any> param;
 };
 
+template<size_t N>
 class event_source
 {
 private:
 
-	boost::lockfree::spsc_queue<event_data, boost::lockfree::capacity<64>>  _event_queue;
+	boost::lockfree::spsc_queue<event_data, boost::lockfree::capacity<N>>  _event_queue;
 	std::vector<std::function<void(event_type, const std::vector<std::any>& param)>> _handle_list;
 
 
