@@ -10,7 +10,7 @@ void engine::add_strategy(straid_t id,std::shared_ptr<strategy> stra)
 	}
 }
 
-void engine::set_trading_filter(std::function<bool(const code_t& code,offset_type offset, direction_type direction,double_t price,order_flag flag)> callback)
+void engine::set_trading_filter(filter_function callback)
 {
 	engine::_filter_function = callback;
 	lt_set_trading_filter(_lt, engine::_filter_callback);

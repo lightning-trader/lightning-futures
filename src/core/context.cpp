@@ -86,12 +86,12 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 	_section = std::make_shared<trading_section>(section_config);
 	
 
-	_default_chain = create_chain(TO_INVALID, false, [this](const code_t& code, offset_type offset, direction_type direction,double_t price, order_flag flag)->bool{
+	_default_chain = create_chain(TO_INVALID, false, [this](const code_t& code, offset_type offset, direction_type direction,uint32_t count,double_t price, order_flag flag)->bool{
 		if(_trading_filter==nullptr)
 		{
 			return true ;
 		}
-		return _trading_filter(code, offset, direction, price, flag);
+		return _trading_filter(code, offset, direction, count, price, flag);
 	});
 	this->add_handle([this](event_type type, const std::vector<std::any>& param)->void {
 		switch (type)
@@ -175,7 +175,7 @@ void context::stop_service()
 
 
 
-pod_chain* context::create_chain(trading_optimal opt, bool flag, filter_callback_function filter_callback)
+pod_chain* context::create_chain(trading_optimal opt, bool flag, filter_function filter_callback)
 {
 
 	auto trader = get_trader();
@@ -415,12 +415,12 @@ void context::use_custom_chain(untid_t untid,trading_optimal opt, bool flag)
 	{
 		delete it->second;
 	}
-	auto chain = create_chain(opt, flag, [this](const code_t& code, offset_type offset, direction_type direction,double_t price, order_flag flag)->bool {
+	auto chain = create_chain(opt, flag, [this](const code_t& code, offset_type offset, direction_type direction,uint32_t count ,double_t price, order_flag flag)->bool {
 		if (_trading_filter == nullptr)
 		{
 			return true;
 		}
-		return _trading_filter(code, offset, direction, price, flag);
+		return _trading_filter(code, offset, direction, count, price, flag);
 		});
 	_custom_chain[untid] = chain;
 }

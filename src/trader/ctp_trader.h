@@ -1,7 +1,6 @@
 #pragma once
 #include <queue>
 #include <stdint.h>
-#include <functional>
 #include <thread>
 #include <define.h>
 #include <trader_api.h>

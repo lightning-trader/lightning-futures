@@ -1,7 +1,6 @@
 #pragma once
 #include <define.h>
 #include <lightning.h>
-#include <functional>
 #include <strategy.h>
 
 
@@ -10,12 +9,12 @@ class engine
 
 private:
 
-	static inline std::function<bool(const code_t& code, offset_type offset, direction_type direction, double_t price, order_flag flag)> _filter_function = nullptr;
-	static inline bool _filter_callback(const code_t& code, offset_type offset, direction_type direction, double_t price, order_flag flag)
+	static inline filter_function _filter_function = nullptr;
+	static inline bool _filter_callback(const code_t& code, offset_type offset, direction_type direction,uint32_t count, double_t price, order_flag flag)
 	{
 		if (_filter_function)
 		{
-			return _filter_function(code, offset, direction, price, flag);
+			return _filter_function(code, offset, direction, count, price, flag);
 		}
 		return true;
 	}
@@ -32,7 +31,7 @@ public:
 	/*
 	* 设置交易过滤器
 	*/
-	void set_trading_filter(std::function<bool(const code_t& code, offset_type offset, direction_type direction, double_t price, order_flag flag)> callback);
+	void set_trading_filter(filter_function callback);
 
 	/**
 	* 获取当前交易日的订单统计

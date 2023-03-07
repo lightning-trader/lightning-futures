@@ -59,6 +59,18 @@ void recorder_proxy::record_update()
 
 recorder_proxy::~recorder_proxy()
 {
+	while (!_order_lifecycle_queue.empty())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	while (!_position_flow_queue.empty())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	while (!_account_flow_queue.empty())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
 	_is_reocding = false ;
 	_record_thread.join();
 	if (_recorder)

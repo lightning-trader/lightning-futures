@@ -4,7 +4,6 @@
 #include <recorder.h>
 #include <lightning.h>
 #include <thread>
-#include <functional>
 #include "event_center.hpp"
 #include "market_api.h"
 #include "trader_api.h"
@@ -167,7 +166,7 @@ private:
 
 	void remove_invalid_condition(estid_t order_id);
 
-	pod_chain * create_chain(trading_optimal opt, bool flag, filter_callback_function fliter_callback);
+	pod_chain * create_chain(trading_optimal opt, bool flag, filter_function fliter_callback);
 
 	pod_chain * get_chain(untid_t untid);
 

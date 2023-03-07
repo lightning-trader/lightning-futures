@@ -2,7 +2,6 @@
 #include <define.h>
 #include <data_types.hpp>
 #include <lightning.h>
-#include <functional>
 
 typedef untid_t straid_t;
 

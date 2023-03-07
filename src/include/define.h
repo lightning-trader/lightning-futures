@@ -7,6 +7,7 @@
 #include <vector>
 #include <stdint.h>
 #include <memory>
+#include <functional>
 
 #ifndef EXPORT_FLAG
 #ifdef _MSC_VER
@@ -100,6 +101,7 @@ public:
 		return true ;
 	}
 };
+
 typedef uint8_t untid_t;
 
 typedef uint64_t estid_t;
@@ -123,6 +125,9 @@ enum direction_type;
 enum event_type;
 
 enum error_type;
+
+typedef std::function<bool(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)> filter_function;
+
 
 typedef enum log_level
 {

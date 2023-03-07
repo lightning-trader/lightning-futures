@@ -63,7 +63,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef void (PORTER_FLAG * ready_callback)();
 
-	typedef bool (PORTER_FLAG * filter_callback)(const code_t& code, offset_type offset, direction_type direction, double_t price, order_flag flag);
+	typedef bool (PORTER_FLAG * filter_callback)(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag);
 
 	EXPORT_FLAG ltobj lt_create_context(context_type ctx_type, const char* config_path);
 	
