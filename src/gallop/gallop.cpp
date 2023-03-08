@@ -31,18 +31,31 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(in
 	auto result = std::make_shared<std::map<straid_t,std::shared_ptr<strategy>>>();
 	switch (account_type)
 	{
-	case 0:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple, 0.0028F, 120, 5, 3, 2);
+	case 10:
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple, 0.0036F, 3, 8, 1.8F, 3);
 		break;
 	case 20:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple, 0.0028F, 120, 5, 3, 2);
-		(*result)[1] = std::make_shared<hft_3_strategy>(rb_second, multiple, 9, 1.98F, 0.36F, 8, 2);
+		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.38F, 0.78F, 20, 2);
+		break;
+	case 30:
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0036F, 3, 8, 1.8F, 3);
+		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.38F, 0.78F, 20, 2);
+		break;
+	case 40:
+		(*result)[0] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
+		break;
+	case 50:
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0036F, 3, 8, 1.8F, 3);
+		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.38F, 0.78F, 20, 2);
+		break;
+	case 60:
+		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.38F, 0.78F, 20, 2);
+		(*result)[1] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
 		break;
 	case 100:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple * 2, 0.0028F, 120, 5, 3, 2);
-		(*result)[1] = std::make_shared<hft_3_strategy>(rb_second, multiple * 2, 9, 1.98F, 0.36F, 8, 2);
-		(*result)[2] = std::make_shared<hft_2_strategy>(ag_second, multiple, 0.0049F, 120, 16, 3, 3);
-		(*result)[3] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 21, 1.58F, .0F, 16, 2);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple * 2, 0.0028F, 3, 10, 1.8F, 3);
+		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.38F, 0.78F, 20, 2);
+		(*result)[2] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
 		break;
 	}
 	return result;
@@ -51,6 +64,7 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(in
 void start_runtime(const char * config_file,int account_type,int multiple)
 {
 	auto app = std::make_shared<runtime_engine>(config_file);
+	
 	auto strategys = make_strategys(account_type, multiple);
 	for(auto it : *strategys)
 	{
@@ -61,38 +75,29 @@ void start_runtime(const char * config_file,int account_type,int multiple)
 }
 
 
-void start_evaluate(const std::vector<uint32_t>& all_trading_day)
+void start_evaluate(const std::vector<uint32_t>& all_trading_day, int account_type, int multiple)
 {
 	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
-	
+	/*
 	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction ,uint32_t count,double_t price, order_flag flag)->bool{
-		if(offset == OT_OPEN)
+		if (offset == OT_OPEN)
 		{
-			return true ;
-		}
-		auto pos = app->get_position(code);
-		if (direction == DT_LONG)
-		{
-			if (pos.yestoday_long.postion >= count)
+			auto pos = app->get_position(code);
+			if (direction == DT_LONG && pos.today_long.postion > 0 && price > pos.today_long.price)
 			{
-				return price > pos.yestoday_long.price;
+				return false;
 			}
-			return price > pos.today_long.price;
-		}
-		if (direction == DT_SHORT)
-		{
-			if (pos.yestoday_short.postion >= count)
+			if (direction == DT_SHORT && pos.today_short.postion > 0 && price < pos.today_short.price)
 			{
-				return price < pos.yestoday_short.price;
+				return false;
 			}
-			return price < pos.today_short.price;
 		}
-		return false;
+		return true;
 	});
-	
+	*/
 	//20w
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	auto strategys = make_strategys(100, 1);
+	auto strategys = make_strategys(account_type, multiple);
 	for (auto it : *strategys)
 	{
 		stra_list.emplace_back(it.second);
@@ -223,11 +228,11 @@ int main(int argc,char* argv[])
 	};
 
 	
-	start_evaluate( trading_day_2301);
+	start_evaluate( trading_day_2301,10,30);
 	//start_evaluate(trading_day_2305);
 	return 0;
 	const char* config_file = "rt_hx_zjh.ini";
-	int account_type = 0;
+	int account_type = 10;
 	int multiple = 1;
 	//获取参数
 	if(argc >= 2)

@@ -11,27 +11,11 @@ void hft_2_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
-	_history_ma = 0;
-	_history_price.clear();
-	/*
-	const position_info& pos = get_position(_code);
-	if (pos.yestoday_long.usable() > 0)
-	{
-		double_t sell_price = std::round(pos.yestoday_long.price * (1 + _open_delta * pos.yestoday_long.usable() / 3 ));
-		_yestoday_sell_order = sell_for_close(_code, pos.yestoday_long.usable() , sell_price);
-	}
-	if (pos.yestoday_short.usable() > 0)
-	{
-		double_t buy_price = std::round(pos.yestoday_short.price * (1 - _open_delta * pos.yestoday_short.usable() / 3));
-		_yestoday_buy_order = buy_for_close(_code, pos.yestoday_short.usable(), buy_price);
-	}
-	*/
 }
 
 void hft_2_strategy::on_tick(const tick_info& tick)
 {
 	_last_tick = tick ; 
-	add_to_history(tick.price);
 	if (!is_trading_ready())
 	{
 		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
@@ -48,33 +32,30 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		LOG_TRACE("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _buy_order, _sell_order);
 		return ;
 	}
-	int32_t direction = 0 ;
-	if(tick.price > tick.standard+15)
-	{
-		direction = 1;
-	}
-	else if(tick.price < tick.standard-15)
-	{
-		direction = -1;
-	}
-	//direction = 1;
 	const position_info& pos = get_position(tick.id);
 	double_t delta = (tick.standard * _open_delta);
-	double_t ma_delta = tick.price - _history_ma;
-	double_t buy_price = tick.buy_price() -  delta - direction * (ma_delta)+_random(_random_engine);
-	double_t sell_price = tick.sell_price() +  delta + direction * (ma_delta)-_random(_random_engine);
+	double_t buy_price = tick.buy_price() -  delta + _random(_random_engine);
+	double_t sell_price = tick.sell_price() +  delta - _random(_random_engine);
 	uint32_t sell_once = _open_once;
 	uint32_t yestoday_once = _yestoday_multiple * _open_once;
 	if (pos.yestoday_long.usable() > 0)
 	{
+		if (pos.get_long_position() > _yestoday_threshold)
+		{
+			yestoday_once = static_cast<uint32_t>(_yestoday_multiple * _open_once * _yestoday_growth);
+		}
 		sell_once = pos.yestoday_long.usable() > yestoday_once ? yestoday_once : pos.yestoday_long.usable();
 		sell_price += (std::ceil(sell_once / _open_once) - 1) * delta / 2 ;
 	}
 	uint32_t buy_once = _open_once;
 	if (pos.yestoday_short.usable() > 0)
 	{
+		if (pos.get_short_position() > _yestoday_threshold)
+		{
+			yestoday_once = static_cast<uint32_t>(_yestoday_multiple * _open_once * _yestoday_growth);
+		}
 		buy_once = pos.yestoday_short.usable() > yestoday_once ? yestoday_once : pos.yestoday_short.usable();
-		buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2  ;
+		buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2 ;
 	}
 	buy_price = buy_price < tick.buy_price() - _protection ? buy_price : tick.buy_price() - _protection;
 	sell_price = sell_price > tick.sell_price() + _protection ? sell_price : tick.sell_price() + _protection;
@@ -114,7 +95,7 @@ void hft_2_strategy::on_entrust(const order_info& order)
 	{
 		return;
 	}
-	if (order.est_id == _buy_order || order.est_id == _sell_order|| order.est_id == _yestoday_buy_order|| order.est_id == _yestoday_sell_order)
+	if (order.est_id == _buy_order || order.est_id == _sell_order)
 	{
 		double_t current_price = _last_tick.price;
 		set_cancel_condition(order.est_id, [this, current_price](const tick_info& tick)->bool {
@@ -143,14 +124,6 @@ void hft_2_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 		cancel_order(_buy_order);
 		_sell_order = INVALID_ESTID;
 	}
-	if (localid == _yestoday_buy_order)
-	{
-		_yestoday_buy_order = INVALID_ESTID;
-	}
-	if (localid == _yestoday_sell_order)
-	{
-		_yestoday_sell_order = INVALID_ESTID;
-	}
 }
 
 void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
@@ -165,15 +138,6 @@ void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 	{
 		_sell_order = INVALID_ESTID;
 	}
-	if (localid == _yestoday_buy_order)
-	{
-		_yestoday_buy_order = INVALID_ESTID;
-	}
-	if (localid == _yestoday_sell_order)
-	{
-		_yestoday_sell_order = INVALID_ESTID;
-	}
-
 }
 
 void hft_2_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
@@ -190,36 +154,4 @@ void hft_2_strategy::on_error(error_type type, estid_t localid, const uint32_t e
 	{
 		_sell_order = INVALID_ESTID;
 	}
-	if (localid == _yestoday_buy_order)
-	{
-		_yestoday_buy_order = INVALID_ESTID;
-	}
-	if (localid == _yestoday_sell_order)
-	{
-		_yestoday_sell_order = INVALID_ESTID;
-	}
-}
-
-void hft_2_strategy::add_to_history(double_t price)
-{
-	_history_price.emplace_back(price);
-	if(_history_price.size() < _history_count)
-	{
-		double_t sum = .0F;
-		for(auto it : _history_price)
-		{
-			sum += it;
-		}
-		_history_ma = std::round(sum / _history_price.size());
-		
-	}
-	else
-	{
-		double_t frist = _history_price.front();
-		double_t delta = (price - frist)/ _history_count;
-		_history_ma = (delta + _history_ma);
-		_history_price.pop_front();
-	}
-	
-
 }

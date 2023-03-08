@@ -32,4 +32,5 @@ void runtime_engine::run_to_close()
 		std::this_thread::sleep_for(std::chrono::seconds(delta_seconds));
 	}
 	lt_stop_service(_lt);
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 }
