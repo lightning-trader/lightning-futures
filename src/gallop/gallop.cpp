@@ -8,44 +8,50 @@
 #include "hft_3_strategy.h"
 #include "runtime_engine.h"
 #include "evaluate_engine.h"
+#include "trading_day.h"
 
 #pragma comment (lib,"lightning.lib")
 #pragma comment (lib,"libltpp.lib")
 
-#ifndef NDEBUG
-const char* rb_frist = "SHFE.rb2301";
-const char* ag_frist = "SHFE.ag2212";
-const char* rb_second = "SHFE.rb2302";
-const char* ag_second = "SHFE.ag2301";
-#else
-const char* rb_frist = "SHFE.rb2305";
-const char* ag_frist = "SHFE.ag2306";
-const char* rb_second = "SHFE.rb2306";
-const char* ag_second = "SHFE.ag2305";
-#endif	
-
-std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(int account_type, int multiple)
+typedef enum run_type
 {
+	RT_EVALUATE,
+	RT_RUNTIME,
+};
 
+std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(run_type rt,int account_type, int multiple)
+{
+	const char* rb_frist = "SHFE.rb2305";
+	const char* ag_frist = "SHFE.ag2306";
+	const char* rb_second = "SHFE.rb2306";
+	const char* ag_second = "SHFE.ag2305";
+	if(rt == RT_EVALUATE)
+	{
+		rb_frist = "SHFE.rb2301";
+		ag_frist = "SHFE.ag2212";
+		rb_second = "SHFE.rb2302";
+		ag_second = "SHFE.ag2301";
+	}
+	LOG_INFO("make_strategys : %s %s %s %s", rb_frist, ag_frist, rb_second, ag_second);
 
 	auto result = std::make_shared<std::map<straid_t,std::shared_ptr<strategy>>>();
 	switch (account_type)
 	{
 	case 10:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple, 0.0036F, 3, 8, 1.8F, 3);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple, 0.0028F, 2, 8, 1.8F, 3);
 		break;
 	case 20:
 		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.38F, 0.78F, 20, 2);
 		break;
 	case 30:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0036F, 3, 8, 1.8F, 3);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0028F, 2, 8, 1.8F, 3);
 		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.38F, 0.78F, 20, 2);
 		break;
 	case 40:
 		(*result)[0] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
 		break;
 	case 50:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0036F, 3, 8, 1.8F, 3);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0028F, 2, 8, 1.8F, 3);
 		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.38F, 0.78F, 20, 2);
 		break;
 	case 60:
@@ -53,7 +59,7 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(in
 		(*result)[1] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
 		break;
 	case 100:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple * 2, 0.0028F, 3, 10, 1.8F, 3);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple * 2, 0.0028F, 2, 10, 1.8F, 3);
 		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.38F, 0.78F, 20, 2);
 		(*result)[2] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
 		break;
@@ -61,11 +67,11 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(in
 	return result;
 }
 
-void start_runtime(const char * config_file,int account_type,int multiple)
+void start_runtime(run_type rt, const char * config_file,int account_type,int multiple)
 {
 	auto app = std::make_shared<runtime_engine>(config_file);
 	
-	auto strategys = make_strategys(account_type, multiple);
+	auto strategys = make_strategys(rt,account_type, multiple);
 	for(auto it : *strategys)
 	{
 		app->add_strategy(it.first,it.second);
@@ -75,29 +81,11 @@ void start_runtime(const char * config_file,int account_type,int multiple)
 }
 
 
-void start_evaluate(const std::vector<uint32_t>& all_trading_day, int account_type, int multiple)
+void start_evaluate(const std::vector<uint32_t>& all_trading_day, run_type rt, const char* config_file, int account_type, int multiple)
 {
-	auto app = std::make_shared<evaluate_engine>("./evaluate.ini");
-	/*
-	app->set_trading_filter([app](const code_t& code, offset_type offset, direction_type direction ,uint32_t count,double_t price, order_flag flag)->bool{
-		if (offset == OT_OPEN)
-		{
-			auto pos = app->get_position(code);
-			if (direction == DT_LONG && pos.today_long.postion > 0 && price > pos.today_long.price)
-			{
-				return false;
-			}
-			if (direction == DT_SHORT && pos.today_short.postion > 0 && price < pos.today_short.price)
-			{
-				return false;
-			}
-		}
-		return true;
-	});
-	*/
-	//20w
+	auto app = std::make_shared<evaluate_engine>(config_file);
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	auto strategys = make_strategys(account_type, multiple);
+	auto strategys = make_strategys(rt,account_type, multiple);
 	for (auto it : *strategys)
 	{
 		stra_list.emplace_back(it.second);
@@ -108,147 +96,37 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day, int account_ty
 
 int main(int argc,char* argv[])
 {
+	//start_runtime("rt_hx_zjh.ini", 10, 1);
+	//return 0;
+	if(argc < 3)
+	{
+		LOG_ERROR("start atgc error");
+		return -1;
+	}
+	const char* config_file = argv[2];
 
-	std::vector<uint32_t> trading_day_2210 = {
-		//2210
-		20220801,
-		20220802,
-		20220803,
-		20220804,
-		20220805,
-		20220808,
-		20220809,
-		20220810,
-		20220811,
-		20220812,
-		20220815,
-		20220816,
-		20220817,
-		20220818,
-		20220819,
-		20220822,
-		20220823,
-		20220824,
-		20220825,
-		20220826,
-		20220829,
-		20220830,
-		20220831
-	};
-	std::vector<uint32_t> trading_day_2301 = {
-		//2301
-		
-		20220901,
-		20220902,
-		20220905,
-		20220906,
-		20220907,
-		20220908,
-		20220909,
-		20220913,
-		20220914,
-		20220915,
-		20220916,
-		20220919,
-		20220920,
-		20220921,
-		20220922,
-		20220923,
-		20220926,
-		20220927,
-		20220928,
-		20220929,
-		20220930,
-		
-		20221010,
-		20221011,
-		20221012,
-		20221013,
-		20221014,
-		20221017,
-		20221018,
-		20221019,
-		20221020,
-		20221021,
-		20221024,
-		20221025,
-		20221026,
-		20221027,
-		20221028,
-		20221031,
-		
-		20221101,
-		20221102,
-		20221103,
-		20221104,
-		20221107,
-		20221108,
-		20221109,
-		20221110,
-		20221111,
-		20221114,
-		20221115,
-		20221116,
-		20221117,
-		20221118,
-		20221121,
-		20221122,
-		20221123,
-		20221124,
-		20221125,
-		20221128,
-		20221129,
-		20221130
-	};
-	std::vector<uint32_t> trading_day_2305 = {
-		//2305
-		20221201,
-		20221202,
-		20221205,
-		20221206,
-		20221207,
-		20221208,
-		20221209,
-		20221212,
-		20221213,
-		20221214,
-		20221215,
-		20221216,
-		20221219,
-		20221220,
-		20221221,
-		20221222,
-		20221223,
-		20221226,
-		20221227,
-		20221228,
-		20221229,
-		20221230
-			
-	};
-
-	
-	start_evaluate( trading_day_2301,10,30);
-	//start_evaluate(trading_day_2305);
-	return 0;
-	const char* config_file = "rt_hx_zjh.ini";
 	int account_type = 10;
 	int multiple = 1;
 	//获取参数
-	if(argc >= 2)
-	{
-		config_file = argv[1];
-	}
-	if (argc >= 3)
-	{
-		account_type = std::atoi(argv[2]);
-	}
+	
 	if (argc >= 4)
 	{
-		multiple = std::atoi(argv[3]);
+		account_type = std::atoi(argv[3]);
 	}
-
-	LOG_INFO("start runtime %s for %d*%d", config_file, account_type, multiple);
-	start_runtime(config_file, account_type, multiple);
+	if (argc >= 5)
+	{
+		multiple = std::atoi(argv[4]);
+	}
+	
+	if (std::strcmp("evaluate", argv[1])==0)
+	{
+		LOG_INFO("start %s evaluate for %d*%d", config_file, account_type, multiple);
+		start_evaluate(trading_day_2301, RT_EVALUATE,config_file, account_type, multiple);
+	}
+	else
+	{
+		LOG_INFO("start %s runtime for %d*%d", config_file, account_type, multiple);
+		start_runtime(RT_RUNTIME,config_file, account_type, multiple);
+	}
 	return 0;
 }

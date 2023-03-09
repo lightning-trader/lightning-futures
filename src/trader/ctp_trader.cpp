@@ -737,7 +737,7 @@ bool ctp_trader::is_usable()const
 
 estid_t ctp_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
 {
-	LOG_INFO("ctp_trader place_order %s %f",code.get_id(), volume);
+	LOG_INFO("ctp_trader place_order %s %d",code.get_id(), volume);
 
 	if (_td_api == nullptr)
 	{

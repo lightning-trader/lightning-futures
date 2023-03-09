@@ -78,8 +78,6 @@ private:
 	
 	code_t _code ;
 
-	int32_t _protection;
-
 	double _open_delta;
 
 	uint32_t _open_once;
