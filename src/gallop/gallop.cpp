@@ -17,7 +17,7 @@ typedef enum run_type
 {
 	RT_EVALUATE,
 	RT_RUNTIME,
-};
+}run_type;
 
 std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(run_type rt,int account_type, int multiple)
 {
@@ -38,30 +38,27 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(ru
 	switch (account_type)
 	{
 	case 10:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple, 0.0028F, 2, 8, 1.8F, 3);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple, 0.0036F, 3, 8, 1.8F, 2);
 		break;
 	case 20:
-		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.38F, 0.78F, 20, 2);
+		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
 		break;
 	case 30:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0028F, 2, 8, 1.8F, 3);
-		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.38F, 0.78F, 20, 2);
-		break;
-	case 40:
-		(*result)[0] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0036F, 3, 8, 1.8F, 2);
+		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
 		break;
 	case 50:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0028F, 2, 8, 1.8F, 3);
-		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.38F, 0.78F, 20, 2);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple * 3, 0.0036F, 3, 8, 1.8F, 2);
+		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
 		break;
 	case 60:
-		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.38F, 0.78F, 20, 2);
-		(*result)[1] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
+		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.39F, 0.8F, 18, 1);
+		(*result)[1] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.58F, 0.98F, 12, 1);
 		break;
 	case 100:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple * 2, 0.0028F, 2, 10, 1.8F, 3);
-		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.38F, 0.78F, 20, 2);
-		(*result)[2] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.5F, 0.68F, 12, 2);
+		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple * 3 , 0.0036F, 3, 8, 1.8F, 2);
+		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.39F, 0.8F, 18, 1);
+		(*result)[2] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.58F, 0.98F, 12, 1);
 		break;
 	}
 	return result;

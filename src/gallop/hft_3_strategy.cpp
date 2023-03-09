@@ -136,7 +136,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 
 void hft_3_strategy::on_entrust(const order_info& order)
 {
-	LOG_DEBUG("on_entrust : %llu\n", order.est_id);
+	LOG_INFO("hft_3_strategy on_entrust : %llu %s %d %d %f %d/%d\n", order.est_id, order.code,order.direction,order.offset,order.price, order.last_volume,order.total_volume);
 	if (_last_tick.time > _coming_to_close)
 	{
 		return;
@@ -157,7 +157,7 @@ void hft_3_strategy::on_entrust(const order_info& order)
 
 void hft_3_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_DEBUG("on_trade : %llu\n", localid);
+	LOG_INFO("hft_3_strategy on_trade : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, volume);
 	if(localid == _open_long_order)
 	{
 		cancel_order(_close_long_order);
@@ -182,8 +182,7 @@ void hft_3_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 
 void hft_3_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
 {
-	LOG_DEBUG("on_cancel : %llu\n", localid);
-	
+	LOG_INFO("hft_3_strategy on_cancel : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, cancel_volume);
 	if(localid == _open_long_order)
 	{
 		_open_long_order = INVALID_ESTID;
@@ -204,6 +203,7 @@ void hft_3_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 
 void hft_3_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
 {
+	LOG_INFO("hft_3_strategy on_cancel : %llu %d \n", localid, error);
 	if(type != ET_PLACE_ORDER)
 	{
 		return ;

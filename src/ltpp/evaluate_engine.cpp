@@ -1,5 +1,7 @@
 #include "evaluate_engine.h"
 #include "strategy_manager.h"
+#include <chrono>
+#include <thread>
 
 
 evaluate_engine::evaluate_engine(const char* config_path)
@@ -25,6 +27,7 @@ void evaluate_engine::back_test(std::vector<std::shared_ptr<strategy>> stra_list
 		{
 			lt_playback_history(_lt, it);
 		}
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 		lt_stop_service(_lt);
 	}
 }

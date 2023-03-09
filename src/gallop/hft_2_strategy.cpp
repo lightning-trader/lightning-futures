@@ -29,7 +29,7 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	//LOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
 	if(_buy_order != INVALID_ESTID || _sell_order != INVALID_ESTID)
 	{
-		//LOG_INFO("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _buy_order, _sell_order);
+		LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _buy_order, _sell_order);
 		return ;
 	}
 	const position_info& pos = get_position(tick.id);
@@ -87,7 +87,7 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 
 void hft_2_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("hft_2_strategy on_entrust : %llu\n", order.est_id);
+	LOG_INFO("hft_3_strategy on_entrust : %llu %s %d %d %f %d/%d\n", order.est_id, order.code, order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 	if (_last_tick.time > _coming_to_close)
 	{
 		return;
@@ -110,7 +110,7 @@ void hft_2_strategy::on_entrust(const order_info& order)
 
 void hft_2_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_INFO("hft_2_strategy on_trade : %llu\n", localid);
+	LOG_INFO("hft_3_strategy on_trade : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, volume);
 	if(localid == _buy_order)
 	{
 		cancel_order(_sell_order);
@@ -125,7 +125,7 @@ void hft_2_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 
 void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
 {
-	LOG_INFO("hft_2_strategy on_cancel : %llu\n", localid);
+	LOG_INFO("hft_3_strategy on_cancel : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, cancel_volume);
 	
 	if(localid == _buy_order)
 	{
@@ -139,7 +139,7 @@ void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 
 void hft_2_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
 {
-	LOG_INFO("hft_2_strategy on_error : %llu %d\n", localid, error);
+	LOG_INFO("hft_2_strategy on_error : %llu %d \n", localid, error);
 	if(type != ET_PLACE_ORDER)
 	{
 		return ;
