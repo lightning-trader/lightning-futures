@@ -42,20 +42,20 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	{
 		if (pos.get_long_position() > _yestoday_threshold)
 		{
-			yestoday_once = static_cast<uint32_t>(_yestoday_multiple * _open_once * _yestoday_growth);
+			yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
 		}
 		sell_once = pos.yestoday_long.usable() > yestoday_once ? yestoday_once : pos.yestoday_long.usable();
-		sell_price += (std::ceil(sell_once / _open_once) - 1) * delta / 2 ;
+		sell_price += (sell_once / _open_once) * delta / 2 ;
 	}
 	uint32_t buy_once = _open_once;
 	if (pos.yestoday_short.usable() > 0)
 	{
 		if (pos.get_short_position() > _yestoday_threshold)
 		{
-			yestoday_once = static_cast<uint32_t>(_yestoday_multiple * _open_once * _yestoday_growth);
+			yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
 		}
 		buy_once = pos.yestoday_short.usable() > yestoday_once ? yestoday_once : pos.yestoday_short.usable();
-		buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2 ;
+		buy_price -= (buy_once / _open_once) * delta / 2 ;
 	}
 	buy_price = std::round(buy_price);
 	sell_price = std::round(sell_price);
@@ -87,7 +87,7 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 
 void hft_2_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("hft_3_strategy on_entrust : %llu %s %d %d %f %d/%d\n", order.est_id, order.code, order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LOG_INFO("hft_2_strategy on_entrust : %llu %s %d %d %f %d/%d\n", order.est_id, order.code, order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 	if (_last_tick.time > _coming_to_close)
 	{
 		return;
@@ -110,7 +110,7 @@ void hft_2_strategy::on_entrust(const order_info& order)
 
 void hft_2_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_INFO("hft_3_strategy on_trade : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, volume);
+	LOG_INFO("hft_2_strategy on_trade : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, volume);
 	if(localid == _buy_order)
 	{
 		cancel_order(_sell_order);
@@ -125,7 +125,7 @@ void hft_2_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 
 void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
 {
-	LOG_INFO("hft_3_strategy on_cancel : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, cancel_volume);
+	LOG_INFO("hft_2_strategy on_cancel : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, cancel_volume);
 	
 	if(localid == _buy_order)
 	{

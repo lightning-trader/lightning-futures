@@ -39,7 +39,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 			//Ö¹Ëð
 			int32_t last = pos.yestoday_long.usable()-_yestoday_ratio;
 			double_t last_price = tick.sell_price() + _delta;
-			last_price += (std::ceil(last / _open_once) - 1) * _delta / 2;
+			last_price += (last / _open_once) * _delta / 2.F;
 			last_price = std::round(last_price);
 			sell_for_close(tick.id, last, last_price);
 		}
@@ -64,7 +64,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 		{
 			int32_t last = pos.yestoday_short.usable() - _yestoday_ratio;
 			double_t last_price = tick.buy_price() - _delta;
-			last_price -= (std::ceil(last / _open_once) - 1) * _delta / 2;
+			last_price -= (last / _open_once) * _delta / 2.F;
 			last_price = std::round(last_price);
 			buy_for_close(tick.id, last, last_price);
 		}
