@@ -45,7 +45,7 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 			yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
 		}
 		sell_once = pos.yestoday_long.usable() > yestoday_once ? yestoday_once : pos.yestoday_long.usable();
-		sell_price += (sell_once / _open_once) * delta / 2 ;
+		sell_price += (std::ceil(sell_once / _open_once) - 1) * delta / 2.F;
 	}
 	uint32_t buy_once = _open_once;
 	if (pos.yestoday_short.usable() > 0)
@@ -55,7 +55,7 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 			yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
 		}
 		buy_once = pos.yestoday_short.usable() > yestoday_once ? yestoday_once : pos.yestoday_short.usable();
-		buy_price -= (buy_once / _open_once) * delta / 2 ;
+		buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2.F;
 	}
 	buy_price = std::round(buy_price);
 	sell_price = std::round(sell_price);
