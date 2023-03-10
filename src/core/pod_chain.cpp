@@ -90,7 +90,7 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 	if (direction == DT_SHORT)
 	{
 		_trader->find_orders(order_list, [code,count, price](const order_info& order)->bool {
-			return order.direction == DT_LONG && order.code == code&&order.last_volume==count && order.price == price;
+			return order.direction == DT_LONG && order.code == code && order.last_volume == count && order.price == price;
 			});
 	}
 	if (!order_list.empty())
