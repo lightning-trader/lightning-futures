@@ -86,13 +86,7 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 	_section = std::make_shared<trading_section>(section_config);
 	
 
-	_default_chain = create_chain(TO_INVALID, false, [this](const code_t& code, offset_type offset, direction_type direction,uint32_t count,double_t price, order_flag flag)->bool{
-		if(_trading_filter==nullptr)
-		{
-			return true ;
-		}
-		return _trading_filter(code, offset, direction, count, price, flag);
-	});
+	_default_chain = create_chain(TO_INVALID, false);
 	this->add_handle([this](event_type type, const std::vector<std::any>& param)->void {
 		switch (type)
 		{
@@ -175,27 +169,22 @@ void context::stop_service()
 
 
 
-pod_chain* context::create_chain(trading_optimal opt, bool flag, filter_function filter_callback)
+pod_chain* context::create_chain(trading_optimal opt, bool flag)
 {
 
-	auto trader = get_trader();
-	if(trader == nullptr)
-	{
-		return nullptr;
-	}
-	pod_chain* chain = nullptr ;
+	pod_chain* chain = new transfer_position_chain(this,new verify_chain(this));
 	if (flag)
 	{
 		switch (opt)
 		{
 		case TO_OPEN_TO_CLOSE:
-			chain = new price_to_cancel_chain(trader, new open_to_close_chain(trader, new verify_chain(trader, _max_position, filter_callback)));
+			chain = new price_to_cancel_chain(this, new open_to_close_chain(this, chain));
 			break;
 		case TO_CLOSE_TO_OPEN:
-			chain = new price_to_cancel_chain(trader, new close_to_open_chain(trader, _max_position, new verify_chain(trader, _max_position, filter_callback)));
+			chain = new price_to_cancel_chain(this, new close_to_open_chain(this, chain));
 			break;
 		default:
-			chain = new price_to_cancel_chain(trader, new verify_chain(trader, _max_position, filter_callback));
+			chain = new price_to_cancel_chain(this, chain);
 			break;
 		}
 	}
@@ -204,13 +193,12 @@ pod_chain* context::create_chain(trading_optimal opt, bool flag, filter_function
 		switch (opt)
 		{
 		case TO_OPEN_TO_CLOSE:
-			chain = new open_to_close_chain(trader, new verify_chain(trader, _max_position, filter_callback));
+			chain = new open_to_close_chain(this, chain);
 			break;
 		case TO_CLOSE_TO_OPEN:
-			chain = new close_to_open_chain(trader, _max_position, new verify_chain(trader, _max_position, filter_callback));
+			chain = new close_to_open_chain(this, chain);
 			break;
 		default:
-			chain = new verify_chain(trader, _max_position, filter_callback);
 			break;
 		}
 	}
@@ -415,14 +403,23 @@ void context::use_custom_chain(untid_t untid,trading_optimal opt, bool flag)
 	{
 		delete it->second;
 	}
-	auto chain = create_chain(opt, flag, [this](const code_t& code, offset_type offset, direction_type direction,uint32_t count ,double_t price, order_flag flag)->bool {
-		if (_trading_filter == nullptr)
-		{
-			return true;
-		}
-		return _trading_filter(code, offset, direction, count, price, flag);
-		});
+	auto chain = create_chain(opt, flag);
 	_custom_chain[untid] = chain;
+}
+
+void context::bind_transfer_info(const code_t& code, const code_t& expire, double_t offset)
+{
+	_transfer_map[code]= transfer_info(expire , offset);
+}
+
+const transfer_info* context::get_transfer_info(const code_t code)const
+{
+	auto it = _transfer_map.find(code);
+	if(it == _transfer_map.end())
+	{
+		return nullptr;
+	}
+	return &(it->second);
 }
 
 void context::load_data(const char* localdb_name,size_t oper_size)

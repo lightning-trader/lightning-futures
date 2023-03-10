@@ -20,11 +20,11 @@ public:
 
 	bool init_from_file(const std::string& config_path);
 
-protected:
-
 	virtual trader_api* get_trader() override;
 
 	virtual market_api* get_market() override;
+
+protected:
 
 	virtual void update() override;
 

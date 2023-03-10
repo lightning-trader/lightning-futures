@@ -44,6 +44,12 @@ public:
 	*/
 	const position_info& get_position(const code_t& code) const;
 
+	/**
+	* ∞Û∂®“∆≤÷–≈œ¢
+	*/
+	void bind_transfer_info(const code_t& code, const code_t& expire, double_t offset);
+
+
 protected:
 
 	ltobj _lt;

@@ -30,6 +30,18 @@ struct operational_data
 
 };
 
+struct transfer_info
+{
+	code_t expire_code;
+	double_t price_offset ;
+
+	transfer_info():price_offset(.0F)
+	{}
+
+	transfer_info(const code_t expire,double_t offset):expire_code(expire), price_offset(offset)
+	{}
+};
+
 class context
 {
 
@@ -72,6 +84,8 @@ private:
 	bool _fast_mode ;
 
 	uint32_t _loop_interval ;
+
+	std::map<code_t, transfer_info> _transfer_map ;
 
 public:
 
@@ -138,6 +152,20 @@ public:
 
 	void use_custom_chain(untid_t untid, trading_optimal opt, bool flag);
 
+	inline uint32_t get_max_position()const
+	{
+		return _max_position;
+	}
+
+	inline filter_callback get_trading_filter()const
+	{
+		return _trading_filter;
+	}
+
+	void bind_transfer_info(const code_t& code, const code_t& expire,double_t offset);
+
+	const transfer_info* get_transfer_info(const code_t code)const;
+
 private:
 
 	void load_data(const char* localdb_name, size_t oper_size);
@@ -166,21 +194,25 @@ private:
 
 	void remove_invalid_condition(estid_t order_id);
 
-	pod_chain * create_chain(trading_optimal opt, bool flag, filter_function fliter_callback);
+	pod_chain * create_chain(trading_optimal opt, bool flag);
 
 	pod_chain * get_chain(untid_t untid);
 
+	
 protected:
 
 	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config);
 
-	virtual class trader_api* get_trader() = 0;
-
-	virtual class market_api* get_market() = 0;
-
 	virtual void update() = 0;
 
 	virtual void add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle) = 0;
+
+public:
+
+	virtual trader_api* get_trader() = 0;
+
+	virtual market_api* get_market() = 0;
+
 
 };
 

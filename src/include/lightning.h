@@ -174,4 +174,10 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	* 使用自定义交易通道
 	*/
 	LT_INTERFACE_DECLARE(void, use_custom_chain, (const ltobj&, untid_t, trading_optimal, bool));
+
+
+	/**
+	* 绑定移仓信息
+	*/
+	LT_INTERFACE_DECLARE(void, bind_transfer_info, (const ltobj&, const code_t&, const code_t& , double_t ));
 }

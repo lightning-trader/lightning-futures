@@ -2,7 +2,6 @@
 #include <define.h>
 #include <data_types.hpp>
 
-
 /***  
 * 
 * 用户构造一个下单的责任链，实现开平互转等相关功能的拆分
@@ -15,26 +14,14 @@ class pod_chain
 protected:
 	
 	pod_chain* _next ;
-
-	class trader_api* _trader ;
-
+	
+	class trader_api* _trader;
+	class context* _ctx ;
+	
 public:
-	pod_chain(class trader_api* trader, pod_chain* next):_next(next), _trader(trader)
-	{}
-
-	virtual ~pod_chain()
-	{
-		if(_trader)
-		{
-			_trader = nullptr ;
-		}
-		if(_next)
-		{
-			delete _next;
-			_next = nullptr ;
-		}
-	}
-
+	pod_chain(context* ctx, pod_chain* next);
+	virtual ~pod_chain();
+	
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) = 0;
 
 protected:
@@ -46,13 +33,10 @@ protected:
 class close_to_open_chain : public pod_chain
 {
 	//最优服务费（平转开）
-private:
-	uint32_t _max_position ;
+
 public:
-	close_to_open_chain(class trader_api* trader,uint32_t max_position, pod_chain* next) :pod_chain(trader,next), _max_position(max_position)
-	{}
-	virtual ~close_to_open_chain()
-	{}
+	
+	close_to_open_chain(context* ctx,pod_chain* next) ;
 
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
@@ -63,10 +47,7 @@ class open_to_close_chain : public pod_chain
 	//最优 保证金 （开转平）
 
 public:
-	open_to_close_chain(class trader_api* trader, pod_chain* next) :pod_chain(trader, next)
-	{}
-
-	virtual ~open_to_close_chain()
+	open_to_close_chain(context* ctx, pod_chain* next) :pod_chain(ctx, next)
 	{}
 
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
@@ -77,29 +58,32 @@ class price_to_cancel_chain : public pod_chain
 {
 	
 public:
-	price_to_cancel_chain(class trader_api* trader, pod_chain* next) :pod_chain(trader, next)
-	{}
-
-	virtual ~price_to_cancel_chain()
+	price_to_cancel_chain(context* ctx, pod_chain* next) :pod_chain(ctx, next)
 	{}
 
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 };
+//移仓
+class transfer_position_chain : public pod_chain
+{
 
+public:
+	transfer_position_chain(context* ctx, pod_chain* next) :pod_chain(ctx, next)
+	{}
+
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+};
+
+//验证
 class verify_chain : public pod_chain
 {
-private:
-	uint32_t _max_position ;
 
-	filter_function _filter_callback;
 public:
 	
-	verify_chain(class trader_api* trader,uint32_t max_position, filter_function filter_callback) :pod_chain(trader, nullptr), _max_position(max_position), _filter_callback(filter_callback)
+	verify_chain(context* ctx) :pod_chain(ctx, nullptr)
 	{}
 
-	virtual ~verify_chain()
-	{}
 
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 

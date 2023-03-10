@@ -26,3 +26,8 @@ const position_info& engine::get_position(const code_t& code) const
 {
 	return lt_get_position(_lt, code);
 }
+
+void engine::bind_transfer_info(const code_t& code, const code_t& expire, double_t offset)
+{
+	lt_bind_transfer_info(_lt, code, expire, offset);
+}
