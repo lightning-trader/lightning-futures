@@ -247,7 +247,7 @@ void tick_simulator::handle_submit()
 	if (!_is_submit_return)
 	{
 		while(!_is_submit_return.exchange(true));
-		this->fire_event(ET_TradingReady);
+		this->fire_event(ET_SettlementCompleted);
 	}
 }
 
@@ -274,7 +274,7 @@ void tick_simulator::publish_tick()
 		{
 			_current_trading_day = tick->trading_day;
 			
-			this->fire_event(ET_CrossDay, _current_trading_day);
+			this->fire_event(ET_FirstMessage, _current_trading_day);
 		}
 		_current_tick_info.emplace_back(tick);
 		this->fire_event(ET_TickReceived, *tick);

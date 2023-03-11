@@ -2,27 +2,44 @@
 #include "strategy.h"
 #include <random>
 
+
+
 class hft_2_strategy : public strategy
 {
+
+	struct persist_data
+	{
+		uint32_t trading_day;
+		estid_t sell_order;
+		estid_t buy_order;
+
+		persist_data() :
+			trading_day(0x0U),
+			sell_order(INVALID_ESTID),
+			buy_order(INVALID_ESTID)
+		{}
+	};
 public:
 	
 	hft_2_strategy(const code_t& code, uint32_t open_once, double open_delta,int32_t yestoday_multiple, int32_t yestoday_threshold, double_t yestoday_growth, int32_t random_offset):
 		strategy(),
 		_code(code),
-		_sell_order(INVALID_ESTID),
-		_buy_order(INVALID_ESTID),
 		_open_once(open_once),
 		_open_delta(open_delta),
 		_yestoday_multiple(yestoday_multiple),
 		_yestoday_threshold(yestoday_threshold),
 		_yestoday_growth(yestoday_growth),
+		_order_data(nullptr),
 		_coming_to_close(0),
 		_random(0, random_offset)
 		{
 		};
 
 
-	~hft_2_strategy(){};
+	~hft_2_strategy()
+	{
+		_order_data = nullptr;
+	};
 
 
 public:
@@ -88,13 +105,11 @@ private:
 
 	double_t _yestoday_growth;
 
-	estid_t _sell_order ;
-
-	estid_t _buy_order ;
-
 	tick_info _last_tick;
 
 	time_t _coming_to_close;
+
+	persist_data* _order_data;
 
 	std::default_random_engine _random_engine;
 

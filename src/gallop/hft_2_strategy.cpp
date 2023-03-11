@@ -5,12 +5,18 @@ void hft_2_strategy::on_init()
 {
 	subscribe(_code);
 	use_custom_chain(TO_OPEN_TO_CLOSE,false);
+	_order_data = static_cast<persist_data*>(get_userdata(sizeof(persist_data)));
 }
 
 void hft_2_strategy::on_ready() 
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
+	if (_order_data->trading_day != trading_day)
+	{
+		_order_data->buy_order = INVALID_ESTID;
+		_order_data->sell_order = INVALID_ESTID;
+	}
 }
 
 void hft_2_strategy::on_tick(const tick_info& tick)
@@ -27,9 +33,9 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 		return;
 	}
 	//LOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
-	if(_buy_order != INVALID_ESTID || _sell_order != INVALID_ESTID)
+	if(_order_data->buy_order != INVALID_ESTID || _order_data->sell_order != INVALID_ESTID)
 	{
-		LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _buy_order, _sell_order);
+		LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _order_data->buy_order, _order_data->sell_order);
 		return ;
 	}
 	const position_info& pos = get_position(tick.id);
@@ -63,22 +69,22 @@ void hft_2_strategy::on_tick(const tick_info& tick)
 	{
 		if (buy_price > tick.low_limit)
 		{
-			_buy_order = buy_for_open(tick.id, buy_once, buy_price);
+			_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
 		}
 		if (sell_price < tick.high_limit)
 		{
-			_sell_order = sell_for_open(tick.id, sell_once, sell_price);
+			_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
 		}
 	}
 	else
 	{
 		if (sell_price < tick.high_limit)
 		{
-			_sell_order = sell_for_open(tick.id, sell_once, sell_price);
+			_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
 		}
 		if (buy_price > tick.low_limit)
 		{
-			_buy_order = buy_for_open(tick.id, buy_once, buy_price);
+			_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
 		}
 	}
 }
@@ -92,7 +98,7 @@ void hft_2_strategy::on_entrust(const order_info& order)
 	{
 		return;
 	}
-	if (order.est_id == _buy_order || order.est_id == _sell_order)
+	if (order.est_id == _order_data->buy_order || order.est_id == _order_data->sell_order)
 	{
 		double_t current_price = _last_tick.price;
 		set_cancel_condition(order.est_id, [this, current_price](const tick_info& tick)->bool {
@@ -111,15 +117,15 @@ void hft_2_strategy::on_entrust(const order_info& order)
 void hft_2_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
 	LOG_INFO("hft_2_strategy on_trade : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, volume);
-	if(localid == _buy_order)
+	if(localid == _order_data->buy_order)
 	{
-		cancel_order(_sell_order);
-		_buy_order = INVALID_ESTID;
+		cancel_order(_order_data->sell_order);
+		_order_data->buy_order = INVALID_ESTID;
 	}
-	if(localid == _sell_order)
+	if(localid == _order_data->sell_order)
 	{
-		cancel_order(_buy_order);
-		_sell_order = INVALID_ESTID;
+		cancel_order(_order_data->buy_order);
+		_order_data->sell_order = INVALID_ESTID;
 	}
 }
 
@@ -127,13 +133,13 @@ void hft_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 {
 	LOG_INFO("hft_2_strategy on_cancel : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, cancel_volume);
 	
-	if(localid == _buy_order)
+	if(localid == _order_data->buy_order)
 	{
-		_buy_order = INVALID_ESTID;
+		_order_data->buy_order = INVALID_ESTID;
 	}
-	if (localid == _sell_order)
+	if (localid == _order_data->sell_order)
 	{
-		_sell_order = INVALID_ESTID;
+		_order_data->sell_order = INVALID_ESTID;
 	}
 }
 
@@ -144,12 +150,12 @@ void hft_2_strategy::on_error(error_type type, estid_t localid, const uint32_t e
 	{
 		return ;
 	}
-	if (localid == _buy_order)
+	if (localid == _order_data->buy_order)
 	{
-		_buy_order = INVALID_ESTID;
+		_order_data->buy_order = INVALID_ESTID;
 	}
-	if (localid == _sell_order)
+	if (localid == _order_data->sell_order)
 	{
-		_sell_order = INVALID_ESTID;
+		_order_data->sell_order = INVALID_ESTID;
 	}
 }

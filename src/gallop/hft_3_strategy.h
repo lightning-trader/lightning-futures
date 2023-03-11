@@ -4,16 +4,35 @@
 
 class hft_3_strategy : public strategy
 {
+
+	struct persist_data
+	{
+		uint32_t trading_day;
+
+		estid_t close_long_order;
+
+		estid_t close_short_order;
+
+		estid_t open_long_order;
+
+		estid_t open_short_order;
+
+		persist_data() :
+			trading_day(0x0U),
+			close_long_order(INVALID_ESTID),
+			close_short_order(INVALID_ESTID),
+			open_long_order(INVALID_ESTID),
+			open_short_order(INVALID_ESTID)
+		{}
+	};
+
 public:
 	
 	hft_3_strategy(const code_t& code, uint32_t open_once, int32_t delta,double_t alpha, double_t beta, uint32_t yestoday_ratio, int32_t random_offset):
 		strategy(),
 		_code(code),
 		_open_once(open_once),
-		_close_long_order(INVALID_ESTID),
-		_close_short_order(INVALID_ESTID),
-		_open_long_order(INVALID_ESTID),
-		_open_short_order(INVALID_ESTID),
+		_order_data(nullptr),
 		_delta(delta),
 		_alpha(alpha),
 		_beta(beta),
@@ -91,14 +110,7 @@ private:
 
 	uint32_t _yestoday_ratio;
 
-	estid_t _close_long_order ;
-
-	estid_t _close_short_order;
-
-	estid_t _open_long_order ;
-
-	estid_t _open_short_order;
-
+	persist_data* _order_data ;
 
 	tick_info _last_tick;
 

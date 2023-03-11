@@ -104,6 +104,8 @@ public:
 
 typedef uint8_t untid_t;
 
+#define MAX_UNITID 0xFFU 
+
 typedef uint64_t estid_t;
 
 #define INVALID_ESTID 0x0LLU 

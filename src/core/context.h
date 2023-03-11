@@ -12,12 +12,13 @@
 #include "trading_section.h"
 #include "pod_chain.h"
 
-struct operational_data
+struct record_data
 {
+	uint32_t trading_day;
 	time_t last_order_time;
 	order_statistic statistic_info;
 
-	operational_data():last_order_time(0) {}
+	record_data():trading_day(0U),last_order_time(0) {}
 
 	void clear()
 	{
@@ -65,11 +66,9 @@ private:
 
 	filter_callback _trading_filter;
 
-	operational_data* _operational_data;
+	record_data* _record_data;
 
-	std::shared_ptr<boost::interprocess::mapped_region> _operational_region;
-
-	size_t _userdata_block ;
+	std::shared_ptr<boost::interprocess::mapped_region> _record_region;
 
 	size_t _userdata_size ;
 
@@ -139,7 +138,7 @@ public:
 
 	const order_statistic& get_order_statistic();
 
-	void* get_userdata(uint32_t index, size_t size);
+	void* get_userdata(untid_t index, size_t size);
 
 	bool is_trading_ready()
 	{
@@ -168,7 +167,7 @@ public:
 
 private:
 
-	void load_data(const char* localdb_name, size_t oper_size);
+	void load_data(const char* localdb_name);
 
 	void handle_account(const std::vector<std::any>& param);
 
@@ -176,7 +175,7 @@ private:
 
 	void handle_crossday(const std::vector<std::any>& param);
 
-	void handle_ready(const std::vector<std::any>& param);
+	void handle_settlement(const std::vector<std::any>& param);
 
 	void handle_entrust(const std::vector<std::any>& param);
 

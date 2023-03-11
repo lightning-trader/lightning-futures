@@ -157,7 +157,7 @@ time_t strategy::last_order_time()
 }
 
 
-void* strategy::get_username(size_t size)
+void* strategy::get_userdata(size_t size)
 {
 	if (_manager == nullptr)
 	{

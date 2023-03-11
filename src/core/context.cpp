@@ -15,8 +15,7 @@ context::context():
 	_max_position(10000),
 	_default_chain(nullptr),
 	_trading_filter(nullptr),
-	_userdata_block(16),
-	_userdata_size(1024),
+	_userdata_size(1024 * MAX_UNITID),
 	_recorder(nullptr),
 	_is_trading_ready(false),
 	on_tick(nullptr),
@@ -26,8 +25,8 @@ context::context():
 	on_cancel(nullptr),
 	on_error(nullptr),
 	on_ready(nullptr),
-	_operational_region(nullptr),
-	_operational_data(nullptr),
+	_record_region(nullptr),
+	_record_data(nullptr),
 	_section(nullptr),
 	_fast_mode(false),
 	_loop_interval(1)
@@ -36,9 +35,9 @@ context::context():
 }
 context::~context()
 {
-	if(_operational_region)
+	if(_record_region)
 	{
-		_operational_region->flush();
+		_record_region->flush();
 	}
 	for(auto it : _userdata_region)
 	{
@@ -65,10 +64,8 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 	auto& localdb_name = ctrl.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
 	{
-		size_t operational_size = ctrl.get<size_t>("operational_size",1024);
-		_userdata_block = ctrl.get<size_t>("userdata_block", 16);
-		_userdata_size = ctrl.get<size_t>("userdata_size", 1024);
-		load_data(localdb_name.c_str(), operational_size);
+		_userdata_size = ctrl.get<size_t>("userdata_size", 4096 * MAX_UNITID);
+		load_data(localdb_name.c_str());
 	}
 	_max_position = ctrl.get<uint16_t>("position_limit", 10000);
 	_fast_mode = ctrl.get<bool>("fast_mode", false);
@@ -96,11 +93,11 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 		case ET_PositionChange:
 			handle_position(param);
 			break;
-		case ET_CrossDay:
+		case ET_FirstMessage:
 			handle_crossday(param);
 			break;
-		case ET_TradingReady:
-			handle_ready(param);
+		case ET_SettlementCompleted:
+			handle_settlement(param);
 			break;
 		case ET_TickReceived:
 			handle_tick(param);
@@ -246,14 +243,14 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		LOG_ERROR("place_order _chain nullptr");
 		return INVALID_ESTID;
 	}
-	if(_operational_data)
+	if(_record_region)
 	{
 		auto market = get_market();
 		if(market)
 		{
-			_operational_data->last_order_time = market->last_tick_time();
+			_record_data->last_order_time = market->last_tick_time();
 		}
-		_operational_data->statistic_info.place_order_amount++;
+		_record_data->statistic_info.place_order_amount++;
 	}
 	return chain->place_order(offset, direction, code, count, price, flag);
 }
@@ -348,29 +345,25 @@ time_t context::get_last_time()
 
 time_t context::last_order_time()
 {
-	if (_operational_data)
+	if (_record_data)
 	{
-		return _operational_data->last_order_time;
+		return _record_data->last_order_time;
 	}
 	return -1;
 }
 
 const order_statistic& context::get_order_statistic()
 {
-	if(_operational_data)
+	if(_record_data)
 	{
-		return _operational_data->statistic_info;
+		return _record_data->statistic_info;
 	}
 	return default_statistic;
 }
 
-void* context::get_userdata(uint32_t index,size_t size)
+void* context::get_userdata(untid_t index,size_t size)
 {
 	if(size > _userdata_size)
-	{
-		return nullptr;
-	}
-	if(index >= _userdata_block)
 	{
 		return nullptr;
 	}
@@ -422,22 +415,32 @@ const transfer_info* context::get_transfer_info(const code_t code)const
 	return &(it->second);
 }
 
-void context::load_data(const char* localdb_name,size_t oper_size)
+void context::load_data(const char* localdb_name)
 {
-	boost::interprocess::shared_memory_object shdmem
+	std::string record_dbname = std::string("record_db") + localdb_name;
+	boost::interprocess::shared_memory_object record_shdmem
+	{
+		boost::interprocess::open_or_create,
+		record_dbname.c_str(),
+		boost::interprocess::read_write
+	};
+	record_shdmem.truncate(sizeof(record_data));
+	_record_region = std::make_shared<boost::interprocess::mapped_region>(record_shdmem, boost::interprocess::read_write);
+	_record_data = static_cast<record_data*>(_record_region->get_address());
+
+	//用户数据
+	std::string uesrdb_name = std::string("uesr_db") + localdb_name;
+	boost::interprocess::shared_memory_object userdb_shdmem
 	{
 		boost::interprocess::open_or_create, 
-		localdb_name,
+		uesrdb_name.c_str(),
 		boost::interprocess::read_write 
 	};
-	shdmem.truncate(oper_size + _userdata_block * _userdata_size);
-	_operational_region = std::make_shared<boost::interprocess::mapped_region>(shdmem,boost::interprocess::read_write);
-	_operational_data = static_cast<operational_data*>(_operational_region->get_address());
-
-	for(size_t i=0;i < _userdata_block;i++)
+	userdb_shdmem.truncate(_userdata_size * MAX_UNITID);
+	for(size_t i=0;i < MAX_UNITID;i++)
 	{
-		boost::interprocess::offset_t offset = oper_size + i * _userdata_size;
-		auto region = std::make_shared<boost::interprocess::mapped_region>(shdmem, boost::interprocess::read_write, offset, _userdata_size);
+		boost::interprocess::offset_t offset = i * _userdata_size;
+		auto region = std::make_shared<boost::interprocess::mapped_region>(userdb_shdmem, boost::interprocess::read_write, offset, _userdata_size);
 		_userdata_region.emplace_back(region);
 	}
 }
@@ -470,31 +473,51 @@ void context::handle_position(const std::vector<std::any>& param)
 
 void context::handle_crossday(const std::vector<std::any>& param)
 {
-	if (param.size() >= 1)
+	if (param.size() < 1)
 	{
-		uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
-		LOG_INFO("cross day %d", trading_day);
+		return ;
 	}
-	auto trader = get_trader();
-	if (trader)
+	uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
+	LOG_INFO("cross day %d", trading_day);
+	_section->init(trading_day, get_last_time());
+	 if (trading_day != _record_data->trading_day)
 	{
-		LOG_INFO("submit_settlement");
-		trader->submit_settlement();
+		if (_record_data)
+		{
+			_record_data->clear();
+			_record_data->trading_day = trading_day;
+		}
+
+		auto trader = get_trader();
+		if (trader)
+		{
+			LOG_INFO("submit_settlement");
+			trader->submit_settlement();
+		}
 	}
-	if (_operational_data)
+	else
 	{
-		_operational_data->clear();
+		 if (!_is_trading_ready)
+		 {
+			 _is_trading_ready = true;
+		 }
+
+		 if (on_ready)
+		 {
+			 on_ready();
+		 }
+		 LOG_INFO("trading ready");
 	}
 }
 
 
-void context::handle_ready(const std::vector<std::any>& param)
+void context::handle_settlement(const std::vector<std::any>& param)
 {
 	if (!_is_trading_ready)
 	{
 		_is_trading_ready = true ;
 	}
-	_section->init(get_trading_day(),get_last_time());
+	
 	if(on_ready)
 	{
 		on_ready();
@@ -513,9 +536,9 @@ void context::handle_entrust(const std::vector<std::any>& param)
 		{
 			this->on_entrust(order);
 		}
-		if(_operational_data)
+		if(_record_data)
 		{
-			_operational_data->statistic_info.entrust_amount++;
+			_record_data->statistic_info.entrust_amount++;
 		}
 		if (_recorder)
 		{
@@ -555,9 +578,9 @@ void context::handle_trade(const std::vector<std::any>& param)
 			this->on_trade(localid, code, offset, direction, price, trade_volume);
 		}
 		remove_invalid_condition(localid);
-		if (_operational_data)
+		if (_record_data)
 		{
-			_operational_data->statistic_info.trade_amount++;
+			_record_data->statistic_info.trade_amount++;
 		}
 		if (_recorder)
 		{
@@ -582,9 +605,9 @@ void context::handle_cancel(const std::vector<std::any>& param)
 			this->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
 		}
 		remove_invalid_condition(localid);
-		if (_operational_data)
+		if (_record_data)
 		{
-			_operational_data->statistic_info.cancel_amount++;
+			_record_data->statistic_info.cancel_amount++;
 		}
 		if (_recorder)
 		{

@@ -194,7 +194,7 @@ protected:
 	*	ID最大值与localdb配置中的userdata_block对应
 	*/
 
-	void* get_username(size_t size);
+	void* get_userdata(size_t size);
 
 	/**
 	* 获取交易日
