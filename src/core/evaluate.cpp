@@ -72,8 +72,13 @@ double evaluate::get_money()
 void evaluate::playback_history(uint32_t tradeing_day)
 {
 	if(_simulator)
-	{
-		_simulator->play(tradeing_day);
+	{	
+		std::set<code_t> expire_code ;
+		for(auto it : _transfer_map)
+		{
+			expire_code.insert(it.second.expire_code);
+		}
+		_simulator->play(tradeing_day, expire_code);
 	}
 }
 

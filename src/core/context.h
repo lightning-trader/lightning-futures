@@ -75,6 +75,8 @@ private:
 
 	uint32_t _loop_interval ;
 
+protected:
+
 	std::map<code_t, transfer_info> _transfer_map ;
 
 public:

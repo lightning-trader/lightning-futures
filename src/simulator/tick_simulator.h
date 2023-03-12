@@ -85,7 +85,7 @@ public:
 
 	//simulator
 
-	virtual void play(uint32_t tradeing_day) override;
+	virtual void play(uint32_t tradeing_day, const std::set<code_t>& expire) override;
 
 public:
 	

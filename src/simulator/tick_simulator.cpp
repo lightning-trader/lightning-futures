@@ -37,12 +37,18 @@ bool tick_simulator::init(const boost::property_tree::ptree& config)
 	return true;
 }
 
-void tick_simulator::play(uint32_t tradeing_day)
+void tick_simulator::play(uint32_t tradeing_day,const std::set<code_t>& expire)
 {
 	_current_time = 0;
 	_current_tick = 0;
 	_current_index = 0;
 	_pending_tick_info.clear();
+
+	for (auto& it : expire)
+	{
+		load_data(it, tradeing_day);
+	}
+
 	for (auto& it : _instrument_id_list)
 	{
 		load_data(it, tradeing_day);

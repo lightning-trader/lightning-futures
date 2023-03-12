@@ -5,6 +5,7 @@
 #include "recorder.h"
 #include <boost/property_tree/ptree.hpp>
 
+
 futures_market* create_market_api(const boost::property_tree::ptree& config);
 
 void destory_market_api(futures_market*& api);
