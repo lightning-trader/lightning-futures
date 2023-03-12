@@ -18,4 +18,7 @@ public:
 	//资金表
 	virtual void record_account_flow(time_t time, const account_info& account) = 0;
 
+	//结算表
+	virtual void record_crossday_flow(time_t time,uint32_t trading_day,const order_statistic& statistic, const account_info& account) = 0;
+
 };

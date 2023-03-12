@@ -78,11 +78,11 @@ void start_runtime(run_type rt, const char * config_file,int account_type,int mu
 }
 
 
-void start_evaluate(const std::vector<uint32_t>& all_trading_day, run_type rt, const char* config_file, int account_type, int multiple)
+void start_evaluate(const std::vector<uint32_t>& all_trading_day, const char* config_file, int account_type, int multiple)
 {
 	auto app = std::make_shared<evaluate_engine>(config_file);
 	std::vector<std::shared_ptr<strategy>> stra_list;
-	auto strategys = make_strategys(rt,account_type, multiple);
+	auto strategys = make_strategys(RT_EVALUATE,account_type, multiple);
 	for (auto it : *strategys)
 	{
 		stra_list.emplace_back(it.second);
@@ -94,7 +94,8 @@ void start_evaluate(const std::vector<uint32_t>& all_trading_day, run_type rt, c
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_hx_zjh.ini", 10, 1);
-	//return 0;
+	start_evaluate(trading_day_2301, "evaluate.ini",10, 1);
+	return 0;
 	if(argc < 3)
 	{
 		LOG_ERROR("start atgc error");
@@ -118,7 +119,7 @@ int main(int argc,char* argv[])
 	if (std::strcmp("evaluate", argv[1])==0)
 	{
 		LOG_INFO("start %s evaluate for %d*%d", config_file, account_type, multiple);
-		start_evaluate(trading_day_2301, RT_EVALUATE,config_file, account_type, multiple);
+		start_evaluate(trading_day_2301, config_file, account_type, multiple);
 	}
 	else
 	{

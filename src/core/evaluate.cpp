@@ -77,14 +77,14 @@ void evaluate::playback_history(uint32_t tradeing_day)
 	}
 }
 
-trader_api* evaluate::get_trader()
+trader_api& evaluate::get_trader()
 {
-	return _simulator;
+	return *_simulator;
 }
 
-market_api* evaluate::get_market()
+market_api& evaluate::get_market()
 {
-	return _simulator;
+	return *_simulator;
 }
 
 void evaluate::update()

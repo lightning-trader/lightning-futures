@@ -2,12 +2,9 @@
 #include "context.h"
 #include <trader_api.h>
 
-pod_chain::pod_chain(context* ctx, pod_chain* next) :_next(next), _ctx(ctx), _trader(nullptr)
+pod_chain::pod_chain(context& ctx, pod_chain* next) :_next(next), _ctx(ctx), _trader(ctx.get_trader())
 {
-	if(_ctx)
-	{
-		_trader = ctx->get_trader();
-	}
+	
 }
 pod_chain::~pod_chain()
 {
@@ -22,7 +19,7 @@ pod_chain::~pod_chain()
 uint32_t pod_chain::get_open_pending() const
 {
 	std::vector<order_info> order_list;
-	_trader->find_orders(order_list, [](const order_info& order)->bool {
+	_trader.find_orders(order_list, [](const order_info& order)->bool {
 		return order.offset==OT_OPEN;
 		});
 	uint32_t res = 0;
@@ -32,7 +29,7 @@ uint32_t pod_chain::get_open_pending() const
 	}
 	return res;
 }
-close_to_open_chain::close_to_open_chain(context* ctx, pod_chain* next) :pod_chain(ctx, next)
+close_to_open_chain::close_to_open_chain(context& ctx, pod_chain* next) :pod_chain(ctx, next)
 {
 	
 }
@@ -43,12 +40,12 @@ estid_t close_to_open_chain::place_order(offset_type offset, direction_type dire
 	if (offset == OT_CLOSE)
 	{
 		uint32_t total_position = 0;
-		auto position = _trader->get_total_position();
+		auto position = _trader.get_total_position();
 		total_position = position + get_open_pending();
 		
 		if (direction == DT_LONG)
 		{
-			auto max_position = _ctx->get_max_position();
+			auto max_position = _ctx.get_max_position();
 			if (total_position + count <= max_position)
 			{
 				//平多转开空
@@ -57,7 +54,7 @@ estid_t close_to_open_chain::place_order(offset_type offset, direction_type dire
 		}
 		if (direction == DT_SHORT)
 		{
-			auto max_position = _ctx->get_max_position();
+			auto max_position = _ctx.get_max_position();
 			if (total_position + count <= max_position)
 			{
 				//平空转开多
@@ -78,7 +75,7 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 	{
 		if(direction == DT_LONG)
 		{
-			auto pos = _trader->get_position(code);
+			auto pos = _trader.get_position(code);
 			LOG_INFO("open_to_close_chain place_order DT_LONG %s %d %d %d", code.get_id(), pos.today_short.usable(), pos.yestoday_short.usable(), count);
 			if (pos.today_short.usable() >= count || pos.yestoday_short.usable() >= count)
 			{
@@ -86,10 +83,10 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 				return _next->place_order(OT_CLOSE, DT_SHORT, code, count, price, flag);
 			}
 			
-			auto transfer = _ctx->get_transfer_info(code);
+			auto transfer = _ctx.get_transfer_info(code);
 			if (transfer)
 			{
-				auto pos = _trader->get_position(transfer->expire_code);
+				auto pos = _trader.get_position(transfer->expire_code);
 				LOG_INFO("open_to_close_chain for transfer_position_chain place_order DT_LONG %s %d %d %d", code.get_id(), pos.today_short.usable(), pos.yestoday_short.usable(), count);
 				if (pos.today_short.usable() >= count || pos.yestoday_short.usable() >= count)
 				{
@@ -100,7 +97,7 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 		}
 		if (direction == DT_SHORT)
 		{
-			auto pos = _trader->get_position(code);
+			auto pos = _trader.get_position(code);
 			LOG_INFO("open_to_close_chain place_order DT_SHORT %s %d %d %d", code.get_id(), pos.today_long.usable(), pos.yestoday_long.usable(), count);
 			if (pos.today_long.usable() >= count || pos.yestoday_long.usable() >= count)
 			{
@@ -108,10 +105,10 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 				return _next->place_order(OT_CLOSE, DT_LONG, code, count, price, flag);
 			}
 
-			auto transfer = _ctx->get_transfer_info(code);
+			auto transfer = _ctx.get_transfer_info(code);
 			if (transfer)
 			{
-				auto pos = _trader->get_position(code);
+				auto pos = _trader.get_position(code);
 				LOG_INFO("open_to_close_chain  for transfer_position_chain place_order DT_SHORT %s %d %d %d", code.get_id(), pos.today_long.usable(), pos.yestoday_long.usable(), count);
 				if (pos.today_long.usable() >= count || pos.yestoday_long.usable() >= count)
 				{
@@ -131,19 +128,19 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 	std::vector<order_info> order_list ;
 	if(direction == DT_LONG)
 	{
-		_trader->find_orders(order_list,[code,count, price](const order_info& order)->bool{
+		_trader.find_orders(order_list,[code,count, price](const order_info& order)->bool{
 			return order.direction == DT_SHORT&&order.code == code && order.last_volume == count && order.price == price;
 		});
 	}
 	if (direction == DT_SHORT)
 	{
-		_trader->find_orders(order_list, [code,count, price](const order_info& order)->bool {
+		_trader.find_orders(order_list, [code,count, price](const order_info& order)->bool {
 			return order.direction == DT_LONG && order.code == code && order.last_volume == count && order.price == price;
 			});
 	}
 	if (!order_list.empty())
 	{
-		_trader->cancel_order(order_list.begin()->est_id);
+		_trader.cancel_order(order_list.begin()->est_id);
 		return INVALID_ESTID;
 	}
 	return _next->place_order(offset, direction, code, count, price, flag);
@@ -154,12 +151,12 @@ estid_t transfer_position_chain::place_order(offset_type offset, direction_type 
 	LOG_DEBUG("transfer_position_chain place_order %s", code.get_id());
 	if (offset == OT_CLOSE)
 	{
-		auto transfer = _ctx->get_transfer_info(code);
+		auto transfer = _ctx.get_transfer_info(code);
 		if(transfer)
 		{
 			if (direction == DT_LONG)
 			{
-				auto pos = _trader->get_position(transfer->expire_code);
+				auto pos = _trader.get_position(transfer->expire_code);
 				LOG_INFO("transfer_position_chain place_order DT_LONG %s %d %d %d", code.get_id(), pos.today_long.usable(), pos.yestoday_long.usable(), count);
 				if (pos.today_long.usable() >= count || pos.yestoday_long.usable() >= count)
 				{
@@ -169,7 +166,7 @@ estid_t transfer_position_chain::place_order(offset_type offset, direction_type 
 			}
 			if (direction == DT_SHORT)
 			{
-				auto pos = _trader->get_position(transfer->expire_code);
+				auto pos = _trader.get_position(transfer->expire_code);
 				LOG_INFO("transfer_position_chain place_order DT_LONG %s %d %d %d", code.get_id(), pos.today_short.usable(), pos.yestoday_short.usable(), count);
 				if (pos.today_short.usable() >= count || pos.yestoday_short.usable() >= count)
 				{
@@ -180,7 +177,7 @@ estid_t transfer_position_chain::place_order(offset_type offset, direction_type 
 		}
 	}
 	LOG_DEBUG("transfer_position_chain _trader place_order %s", code.get_id());
-	return _trader->place_order(offset, direction, code, count, price, flag);
+	return _trader.place_order(offset, direction, code, count, price, flag);
 }
 
 
@@ -190,9 +187,9 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 	LOG_DEBUG("verify_chain place_order %s", code.get_id());
 	if(offset == OT_OPEN)
 	{
-		auto position = _trader->get_total_position();
+		auto position = _trader.get_total_position();
 		auto pending = get_open_pending();
-		auto max_position = _ctx->get_max_position();
+		auto max_position = _ctx.get_max_position();
 		if (position + pending + count > max_position)
 		{
 			return INVALID_ESTID;
@@ -200,7 +197,7 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 	}
 	else if (offset == OT_CLOSE)
 	{
-		const auto pos = _trader->get_position(code);
+		const auto pos = _trader.get_position(code);
 		if (direction == DT_LONG &&( pos.today_long.usable() < count && pos.yestoday_long.usable() < count))
 		{
 			return INVALID_ESTID;
@@ -210,12 +207,12 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 			return INVALID_ESTID;
 		}
 	}
-	auto filter_callback = _ctx->get_trading_filter();
+	auto filter_callback = _ctx.get_trading_filter();
 	if(filter_callback&&!filter_callback(code, offset, direction, count, price, flag))
 	{
 		return INVALID_ESTID;
 	}
 	LOG_DEBUG("verify_chain _trader place_order %s", code.get_id());
-	return _trader->place_order(offset, direction, code, count, price, flag);
+	return _trader.place_order(offset, direction, code, count, price, flag);
 }
 

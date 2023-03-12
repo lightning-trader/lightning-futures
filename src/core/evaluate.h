@@ -19,9 +19,9 @@ public:
 
 	void playback_history(uint32_t tradeing_day);
 
-	virtual trader_api* get_trader() override;
+	virtual trader_api& get_trader() override;
 
-	virtual market_api* get_market() override;
+	virtual market_api& get_market() override;
 
 protected:
 

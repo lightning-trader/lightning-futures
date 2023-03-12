@@ -55,22 +55,16 @@ void recorder_proxy::record_update()
 	{
 		_recorder->record_account_flow(std::get<0>(account_flow_data), std::get<1>(account_flow_data));
 	}
+
+	std::tuple<time_t, uint32_t, order_statistic, account_info > crossday_flow_data;
+	while (_crossday_flow_queue.pop(crossday_flow_data))
+	{
+		_recorder->record_crossday_flow(std::get<0>(crossday_flow_data), std::get<1>(crossday_flow_data), std::get<2>(crossday_flow_data), std::get<3>(crossday_flow_data));
+	}
 }
 
 recorder_proxy::~recorder_proxy()
 {
-	while (!_order_lifecycle_queue.empty())
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
-	while (!_position_flow_queue.empty())
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
-	while (!_account_flow_queue.empty())
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
 	_is_reocding = false ;
 	_record_thread.join();
 	if (_recorder)
@@ -112,4 +106,9 @@ void recorder_proxy::record_position_flow(time_t time, const position_info& posi
 void recorder_proxy::record_account_flow(time_t time, const account_info& account)
 {
 	while (!_account_flow_queue.push(std::make_tuple(time, account)));
+}
+
+void recorder_proxy::record_crossday_flow(time_t time, uint32_t trading_day, const order_statistic& statistic, const account_info& account)
+{
+	while (!_crossday_flow_queue.push(std::make_tuple(time, trading_day, statistic, account)));
 }

@@ -259,12 +259,15 @@ struct order_statistic
 	uint32_t trade_amount;
 	//撤单数量
 	uint32_t cancel_amount;
+	//错误数量
+	uint32_t error_amount;
 
 	order_statistic():
 		place_order_amount(0),
 		entrust_amount(0),
 		trade_amount(0),
-		cancel_amount(0)
+		cancel_amount(0),
+		error_amount(0)
 	{}
 
 };

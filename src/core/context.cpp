@@ -73,12 +73,6 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 
 	_recorder = create_recorder(rcd_config);
 
-	auto trader = get_trader();
-	if (trader == nullptr)
-	{
-		return false;
-	}
-
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
 	
@@ -169,19 +163,19 @@ void context::stop_service()
 pod_chain* context::create_chain(trading_optimal opt, bool flag)
 {
 
-	pod_chain* chain = new transfer_position_chain(this,new verify_chain(this));
+	pod_chain* chain = new transfer_position_chain(*this,new verify_chain(*this));
 	if (flag)
 	{
 		switch (opt)
 		{
 		case TO_OPEN_TO_CLOSE:
-			chain = new price_to_cancel_chain(this, new open_to_close_chain(this, chain));
+			chain = new price_to_cancel_chain(*this, new open_to_close_chain(*this, chain));
 			break;
 		case TO_CLOSE_TO_OPEN:
-			chain = new price_to_cancel_chain(this, new close_to_open_chain(this, chain));
+			chain = new price_to_cancel_chain(*this, new close_to_open_chain(*this, chain));
 			break;
 		default:
-			chain = new price_to_cancel_chain(this, chain);
+			chain = new price_to_cancel_chain(*this, chain);
 			break;
 		}
 	}
@@ -190,10 +184,10 @@ pod_chain* context::create_chain(trading_optimal opt, bool flag)
 		switch (opt)
 		{
 		case TO_OPEN_TO_CLOSE:
-			chain = new open_to_close_chain(this, chain);
+			chain = new open_to_close_chain(*this, chain);
 			break;
 		case TO_CLOSE_TO_OPEN:
-			chain = new close_to_open_chain(this, chain);
+			chain = new close_to_open_chain(*this, chain);
 			break;
 		default:
 			break;
@@ -245,11 +239,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 	}
 	if(_record_region)
 	{
-		auto market = get_market();
-		if(market)
-		{
-			_record_data->last_order_time = market->last_tick_time();
-		}
+		_record_data->last_order_time = get_market().last_tick_time();
 		_record_data->statistic_info.place_order_amount++;
 	}
 	return chain->place_order(offset, direction, code, count, price, flag);
@@ -271,76 +261,36 @@ void context::cancel_order(estid_t order_id)
 		return ;
 	}
 	LOG_DEBUG("context cancel_order : %llu\n", order_id);
-	auto trader = get_trader();
-	if (trader)
-	{
-		trader->cancel_order(order_id);
-	}
+	get_trader().cancel_order(order_id);
 }
 
 const position_info& context::get_position(const code_t& code)
 {
-	auto trader = get_trader();
-	if (trader == nullptr)
-	{
-		LOG_ERROR("cancel_order error _trader nullptr");
-		return default_position;
-	}
-	return trader->get_position(code);
+	return get_trader().get_position(code);
 }
 
 const account_info& context::get_account()
 {
-	auto trader = get_trader();
-	if (trader == nullptr)
-	{
-		LOG_ERROR("get_account error _trader nullptr");
-		return default_account;
-	}
-	return trader->get_account();
+	return get_trader().get_account();
 }
 
 const order_info& context::get_order(estid_t order_id)
 {
-	auto trader = get_trader();
-	if (trader == nullptr)
-	{
-		LOG_ERROR("get_account error _trader nullptr");
-		return default_order;
-	}
-	return trader->get_order(order_id);
+	return get_trader().get_order(order_id);
 }
 
 void context::subscribe(const std::set<code_t>& codes)
 {
-	auto market = get_market();
-	if (market == nullptr)
-	{
-		LOG_ERROR("subscribe error _market nullptr");
-		return;
-	}
-	market->subscribe(codes);
+	get_market().subscribe(codes);
 }
 
 void context::unsubscribe(const std::set<code_t>& codes)
 {
-	auto market = get_market();
-	if (market == nullptr)
-	{
-		LOG_ERROR("unsubscribe error _market nullptr");
-		return;
-	}
-	market->unsubscribe(codes);
+	get_market().unsubscribe(codes);
 }
 time_t context::get_last_time()
 {
-	auto market = get_market();
-	if (market == nullptr)
-	{
-		LOG_ERROR("get_last_time error _market nullptr");
-		return 0;
-	}
-	return market->last_tick_time();
+	return get_market().last_tick_time();
 }
 
 time_t context::last_order_time()
@@ -372,12 +322,7 @@ void* context::get_userdata(untid_t index,size_t size)
 
 uint32_t context::get_trading_day()
 {
-	const auto market = get_market();
-	if(market == nullptr)
-	{
-		return 0U;
-	}
-	return market->get_trading_day();
+	return get_market().get_trading_day();
 }
 
 time_t context::get_close_time()
@@ -480,20 +425,26 @@ void context::handle_crossday(const std::vector<std::any>& param)
 	uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
 	LOG_INFO("cross day %d", trading_day);
 	_section->init(trading_day, get_last_time());
-	 if (trading_day != _record_data->trading_day)
+	if (trading_day != _record_data->trading_day)
 	{
 		if (_record_data)
 		{
-			_record_data->clear();
+			//记录结算数据
+			if (_recorder)
+			{
+				_recorder->record_crossday_flow(get_last_time(), trading_day, _record_data->statistic_info, get_trader().get_account());
+			}
+			
+			_record_data->statistic_info.place_order_amount = 0;
+			_record_data->statistic_info.entrust_amount = 0;
+			_record_data->statistic_info.trade_amount = 0;
+			_record_data->statistic_info.cancel_amount = 0;
+			_record_data->statistic_info.error_amount = 0;
 			_record_data->trading_day = trading_day;
 		}
 
-		auto trader = get_trader();
-		if (trader)
-		{
-			LOG_INFO("submit_settlement");
-			trader->submit_settlement();
-		}
+		LOG_INFO("submit_settlement");
+		get_trader().submit_settlement();
 	}
 	else
 	{
@@ -637,6 +588,10 @@ void context::handle_error(const std::vector<std::any>& param)
 		const error_type type = std::any_cast<error_type>(param[0]);
 		const estid_t localid = std::any_cast<estid_t>(param[1]);
 		const uint32_t error_code = std::any_cast<uint32_t>(param[2]);
+		if (_record_data)
+		{
+			_record_data->statistic_info.error_amount++;
+		}
 		if (this->on_error)
 		{
 			this->on_error(type, localid, error_code);
@@ -651,11 +606,7 @@ void context::check_order_condition(const tick_info& tick)
 	{
 		if (it->second(it->first,tick))
 		{
-			auto trader = get_trader();
-			if(trader)
-			{
-				trader->cancel_order(it->first);
-			}
+			get_trader().cancel_order(it->first);
 			it = _need_check_condition.erase(it);
 		}
 		else

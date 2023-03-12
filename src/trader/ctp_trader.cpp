@@ -96,7 +96,7 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 					_last_query_time = get_now();
 				}
 				std::this_thread::sleep_for(std::chrono::seconds(1));
-				query_account();
+				//query_account();
 			}
 			});
 		//_work_thread->join();
@@ -455,10 +455,18 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			}
 		}
 		_position_info[code] = position;
+		if(bIsLast)
+		{
+			LOG_INFO("Query Position Finish : %s today_long(%d %d %f) today_short(%d %d %f) yestoday_long(%d %d %f) yestoday_short(%d %d %f)", position.id.get_id(),position.today_long.postion, position.today_long.frozen, position.today_long.price,
+			position.today_short.postion,position.today_short.frozen, position.today_short.price,
+			position.yestoday_long.postion, position.yestoday_long.frozen, position.yestoday_long.price,
+			position.yestoday_short.postion, position.yestoday_short.frozen, position.yestoday_short.price);
+
+		}
 	}
-	
 	if (bIsLast && !_is_inited)
 	{
+		
 		_process_signal.notify_all();
 	}
 }
@@ -650,6 +658,12 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			this->fire_event(ET_OrderDeal, estid, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 		}
 	}
+	auto it = _position_info.find(code);
+	if(it != _position_info.end())
+	{
+		auto& pos = it->second;
+		LOG_INFO("OnRtnOrder position change : %d %d %d %d", pos.today_long.postion, pos.today_short.postion, pos.yestoday_long.postion, pos.yestoday_short.postion);
+	}
 }
 
 void ctp_trader::OnRtnTrade(CThostFtdcTradeField *pTrade)
@@ -667,10 +681,11 @@ void ctp_trader::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTh
 {
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
-		LOG_ERROR("OnRspQryTrade \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		LOG_ERROR("OnErrRtnOrderInsert \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
 	if(pInputOrder && pRspInfo)
 	{
+		LOG_ERROR("OnErrRtnOrderInsert %s %d %s \n", pInputOrder->InstrumentID, pInputOrder->VolumeTotalOriginal, pRspInfo->ErrorMsg);
 		estid_t estid = generate_estid(_front_id, _session_id, strtol(pInputOrder->OrderRef,NULL,10));
 		auto it = _order_info.find(estid);
 		if(it != _order_info.end())

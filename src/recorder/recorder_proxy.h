@@ -24,8 +24,9 @@ private:
 	std::thread _record_thread;
 
 	boost::lockfree::spsc_queue<std::pair<order_action_type,std::any>, boost::lockfree::capacity<128>>  _order_lifecycle_queue;
-	boost::lockfree::spsc_queue<std::tuple<time_t,position_info>, boost::lockfree::capacity<128>>  _position_flow_queue;
+	boost::lockfree::spsc_queue<std::tuple<time_t, position_info>, boost::lockfree::capacity<128>>  _position_flow_queue;
 	boost::lockfree::spsc_queue<std::tuple<time_t, account_info>, boost::lockfree::capacity<128>>  _account_flow_queue;
+	boost::lockfree::spsc_queue<std::tuple<time_t, uint32_t , order_statistic, account_info>, boost::lockfree::capacity<128>>  _crossday_flow_queue;
 
 public :
 
@@ -46,5 +47,8 @@ public:
 
 	//资金表
 	virtual void record_account_flow(time_t time, const account_info& account) override;
+
+	//结算表
+	virtual void record_crossday_flow(time_t time, uint32_t trading_day, const order_statistic& statistic, const account_info& account) override;
 
 };

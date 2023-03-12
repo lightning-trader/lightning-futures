@@ -75,14 +75,14 @@ bool runtime::init_from_file(const std::string& config_path)
 	return this->init(control_config, include_config, recorder_config);
 }
 
-trader_api* runtime::get_trader()
+trader_api& runtime::get_trader()
 {
-	return _trader_api;
+	return *_trader_api;
 }
 
-market_api* runtime::get_market()
+market_api& runtime::get_market()
 {
-	return _market_api;
+	return *_market_api;
 }
 
 void runtime::update()

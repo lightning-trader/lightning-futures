@@ -20,15 +20,6 @@ struct record_data
 
 	record_data():trading_day(0U),last_order_time(0) {}
 
-	void clear()
-	{
-		last_order_time = 0;
-		statistic_info.place_order_amount = 0;
-		statistic_info.entrust_amount = 0;
-		statistic_info.trade_amount = 0;
-		statistic_info.cancel_amount = 0;
-	}
-
 };
 
 struct transfer_info
@@ -208,9 +199,9 @@ protected:
 
 public:
 
-	virtual trader_api* get_trader() = 0;
+	virtual trader_api& get_trader() = 0;
 
-	virtual market_api* get_market() = 0;
+	virtual market_api& get_market() = 0;
 
 
 };
