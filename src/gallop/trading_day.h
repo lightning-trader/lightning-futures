@@ -1,7 +1,6 @@
 
 std::vector<uint32_t> trading_day_2210 = {
 	//2210
-	/*
 	20220801,
 	20220802,
 	20220803,
@@ -24,7 +23,6 @@ std::vector<uint32_t> trading_day_2210 = {
 	20220826,
 	20220829,
 	20220830,
-	*/
 	20220831
 };
 std::vector<uint32_t> trading_day_2301 = {
