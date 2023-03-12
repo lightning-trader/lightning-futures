@@ -274,6 +274,25 @@ struct order_statistic
 
 const order_statistic default_statistic;
 
+
+struct transfer_info
+{
+	code_t expire_code;
+	double_t price_offset;
+
+	transfer_info() :price_offset(.0F)
+	{}
+
+	transfer_info(const code_t expire, double_t offset) :expire_code(expire), price_offset(offset)
+	{}
+
+	bool operator == (const transfer_info& other)const
+	{
+		return expire_code == other.expire_code;
+	}
+};
+const transfer_info default_transfer;
+
 typedef enum error_type
 {
 	ET_PLACE_ORDER,

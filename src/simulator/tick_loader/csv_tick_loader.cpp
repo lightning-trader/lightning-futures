@@ -2,6 +2,7 @@
 #include "csv_tick_loader.h"
 #include <rapidcsv.h>
 #include <time_utils.hpp>
+#include <file_wapper.hpp>
 
 bool csv_tick_loader::init(const std::string& root_path)
 {
@@ -14,6 +15,10 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 {
 	char buffer[128];
 	sprintf_s(buffer, 128, _root_path.c_str(), code.get_id(), trade_day);
+	if (!file_wapper::exists(buffer))
+	{
+		return ;
+	}
 	rapidcsv::Document doc(buffer, rapidcsv::LabelParams(0, -1));
 	for(size_t i = 0;i < doc.GetRowCount();i++)
 	{

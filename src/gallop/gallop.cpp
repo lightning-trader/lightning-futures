@@ -77,13 +77,13 @@ void start_evaluate(const char* config_file, int account_type, int multiple)
 		uint32_t index = it.first;
 		auto rb_frist = get_rb_frist(index);
 		auto rb_second = get_rb_second(index);
-		if(std::strcmp(rb_frist.second,"")!=0)
+		if(std::strcmp(rb_frist.first,"")!=0 && rb_frist.second != default_transfer)
 		{
-			app->bind_transfer_info(rb_frist.first, rb_frist.second, 20);
+			app->bind_transfer_info(rb_frist.first, rb_frist.second.expire_code, rb_frist.second.price_offset);
 		}
-		if (std::strcmp(rb_second.second, "") != 0)
+		if (std::strcmp(rb_second.first, "") != 0 && rb_frist.second != default_transfer)
 		{
-			app->bind_transfer_info(rb_second.first, rb_second.second, 20);
+			app->bind_transfer_info(rb_second.first, rb_second.second.expire_code, rb_second.second.price_offset);
 		}
 		std::vector<std::shared_ptr<strategy>> stra_list;
 		auto strategys = make_strategys(rb_frist.first,rb_second.first,"SHFE.ag2306", account_type, multiple);

@@ -22,18 +22,6 @@ struct record_data
 
 };
 
-struct transfer_info
-{
-	code_t expire_code;
-	double_t price_offset ;
-
-	transfer_info():price_offset(.0F)
-	{}
-
-	transfer_info(const code_t expire,double_t offset):expire_code(expire), price_offset(offset)
-	{}
-};
-
 class context
 {
 
