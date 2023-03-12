@@ -232,4 +232,7 @@ void hft_3_strategy::on_error(error_type type, estid_t localid, const uint32_t e
 		_order_data->close_short_order = INVALID_ESTID;
 	}
 }
-
+void hft_3_strategy::on_destory()
+{
+	unsubscribe(_code);
+}

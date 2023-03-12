@@ -13,6 +13,7 @@ void strategy_manager::unregist_strategy(straid_t straid)
 	auto it = _strategy_map.find(straid);
 	if(it != _strategy_map.end())
 	{
+		it->second->on_destory();
 		_strategy_map.erase(it);
 	}
 }

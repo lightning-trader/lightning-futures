@@ -82,6 +82,10 @@ public:
 	 */
 	virtual void on_error(error_type type, estid_t localid, const uint32_t error) {}
 
+	/*
+	 *	销毁
+	 */
+	virtual void on_destory() {}
 
 protected:
 	//功能函数

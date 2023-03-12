@@ -159,3 +159,8 @@ void hft_2_strategy::on_error(error_type type, estid_t localid, const uint32_t e
 		_order_data->sell_order = INVALID_ESTID;
 	}
 }
+
+void hft_2_strategy::on_destory()
+{
+	unsubscribe(_code);
+}

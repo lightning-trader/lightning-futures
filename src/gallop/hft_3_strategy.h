@@ -95,6 +95,10 @@ public:
 	 */
 	virtual void on_error(error_type type,estid_t localid, const uint32_t error) override;
 
+	/*
+	 *	Ïú»Ù
+	 */
+	virtual void on_destory()override;
 
 private:
 	

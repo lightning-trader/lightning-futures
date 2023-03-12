@@ -29,5 +29,9 @@ void evaluate_engine::back_test(std::vector<std::shared_ptr<strategy>> stra_list
 		}
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		lt_stop_service(_lt);
+		for (size_t i = 0; i < stra_list.size(); i++)
+		{
+			_strategy_manager->unregist_strategy((straid_t)i);
+		}
 	}
 }

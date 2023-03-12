@@ -19,20 +19,10 @@ typedef enum run_type
 	RT_RUNTIME,
 }run_type;
 
-std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(run_type rt,int account_type, int multiple)
+std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(const char* rb_frist,const char* rb_second, const char* ag_frist,int account_type, int multiple)
 {
-	const char* rb_frist = "SHFE.rb2305";
-	const char* ag_frist = "SHFE.ag2306";
-	const char* rb_second = "SHFE.rb2306";
-	const char* ag_second = "SHFE.ag2305";
-	if(rt == RT_EVALUATE)
-	{
-		rb_frist = "SHFE.rb2301";
-		ag_frist = "SHFE.ag2212";
-		rb_second = "SHFE.rb2302";
-		ag_second = "SHFE.ag2301";
-	}
-	LOG_INFO("make_strategys : %s %s %s %s", rb_frist, ag_frist, rb_second, ag_second);
+
+	LOG_INFO("make_strategys : %s %s %s", rb_frist, ag_frist, rb_second);
 
 	auto result = std::make_shared<std::map<straid_t,std::shared_ptr<strategy>>>();
 	switch (account_type)
@@ -67,8 +57,8 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(ru
 void start_runtime(run_type rt, const char * config_file,int account_type,int multiple)
 {
 	auto app = std::make_shared<runtime_engine>(config_file);
-	
-	auto strategys = make_strategys(rt,account_type, multiple);
+
+	auto strategys = make_strategys("SHFE.rb2305","SHFE.rb2306", "SHFE.ag2306",account_type, multiple);
 	for(auto it : *strategys)
 	{
 		app->add_strategy(it.first,it.second);
@@ -78,23 +68,34 @@ void start_runtime(run_type rt, const char * config_file,int account_type,int mu
 }
 
 
-void start_evaluate(const std::vector<uint32_t>& all_trading_day, const char* config_file, int account_type, int multiple)
+void start_evaluate(const char* config_file, int account_type, int multiple)
 {
 	auto app = std::make_shared<evaluate_engine>(config_file);
-	std::vector<std::shared_ptr<strategy>> stra_list;
-	auto strategys = make_strategys(RT_EVALUATE,account_type, multiple);
-	for (auto it : *strategys)
+
+	for(auto it : trading_index)
 	{
-		stra_list.emplace_back(it.second);
+		uint32_t index = it.first;
+		auto rb_frist = get_rb_frist(index);
+		auto rb_second = get_rb_second(index);
+		app->bind_transfer_info(rb_frist.first, rb_frist.second,20);
+		app->bind_transfer_info(rb_second.first, rb_second.second, 20);
+		std::vector<std::shared_ptr<strategy>> stra_list;
+		auto strategys = make_strategys(rb_frist.first,rb_second.first,"SHFE.ag2306", account_type, multiple);
+		for (auto it : *strategys)
+		{
+			stra_list.emplace_back(it.second);
+		}
+		app->back_test(stra_list, it.second);
 	}
-	app->back_test(stra_list, all_trading_day);
+
+	
 }
 
 
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_hx_zjh.ini", 10, 1);
-	start_evaluate(trading_day_2301, "evaluate.ini",10, 1);
+	start_evaluate("evaluate.ini",10, 1);
 	return 0;
 	if(argc < 3)
 	{
@@ -119,7 +120,7 @@ int main(int argc,char* argv[])
 	if (std::strcmp("evaluate", argv[1])==0)
 	{
 		LOG_INFO("start %s evaluate for %d*%d", config_file, account_type, multiple);
-		start_evaluate(trading_day_2301, config_file, account_type, multiple);
+		start_evaluate(config_file, account_type, multiple);
 	}
 	else
 	{

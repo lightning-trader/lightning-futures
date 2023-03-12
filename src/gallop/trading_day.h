@@ -1,6 +1,7 @@
 
 std::vector<uint32_t> trading_day_2210 = {
 	//2210
+	/*
 	20220801,
 	20220802,
 	20220803,
@@ -23,6 +24,7 @@ std::vector<uint32_t> trading_day_2210 = {
 	20220826,
 	20220829,
 	20220830,
+	*/
 	20220831
 };
 std::vector<uint32_t> trading_day_2301 = {
@@ -116,3 +118,39 @@ std::vector<uint32_t> trading_day_2305 = {
 	20221230
 
 };
+
+
+std::map<uint32_t, std::vector<uint32_t>> trading_index = {{1,trading_day_2210},{2,trading_day_2301},{3,trading_day_2305}};
+
+std::pair<const char*,const char*> get_rb_frist(uint32_t index)
+{
+	switch(index)
+	{
+		case 1:
+			return std::make_pair("SHFE.rb2210","");
+			break;
+		case 2:
+			return std::make_pair("SHFE.rb2301","SHFE.rb2210");
+			break;
+		case 3:
+			return std::make_pair("SHFE.rb2305", "SHFE.rb2301");
+			break;
+	}
+	return std::make_pair("", "");
+}
+std::pair<const char*, const char*> get_rb_second(uint32_t index)
+{
+	switch (index)
+	{
+	case 1:
+		return std::make_pair("SHFE.rb2301", "");
+		break;
+	case 2:
+		return std::make_pair("SHFE.rb2210", "SHFE.rb2301");
+		break;
+	case 3:
+		return std::make_pair("SHFE.rb2303", "SHFE.rb2210");
+		break;
+	}
+	return std::make_pair("", "");
+}
