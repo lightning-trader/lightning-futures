@@ -19,6 +19,10 @@ void hft_3_strategy::on_ready()
 		_order_data->close_short_order = INVALID_ESTID;
 		_order_data->open_long_order = INVALID_ESTID;
 		_order_data->open_short_order = INVALID_ESTID;
+		for (size_t i = 0; i < YESTODAY_CLOSE_COUNT; i++)
+		{
+			_order_data->yestody_close_order[i] = INVALID_ESTID;
+		}
 	}
 }
 
