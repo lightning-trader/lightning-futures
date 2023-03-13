@@ -69,8 +69,8 @@ void log_format(log_level lv, const char* format, ...)
 	}
 	va_list arg_list;
 	va_start(arg_list, format);
-	char formatted_string[1024] = {0};
-	vsnprintf(formatted_string, 1024, format, arg_list);
+	char formatted_string[10240] = {0};
+	vsnprintf(formatted_string, 10240, format, arg_list);
 	//printf(formatted_string.get());
 	//BOOST_LOG(crush::common::SL_TRACE) << formatted_string;
 	switch(lv)

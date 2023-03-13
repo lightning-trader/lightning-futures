@@ -240,6 +240,19 @@ private:
 		return _reqid.fetch_add(1);
 	}
 
+	inline void print_position()
+	{
+		for (auto it : _position_info)
+		{
+			const auto& pos = it.second;
+			LOG_INFO("position : %s today_long(%d %d %f) today_short(%d %d %f) yestoday_long(%d %d %f) yestoday_short(%d %d %f)", pos.id.get_id(),
+				pos.today_long.postion, pos.today_long.frozen, pos.today_long.price,
+				pos.today_short.postion, pos.today_short.frozen, pos.today_short.price,
+				pos.yestoday_long.postion, pos.yestoday_long.frozen, pos.yestoday_long.price,
+				pos.yestoday_short.postion, pos.yestoday_short.frozen, pos.yestoday_short.price);
+		}
+	}
+
 protected:
 
 	CThostFtdcTraderApi*	_td_api;

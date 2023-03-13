@@ -48,7 +48,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 			double_t last_price = tick.sell_price() + _delta;
 			last_price += (last / _open_once) * _delta / 2.F;
 			last_price = std::round(last_price);
-			sell_for_close(tick.id, last, last_price);
+			_order_data->yestody_close_order[0] = sell_for_close(tick.id, last, last_price);
 		}
 		else
 		{
@@ -61,7 +61,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 			sell_price = tick.sell_price() + _delta;
 		}
 		sell_price = std::round(sell_price);
-		sell_for_close(tick.id, once, sell_price);
+		_order_data->yestody_close_order[1] = sell_for_close(tick.id, once, sell_price);
 
 	}
 	if (pos.yestoday_short.usable() > 0)
@@ -73,7 +73,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 			double_t last_price = tick.buy_price() - _delta;
 			last_price -= (last / _open_once) * _delta / 2.F;
 			last_price = std::round(last_price);
-			buy_for_close(tick.id, last, last_price);
+			_order_data->yestody_close_order[2] = buy_for_close(tick.id, last, last_price);
 		}
 		else
 		{
@@ -85,8 +85,7 @@ void hft_3_strategy::on_tick(const tick_info& tick)
 			buy_price = tick.buy_price() - _delta;
 		}
 		buy_price = std::round(buy_price);
-		buy_for_close(tick.id, once, buy_price);
-		
+		_order_data->yestody_close_order[3] = buy_for_close(tick.id, once, buy_price);
 	}
 	
 
@@ -148,7 +147,10 @@ void hft_3_strategy::on_entrust(const order_info& order)
 	{
 		return;
 	}
-	if (order.est_id == _order_data->open_short_order || order.est_id == _order_data->open_long_order || order.est_id == _order_data->close_long_order || order.est_id == _order_data->close_short_order )
+	if (order.est_id == _order_data->open_short_order || order.est_id == _order_data->open_long_order 
+	|| order.est_id == _order_data->close_long_order || order.est_id == _order_data->close_short_order
+	|| order.est_id == _order_data->yestody_close_order[0]|| order.est_id == _order_data->yestody_close_order[1]
+	|| order.est_id == _order_data->yestody_close_order[2]|| order.est_id == _order_data->yestody_close_order[3])
 	{
 		set_cancel_condition(order.est_id, [this](const tick_info& tick)->bool {
 
@@ -185,6 +187,22 @@ void hft_3_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 	{
 		_order_data->close_short_order = INVALID_ESTID;
 	}
+	if (localid == _order_data->yestody_close_order[0])
+	{
+		_order_data->yestody_close_order[0] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[1])
+	{
+		_order_data->yestody_close_order[1] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[2])
+	{
+		_order_data->yestody_close_order[2] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[3])
+	{
+		_order_data->yestody_close_order[3] = INVALID_ESTID;
+	}
 }
 
 void hft_3_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
@@ -206,11 +224,27 @@ void hft_3_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 	{
 		_order_data->close_short_order = INVALID_ESTID;
 	}
+	if (localid == _order_data->yestody_close_order[0])
+	{
+		_order_data->yestody_close_order[0] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[1])
+	{
+		_order_data->yestody_close_order[1] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[2])
+	{
+		_order_data->yestody_close_order[2] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[3])
+	{
+		_order_data->yestody_close_order[3] = INVALID_ESTID;
+	}
 }
 
 void hft_3_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
 {
-	LOG_INFO("hft_3_strategy on_cancel : %llu %d \n", localid, error);
+	LOG_INFO("hft_3_strategy on_error : %llu %d \n", localid, error);
 	if(type != ET_PLACE_ORDER)
 	{
 		return ;
@@ -230,6 +264,22 @@ void hft_3_strategy::on_error(error_type type, estid_t localid, const uint32_t e
 	if (localid == _order_data->close_short_order)
 	{
 		_order_data->close_short_order = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[0])
+	{
+		_order_data->yestody_close_order[0] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[1])
+	{
+		_order_data->yestody_close_order[1] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[2])
+	{
+		_order_data->yestody_close_order[2] = INVALID_ESTID;
+	}
+	if (localid == _order_data->yestody_close_order[3])
+	{
+		_order_data->yestody_close_order[3] = INVALID_ESTID;
 	}
 }
 void hft_3_strategy::on_destory()

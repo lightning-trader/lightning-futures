@@ -455,18 +455,10 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			}
 		}
 		_position_info[code] = position;
-		if(bIsLast)
-		{
-			LOG_INFO("Query Position Finish : %s today_long(%d %d %f) today_short(%d %d %f) yestoday_long(%d %d %f) yestoday_short(%d %d %f)", position.id.get_id(),position.today_long.postion, position.today_long.frozen, position.today_long.price,
-			position.today_short.postion,position.today_short.frozen, position.today_short.price,
-			position.yestoday_long.postion, position.yestoday_long.frozen, position.yestoday_long.price,
-			position.yestoday_short.postion, position.yestoday_short.frozen, position.yestoday_short.price);
-
-		}
 	}
 	if (bIsLast && !_is_inited)
 	{
-		
+		print_position();
 		_process_signal.notify_all();
 	}
 }
@@ -662,7 +654,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 	if(it != _position_info.end())
 	{
 		auto& pos = it->second;
-		LOG_INFO("OnRtnOrder position change : %d %d %d %d", pos.today_long.postion, pos.today_short.postion, pos.yestoday_long.postion, pos.yestoday_short.postion);
+		LOG_INFO("OnRtnOrder position change %s : %d %d %d %d", code.get_id(), pos.today_long.postion, pos.today_short.postion, pos.yestoday_long.postion, pos.yestoday_short.postion);
 	}
 }
 
@@ -682,6 +674,7 @@ void ctp_trader::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTh
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_ERROR("OnErrRtnOrderInsert \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		print_position();
 	}
 	if(pInputOrder && pRspInfo)
 	{
@@ -700,6 +693,7 @@ void ctp_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, C
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_ERROR("OnRspQryTrade \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		print_position();
 	}
 	if (pOrderAction && pRspInfo)
 	{

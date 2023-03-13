@@ -2,9 +2,11 @@
 #include "strategy.h"
 #include <random>
 
+#define YESTODAY_CLOSE_COUNT 4
+
 class hft_3_strategy : public strategy
 {
-
+	
 	struct persist_data
 	{
 		uint32_t trading_day;
@@ -17,13 +19,20 @@ class hft_3_strategy : public strategy
 
 		estid_t open_short_order;
 
+		estid_t yestody_close_order[YESTODAY_CLOSE_COUNT];
+
 		persist_data() :
 			trading_day(0x0U),
 			close_long_order(INVALID_ESTID),
 			close_short_order(INVALID_ESTID),
 			open_long_order(INVALID_ESTID),
 			open_short_order(INVALID_ESTID)
-		{}
+		{
+			for(size_t i = 0;i < YESTODAY_CLOSE_COUNT;i++)
+			{
+				yestody_close_order[i] = INVALID_ESTID;
+			}
+		}
 	};
 
 public:
