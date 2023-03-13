@@ -264,18 +264,20 @@ void ctp_trader::OnFrontDisconnected(int nReason)
 
 void ctp_trader::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-	if (pRspInfo)
+	if (pRspInfo && pRspInfo->ErrorID)
 	{
 		LOG_ERROR("ctp_trader OnRspAuthenticate Error : %d", pRspInfo->ErrorID);
+		return ;
 	}
 	do_login();
 }
 
 void ctp_trader::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-	if (pRspInfo)
+	if (pRspInfo && pRspInfo->ErrorID)
 	{
-		LOG_ERROR("ctp_trader OnRspAuthenticate Error : %d", pRspInfo->ErrorID);
+		LOG_ERROR("ctp_trader OnRspUserLogin Error : %d", pRspInfo->ErrorID);
+		return;
 	}
 
 	if (pRspUserLogin)
