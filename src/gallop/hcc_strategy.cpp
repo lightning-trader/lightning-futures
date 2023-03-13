@@ -9,7 +9,7 @@ void hcc_strategy::on_init()
 /*
  *	tickÍÆËÍ
  */
-void hcc_strategy::on_tick(const tick_info& tick)
+void hcc_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 {
 	//LOG_INFO("tick:%f %d \n", tick->price, tick->volume);
 	

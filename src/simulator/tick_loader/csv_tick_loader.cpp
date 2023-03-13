@@ -42,6 +42,7 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		tick.low_limit = doc.GetCell<double_t>("跌停板价", i);
 		tick.standard = doc.GetCell<double_t>("上次结算价", i);
 		tick.volume = doc.GetCell<uint32_t>("数量", i);
+		tick.open_interest = doc.GetCell<uint32_t>("持仓量", i);
 		tick.trading_day = doc.GetCell<uint32_t>("交易日", i);
 	
 		tick.buy_order[0] = std::make_pair(doc.GetCell<double_t>("申买价一", i), doc.GetCell<uint32_t>("申买量一", i));

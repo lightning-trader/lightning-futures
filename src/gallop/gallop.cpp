@@ -101,8 +101,8 @@ void start_evaluate(const char* config_file, int account_type, int multiple)
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_hx_zjh.ini", 10, 1);
-	//start_evaluate("evaluate.ini",30, 1);
-	//return 0;
+	start_evaluate("evaluate.ini",30, 1);
+	return 0;
 	if(argc < 3)
 	{
 		LOG_ERROR("start atgc error");

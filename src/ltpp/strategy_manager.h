@@ -38,7 +38,7 @@ private:
 
 	static inline strategy_manager* _self;
 
-	static inline void _tick_callback(const tick_info& tick)
+	static inline void _tick_callback(const tick_info& tick,const deal_info& deal)
 	{
 		if (_self)
 		{
@@ -51,7 +51,7 @@ private:
 			{
 				if (stra)
 				{
-					stra->on_tick(tick);
+					stra->on_tick(tick, deal);
 				}
 			}
 

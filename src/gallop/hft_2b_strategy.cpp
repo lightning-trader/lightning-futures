@@ -28,7 +28,7 @@ void hft_2b_strategy::on_ready()
 	*/
 }
 
-void hft_2b_strategy::on_tick(const tick_info& tick)
+void hft_2b_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 {
 	_last_tick = tick;
 	add_to_history(tick.price);

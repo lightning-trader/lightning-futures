@@ -63,6 +63,8 @@ private:
 
 	uint32_t _loop_interval ;
 
+	std::map<code_t,tick_info> _previous_tick;
+
 protected:
 
 	std::map<code_t, transfer_info> _transfer_map ;
@@ -178,7 +180,8 @@ private:
 
 	pod_chain * get_chain(untid_t untid);
 
-	
+	deal_direction get_deal_direction(const tick_info& prev, const tick_info& tick);
+
 protected:
 
 	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config);

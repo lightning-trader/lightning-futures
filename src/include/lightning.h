@@ -47,7 +47,7 @@ LT_INTERFACE_CHECK(object_name,default_return)\
 LT_INTERFACE_CALL(func_name,real_args)\
 }
 
-	typedef void (PORTER_FLAG * tick_callback)(const tick_info&);
+	typedef void (PORTER_FLAG * tick_callback)(const tick_info&, const deal_info&);
 
 	typedef void (PORTER_FLAG * entrust_callback)(const order_info&);
 

@@ -135,6 +135,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	tick.low = pDepthMarketData->LowestPrice;
 	tick.high_limit = pDepthMarketData->UpperLimitPrice;
 	tick.low_limit = pDepthMarketData->LowerLimitPrice;
+	tick.open_interest = pDepthMarketData->OpenInterest;
 
 	tick.buy_order[0] = std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1);
 	tick.buy_order[1] = std::make_pair(pDepthMarketData->BidPrice2, pDepthMarketData->BidVolume2);

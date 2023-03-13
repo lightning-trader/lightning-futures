@@ -13,7 +13,7 @@ void hft_1_strategy::on_ready()
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
 }
 
-void hft_1_strategy::on_tick(const tick_info& tick)
+void hft_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 {
 	_last_tick = tick ; 
 	add_to_history(tick.price);

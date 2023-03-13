@@ -128,6 +128,10 @@ enum event_type;
 
 enum error_type;
 
+enum deal_direction ;
+
+enum deal_status;
+
 typedef std::function<bool(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)> filter_function;
 
 

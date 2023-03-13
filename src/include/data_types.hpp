@@ -29,6 +29,8 @@ struct tick_info
 
 	uint32_t trading_day;
 
+	double_t open_interest;
+
 	std::array<std::pair<double_t, uint32_t>, 5> buy_order;
 	std::array<std::pair<double_t, uint32_t>, 5> sell_order;
 
@@ -60,7 +62,8 @@ struct tick_info
 		price(0),
 		standard(0),
 		volume(0),
-		trading_day(0)
+		trading_day(0),
+		open_interest(.0F)
 	{}
 
 
@@ -85,6 +88,63 @@ struct tick_info
 	}
 };
 
+typedef enum deal_direction
+{
+	DD_DOWN = -1,	//向下
+	DD_FLAT = 0,	//平
+	DD_UP = 1,		//向上
+}deal_direction;
+
+typedef enum deal_status
+{
+	DS_INVALID,
+	DS_DOUBLE_OPEN, //双开
+	DS_OPEN,		//开仓
+	DS_CHANGE,		//换手
+	DS_CLOSE,		//平仓
+	DS_DOUBLE_CLOSE,//双平
+
+}deal_status;
+
+struct deal_info
+{
+	//现手
+	uint32_t	volume_delta;
+	//增仓
+	double_t	interest_delta;
+	//方向
+	deal_direction	direction;
+
+	deal_info() :
+		volume_delta(0),
+		interest_delta(.0F),
+		direction(DD_FLAT)
+	{}
+
+	deal_status get_status()
+	{
+		if(volume_delta == interest_delta && interest_delta > 0)
+		{
+			return DS_DOUBLE_OPEN;
+		}
+		if (volume_delta > interest_delta && interest_delta > 0)
+		{
+			return DS_OPEN;
+		}
+		if (volume_delta > interest_delta && interest_delta == 0)
+		{
+			return DS_CHANGE;
+		}
+		if (volume_delta > -interest_delta && -interest_delta > 0)
+		{
+			return DS_CLOSE;
+		}
+		if (volume_delta == -interest_delta && -interest_delta > 0)
+		{
+			return DS_DOUBLE_CLOSE;
+		}
+	}
+};
 struct position_item
 {
 	//仓位

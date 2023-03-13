@@ -7,7 +7,7 @@ void demo_strategy::on_init()
 	//add_condition(std::make_shared<fall_back_cds>());
 }
 
-void demo_strategy::on_tick(const tick_info& tick)
+void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 {
 
 	LOG_INFO("on_tick time : %d tick : %d\n", tick.time,tick.tick);

@@ -206,6 +206,19 @@ pod_chain* context::get_chain(untid_t untid)
 	return _default_chain;
 }
 
+deal_direction context::get_deal_direction(const tick_info& prev, const tick_info& tick)
+{
+	if(tick.price >= prev.sell_price() || tick.price >= tick.sell_price())
+	{
+		return DD_UP;
+	}
+	if (tick.price <= prev.buy_price() || tick.price <= tick.buy_price())
+	{
+		return DD_DOWN;
+	}
+	return DD_FLAT;
+}
+
 void context::set_cancel_condition(estid_t order_id, condition_callback callback)
 {
 	LOG_DEBUG("context set_cancel_condition : %llu\n", order_id);
@@ -572,11 +585,23 @@ void context::handle_tick(const std::vector<std::any>& param)
 	if (param.size() >= 1)
 	{
 		tick_info last_tick = std::any_cast<tick_info>(param[0]);
-		if(this->on_tick)
+		auto it = _previous_tick.find(last_tick.id);
+		if(it == _previous_tick.end())
 		{
-			this->on_tick(last_tick);
+			_previous_tick.insert(std::make_pair(last_tick.id, last_tick));
+			return;
+		}
+		tick_info& prev_tick = it->second;
+		if(this->on_tick)
+		{	
+			deal_info deal_info;
+			deal_info.volume_delta = last_tick.volume - prev_tick.volume;
+			deal_info.interest_delta = last_tick.open_interest - prev_tick.open_interest;
+			deal_info.direction = get_deal_direction(prev_tick, last_tick);
+			this->on_tick(last_tick, deal_info);
 		}
 		check_order_condition(last_tick);
+		it->second = last_tick;
 	}
 	
 }
