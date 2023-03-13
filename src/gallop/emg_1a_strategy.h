@@ -2,44 +2,23 @@
 #include "strategy.h"
 #include <random>
 
-
-
-class hft_2_strategy : public strategy
+class emg_1a_strategy : public strategy
 {
-
-	struct persist_data
-	{
-		uint32_t trading_day;
-		estid_t sell_order;
-		estid_t buy_order;
-
-		persist_data() :
-			trading_day(0x0U),
-			sell_order(INVALID_ESTID),
-			buy_order(INVALID_ESTID)
-		{}
-	};
 public:
 	
-	hft_2_strategy(const code_t& code, uint32_t open_once, double open_delta,int32_t yestoday_multiple, int32_t yestoday_threshold, double_t yestoday_growth, int32_t random_offset):
+	emg_1a_strategy(const code_t& code,double open_delta,int32_t open_once):
 		strategy(),
 		_code(code),
+		_sell_order(INVALID_ESTID),
+		_buy_order(INVALID_ESTID),
 		_open_once(open_once),
 		_open_delta(open_delta),
-		_yestoday_multiple(yestoday_multiple),
-		_yestoday_threshold(yestoday_threshold),
-		_yestoday_growth(yestoday_growth),
-		_order_data(nullptr),
-		_coming_to_close(0),
-		_random(0, random_offset)
+		_coming_to_close(0)
 		{
 		};
 
 
-	~hft_2_strategy()
-	{
-		_order_data = nullptr;
-	};
+	~emg_1a_strategy(){};
 
 
 public:
@@ -89,34 +68,25 @@ public:
 	 *	@error ´íÎó´úÂë
 	 */
 	virtual void on_error(error_type type,estid_t localid, const uint32_t error) override;
-	
-	/*
-	 *	Ïú»Ù
-	 */
-	virtual void on_destory()override;
+
 
 private:
 	
 	code_t _code ;
 
+	
 	double _open_delta;
 
 	uint32_t _open_once;
 
-	uint32_t _yestoday_multiple;
+	
+	estid_t _sell_order ;
 
-	uint32_t _yestoday_threshold;
-
-	double_t _yestoday_growth;
+	estid_t _buy_order ;
 
 	tick_info _last_tick;
 
 	time_t _coming_to_close;
 
-	persist_data* _order_data;
-
-	std::default_random_engine _random_engine;
-
-	std::uniform_int_distribution<int> _random;
 };
 

@@ -3,7 +3,7 @@
 
 void hcc_strategy::on_init()
 {
-	subscribe({ _code });
+	subscribe(_code);
 }
 
 /*
@@ -117,4 +117,10 @@ void hcc_strategy::on_cancel(estid_t localid, const code_t& code, offset_type of
 	//auto& pos = get_position(_code);
 	//LOG_INFO("on_cancel tick : %llu [%d %d %d %d]\n", localid, pos.long_postion, pos.short_postion, pos.long_frozen, pos.short_frozen);
 	_order_id = INVALID_ESTID;
+}
+
+
+void hcc_strategy::on_destory()
+{
+	unsubscribe(_code);
 }

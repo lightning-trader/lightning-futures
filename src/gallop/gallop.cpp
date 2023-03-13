@@ -2,10 +2,8 @@
 #include <define.h>
 #include "demo_strategy.h"
 #include "hcc_strategy.h"
-#include "hft_1_strategy.h"
-#include "hft_2_strategy.h"
-#include "hft_2a_strategy.h"
-#include "hft_3_strategy.h"
+#include "emg_1_strategy.h"
+#include "emg_2_strategy.h"
 #include "runtime_engine.h"
 #include "evaluate_engine.h"
 #include "trading_day.h"
@@ -19,36 +17,39 @@ typedef enum run_type
 	RT_RUNTIME,
 }run_type;
 
-std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(const char* rb_frist,const char* rb_second, const char* ag_frist,int account_type, int multiple)
+std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(const char* rb_frist,const char* hc_frist, const char* ag_frist,int account_type, int multiple)
 {
 
-	LOG_INFO("make_strategys : %s %s %s", rb_frist, ag_frist, rb_second);
+	LOG_INFO("make_strategys : %s %s %s", rb_frist, ag_frist, hc_frist);
 
 	auto result = std::make_shared<std::map<straid_t,std::shared_ptr<strategy>>>();
 	switch (account_type)
 	{
+	case 0:
+		(*result)[0] = std::make_shared<hcc_strategy>(rb_frist, multiple, 0.0036F, 3, 60);
+		break;
 	case 10:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_frist, multiple, 0.0036F, 3, 8, 2.F, 2);
+		(*result)[0] = std::make_shared<emg_1_strategy>(rb_frist, multiple, 0.0036F, 3, 8, 2.F, 2);
 		break;
 	case 20:
-		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
+		(*result)[0] = std::make_shared<emg_2_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
 		break;
 	case 30:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple, 0.0036F, 3, 8, 2.F, 2);
-		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
+		(*result)[0] = std::make_shared<emg_1_strategy>(hc_frist, multiple, 0.0036F, 3, 8, 2.F, 2);
+		(*result)[1] = std::make_shared<emg_2_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
 		break;
 	case 50:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple * 3, 0.0036F, 3, 8, 2.F, 2);
-		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
+		(*result)[0] = std::make_shared<emg_1_strategy>(hc_frist, multiple * 3, 0.0036F, 3, 8, 2.F, 2);
+		(*result)[1] = std::make_shared<emg_2_strategy>(rb_frist, multiple, 9, 0.39F, 0.8F, 18, 1);
 		break;
 	case 60:
-		(*result)[0] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.39F, 0.8F, 18, 1);
-		(*result)[1] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.58F, 0.98F, 12, 1);
+		(*result)[0] = std::make_shared<emg_2_strategy>(rb_frist, multiple * 2, 9, 0.39F, 0.8F, 18, 1);
+		(*result)[1] = std::make_shared<emg_2_strategy>(ag_frist, multiple, 16, 0.58F, 0.98F, 12, 1);
 		break;
 	case 100:
-		(*result)[0] = std::make_shared<hft_2_strategy>(rb_second, multiple * 3 , 0.0036F, 3, 8, 2.F, 2);
-		(*result)[1] = std::make_shared<hft_3_strategy>(rb_frist, multiple * 2, 9, 0.39F, 0.8F, 18, 1);
-		(*result)[2] = std::make_shared<hft_3_strategy>(ag_frist, multiple, 16, 0.58F, 0.98F, 12, 1);
+		(*result)[0] = std::make_shared<emg_1_strategy>(hc_frist, multiple * 3 , 0.0036F, 3, 8, 2.F, 2);
+		(*result)[1] = std::make_shared<emg_2_strategy>(rb_frist, multiple * 2, 9, 0.39F, 0.8F, 18, 1);
+		(*result)[2] = std::make_shared<emg_2_strategy>(ag_frist, multiple, 16, 0.58F, 0.98F, 12, 1);
 		break;
 	}
 	return result;
@@ -57,8 +58,9 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(co
 void start_runtime(const char * config_file,int account_type,int multiple)
 {
 	auto app = std::make_shared<runtime_engine>(config_file);
-
-	auto strategys = make_strategys("SHFE.rb2305","SHFE.rb2306", "SHFE.ag2306",account_type, multiple);
+	app->bind_transfer_info("SHFE.rb2310", "SHFE.rb2305", 104);
+	app->bind_transfer_info("SHFE.hc2310", "SHFE.rb2306", -7);
+	auto strategys = make_strategys("SHFE.rb2310","SHFE.hc2310", "SHFE.ag2306",account_type, multiple);
 	for(auto it : *strategys)
 	{
 		app->add_strategy(it.first,it.second);
@@ -101,7 +103,7 @@ void start_evaluate(const char* config_file, int account_type, int multiple)
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_hx_zjh.ini", 10, 1);
-	start_evaluate("evaluate.ini",30, 1);
+	start_evaluate("evaluate.ini",0, 1);
 	return 0;
 	if(argc < 3)
 	{

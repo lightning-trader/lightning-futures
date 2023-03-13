@@ -1,13 +1,13 @@
-#include "hft_2b_strategy.h"
+#include "emg_1b_strategy.h"
 #include "time_utils.hpp"
 
-void hft_2b_strategy::on_init()
+void emg_1b_strategy::on_init()
 {
 	subscribe(_code);
 	use_custom_chain(TO_OPEN_TO_CLOSE, false);
 }
 
-void hft_2b_strategy::on_ready()
+void emg_1b_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
@@ -28,7 +28,7 @@ void hft_2b_strategy::on_ready()
 	*/
 }
 
-void hft_2b_strategy::on_tick(const tick_info& tick, const deal_info& deal)
+void emg_1b_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 {
 	_last_tick = tick;
 	add_to_history(tick.price);
@@ -107,7 +107,7 @@ void hft_2b_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 
 
 
-void hft_2b_strategy::on_entrust(const order_info& order)
+void emg_1b_strategy::on_entrust(const order_info& order)
 {
 	LOG_DEBUG("on_entrust : %llu\n", order.est_id);
 	if (_last_tick.time > _coming_to_close)
@@ -130,7 +130,7 @@ void hft_2b_strategy::on_entrust(const order_info& order)
 
 }
 
-void hft_2b_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
+void emg_1b_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
 	LOG_DEBUG("on_trade : %llu\n", localid);
 	if (localid == _buy_order)
@@ -153,7 +153,7 @@ void hft_2b_strategy::on_trade(estid_t localid, const code_t& code, offset_type 
 	}
 }
 
-void hft_2b_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
+void emg_1b_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
 	LOG_DEBUG("on_cancel : %llu\n", localid);
 
@@ -176,7 +176,7 @@ void hft_2b_strategy::on_cancel(estid_t localid, const code_t& code, offset_type
 
 }
 
-void hft_2b_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
+void emg_1b_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
 {
 	if (type != ET_PLACE_ORDER)
 	{
@@ -200,7 +200,7 @@ void hft_2b_strategy::on_error(error_type type, estid_t localid, const uint32_t 
 	}
 }
 
-void hft_2b_strategy::add_to_history(double_t price)
+void emg_1b_strategy::add_to_history(double_t price)
 {
 	_history_price.emplace_back(price);
 	if (_history_price.size() < _history_count)

@@ -4,7 +4,7 @@
 
 #define YESTODAY_CLOSE_COUNT 4
 
-class hft_3_strategy : public strategy
+class emg_2_strategy : public strategy
 {
 	
 	struct persist_data
@@ -37,7 +37,7 @@ class hft_3_strategy : public strategy
 
 public:
 	
-	hft_3_strategy(const code_t& code, uint32_t open_once, int32_t delta,double_t alpha, double_t beta, uint32_t yestoday_ratio, int32_t random_offset):
+	emg_2_strategy(const code_t& code, uint32_t open_once, int32_t delta,double_t alpha, double_t beta, uint32_t yestoday_ratio, int32_t random_offset):
 		strategy(),
 		_code(code),
 		_open_once(open_once),
@@ -53,7 +53,7 @@ public:
 		};
 
 
-	~hft_3_strategy(){};
+	~emg_2_strategy(){};
 
 
 public:
