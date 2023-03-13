@@ -54,7 +54,7 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(co
 	return result;
 }
 
-void start_runtime(const char * config_file,int account_type,int multiple)
+void start_runtime(run_type rt, const char * config_file,int account_type,int multiple)
 {
 	auto app = std::make_shared<runtime_engine>(config_file);
 
@@ -101,8 +101,8 @@ void start_evaluate(const char* config_file, int account_type, int multiple)
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_hx_zjh.ini", 10, 1);
-	//start_evaluate("evaluate.ini",30, 1);
-	//return 0;
+	start_evaluate("evaluate.ini",10, 1);
+	return 0;
 	if(argc < 3)
 	{
 		LOG_ERROR("start atgc error");
@@ -131,7 +131,7 @@ int main(int argc,char* argv[])
 	else
 	{
 		LOG_INFO("start %s runtime for %d*%d", config_file, account_type, multiple);
-		start_runtime(config_file, account_type, multiple);
+		start_runtime(RT_RUNTIME,config_file, account_type, multiple);
 	}
 	return 0;
 }
