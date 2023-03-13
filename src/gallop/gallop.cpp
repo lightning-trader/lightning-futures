@@ -26,7 +26,7 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(co
 	switch (account_type)
 	{
 	case 0:
-		(*result)[0] = std::make_shared<hcc_strategy>(rb_frist, multiple, 0.0036F, 3, 60);
+		//(*result)[0] = std::make_shared<hcc_strategy>(rb_frist, multiple, 0.0036F, 3, 60);
 		break;
 	case 10:
 		(*result)[0] = std::make_shared<emg_1_strategy>(rb_frist, multiple, 0.0036F, 3, 8, 2.F, 2);
@@ -103,8 +103,8 @@ void start_evaluate(const char* config_file, int account_type, int multiple)
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_hx_zjh.ini", 10, 1);
-	start_evaluate("evaluate.ini",0, 1);
-	return 0;
+	//start_evaluate("evaluate.ini",0, 1);
+	//return 0;
 	if(argc < 3)
 	{
 		LOG_ERROR("start atgc error");

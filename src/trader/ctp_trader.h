@@ -240,9 +240,10 @@ private:
 		return _reqid.fetch_add(1);
 	}
 
-	inline void print_position()
+	inline void print_position(const char* title)
 	{
-		for (auto it : _position_info)
+		LOG_INFO("print_position %s \n", title);
+		for (const auto& it : _position_info)
 		{
 			const auto& pos = it.second;
 			LOG_INFO("position : %s today_long(%d %d %f) today_short(%d %d %f) yestoday_long(%d %d %f) yestoday_short(%d %d %f)", pos.id.get_id(),

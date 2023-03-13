@@ -322,6 +322,7 @@ void ctp_trader::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThost
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_ERROR("OnRspOrderInsert \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		print_position("OnRspOrderInsert");
 	}
 	if (pInputOrder && pRspInfo)
 	{
@@ -460,7 +461,7 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 	}
 	if (bIsLast && !_is_inited)
 	{
-		print_position();
+		print_position("OnRspQryInvestorPosition");
 		_process_signal.notify_all();
 	}
 }
@@ -652,12 +653,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			this->fire_event(ET_OrderDeal, estid, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 		}
 	}
-	auto it = _position_info.find(code);
-	if(it != _position_info.end())
-	{
-		auto& pos = it->second;
-		LOG_INFO("OnRtnOrder position change %s : %d %d %d %d", code.get_id(), pos.today_long.postion, pos.today_short.postion, pos.yestoday_long.postion, pos.yestoday_short.postion);
-	}
+	print_position("OnRtnOrder");
 }
 
 void ctp_trader::OnRtnTrade(CThostFtdcTradeField *pTrade)
@@ -676,7 +672,7 @@ void ctp_trader::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTh
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_ERROR("OnErrRtnOrderInsert \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
-		print_position();
+		print_position("OnErrRtnOrderInsert");
 	}
 	if(pInputOrder && pRspInfo)
 	{
@@ -695,7 +691,7 @@ void ctp_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, C
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_ERROR("OnRspQryTrade \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
-		print_position();
+		print_position("OnErrRtnOrderAction");
 	}
 	if (pOrderAction && pRspInfo)
 	{
@@ -1075,7 +1071,7 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 	
 	}
 	_position_info[code] = p ;	
-	LOG_INFO("calculate_position %s today %d %d %f yestoday %d %d %f", code.get_id(), p.today_long.postion, p.today_long.frozen, p.today_long.price, p.yestoday_long.postion, p.yestoday_long.frozen, p.yestoday_long.price);
+	print_position("calculate_position");
 	this->fire_event(ET_PositionChange, p);
 }
 
@@ -1104,7 +1100,7 @@ void ctp_trader::frozen_deduction(const code_t& code, direction_type dir_type, u
 			pos.yestoday_short.frozen += volume;
 		}
 	}
-	
+	print_position("frozen_deduction");
 	this->fire_event(ET_PositionChange, pos);
 }
 void ctp_trader::thawing_deduction(const code_t& code, direction_type dir_type, uint32_t volume,bool is_today)
@@ -1159,5 +1155,6 @@ void ctp_trader::thawing_deduction(const code_t& code, direction_type dir_type, 
 			}
 		}
 	}
+	print_position("thawing_deduction");
 	this->fire_event(ET_PositionChange, pos);
 }
