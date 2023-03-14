@@ -599,6 +599,11 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		auto it = _order_info.find(estid);
 		if (it != _order_info.end())
 		{
+			if (it->second.last_volume > static_cast<uint32_t>(pOrder->VolumeTotal))
+			{
+				calculate_position(code, direction, offset, it->second.last_volume - static_cast<uint32_t>(pOrder->VolumeTotal), pOrder->LimitPrice, is_today);
+				it->second.last_volume = pOrder->VolumeTotal;
+			}
 			if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
 			{
 				//³·Ïú½â¶³²ÖÎ»
@@ -628,6 +633,10 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			entrust.offset = offset;
 			entrust.price = pOrder->LimitPrice;
 			order = _order_info.insert(std::make_pair(estid, entrust)).first;
+			if (pOrder->VolumeTraded > 0)
+			{
+				calculate_position(code, direction, offset, static_cast<uint32_t>(pOrder->VolumeTraded), pOrder->LimitPrice, is_today);
+			}
 			this->fire_event(ET_OrderPlace, order->second);
 			if(offset == OT_OPEN)
 			{
