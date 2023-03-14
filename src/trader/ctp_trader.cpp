@@ -607,7 +607,6 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			}
 			if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
 			{
-				calculate_position(code, direction, offset, pOrder->VolumeTotal + pOrder->VolumeTraded, pOrder->LimitPrice, is_today);
 				this->fire_event(ET_OrderTrade, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 			}
 			_order_info.erase(it);
@@ -643,8 +642,17 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		}
 		else
 		{
-			auto& entrust = _order_info[estid];
-			entrust.last_volume = pOrder->VolumeTotal;
+			auto& entrust = order->second;
+			if(entrust.last_volume > pOrder->VolumeTotal)
+			{
+				calculate_position(code, direction, offset, entrust.last_volume - pOrder->VolumeTotal, pOrder->LimitPrice, is_today);
+				entrust.last_volume = pOrder->VolumeTotal;
+			}
+			else
+			{
+				LOG_ERROR("OnRtnOrder Error %s %d < %d\n", order->first, entrust.last_volume, pOrder->VolumeTotal);
+			}
+		
 		}
 
 		if (pOrder->OrderStatus == THOST_FTDC_OST_PartTradedQueueing || pOrder->OrderStatus == THOST_FTDC_OST_PartTradedNotQueueing)
