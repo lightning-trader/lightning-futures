@@ -643,14 +643,17 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		else
 		{
 			auto& entrust = order->second;
-			if(entrust.last_volume > pOrder->VolumeTotal)
+			if(entrust.last_volume > static_cast<uint32_t>(pOrder->VolumeTotal))
 			{
-				calculate_position(code, direction, offset, entrust.last_volume - pOrder->VolumeTotal, pOrder->LimitPrice, is_today);
+				calculate_position(code, direction, offset, entrust.last_volume - static_cast<uint32_t>(pOrder->VolumeTotal), pOrder->LimitPrice, is_today);
 				entrust.last_volume = pOrder->VolumeTotal;
 			}
 			else
 			{
-				LOG_ERROR("OnRtnOrder Error %s %d < %d\n", order->first, entrust.last_volume, pOrder->VolumeTotal);
+				if (entrust.last_volume < static_cast<uint32_t>(pOrder->VolumeTotal))
+				{
+					LOG_ERROR("OnRtnOrder Error %llu %s %d < %d\n", estid, code.get_id(), entrust.last_volume, pOrder->VolumeTotal);
+				}
 			}
 		
 		}
@@ -1085,7 +1088,12 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 
 void ctp_trader::frozen_deduction(const code_t& code, direction_type dir_type, uint32_t volume,bool is_today)
 {
-	auto& pos = _position_info[code];
+	auto it = _position_info.find(code);
+	if (it == _position_info.end())
+	{
+		return ;
+	}
+	position_info pos = it->second;
 	if(is_today)
 	{
 		if (dir_type == DT_LONG)
@@ -1108,12 +1116,18 @@ void ctp_trader::frozen_deduction(const code_t& code, direction_type dir_type, u
 			pos.yestoday_short.frozen += volume;
 		}
 	}
+	_position_info[code] = pos;
 	print_position("frozen_deduction");
 	this->fire_event(ET_PositionChange, pos);
 }
 void ctp_trader::thawing_deduction(const code_t& code, direction_type dir_type, uint32_t volume,bool is_today)
 {
-	auto& pos = _position_info[code];
+	auto it = _position_info.find(code);
+	if (it == _position_info.end())
+	{
+		return;
+	}
+	position_info pos = it->second;
 	if(is_today)
 	{
 		if (dir_type == DT_LONG)
@@ -1163,6 +1177,7 @@ void ctp_trader::thawing_deduction(const code_t& code, direction_type dir_type, 
 			}
 		}
 	}
+	_position_info[code] = pos;
 	print_position("thawing_deduction");
 	this->fire_event(ET_PositionChange, pos);
 }

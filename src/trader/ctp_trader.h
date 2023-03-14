@@ -242,7 +242,10 @@ private:
 
 	inline void print_position(const char* title)
 	{
-		LOG_INFO("print_position %s \n", title);
+		if(!_position_info.empty())
+		{
+			LOG_INFO("print_position %s \n", title);
+		}
 		for (const auto& it : _position_info)
 		{
 			const auto& pos = it.second;
