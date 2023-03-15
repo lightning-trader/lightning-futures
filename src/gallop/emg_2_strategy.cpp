@@ -44,6 +44,10 @@ void emg_2_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 
 	if( pos.yestoday_long.usable() > 0)
 	{
+		//max_yestoday_ratio = pos.yestoday_long.usable() - 2 / _delta * _open_once;
+		//_yestoday_ratio 最大值 如果超过最大值_yestoday_ratio将失去损失效果
+		uint32_t max_yestoday_ratio = pos.yestoday_long.usable() - 2 / _delta * _open_once;
+		_yestoday_ratio = _yestoday_ratio>max_yestoday_ratio -1 ? max_yestoday_ratio - 1 : _yestoday_ratio;
 		int32_t once = _yestoday_ratio;
 		if (pos.yestoday_long.usable() > _yestoday_ratio)
 		{
@@ -70,6 +74,10 @@ void emg_2_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	}
 	if (pos.yestoday_short.usable() > 0)
 	{
+		//max_yestoday_ratio = pos.yestoday_long.usable() - 2 / _delta * _open_once;
+		//_yestoday_ratio 最大值 如果超过最大值_yestoday_ratio将失去损失效果
+		uint32_t max_yestoday_ratio = pos.yestoday_short.usable() - 2 / _delta * _open_once;
+		_yestoday_ratio = _yestoday_ratio > max_yestoday_ratio - 1 ? max_yestoday_ratio - 1 : _yestoday_ratio;
 		int32_t once = _yestoday_ratio;
 		if (pos.yestoday_short.usable() > _yestoday_ratio)
 		{
