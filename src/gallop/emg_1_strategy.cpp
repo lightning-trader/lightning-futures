@@ -215,4 +215,8 @@ void emg_1_strategy::on_error(error_type type, estid_t localid, const uint32_t e
 void emg_1_strategy::on_destory()
 {
 	unsubscribe(_code);
+	if (_expire != default_code)
+	{
+		unsubscribe(_expire);
+	}
 }
