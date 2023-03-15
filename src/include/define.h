@@ -83,6 +83,10 @@ public:
 	{
 		return memcmp(_data, other._data, CODE_DATA_LEN) == 0;
 	}
+	bool operator != (const code_t& other)const
+	{
+		return memcmp(_data, other._data, CODE_DATA_LEN) != 0;
+	}
 
 	const char* get_id()const
 	{
@@ -101,6 +105,8 @@ public:
 		return true ;
 	}
 };
+
+const code_t default_code;
 
 typedef uint8_t untid_t;
 

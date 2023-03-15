@@ -91,3 +91,12 @@ static std::string datetime_to_string(const char* date, const char* time)
 	}
 	return "";
 }
+
+static uint32_t convert_to_uint(time_t t)
+{
+	char buffer[16] = { 0 };
+	struct tm info;
+	localtime_s(&info, &t);
+	strftime(buffer, sizeof buffer, "%Y%m%d", &info);
+	return std::atoi(buffer);
+}

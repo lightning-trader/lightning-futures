@@ -21,19 +21,7 @@ class emg_1_strategy : public strategy
 	};
 public:
 	
-	emg_1_strategy(const code_t& code, uint32_t open_once, double open_delta,int32_t yestoday_multiple, int32_t yestoday_threshold, double_t yestoday_growth, int32_t random_offset):
-		strategy(),
-		_code(code),
-		_open_once(open_once),
-		_open_delta(open_delta),
-		_yestoday_multiple(yestoday_multiple),
-		_yestoday_threshold(yestoday_threshold),
-		_yestoday_growth(yestoday_growth),
-		_order_data(nullptr),
-		_coming_to_close(0),
-		_random(0, random_offset)
-		{
-		};
+	emg_1_strategy(const param& p);
 
 
 	~emg_1_strategy()
@@ -98,6 +86,8 @@ public:
 private:
 	
 	code_t _code ;
+
+	code_t _expire;
 
 	double _open_delta;
 

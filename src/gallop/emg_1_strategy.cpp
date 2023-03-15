@@ -1,9 +1,28 @@
 #include "emg_1_strategy.h"
 #include "time_utils.hpp"
 
+emg_1_strategy::emg_1_strategy(const param& p) :
+	strategy(),
+	_order_data(nullptr),
+	_coming_to_close(0),
+	_random(0, p.get<uint32_t>("random_offset"))
+{
+	_code = p.get<const char*>("code");
+	_open_once = p.get<uint32_t>("open_once");
+	_open_delta = p.get<double_t>("open_delta");
+	_yestoday_multiple = p.get<uint32_t>("yestoday_multiple");
+	_yestoday_threshold = p.get<uint32_t>("yestoday_threshold");
+	_yestoday_growth = p.get<double_t>("yestoday_growth"); 
+	_expire = p.get<const char*>("expire");
+};
+
 void emg_1_strategy::on_init()
 {
 	subscribe(_code);
+	if(_expire != default_code)
+	{
+		subscribe(_expire);
+	}
 	use_custom_chain(TO_OPEN_TO_CLOSE,false);
 	_order_data = static_cast<persist_data*>(get_userdata(sizeof(persist_data)));
 }
@@ -38,53 +57,86 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _order_data->buy_order, _order_data->sell_order);
 		return ;
 	}
-	const position_info& pos = get_position(tick.id);
 	double_t delta = (tick.standard * _open_delta);
 	double_t buy_price = tick.buy_price() -  delta - _random(_random_engine);
 	double_t sell_price = tick.sell_price() +  delta + _random(_random_engine);
 	uint32_t sell_once = _open_once;
 	uint32_t yestoday_once = _yestoday_multiple * _open_once;
-	if (pos.yestoday_long.usable() > 0)
+
+	if(tick.id==_expire)
 	{
-		if (pos.get_long_position() > _yestoday_threshold)
+		//对于过期合约，只平仓不开仓
+		const position_info& expire_pos = get_position(tick.id);
+
+		if (expire_pos.yestoday_long.usable() > 0)
 		{
-			yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+			if (expire_pos.get_long_position() > _yestoday_threshold)
+			{
+				yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+			}
+			sell_once = expire_pos.yestoday_long.usable() > yestoday_once ? yestoday_once : expire_pos.yestoday_long.usable();
+			sell_price += (std::ceil(sell_once / _open_once) - 1) * delta / 2.F;
+			sell_price = std::round(sell_price);
+			if (sell_price < tick.high_limit)
+			{
+				_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
+			}
 		}
-		sell_once = pos.yestoday_long.usable() > yestoday_once ? yestoday_once : pos.yestoday_long.usable();
-		sell_price += (std::ceil(sell_once / _open_once) - 1) * delta / 2.F;
-	}
-	uint32_t buy_once = _open_once;
-	if (pos.yestoday_short.usable() > 0)
-	{
-		if (pos.get_short_position() > _yestoday_threshold)
+		uint32_t buy_once = _open_once;
+		if (expire_pos.yestoday_short.usable() > 0)
 		{
-			yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
-		}
-		buy_once = pos.yestoday_short.usable() > yestoday_once ? yestoday_once : pos.yestoday_short.usable();
-		buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2.F;
-	}
-	buy_price = std::round(buy_price);
-	sell_price = std::round(sell_price);
-	if(tick.price >= tick.standard)
-	{
-		if (buy_price > tick.low_limit)
-		{
-			_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
-		}
-		if (sell_price < tick.high_limit)
-		{
-			_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
+			if (expire_pos.get_short_position() > _yestoday_threshold)
+			{
+				yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+			}
+			buy_once = expire_pos.yestoday_short.usable() > yestoday_once ? yestoday_once : expire_pos.yestoday_short.usable();
+			buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2.F;
+			buy_price = std::round(buy_price);
+			if (buy_price > tick.low_limit)
+			{
+				_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
+			}
 		}
 	}
 	else
 	{
-		if (sell_price < tick.high_limit)
+		//对于普通合约，过期合约存在的情况下，不平仓只开仓
+		const position_info& pos = get_position(tick.id);
+		const position_info& expire_pos = get_position(tick.id);
+		if (expire_pos.yestoday_long.usable() == 0)
 		{
-			_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
+			if(pos.yestoday_long.usable() > 0)
+			{
+				if (pos.get_long_position() > _yestoday_threshold)
+				{
+					yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+				}
+				sell_once = pos.yestoday_long.usable() > yestoday_once ? yestoday_once : pos.yestoday_long.usable();
+				sell_price += (std::ceil(sell_once / _open_once) - 1) * delta / 2.F;
+			}
+			sell_price = std::round(sell_price);
+			if (sell_price < tick.high_limit)
+			{
+				_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
+			}
 		}
-		if (buy_price > tick.low_limit)
+		uint32_t buy_once = _open_once;
+		if (expire_pos.yestoday_short.usable() == 0)
 		{
-			_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
+			if(pos.yestoday_short.usable() > 0)
+			{
+				if (pos.get_short_position() > _yestoday_threshold)
+				{
+					yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+				}
+				buy_once = pos.yestoday_short.usable() > yestoday_once ? yestoday_once : pos.yestoday_short.usable();
+				buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2.F;
+			}
+			buy_price = std::round(buy_price);
+			if (buy_price > tick.low_limit)
+			{
+				_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
+			}
 		}
 	}
 }
@@ -93,7 +145,7 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 
 void emg_1_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("hft_2_strategy on_entrust : %llu %s %d %d %f %d/%d\n", order.est_id, order.code, order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LOG_INFO("emg_1_strategy on_entrust : %llu %s %d %d %f %d/%d\n", order.est_id, order.code, order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 	if (_last_tick.time > _coming_to_close)
 	{
 		return;
@@ -116,7 +168,7 @@ void emg_1_strategy::on_entrust(const order_info& order)
 
 void emg_1_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_INFO("hft_2_strategy on_trade : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, volume);
+	LOG_INFO("emg_1_strategy on_trade : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, volume);
 	if(localid == _order_data->buy_order)
 	{
 		cancel_order(_order_data->sell_order);
@@ -131,7 +183,7 @@ void emg_1_strategy::on_trade(estid_t localid, const code_t& code, offset_type o
 
 void emg_1_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume,uint32_t total_volume)
 {
-	LOG_INFO("hft_2_strategy on_cancel : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, cancel_volume);
+	LOG_INFO("emg_1_strategy on_cancel : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, cancel_volume);
 	
 	if(localid == _order_data->buy_order)
 	{
@@ -145,7 +197,7 @@ void emg_1_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 
 void emg_1_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
 {
-	LOG_INFO("hft_2_strategy on_error : %llu %d \n", localid, error);
+	LOG_INFO("emg_1_strategy on_error : %llu %d \n", localid, error);
 	if(type != ET_PLACE_ORDER)
 	{
 		return ;

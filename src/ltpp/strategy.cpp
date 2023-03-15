@@ -2,6 +2,41 @@
 #include "lightning.h"
 #include "strategy_manager.h"
 
+
+std::vector<std::string> split_string(const std::string& str, char delim) {
+	std::size_t previous = 0;
+	std::size_t current = str.find(delim);
+	std::vector<std::string> elems;
+	while (current != std::string::npos) {
+		if (current > previous) {
+			elems.push_back(str.substr(previous, current - previous));
+		}
+		previous = current + 1;
+		current = str.find(delim, previous);
+	}
+	if (previous != str.size()) {
+		elems.push_back(str.substr(previous));
+	}
+	return elems;
+}
+
+std::map<std::string, std::string> parse_params(const std::string& param)
+{
+	std::map<std::string, std::string> result;
+	auto param_pair = split_string(param, '&');
+	for (auto it : param_pair)
+	{
+		auto param = split_string(it, '=');
+		result[param[0]] = param[1];
+	}
+	return result;
+}
+
+strategy::param::param(const char * str)
+{
+	_param = parse_params(str);
+}
+
 strategy::strategy()
 {
 }

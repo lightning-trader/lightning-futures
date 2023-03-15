@@ -350,6 +350,10 @@ struct transfer_info
 	{
 		return expire_code == other.expire_code;
 	}
+	bool operator != (const transfer_info& other)const
+	{
+		return expire_code != other.expire_code;
+	}
 };
 const transfer_info default_transfer;
 

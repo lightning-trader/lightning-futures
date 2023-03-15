@@ -7,7 +7,81 @@ typedef untid_t straid_t;
 
 class strategy
 {
+public :
+	class param
+	{
+		std::map<std::string, std::string> _param;
+	public:
+		param(const char* str);
 
+		template< typename T>
+		T get(const std::string& key)const
+		{
+			return get<T>(key);
+		}
+		template<>
+		const char* get(const std::string& key)const
+		{
+			auto it = _param.find(key);
+			if (it == _param.end())
+			{
+				return "";
+			}
+			return it->second.c_str();
+		}
+
+		template<>
+		int32_t get(const std::string& key)const
+		{
+			auto it = _param.find(key);
+			if (it == _param.end())
+			{
+				return 0X0D;
+			}
+			return std::atoi(it->second.c_str());
+		}
+		template<>
+		uint32_t get(const std::string& key)const
+		{
+			auto it = _param.find(key);
+			if (it == _param.end())
+			{
+				return 0X0U;
+			}
+			return static_cast<uint32_t>(std::atoi(it->second.c_str()));
+		}
+
+		template<>
+		double_t get(const std::string& key)const
+		{
+			auto it = _param.find(key);
+			if (it == _param.end())
+			{
+				return .0F;
+			}
+			return std::atof(it->second.c_str());
+		}
+		template<>
+		int64_t get(const std::string& key)const
+		{
+			auto it = _param.find(key);
+			if (it == _param.end())
+			{
+				return 0X0LL;
+			}
+			return std::atoll(it->second.c_str());
+		}
+		template<>
+		uint64_t get(const std::string& key)const
+		{
+			auto it = _param.find(key);
+			if (it == _param.end())
+			{
+				return 0X0LLU;
+			}
+			return static_cast<uint64_t>(std::atoll(it->second.c_str()));
+		}
+	};
 private:
 
 	straid_t _id;

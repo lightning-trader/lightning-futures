@@ -21,6 +21,8 @@ class emg_2_strategy : public strategy
 
 		estid_t yestody_close_order[YESTODAY_CLOSE_COUNT];
 
+		estid_t expire_close_order[YESTODAY_CLOSE_COUNT];
+
 		persist_data() :
 			trading_day(0x0U),
 			close_long_order(INVALID_ESTID),
@@ -32,23 +34,27 @@ class emg_2_strategy : public strategy
 			{
 				yestody_close_order[i] = INVALID_ESTID;
 			}
+			for (size_t i = 0; i < YESTODAY_CLOSE_COUNT; i++)
+			{
+				expire_close_order[i] = INVALID_ESTID;
+			}
 		}
 	};
 
 public:
 	
-	emg_2_strategy(const code_t& code, uint32_t open_once, int32_t delta,double_t alpha, double_t beta, uint32_t yestoday_ratio, int32_t random_offset):
+	emg_2_strategy(const param& p):
 		strategy(),
-		_code(code),
-		_open_once(open_once),
+		_code(p.get<const char*>("code")),
+		_open_once(p.get<uint32_t>("open_once")),
 		_order_data(nullptr),
-		_delta(delta),
-		_alpha(alpha),
-		_beta(beta),
-		_yestoday_ratio(yestoday_ratio),
+		_delta(p.get<uint32_t>("delta")),
+		_alpha(p.get<double_t>("alpha")),
+		_beta(p.get<double_t>("beta")),
+		_yestoday_ratio(p.get<uint32_t>("yestoday_ratio")),
 		_coming_to_close(0),
-		_random(0, random_offset)
-		
+		_random(0, p.get<uint32_t>("random_offset")),
+		_expire(p.get<const char*>("code"))
 		{
 		};
 
@@ -112,6 +118,8 @@ public:
 private:
 	
 	code_t _code ;
+
+	code_t _expire;
 
 	uint32_t _open_once;
 
