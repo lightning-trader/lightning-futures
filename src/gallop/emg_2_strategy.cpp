@@ -316,7 +316,7 @@ void emg_2_strategy::on_cancel(estid_t localid, const code_t& code, offset_type 
 
 void emg_2_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
 {
-	LOG_INFO("emg_2_strategy on_error : %llu %d \n", localid, error);
+	LOG_ERROR("emg_2_strategy on_error : %llu %d \n", localid, error);
 	if(type != ET_PLACE_ORDER)
 	{
 		return ;
