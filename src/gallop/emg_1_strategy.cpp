@@ -53,10 +53,10 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		return;
 	}
 	//LOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
-	if(_order_data->buy_order != INVALID_ESTID || _order_data->sell_order != INVALID_ESTID)
+	if (_order_data->buy_order != INVALID_ESTID || _order_data->sell_order != INVALID_ESTID)
 	{
 		LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _order_data->buy_order, _order_data->sell_order);
-		return ;
+		return;
 	}
 	double_t delta = (tick.standard * _open_delta);
 	double_t buy_price = tick.buy_price() -  delta - _random(_random_engine);
@@ -101,6 +101,7 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	}
 	else
 	{
+
 		//对于普通合约，过期合约存在的情况下，不平仓只开仓
 		const position_info& pos = get_position(tick.id);
 		const position_info& expire_pos = get_position(tick.id);

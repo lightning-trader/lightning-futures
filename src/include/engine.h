@@ -19,14 +19,19 @@ private:
 		return true;
 	}
 
-
-public:
+protected:
+	
+	/***
+	* 注册策略
+	*/
+	void regist_strategy(straid_t id, std::shared_ptr<strategy> stra);
 
 	/***
-	* 增加策略
+	* 取消注册策略
 	*/
-	void add_strategy(straid_t id, std::shared_ptr<strategy> stra);
+	void unregist_strategy(straid_t id);
 
+public:
 
 	/*
 	* 设置交易过滤器

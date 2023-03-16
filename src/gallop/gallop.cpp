@@ -12,12 +12,6 @@
 #pragma comment (lib,"lightning.lib")
 #pragma comment (lib,"libltpp.lib")
 
-typedef enum run_type
-{
-	RT_EVALUATE,
-	RT_RUNTIME,
-}run_type;
-
 
 
 std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(const std::vector<strategy_info>& stra_info)
@@ -46,11 +40,7 @@ void start_runtime(const char * account_config, const char* strategy_config)
 	auto now = convert_to_uint(get_now()) ;
 	const auto& stra_info = get_strategy_info(strategy_config,now);
 	auto strategys = make_strategys(stra_info);
-	for(auto it : *strategys)
-	{
-		app->add_strategy(it.first,it.second);
-	}
-	app->run_to_close();
+	app->run_to_close(*strategys);
 	
 }
 
@@ -70,7 +60,7 @@ void start_evaluate(const char* account_config, const char* strategy_config, con
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_simnow.ini", 10, 1);
-	start_evaluate("evaluate.ini","strategy_30w.xml", "trading_days.xml");
+	start_evaluate("evaluate.ini","strategy_20w.xml", "trading_days.xml");
 	return 0;
 	if(argc < 4)
 	{

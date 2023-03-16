@@ -6,3 +6,9 @@
 #include <iostream>
 
 // TODO: 在此处引用程序需要的其他标头。
+
+typedef enum run_type
+{
+	RT_EVALUATE,
+	RT_RUNTIME,
+}run_type;

@@ -429,7 +429,7 @@ void context::handle_crossday(const std::vector<std::any>& param)
 		if (_record_data)
 		{
 			//记录结算数据
-			if (_recorder)
+			if (_recorder && trading_day > _record_data->trading_day)
 			{
 				_recorder->record_crossday_flow(get_last_time(), _record_data->trading_day, _record_data->statistic_info, get_trader().get_account());
 			}

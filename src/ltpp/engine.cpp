@@ -2,11 +2,19 @@
 #include "strategy_manager.h"
 #include <thread>
 
-void engine::add_strategy(straid_t id,std::shared_ptr<strategy> stra)
+void engine::regist_strategy(straid_t id,std::shared_ptr<strategy> stra)
 {
 	if(_strategy_manager&&stra)
 	{
 		_strategy_manager->regist_strategy(id,stra);
+	}
+}
+
+void engine::unregist_strategy(straid_t id)
+{
+	if (_strategy_manager)
+	{
+		_strategy_manager->unregist_strategy(id);
 	}
 }
 

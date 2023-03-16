@@ -13,7 +13,7 @@ public:
 
 public:
 	
-	void run_to_close();
+	void run_to_close(const std::map<straid_t, std::shared_ptr<strategy>>& stra_map);
 
 };
 

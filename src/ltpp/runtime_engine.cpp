@@ -14,8 +14,12 @@ runtime_engine::~runtime_engine()
 }
 
 
-void runtime_engine::run_to_close()
+void runtime_engine::run_to_close(const std::map<straid_t, std::shared_ptr<strategy>>& stra_map)
 {
+	for (auto it : stra_map)
+	{
+		regist_strategy(it.first, it.second);
+	}
 	lt_start_service(_lt);
 	bool is_trading_ready = lt_is_trading_ready(_lt);
 	while (!is_trading_ready)
@@ -33,5 +37,8 @@ void runtime_engine::run_to_close()
 	}
 	std::this_thread::sleep_for(std::chrono::seconds(1));
 	lt_stop_service(_lt);
-	
+	for (auto it : stra_map)
+	{
+		unregist_strategy(it.first);
+	}
 }

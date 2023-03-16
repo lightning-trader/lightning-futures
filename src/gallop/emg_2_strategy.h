@@ -3,7 +3,7 @@
 #include <random>
 
 #define YESTODAY_CLOSE_COUNT 4
-
+#define EXPIRE_CLOSE_COUNT 2
 class emg_2_strategy : public strategy
 {
 	
@@ -21,7 +21,7 @@ class emg_2_strategy : public strategy
 
 		estid_t yestody_close_order[YESTODAY_CLOSE_COUNT];
 
-		estid_t expire_close_order[YESTODAY_CLOSE_COUNT];
+		estid_t expire_close_order[EXPIRE_CLOSE_COUNT];
 
 		persist_data() :
 			trading_day(0x0U),
@@ -34,7 +34,7 @@ class emg_2_strategy : public strategy
 			{
 				yestody_close_order[i] = INVALID_ESTID;
 			}
-			for (size_t i = 0; i < YESTODAY_CLOSE_COUNT; i++)
+			for (size_t i = 0; i < EXPIRE_CLOSE_COUNT; i++)
 			{
 				expire_close_order[i] = INVALID_ESTID;
 			}
@@ -54,7 +54,7 @@ public:
 		_yestoday_ratio(p.get<uint32_t>("yestoday_ratio")),
 		_coming_to_close(0),
 		_random(0, p.get<uint32_t>("random_offset")),
-		_expire(p.get<const char*>("code"))
+		_expire(p.get<const char*>("expire"))
 		{
 		};
 
