@@ -12,7 +12,7 @@ emg_1_strategy::emg_1_strategy(const param& p) :
 	_open_delta = p.get<double_t>("open_delta");
 	_yestoday_multiple = p.get<uint32_t>("yestoday_multiple");
 	_yestoday_threshold = p.get<uint32_t>("yestoday_threshold");
-	_yestoday_growth = p.get<double_t>("yestoday_growth"); 
+	_yestoday_growth = p.get<double_t>("yestoday_growth");
 	_expire = p.get<const char*>("expire");
 };
 
@@ -59,39 +59,39 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		return;
 	}
 	double_t delta = (tick.standard * _open_delta);
-	double_t buy_price = tick.buy_price() -  delta - _random(_random_engine);
 	double_t sell_price = tick.sell_price() +  delta + _random(_random_engine);
 	uint32_t sell_once = _open_once;
 	uint32_t yestoday_once = _yestoday_multiple * _open_once;
-
-	if(tick.id==_expire)
+	double_t buy_price = tick.buy_price() - delta - _random(_random_engine);
+	uint32_t buy_once = _open_once;
+	if(tick.id == _expire)
 	{
 		//对于过期合约，只平仓不开仓
-		const position_info& expire_pos = get_position(tick.id);
+		const position_info& expire_pos = get_position(_expire);
 
 		if (expire_pos.yestoday_long.usable() > 0)
 		{
-			if (expire_pos.get_long_position() > _yestoday_threshold)
+			if(expire_pos.yestoday_long.usable() > _yestoday_threshold)
 			{
-				yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+				yestoday_once *= _yestoday_growth;
 			}
 			sell_once = expire_pos.yestoday_long.usable() > yestoday_once ? yestoday_once : expire_pos.yestoday_long.usable();
-			sell_price += (std::ceil(sell_once / _open_once) - 1) * delta / 2.F;
+			sell_price += (sell_once / _open_once) * delta / 2.F;
 			sell_price = std::round(sell_price);
 			if (sell_price < tick.high_limit)
 			{
 				_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
 			}
 		}
-		uint32_t buy_once = _open_once;
+		
 		if (expire_pos.yestoday_short.usable() > 0)
 		{
-			if (expire_pos.get_short_position() > _yestoday_threshold)
+			if (expire_pos.yestoday_short.usable() > _yestoday_threshold)
 			{
-				yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+				yestoday_once *= _yestoday_growth;
 			}
 			buy_once = expire_pos.yestoday_short.usable() > yestoday_once ? yestoday_once : expire_pos.yestoday_short.usable();
-			buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2.F;
+			buy_price -= (buy_once / _open_once) * delta / 2.F;
 			buy_price = std::round(buy_price);
 			if (buy_price > tick.low_limit)
 			{
@@ -103,18 +103,18 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	{
 
 		//对于普通合约，过期合约存在的情况下，不平仓只开仓
-		const position_info& pos = get_position(tick.id);
-		const position_info& expire_pos = get_position(tick.id);
+		const position_info& pos = get_position(_code);
+		const position_info& expire_pos = get_position(_expire);
 		if (expire_pos.yestoday_long.usable() == 0)
 		{
 			if(pos.yestoday_long.usable() > 0)
 			{
-				if (pos.get_long_position() > _yestoday_threshold)
+				if (pos.yestoday_long.usable() > _yestoday_threshold)
 				{
-					yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+					yestoday_once *= _yestoday_growth;
 				}
 				sell_once = pos.yestoday_long.usable() > yestoday_once ? yestoday_once : pos.yestoday_long.usable();
-				sell_price += (std::ceil(sell_once / _open_once) - 1) * delta / 2.F;
+				sell_price += (sell_once / _open_once) * delta / 2.F;
 			}
 			sell_price = std::round(sell_price);
 			if (sell_price < tick.high_limit)
@@ -122,17 +122,16 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 				_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
 			}
 		}
-		uint32_t buy_once = _open_once;
 		if (expire_pos.yestoday_short.usable() == 0)
 		{
 			if(pos.yestoday_short.usable() > 0)
 			{
-				if (pos.get_short_position() > _yestoday_threshold)
+				if (pos.yestoday_short.usable() > _yestoday_threshold)
 				{
-					yestoday_once = static_cast<uint32_t>(std::round(_yestoday_multiple * _open_once * _yestoday_growth));
+					yestoday_once *= _yestoday_growth;
 				}
 				buy_once = pos.yestoday_short.usable() > yestoday_once ? yestoday_once : pos.yestoday_short.usable();
-				buy_price -= (std::ceil(buy_once / _open_once) - 1) * delta / 2.F;
+				buy_price -= (buy_once / _open_once) * delta / 2.F;
 			}
 			buy_price = std::round(buy_price);
 			if (buy_price > tick.low_limit)

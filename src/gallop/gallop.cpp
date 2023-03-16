@@ -60,7 +60,7 @@ void start_evaluate(const char* account_config, const char* strategy_config, con
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_simnow.ini", 10, 1);
-	start_evaluate("evaluate.ini","strategy_20w.xml", "trading_days.xml");
+	start_evaluate("evaluate.ini","strategy_30w.xml", "trading_days.xml");
 	return 0;
 	if(argc < 4)
 	{

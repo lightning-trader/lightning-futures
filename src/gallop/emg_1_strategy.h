@@ -89,7 +89,7 @@ private:
 
 	code_t _expire;
 
-	double _open_delta;
+	double_t _open_delta;
 
 	uint32_t _open_once;
 
