@@ -175,9 +175,4 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	*/
 	LT_INTERFACE_DECLARE(void, use_custom_chain, (const ltobj&, untid_t, trading_optimal, bool));
 
-
-	/**
-	* ∞Û∂®“∆≤÷–≈œ¢
-	*/
-	LT_INTERFACE_DECLARE(void, bind_transfer_info, (const ltobj&, const code_t&, const code_t& , double_t ));
 }

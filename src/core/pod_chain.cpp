@@ -83,17 +83,6 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 				return _next->place_order(OT_CLOSE, DT_SHORT, code, count, price, flag);
 			}
 			
-			auto transfer = _ctx.get_transfer_info(code);
-			if (transfer)
-			{
-				auto pos = _trader.get_position(transfer->expire_code);
-				LOG_INFO("open_to_close_chain for transfer_position_chain place_order DT_LONG %s %d %d %d", code.get_id(), pos.today_short.usable(), pos.yestoday_short.usable(), count);
-				if (pos.today_short.usable() >= count || pos.yestoday_short.usable() >= count)
-				{
-					//开多转平空
-					return _next->place_order(OT_CLOSE, DT_SHORT, code, count, price, flag);
-				}
-			}
 		}
 		if (direction == DT_SHORT)
 		{
@@ -105,17 +94,6 @@ estid_t open_to_close_chain::place_order(offset_type offset, direction_type dire
 				return _next->place_order(OT_CLOSE, DT_LONG, code, count, price, flag);
 			}
 
-			auto transfer = _ctx.get_transfer_info(code);
-			if (transfer)
-			{
-				auto pos = _trader.get_position(code);
-				LOG_INFO("open_to_close_chain  for transfer_position_chain place_order DT_SHORT %s %d %d %d", code.get_id(), pos.today_long.usable(), pos.yestoday_long.usable(), count);
-				if (pos.today_long.usable() >= count || pos.yestoday_long.usable() >= count)
-				{
-					//开空转平多
-					return _next->place_order(OT_CLOSE, DT_LONG, code, count, price, flag);
-				}
-			}
 		}
 	}
 	return _next->place_order(offset, direction, code, count, price, flag);
@@ -145,41 +123,6 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 	}
 	return _next->place_order(offset, direction, code, count, price, flag);
 }
-
-estid_t transfer_position_chain::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
-{
-	LOG_DEBUG("transfer_position_chain place_order %s", code.get_id());
-	if (offset == OT_CLOSE)
-	{
-		auto transfer = _ctx.get_transfer_info(code);
-		if(transfer)
-		{
-			if (direction == DT_LONG)
-			{
-				auto pos = _trader.get_position(transfer->expire_code);
-				LOG_INFO("transfer_position_chain place_order DT_LONG %s %d %d %d", code.get_id(), pos.today_long.usable(), pos.yestoday_long.usable(), count);
-				if (pos.today_long.usable() >= count || pos.yestoday_long.usable() >= count)
-				{
-					//移仓（多）
-					return _next->place_order(offset, direction, transfer->expire_code, count, price + transfer->price_offset, flag);
-				}
-			}
-			if (direction == DT_SHORT)
-			{
-				auto pos = _trader.get_position(transfer->expire_code);
-				LOG_INFO("transfer_position_chain place_order DT_LONG %s %d %d %d", code.get_id(), pos.today_short.usable(), pos.yestoday_short.usable(), count);
-				if (pos.today_short.usable() >= count || pos.yestoday_short.usable() >= count)
-				{
-					//移仓（空）
-					return _next->place_order(offset, direction, transfer->expire_code, count, price + transfer->price_offset, flag);
-				}
-			}
-		}
-	}
-	LOG_DEBUG("transfer_position_chain _trader place_order %s", code.get_id());
-	return _trader.place_order(offset, direction, code, count, price, flag);
-}
-
 
 
 estid_t verify_chain::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)

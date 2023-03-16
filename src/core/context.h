@@ -65,10 +65,6 @@ private:
 
 	std::map<code_t,tick_info> _previous_tick;
 
-protected:
-
-	std::map<code_t, transfer_info> _transfer_map ;
-
 public:
 
 	tick_callback on_tick ;
@@ -144,9 +140,6 @@ public:
 		return _trading_filter;
 	}
 
-	void bind_transfer_info(const code_t& code, const code_t& expire,double_t offset);
-
-	const transfer_info* get_transfer_info(const code_t code)const;
 
 private:
 

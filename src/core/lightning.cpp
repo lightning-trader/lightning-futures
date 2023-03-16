@@ -110,6 +110,4 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, use_custom_chain, (const ltobj& lt, untid_t untid, trading_optimal opt, bool flag), (untid, opt, flag));
 
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, bind_transfer_info, (const ltobj& lt, const code_t& code, const code_t& expire, double_t offset), (code, expire, offset));
-
 }

@@ -33,6 +33,7 @@ void emg_1_strategy::on_ready()
 	_coming_to_close = make_datetime(trading_day, "14:58:00");
 	if (_order_data->trading_day != trading_day)
 	{
+		_order_data->trading_day = trading_day;
 		_order_data->buy_order = INVALID_ESTID;
 		_order_data->sell_order = INVALID_ESTID;
 	}

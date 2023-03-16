@@ -64,16 +64,7 @@ public:
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 };
-//“∆≤÷
-class transfer_position_chain : public pod_chain
-{
 
-public:
-	transfer_position_chain(context& ctx, pod_chain* next) :pod_chain(ctx, next)
-	{}
-
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
-};
 
 //—È÷§
 class verify_chain : public pod_chain

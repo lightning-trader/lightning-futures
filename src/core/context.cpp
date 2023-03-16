@@ -163,7 +163,7 @@ void context::stop_service()
 pod_chain* context::create_chain(trading_optimal opt, bool flag)
 {
 
-	pod_chain* chain = new transfer_position_chain(*this,new verify_chain(*this));
+	pod_chain* chain = new verify_chain(*this);
 	if (flag)
 	{
 		switch (opt)
@@ -358,20 +358,6 @@ void context::use_custom_chain(untid_t untid,trading_optimal opt, bool flag)
 	_custom_chain[untid] = chain;
 }
 
-void context::bind_transfer_info(const code_t& code, const code_t& expire, double_t offset)
-{
-	_transfer_map[code]= transfer_info(expire , offset);
-}
-
-const transfer_info* context::get_transfer_info(const code_t code)const
-{
-	auto it = _transfer_map.find(code);
-	if(it == _transfer_map.end())
-	{
-		return nullptr;
-	}
-	return &(it->second);
-}
 
 void context::load_data(const char* localdb_name)
 {
@@ -445,7 +431,7 @@ void context::handle_crossday(const std::vector<std::any>& param)
 			//记录结算数据
 			if (_recorder)
 			{
-				_recorder->record_crossday_flow(get_last_time(), trading_day, _record_data->statistic_info, get_trader().get_account());
+				_recorder->record_crossday_flow(get_last_time(), _record_data->trading_day, _record_data->statistic_info, get_trader().get_account());
 			}
 			
 			_record_data->statistic_info.place_order_amount = 0;

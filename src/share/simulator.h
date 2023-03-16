@@ -7,5 +7,5 @@ class simulator : public market_api, public trader_api,public event_source<4>
 {
 public:
 	
-	virtual void play(uint32_t tradeing_day, const std::set<code_t>& expire) = 0;
+	virtual void play(uint32_t tradeing_day) = 0;
 };

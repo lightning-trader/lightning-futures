@@ -29,9 +29,9 @@ void evaluate_engine::back_test(const std::map<straid_t,std::shared_ptr<strategy
 		}
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		lt_stop_service(_lt);
-		for (size_t i = 0; i < stra_map.size(); i++)
+		for (auto it : stra_map)
 		{
-			_strategy_manager->unregist_strategy((straid_t)i);
+			_strategy_manager->unregist_strategy(it.first);
 		}
 	}
 }
