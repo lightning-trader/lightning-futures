@@ -60,8 +60,8 @@ void start_evaluate(const char* account_config, const char* strategy_config, con
 int main(int argc,char* argv[])
 {
 	//start_runtime("rt_simnow.ini", 10, 1);
-	start_evaluate("evaluate.ini","strategy_30w.xml", "trading_days.xml");
-	return 0;
+	//start_evaluate("evaluate.ini","strategy_30w.xml", "trading_days.xml");
+	//return 0;
 	if(argc < 4)
 	{
 		LOG_ERROR("start atgc error");
@@ -77,14 +77,14 @@ int main(int argc,char* argv[])
 		const char* account_file = argv[2];
 		const char* strategy_file = argv[3];
 		const char* trading_day_file = argv[4];
-		LOG_INFO("start %s evaluate for %s %s %s", account_file, strategy_file, trading_day_file);
+		LOG_INFO("start evaluate for %s %s %s\n", account_file, strategy_file, trading_day_file);
 		start_evaluate(account_file, strategy_file, trading_day_file);
 	}
 	else
 	{
 		const char* account_file = argv[2];
 		const char* strategy_file = argv[3];
-		LOG_INFO("start %s runtime for %s %s", account_file, strategy_file);
+		LOG_INFO("start runtime for %s %s\n", account_file, strategy_file);
 		start_runtime(account_file, strategy_file);
 	}
 	return 0;
