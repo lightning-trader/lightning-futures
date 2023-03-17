@@ -87,13 +87,13 @@ market_api& runtime::get_market()
 
 void runtime::update()
 {
+	if (_market_api)
+	{
+		_market_api->update();
+	}
 	if(_trader_api)
 	{
 		_trader_api->update();
-	}
-	if(_market_api)
-	{
-		_market_api->update();
 	}
 }
 
