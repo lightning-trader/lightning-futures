@@ -23,7 +23,7 @@ void emg_1_strategy::on_init()
 	{
 		subscribe(_expire);
 	}
-	use_custom_chain(TO_OPEN_TO_CLOSE,false);
+	use_custom_chain(TO_OPEN_TO_CLOSE,true);
 	_order_data = static_cast<persist_data*>(get_userdata(sizeof(persist_data)));
 }
 
@@ -85,13 +85,13 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	}
 	if (tick.time > _coming_to_close)
 	{
-		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
+		//LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
 		return;
 	}
 	//LOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
 	if (_order_data->buy_order != INVALID_ESTID || _order_data->sell_order != INVALID_ESTID)
 	{
-		LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _order_data->buy_order, _order_data->sell_order);
+		//LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _order_data->buy_order, _order_data->sell_order);
 		return;
 	}
 	double_t delta = (tick.standard * _open_delta);
@@ -183,10 +183,7 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 void emg_1_strategy::on_entrust(const order_info& order)
 {
 	LOG_INFO("emg_1_strategy on_entrust : %llu %s %d %d %f %d/%d\n", order.est_id, order.code, order.direction, order.offset, order.price, order.last_volume, order.total_volume);
-	if (_last_tick.time > _coming_to_close)
-	{
-		return;
-	}
+	
 	if (order.est_id == _order_data->buy_order || order.est_id == _order_data->sell_order)
 	{
 		set_cancel_condition(order.est_id, [this](const tick_info& tick)->bool {

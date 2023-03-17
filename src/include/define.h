@@ -118,6 +118,8 @@ typedef uint64_t estid_t;
 
 struct tick_info;
 
+struct deal_info;
+
 struct position_info;
 
 struct account_info;

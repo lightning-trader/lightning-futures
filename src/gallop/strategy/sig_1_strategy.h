@@ -1,36 +1,22 @@
 #pragma once
 #include "strategy.h"
 #include <random>
+#include "signal/signal.h"
+#include "pms/pms.h"
 
 
 class sig_1_strategy : public strategy
 {
-	enum {
-		CLOSE_LONG_ORDER,
-		CLOSE_SHORT_ORDER,
-		OPEN_LONG_ORDER,
-		OPEN_SHORT_ORDER,
-		YESTODAY_CLOSE_LONG,
-		YESTODAY_CLOSE_SHORT,
-		REGARDLESS_CLOSE_LONG,
-		REGARDLESS_CLOSE_SHORT,
-		TRANSFER_CLOSE_LONG,
-		TRANSFER_CLOSE_SHORT,
-		ORDER_ESTID_COUNT
-	};
 	struct persist_data
 	{
 		uint32_t trading_day;
 
-		estid_t order_estids[ORDER_ESTID_COUNT];
+		estid_t order_estid;
 
 		persist_data() :
-			trading_day(0x0U)
+			trading_day(0x0U),
+			order_estid(INVALID_ESTID)
 		{
-			for(size_t i = 0;i < ORDER_ESTID_COUNT;i++)
-			{
-				order_estids[i] = INVALID_ESTID;
-			}
 		}
 	};
 
@@ -40,15 +26,12 @@ public:
 		strategy(),
 		_code(p.get<const char*>("code")),
 		_open_once(p.get<uint32_t>("open_once")),
-		_order_data(nullptr),
-		_delta(p.get<uint32_t>("delta")),
-		_alpha(p.get<double_t>("alpha")),
 		_beta(p.get<double_t>("beta")),
-		_yestoday_ratio(p.get<uint32_t>("yestoday_ratio")),
-		_coming_to_close(0),
-		_random(0, p.get<uint32_t>("random_offset")),
-		_expire(p.get<const char*>("expire"))
-		{
+		_prb_delta(p.get<uint32_t>("prb_delta")),
+		_expire(p.get<const char*>("expire")),
+		_current_prb_st(ST_INVALID),
+		_expire_prb_st(ST_INVALID)
+	{
 		};
 
 
@@ -112,26 +95,28 @@ private:
 	
 	code_t _code ;
 
-	code_t _expire;
+	code_t _expire ;
 
-	uint32_t _open_once;
+	uint32_t _prb_delta ;
 
-	int32_t _delta;
+	uint32_t _open_once ;
 
-	double_t _alpha;
+	double_t _beta ;
 
-	double_t _beta;
+	std::vector<std::shared_ptr<signal>> _current_signals;
 
-	uint32_t _yestoday_ratio;
-
-	persist_data* _order_data ;
-
-	tick_info _last_tick;
+	std::vector<std::shared_ptr<signal>> _expire_signals;
 
 	time_t _coming_to_close;
 
-	std::default_random_engine _random_engine;
+	signal_type _current_prb_st;
 
-	std::uniform_int_distribution<int> _random;
+	signal_type _expire_prb_st;
+
+	persist_data* _order_data;
+
+	std::shared_ptr<pms> _current_pcm;
+	std::shared_ptr<pms> _expire_pcm;
+
 };
 
