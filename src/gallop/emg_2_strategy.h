@@ -2,41 +2,34 @@
 #include "strategy.h"
 #include <random>
 
-#define YESTODAY_CLOSE_COUNT 4
-#define EXPIRE_CLOSE_COUNT 2
+
 class emg_2_strategy : public strategy
 {
-	
+	enum {
+		CLOSE_LONG_ORDER,
+		CLOSE_SHORT_ORDER,
+		OPEN_LONG_ORDER,
+		OPEN_SHORT_ORDER,
+		YESTODAY_CLOSE_LONG,
+		YESTODAY_CLOSE_SHORT,
+		REGARDLESS_CLOSE_LONG,
+		REGARDLESS_CLOSE_SHORT,
+		TRANSFER_CLOSE_LONG,
+		TRANSFER_CLOSE_SHORT,
+		ORDER_ESTID_COUNT
+	};
 	struct persist_data
 	{
 		uint32_t trading_day;
 
-		estid_t close_long_order;
-
-		estid_t close_short_order;
-
-		estid_t open_long_order;
-
-		estid_t open_short_order;
-
-		estid_t yestody_close_order[YESTODAY_CLOSE_COUNT];
-
-		estid_t expire_close_order[EXPIRE_CLOSE_COUNT];
+		estid_t order_estids[ORDER_ESTID_COUNT];
 
 		persist_data() :
-			trading_day(0x0U),
-			close_long_order(INVALID_ESTID),
-			close_short_order(INVALID_ESTID),
-			open_long_order(INVALID_ESTID),
-			open_short_order(INVALID_ESTID)
+			trading_day(0x0U)
 		{
-			for(size_t i = 0;i < YESTODAY_CLOSE_COUNT;i++)
+			for(size_t i = 0;i < ORDER_ESTID_COUNT;i++)
 			{
-				yestody_close_order[i] = INVALID_ESTID;
-			}
-			for (size_t i = 0; i < EXPIRE_CLOSE_COUNT; i++)
-			{
-				expire_close_order[i] = INVALID_ESTID;
+				order_estids[i] = INVALID_ESTID;
 			}
 		}
 	};

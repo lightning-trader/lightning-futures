@@ -37,6 +37,42 @@ void emg_1_strategy::on_ready()
 		_order_data->buy_order = INVALID_ESTID;
 		_order_data->sell_order = INVALID_ESTID;
 	}
+	else
+	{
+		auto& buy_order = get_order(_order_data->buy_order);
+		if (buy_order.est_id != INVALID_ESTID)
+		{
+			set_cancel_condition(buy_order.est_id, [this](const tick_info& tick)->bool {
+
+				if (tick.time > _coming_to_close)
+				{
+					return true;
+				}
+				return false;
+				});
+		}
+		else
+		{
+			_order_data->buy_order = INVALID_ESTID;
+		}
+		auto& sell_order = get_order(_order_data->sell_order);
+		if (sell_order.est_id != INVALID_ESTID)
+		{
+			set_cancel_condition(sell_order.est_id, [this](const tick_info& tick)->bool {
+
+				if (tick.time > _coming_to_close)
+				{
+					return true;
+				}
+				return false;
+				});
+		}
+		else
+		{
+			_order_data->sell_order = INVALID_ESTID;
+		}
+	}
+	
 }
 
 void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
@@ -73,7 +109,7 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		{
 			if(expire_pos.yestoday_long.usable() > _yestoday_threshold)
 			{
-				yestoday_once *= _yestoday_growth;
+				yestoday_once = static_cast<uint32_t>(yestoday_once * _yestoday_growth);
 			}
 			sell_once = expire_pos.yestoday_long.usable() > yestoday_once ? yestoday_once : expire_pos.yestoday_long.usable();
 			sell_price += (sell_once / _open_once) * delta / 2.F;
@@ -88,7 +124,7 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		{
 			if (expire_pos.yestoday_short.usable() > _yestoday_threshold)
 			{
-				yestoday_once *= _yestoday_growth;
+				yestoday_once = static_cast<uint32_t>(yestoday_once * _yestoday_growth);
 			}
 			buy_once = expire_pos.yestoday_short.usable() > yestoday_once ? yestoday_once : expire_pos.yestoday_short.usable();
 			buy_price -= (buy_once / _open_once) * delta / 2.F;
@@ -111,7 +147,7 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 			{
 				if (pos.yestoday_long.usable() > _yestoday_threshold)
 				{
-					yestoday_once *= _yestoday_growth;
+					yestoday_once = static_cast<uint32_t>(yestoday_once * _yestoday_growth);
 				}
 				sell_once = pos.yestoday_long.usable() > yestoday_once ? yestoday_once : pos.yestoday_long.usable();
 				sell_price += (sell_once / _open_once) * delta / 2.F;
@@ -128,7 +164,7 @@ void emg_1_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 			{
 				if (pos.yestoday_short.usable() > _yestoday_threshold)
 				{
-					yestoday_once *= _yestoday_growth;
+					yestoday_once = static_cast<uint32_t>(yestoday_once * _yestoday_growth);
 				}
 				buy_once = pos.yestoday_short.usable() > yestoday_once ? yestoday_once : pos.yestoday_short.usable();
 				buy_price -= (buy_once / _open_once) * delta / 2.F;
@@ -153,8 +189,7 @@ void emg_1_strategy::on_entrust(const order_info& order)
 	}
 	if (order.est_id == _order_data->buy_order || order.est_id == _order_data->sell_order)
 	{
-		double_t current_price = _last_tick.price;
-		set_cancel_condition(order.est_id, [this, current_price](const tick_info& tick)->bool {
+		set_cancel_condition(order.est_id, [this](const tick_info& tick)->bool {
 
 			if (tick.time > _coming_to_close)
 			{
