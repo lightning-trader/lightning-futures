@@ -91,9 +91,12 @@ void runtime::update()
 	{
 		_market_api->update();
 	}
-	if(_trader_api)
+	if(is_in_trading())
 	{
-		_trader_api->update();
+		if (_trader_api)
+		{
+			_trader_api->update();
+		}
 	}
 }
 

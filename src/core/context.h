@@ -140,6 +140,10 @@ public:
 		return _trading_filter;
 	}
 
+	inline bool is_in_trading()
+	{
+		return _section->is_in_trading(get_last_time());
+	}
 
 private:
 

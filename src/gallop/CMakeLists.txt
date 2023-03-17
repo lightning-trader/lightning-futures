@@ -7,8 +7,10 @@ cmake_minimum_required (VERSION 3.8)
 include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
 
+AUX_SOURCE_DIRECTORY(strategy   STRATEGY_DIR_VAR)
+AUX_SOURCE_DIRECTORY(signal   SIGNAL_DIR_VAR)
 # 将源代码添加到此项目的可执行文件。
-add_executable (gallop "gallop.cpp" "demo_strategy.cpp" "hcc_strategy.cpp" "hft_1_strategy.cpp" "emg_1_strategy.cpp" "emg_1a_strategy.cpp" "emg_1b_strategy.cpp" "emg_2_strategy.cpp" "pugixml.cpp")
+add_executable (gallop "gallop.cpp" "pugixml.cpp" ${STRATEGY_DIR_VAR} ${SIGNAL_DIR_VAR})
 
 target_link_libraries(gallop "libltpp")
 

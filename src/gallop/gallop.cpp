@@ -1,13 +1,11 @@
 ﻿#include "gallop.h"
 #include <define.h>
-#include "demo_strategy.h"
-#include "hcc_strategy.h"
-#include "emg_1_strategy.h"
-#include "emg_2_strategy.h"
 #include "runtime_engine.h"
 #include "evaluate_engine.h"
 #include "config.h"
 #include "time_utils.hpp"
+#include "strategy/emg_1_strategy.h"
+#include "strategy/emg_2_strategy.h"
 
 #pragma comment (lib,"lightning.lib")
 #pragma comment (lib,"libltpp.lib")

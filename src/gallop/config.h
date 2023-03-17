@@ -1,4 +1,5 @@
-#include "pugixml.hpp"
+#pragma once
+
 #include "pugixml.hpp"
 
 typedef enum strategy_type

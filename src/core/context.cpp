@@ -303,7 +303,7 @@ void context::unsubscribe(const std::set<code_t>& codes)
 }
 time_t context::get_last_time()
 {
-	return get_market().last_tick_time();
+	return const_cast<const market_api&>(get_market()).last_tick_time();
 }
 
 time_t context::last_order_time()
