@@ -645,9 +645,17 @@ void tick_simulator::handle_buy(const tick_info* tick, const order_match& match,
 
 void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_today)
 {
+	position_info pos ;
+	auto it = _position_info.find(order.code);
+	if(it == _position_info.end())
+	{
+		pos.id = order.code;
+	}
+	else
+	{
+		pos = it->second;
+	}
 	
-	auto& pos = _position_info[order.code];
-	pos.id = order.code;
 	auto contract_info = _contract_parser.get_contract_info(order.code);
 	if(contract_info == nullptr)
 	{
@@ -720,6 +728,17 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 				_account_info.frozen_monery -= (deal_volume * pos.yestoday_short.price * contract_info->multiple * contract_info->margin_rate);
 			}
 			_account_info.money -= deal_volume * service_charge;
+		}
+	}
+	if (!pos.empty())
+	{
+		_position_info[order.code] = pos;
+	}
+	else
+	{
+		if (it != _position_info.end())
+		{
+			_position_info.erase(it);
 		}
 	}
 	order.last_volume =_order_info.set_last_volume(order.est_id,order.last_volume - deal_volume);

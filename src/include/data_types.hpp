@@ -165,6 +165,11 @@ struct position_item
 		return postion - frozen;
 	}
 
+	bool empty()const
+	{
+		return postion == 0;
+	}
+
 	void clear()
 	{
 		postion = 0;
@@ -185,6 +190,11 @@ struct position_info
 	//ЧтІЦ
 	position_item yestoday_long;
 	position_item yestoday_short;
+
+	bool empty()const
+	{
+		return today_long.empty()&& today_short.empty()&& yestoday_long.empty()&& yestoday_short.empty();
+	}
 
 	uint32_t get_total()const 
 	{

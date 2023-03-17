@@ -1088,9 +1088,19 @@ void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, 
 				}
 			}
 		}
-	
+		
 	}
-	_position_info[code] = p ;	
+	if (!p.empty())
+	{
+		_position_info[code] = p;
+	}
+	else
+	{
+		if (it != _position_info.end())
+		{
+			_position_info.erase(it);
+		}
+	}
 	print_position("calculate_position");
 	this->fire_event(ET_PositionChange, p);
 }
