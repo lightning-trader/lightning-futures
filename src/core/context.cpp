@@ -424,9 +424,9 @@ void context::handle_crossday(const std::vector<std::any>& param)
 	uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
 	LOG_INFO("cross day %d", trading_day);
 	_section->init(trading_day, get_last_time());
-	if (trading_day != _record_data->trading_day)
+	if (_record_data)
 	{
-		if (_record_data)
+		if (trading_day != _record_data->trading_day)
 		{
 			//记录结算数据
 			if (_recorder && trading_day > _record_data->trading_day)
