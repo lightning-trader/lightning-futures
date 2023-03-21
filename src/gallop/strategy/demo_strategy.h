@@ -1,12 +1,33 @@
 #pragma once
 #include "strategy.h"
-#include <list>
+#include <random>
+
+
 
 class demo_strategy : public strategy
 {
+
+	struct persist_data
+	{
+		uint32_t trading_day;
+		estid_t sell_order;
+		estid_t buy_order;
+
+		persist_data() :
+			trading_day(0x0U),
+			sell_order(INVALID_ESTID),
+			buy_order(INVALID_ESTID)
+		{}
+	};
 public:
-	demo_strategy(int lose_offset,int open_delta):_lose_offset(lose_offset), _open_delta(open_delta), _highest_price(0), _lowest_price(0) {};
-	~demo_strategy(){};
+
+	demo_strategy(const param& p);
+
+
+	~demo_strategy()
+	{
+		_order_data = nullptr;
+	};
 
 
 public:
@@ -16,7 +37,12 @@ public:
 	 *	初始化事件
 	 *	生命周期中只会回调一次
 	 */
-	virtual void on_init() override ;
+	virtual void on_init() override;
+
+	/*
+	*	交易日初始化完成
+	*/
+	virtual void on_ready() override;
 
 	/*
 	 *	tick推送
@@ -45,24 +71,42 @@ public:
 	 */
 	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type directionv, double_t price, uint32_t cancel_volume, uint32_t total_volume)  override;
 
+	/*
+	 *	错误
+	 *	@localid	本地订单id
+	 *	@error 错误代码
+	 */
+	virtual void on_error(error_type type, estid_t localid, const uint32_t error) override;
+
+	/*
+	 *	销毁
+	 */
+	virtual void on_destory()override;
+
 private:
 
+	code_t _code;
 
+	code_t _expire;
 
-private:
+	double_t _open_delta;
 
-	int _lose_offset;
+	uint32_t _open_once;
 
-	int _open_delta;
+	uint32_t _yestoday_multiple;
 
-	estid_t _sell_order ;
+	uint32_t _yestoday_threshold;
 
-	estid_t _buy_order ;
+	double_t _yestoday_growth;
 
-	double _highest_price; //止损价
-	double _lowest_price; //止损价
+	tick_info _last_tick;
 
-	std::list<double_t> _history_list ;
+	time_t _coming_to_close;
 
+	persist_data* _order_data;
+
+	std::default_random_engine _random_engine;
+
+	std::uniform_int_distribution<int> _random;
 };
 

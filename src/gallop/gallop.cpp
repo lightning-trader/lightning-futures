@@ -4,8 +4,7 @@
 #include "evaluate_engine.h"
 #include "config.h"
 #include "time_utils.hpp"
-#include "strategy/emg_1_strategy.h"
-#include "strategy/emg_2_strategy.h"
+#include "strategy/demo_strategy.h"
 
 #pragma comment (lib,"lightning.lib")
 #pragma comment (lib,"libltpp.lib")
@@ -21,12 +20,9 @@ std::shared_ptr<std::map<straid_t, std::shared_ptr<strategy>>> make_strategys(co
 		const auto& p = strategy::param(it.param.c_str());
 		switch(it.type)
 		{
-			case ST_EMG_1:
-				(*result)[it.id] = std::make_shared<emg_1_strategy>(p);
+			case ST_DEMO:
+				(*result)[it.id] = std::make_shared<demo_strategy>(p);
 			break;
-			case ST_EMG_2:
-				(*result)[it.id] = std::make_shared<emg_2_strategy>(p);
-				break;
 		}
 	}
 	return result;

@@ -5,8 +5,7 @@
 typedef enum strategy_type
 {
 	ST_INVALID = 0,
-	ST_EMG_1 = 1,
-	ST_EMG_2 = 2,
+	ST_DEMO = 1,
 }strategy_type;
 
 struct strategy_info
