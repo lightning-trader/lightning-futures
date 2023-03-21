@@ -419,7 +419,7 @@ void context::handle_crossday(const std::vector<std::any>& param)
 {
 	if (param.size() < 1)
 	{
-		return ;
+		return;
 	}
 	uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
 	LOG_INFO("cross day %d", trading_day);
@@ -433,30 +433,30 @@ void context::handle_crossday(const std::vector<std::any>& param)
 			{
 				_recorder->record_crossday_flow(get_last_time(), _record_data->trading_day, _record_data->statistic_info, get_trader().get_account());
 			}
-			
+
 			_record_data->statistic_info.place_order_amount = 0;
 			_record_data->statistic_info.entrust_amount = 0;
 			_record_data->statistic_info.trade_amount = 0;
 			_record_data->statistic_info.cancel_amount = 0;
 			_record_data->statistic_info.error_amount = 0;
 			_record_data->trading_day = trading_day;
+			LOG_INFO("submit_settlement");
+			get_trader().submit_settlement();
+		}
+		else
+		{
+			if (!_is_trading_ready)
+			{
+				_is_trading_ready = true;
+			}
+
+			if (on_ready)
+			{
+				on_ready();
+			}
+			LOG_INFO("trading ready");
 		}
 
-		LOG_INFO("submit_settlement");
-		get_trader().submit_settlement();
-	}
-	else
-	{
-		 if (!_is_trading_ready)
-		 {
-			 _is_trading_ready = true;
-		 }
-
-		 if (on_ready)
-		 {
-			 on_ready();
-		 }
-		 LOG_INFO("trading ready");
 	}
 }
 
