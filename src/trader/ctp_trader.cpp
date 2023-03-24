@@ -607,7 +607,10 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
 			{
 				//³·Ïú½â¶³²ÖÎ»
-				thawing_deduction(code, direction, pOrder->VolumeTotal + pOrder->VolumeTraded, is_today);
+				if (offset == OT_CLOSE)
+				{
+					thawing_deduction(code, direction, pOrder->VolumeTotal + pOrder->VolumeTraded, is_today);
+				}
 				this->fire_event(ET_OrderCancel, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 			}
 			if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
