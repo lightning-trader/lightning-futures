@@ -897,6 +897,11 @@ void tick_simulator::crossday_settlement()
 	_order_info.clear();
 	for (auto& it : _position_info)
 	{
+		//只有上期所区分昨仓今仓
+		if (std::strcmp(it.first.get_excg(), "SHFE") != 0)
+		{
+			continue;
+		}
 		if(it.second.yestoday_long.postion + it.second.today_long.postion>0)
 		{
 			it.second.yestoday_long.price = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.today_long.postion * it.second.today_long.price) / (it.second.yestoday_long.postion + it.second.today_long.postion);
