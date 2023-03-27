@@ -854,8 +854,8 @@ bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for %s", code.get_id());
 		return false;
 	}
-	double_t service_charge = contract_info->get_service_charge(price, offset, is_today);
-	_account_info.money+= last_volume * service_charge;
+	//double_t service_charge = contract_info->get_service_charge(price, offset, is_today);
+	//_account_info.money+= last_volume * service_charge;
 	if (offset == OT_OPEN)
 	{
 		double_t delta = (last_volume * price * contract_info->multiple * contract_info->margin_rate);
