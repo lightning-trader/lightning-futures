@@ -48,6 +48,7 @@ void tick_simulator::play(uint32_t tradeing_day)
 	{
 		load_data(it, tradeing_day);
 	}
+
 	//模拟跨天时候之前的订单失效
 	crossday_settlement();
 	
@@ -72,10 +73,9 @@ void tick_simulator::play(uint32_t tradeing_day)
 		{
 			std::this_thread::sleep_for(std::chrono::microseconds(0));
 		}
-		_last_frame_volume.clear();
 		for (const auto& tick : _current_tick_info)
 		{
-			_last_frame_volume[tick->id] = tick->volume;
+			_last_frame_volume[tick->id] = tick->volume ;
 		}
 	}
 }
@@ -291,7 +291,7 @@ void tick_simulator::publish_tick()
 			//结束了触发收盘事件
 			_is_in_trading = false ;
 			_last_frame_volume.clear();
-			return;
+			break;
 		}
 	}
 }
@@ -894,28 +894,39 @@ bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 
 void tick_simulator::crossday_settlement()
 {
+	std::vector<order_info> order_info ;
+	_order_info.get_all_order(order_info);
+	for(auto it : order_info)
+	{
+		std::vector<order_match> match;
+		_order_info.get_order_match(match, it.code);
+		for (const order_match& mit : match)
+		{
+			order_cancel(it, mit.is_today);
+		}
+	}
 	_order_info.clear();
 	for (auto& it : _position_info)
 	{
 		//只有上期所区分昨仓今仓
-		if (std::strcmp(it.first.get_excg(), "SHFE") != 0)
+		if(std::strcmp(it.first.get_excg(),"SHFE")==0)
 		{
-			continue;
+			if (it.second.yestoday_long.postion + it.second.today_long.postion > 0)
+			{
+				it.second.yestoday_long.price = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.today_long.postion * it.second.today_long.price) / (it.second.yestoday_long.postion + it.second.today_long.postion);
+				it.second.yestoday_long.postion += it.second.today_long.postion;
+				it.second.yestoday_long.frozen = 0;
+			}
+			if (it.second.yestoday_short.postion + it.second.today_short.postion > 0)
+			{
+				it.second.yestoday_short.price = (it.second.yestoday_short.postion * it.second.yestoday_short.price + it.second.today_short.postion * it.second.today_short.price) / (it.second.yestoday_short.postion + it.second.today_short.postion);
+				it.second.yestoday_short.postion += it.second.today_short.postion;
+				it.second.yestoday_short.frozen = 0;
+			}
+			it.second.today_long.clear();
+			it.second.today_short.clear();
+			this->fire_event(ET_PositionChange, it.second);
 		}
-		if(it.second.yestoday_long.postion + it.second.today_long.postion>0)
-		{
-			it.second.yestoday_long.price = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.today_long.postion * it.second.today_long.price) / (it.second.yestoday_long.postion + it.second.today_long.postion);
-			it.second.yestoday_long.postion += it.second.today_long.postion;
-			it.second.yestoday_long.frozen = 0;
-		}
-		if(it.second.yestoday_short.postion + it.second.today_short.postion>0)
-		{
-			it.second.yestoday_short.price = (it.second.yestoday_short.postion * it.second.yestoday_short.price + it.second.today_short.postion * it.second.today_short.price) / (it.second.yestoday_short.postion + it.second.today_short.postion);
-			it.second.yestoday_short.postion += it.second.today_short.postion;
-			it.second.yestoday_short.frozen = 0;
-		}
-		it.second.today_long.clear();
-		it.second.today_short.clear();
-		this->fire_event(ET_PositionChange, it.second);
+		
 	}
 }

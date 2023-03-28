@@ -19,6 +19,7 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 	{
 		return ;
 	}
+	time_t last_time = 0;
 	rapidcsv::Document doc(buffer, rapidcsv::LabelParams(0, -1));
 	for(size_t i = 0;i < doc.GetRowCount();i++)
 	{
@@ -32,7 +33,16 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		const std::string& date_str = doc.GetCell<std::string>("业务日期",i);
 		const std::string& time_str = doc.GetCell<std::string>("最后修改时间",i);
 		tick.time = make_datetime(date_str.c_str(), time_str.c_str());
-		tick.tick = doc.GetCell<uint32_t>("最后修改毫秒",i);
+		if(std::strcmp(code.get_excg(),"ZEC")&& tick.time == last_time)
+		{
+			//郑商所 没有tick问题，后一个填上500和上期所一致
+			tick.tick = 500;
+		}
+		else
+		{
+			tick.tick = doc.GetCell<uint32_t>("最后修改毫秒", i);
+			last_time = tick.time;
+		}
 		tick.price = doc.GetCell<double_t>("最新价",i);
 		tick.open = doc.GetCell<double_t>("今开盘",i);
 		tick.close = doc.GetCell<double_t>("今收盘", i);
