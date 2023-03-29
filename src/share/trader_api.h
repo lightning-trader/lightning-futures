@@ -56,17 +56,12 @@ public:
 	/*
 	*	获取所有仓位
 	*/
-	virtual uint32_t get_total_position() const  = 0;
+	virtual uint32_t get_total_position() const = 0;
 
-	/*
-	*	获取合约信息
-	* */
-	virtual bool get_instrument(const code_t& code) = 0;
-
-	/*
-	*	是否在交易中
-	* */
-	virtual bool is_in_trading(const code_t& code) = 0;
+	/**
+	* 获取当前交易日
+	*/
+	virtual uint32_t get_trading_day()const = 0;
 
 };
 

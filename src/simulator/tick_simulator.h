@@ -118,9 +118,6 @@ public:
 
 	virtual void submit_settlement() override;
 
-	virtual bool get_instrument(const code_t& code) override;
-
-	virtual bool is_in_trading(const code_t& code) override;
 
 private:
 

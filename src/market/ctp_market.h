@@ -28,10 +28,6 @@ public:
 
 	virtual void unsubscribe(const std::set<code_t>& codes) override;
 
-	virtual uint32_t get_trading_day() const override
-	{
-		return _current_trading_day;
-	}
 	virtual time_t last_tick_time() const override
 	{
 		return _last_tick_time;
@@ -86,8 +82,6 @@ private:
 	std::unordered_map<std::string,std::string> _instrument_id_list;
 
 	time_t _last_tick_time ;
-
-	uint32_t _current_trading_day;
 
 	bool _is_inited ;
 

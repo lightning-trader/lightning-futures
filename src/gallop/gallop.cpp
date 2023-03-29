@@ -42,11 +42,12 @@ void start_runtime(const char * account_config, const char* strategy_config)
 void start_evaluate(const char* account_config, const char* strategy_config, const char* trading_day_config)
 {
 	auto app = std::make_shared<evaluate_engine>(account_config);
-	auto config = get_strategy_evaluate(strategy_config, trading_day_config);
-	for(auto it : config)
+	auto td_cfg = get_trading_day_config(trading_day_config);
+	for(auto it : td_cfg)
 	{
-		auto strategys = make_strategys(it.stra_info);
-		app->back_test(*strategys, it.trading_days);
+		const auto& stra_info = get_strategy_info(strategy_config, it);
+		auto strategys = make_strategys(stra_info);
+		app->back_test(*strategys, it);
 	}
 }
 

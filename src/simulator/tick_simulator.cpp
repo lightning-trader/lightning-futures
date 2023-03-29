@@ -225,15 +225,6 @@ void tick_simulator::submit_settlement()
 	while (!_is_submit_return.exchange(false));
 }
 
-bool tick_simulator::get_instrument(const code_t& codes)
-{
-	return false ;
-}
-
-bool tick_simulator::is_in_trading(const code_t& code)
-{
-	return true ;
-}
 
 void tick_simulator::load_data(const code_t& code, uint32_t trading_day)
 {
@@ -274,8 +265,6 @@ void tick_simulator::publish_tick()
 		if(tick->trading_day != _current_trading_day)
 		{
 			_current_trading_day = tick->trading_day;
-			
-			this->fire_event(ET_FirstMessage, _current_trading_day);
 		}
 		_current_tick_info.emplace_back(tick);
 		this->fire_event(ET_TickReceived, *tick);

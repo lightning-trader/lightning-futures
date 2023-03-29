@@ -10,7 +10,6 @@ ctp_market::ctp_market()
 	,_reqid(0)
 	,_process_mutex(_mutex)
 	,_last_tick_time(0)
-	, _current_trading_day(0)
 	, _is_inited(false)
 {
 }
@@ -150,11 +149,6 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	tick.sell_order[4] = std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5);
 	tick.trading_day = std::atoi(pDepthMarketData->TradingDay);
 	_last_tick_time = tick.time;
-	if (_current_trading_day != tick.trading_day)
-	{
-		_current_trading_day = tick.trading_day;
-		this->fire_event(ET_FirstMessage, _current_trading_day);
-	}
 	this->fire_event(ET_TickReceived, tick);
 	
 }

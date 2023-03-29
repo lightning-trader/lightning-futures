@@ -26,7 +26,7 @@ struct strategy_evaluate
 };
 
 
-std::vector<strategy_evaluate> get_strategy_evaluate(const char* stra_file, const char* trading_day_file)
+std::vector<uint32_t> get_trading_day_config(const char* trading_day_file)
 {
 	std::vector<uint32_t> trading_days;
 	pugi::xml_document trading_day_doc;
@@ -38,34 +38,7 @@ std::vector<strategy_evaluate> get_strategy_evaluate(const char* stra_file, cons
 		trading_days.emplace_back(trading_day);
 	}
 
-	std::vector <strategy_evaluate> all_strategy;
-	pugi::xml_document stra_doc;
-	stra_doc.load_file(stra_file);
-	auto stra_root = stra_doc.first_child();
-	for (pugi::xml_node c = stra_root.first_child(); c; c = c.next_sibling())
-	{
-		uint32_t begin = c.attribute("begin").as_int();
-		uint32_t end = c.attribute("end").as_int();
-		strategy_evaluate se ;
-		for (pugi::xml_node sn = c.first_child(); sn; sn = sn.next_sibling())
-		{
-			strategy_info info;
-			info.id = sn.attribute("id").as_int();
-			info.type = static_cast<strategy_type>(sn.attribute("type").as_int());
-			info.param = sn.attribute("param").as_string();
-			se.stra_info.emplace_back(info);
-		}
-		for(auto it : trading_days)
-		{
-			if (begin <= it && it <= end)
-			{
-				se.trading_days.emplace_back(it);
-			}
-		}
-		all_strategy.emplace_back(se);
-	}
-
-	return all_strategy;
+	return trading_days;
 }
 
 std::vector <strategy_info> get_strategy_info(const char* cfg_file,uint32_t date)

@@ -59,13 +59,17 @@ context::~context()
 	}
 }
 
-bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config)
+bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config,bool reset_trading_day)
 {
 	auto& localdb_name = ctrl.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
 	{
 		_userdata_size = ctrl.get<size_t>("userdata_size", 4096 * MAX_UNITID);
 		load_data(localdb_name.c_str());
+		if(reset_trading_day)
+		{
+			_record_data->trading_day = 0;
+		}
 	}
 	_max_position = ctrl.get<uint16_t>("position_limit", 10000);
 	_fast_mode = ctrl.get<bool>("fast_mode", false);
@@ -86,9 +90,6 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 			break;
 		case ET_PositionChange:
 			handle_position(param);
-			break;
-		case ET_FirstMessage:
-			handle_crossday(param);
 			break;
 		case ET_SettlementCompleted:
 			handle_settlement(param);
@@ -128,6 +129,7 @@ void context::start_service()
 				LOG_ERROR("Binding to core {%d} failed", core);
 			}
 		}
+		_is_trading_ready = false ;
 		while (_is_runing)
 		{
 
@@ -335,7 +337,7 @@ void* context::get_userdata(untid_t index,size_t size)
 
 uint32_t context::get_trading_day()
 {
-	return get_market().get_trading_day();
+	return get_trader().get_trading_day();
 }
 
 time_t context::get_close_time()
@@ -389,45 +391,15 @@ void context::load_data(const char* localdb_name)
 	}
 }
 
-void context::handle_account(const std::vector<std::any>& param)
+void context::check_crossday()
 {
-	if (param.size() >= 1)
-	{
-		const auto& account = std::any_cast<account_info>(param[0]);
-		if (_recorder)
-		{
-			_recorder->record_account_flow(get_last_time(), account);
-		}
-	}
-	
-}
-
-void context::handle_position(const std::vector<std::any>& param)
-{
-	if (param.size() >= 1)
-	{
-		auto position = std::any_cast<position_info>(param[0]);
-		if (_recorder)
-		{
-			_recorder->record_position_flow(get_last_time(), position);
-		}
-	}
-	
-}
-
-void context::handle_crossday(const std::vector<std::any>& param)
-{
-	if (param.size() < 1)
-	{
-		return;
-	}
-	uint32_t trading_day = std::any_cast<uint32_t>(param[0]);
-	LOG_INFO("cross day %d", trading_day);
-	_section->init(trading_day, get_last_time());
 	if (_record_data)
 	{
+		uint32_t trading_day = get_trader().get_trading_day();
 		if (trading_day != _record_data->trading_day)
 		{
+			LOG_INFO("cross day %d", trading_day);
+			_section->init(trading_day, get_last_time());
 			//记录结算数据
 			if (_recorder && trading_day > _record_data->trading_day)
 			{
@@ -460,6 +432,31 @@ void context::handle_crossday(const std::vector<std::any>& param)
 	}
 }
 
+void context::handle_account(const std::vector<std::any>& param)
+{
+	if (param.size() >= 1)
+	{
+		const auto& account = std::any_cast<account_info>(param[0]);
+		if (_recorder)
+		{
+			_recorder->record_account_flow(get_last_time(), account);
+		}
+	}
+	
+}
+
+void context::handle_position(const std::vector<std::any>& param)
+{
+	if (param.size() >= 1)
+	{
+		auto position = std::any_cast<position_info>(param[0]);
+		if (_recorder)
+		{
+			_recorder->record_position_flow(get_last_time(), position);
+		}
+	}
+	
+}
 
 void context::handle_settlement(const std::vector<std::any>& param)
 {

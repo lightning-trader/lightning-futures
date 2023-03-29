@@ -1,0 +1,104 @@
+[2023-03-28 20:00:40.305409][0x00006508][info] start runtime for runtime.ini strategy_10w.xml
+[2023-03-28 20:00:40.314168][0x00006508][info] ctp_trader init v6.6.9_20220914  9:57:19.2466          
+[2023-03-28 20:00:40.440268][0x00009160][info] ctp_trader OnFrontConnected 
+[2023-03-28 20:00:40.519044][0x00009160][info] [2023-03-28 20:00:36][ÓÃ»§µÇÂ¼] UserID:00373761 AppID:client_lightning_0.9.4 SessionID:-689739275 FrontID:5
+[2023-03-28 20:00:40.520043][0x00009160][info] calculate_position rb2305 49 48 1 4120.000000 0
+[2023-03-28 20:00:40.521044][0x00009160][info] print_position calculate_position 
+[2023-03-28 20:00:40.521044][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(1 0 4120.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.521044][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.521044][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(1 0 4120.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.521044][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.521044][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(1 0 4120.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.522044][0x00009160][info] print_position frozen_deduction 
+[2023-03-28 20:00:40.522044][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(1 1 4120.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.522044][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.522044][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(1 1 4120.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.522044][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.522044][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(1 1 4120.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.522044][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.522044][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(1 1 4120.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.523045][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.523045][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(1 1 4120.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.525045][0x00009160][info] calculate_position rb2305 49 48 1 4134.000000 0
+[2023-03-28 20:00:40.526045][0x00009160][info] print_position calculate_position 
+[2023-03-28 20:00:40.527045][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(2 1 4127.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.529045][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.530055][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(2 1 4127.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.542047][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.543049][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(2 1 4127.000000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.545049][0x00009160][info] calculate_position rb2305 49 48 1 4134.000000 0
+[2023-03-28 20:00:40.545049][0x00009160][info] print_position calculate_position 
+[2023-03-28 20:00:40.546049][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 1 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.548049][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.548049][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 1 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.550050][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.551050][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 1 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.552050][0x00009160][info] print_position thawing_deduction 
+[2023-03-28 20:00:40.553051][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 0 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.555051][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.555051][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 0 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.559180][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.559180][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 0 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.560052][0x00009160][info] print_position frozen_deduction 
+[2023-03-28 20:00:40.561053][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.562054][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.563053][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.565052][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.565052][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.567054][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.567054][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.570054][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.570054][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.573054][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.574056][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.575056][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.576057][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.577056][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.578057][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.579056][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.579056][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(3 3 4129.333333) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.582057][0x00009160][info] calculate_position rb2305 49 48 1 4146.000000 0
+[2023-03-28 20:00:40.582057][0x00009160][info] print_position calculate_position 
+[2023-03-28 20:00:40.583057][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.584058][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.585058][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.586058][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.589059][0x00009160][info] position : rb2305 today_long(0 0 0.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.590059][0x00009160][info] calculate_position rb2305 48 48 1 4121.000000 0
+[2023-03-28 20:00:40.590059][0x00009160][info] print_position calculate_position 
+[2023-03-28 20:00:40.591060][0x00009160][info] position : rb2305 today_long(1 0 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.592059][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.592059][0x00009160][info] position : rb2305 today_long(1 0 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.594060][0x00009160][info] print_position frozen_deduction 
+[2023-03-28 20:00:40.595060][0x00009160][info] position : rb2305 today_long(1 1 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.596060][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.596060][0x00009160][info] position : rb2305 today_long(1 1 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.597061][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.598061][0x00009160][info] position : rb2305 today_long(1 1 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.599061][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.600061][0x00009160][info] position : rb2305 today_long(1 1 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.604062][0x00009160][info] calculate_position rb2305 48 49 1 4131.000000 1
+[2023-03-28 20:00:40.605063][0x00009160][info] print_position calculate_position 
+[2023-03-28 20:00:40.605063][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.607063][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.607063][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.609063][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.609063][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 3 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.611064][0x00009160][info] print_position frozen_deduction 
+[2023-03-28 20:00:40.611064][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.613064][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.613064][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.615065][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.640213][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.643214][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.643214][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.643214][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.643214][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.644215][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.644215][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.662218][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.662218][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.669221][0x00009160][info] print_position OnRtnOrder 
+[2023-03-28 20:00:40.672221][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)
+[2023-03-28 20:00:40.675222][0x00009160][info] print_position thawing_deduction 
+[2023-03-28 20:00:40.677221][0x00009160][info] position : rb2305 today_long(0 0 4121.000000) today_short(4 4 4133.500000) yestoday_long(0 0 0.000000) yestoday_short(0 0 0.000000)

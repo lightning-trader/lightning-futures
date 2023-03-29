@@ -14,7 +14,7 @@ evaluate_engine::~evaluate_engine()
 	lt_destory_context(_lt);
 }
 
-void evaluate_engine::back_test(const std::map<straid_t,std::shared_ptr<strategy>>& stra_map, const std::vector<uint32_t>& trading_days)
+void evaluate_engine::back_test(const std::map<straid_t,std::shared_ptr<strategy>>& stra_map, uint32_t trading_day)
 {
 
 	for (auto it : stra_map)
@@ -22,10 +22,7 @@ void evaluate_engine::back_test(const std::map<straid_t,std::shared_ptr<strategy
 		regist_strategy(it.first, it.second);
 	}
 	lt_start_service(_lt);
-	for (auto it : trading_days)
-	{
-		lt_playback_history(_lt, it);
-	}
+	lt_playback_history(_lt, trading_day);
 	std::this_thread::sleep_for(std::chrono::seconds(1));
 	lt_stop_service(_lt);
 	for (auto it : stra_map)

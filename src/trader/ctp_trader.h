@@ -53,9 +53,8 @@ public:
 
 	virtual void submit_settlement() override;
 
-	virtual bool get_instrument(const code_t& codes) override;
+	virtual uint32_t get_trading_day()const override;
 
-	virtual bool is_in_trading(const code_t& code) override;
 	//////////////////////////////////////////////////////////////////////////
 	//CTP交易接口实现
 public:

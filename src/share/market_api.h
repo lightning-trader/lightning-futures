@@ -28,10 +28,6 @@ public:
 	*/
 	virtual time_t last_tick_time()const = 0;
 
-	/**   
-	* 获取当前交易日  
-	*/
-	virtual uint32_t get_trading_day()const = 0 ;
 };
 
 class futures_market : public market_api, public event_source<64>

@@ -563,6 +563,7 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		order.last_volume = pOrder->VolumeTotal;
 		order.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;
 		order.price = pOrder->LimitPrice;
+		LOG_INFO("OnRspQryOrder %s %lld %d %d %s %f\n", pOrder->InstrumentID, estid, pOrder->FrontID, pOrder->SessionID, pOrder->OrderRef, pOrder->LimitPrice);
 	}
 
 	if (bIsLast && !_is_inited)
@@ -593,7 +594,8 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 	auto direction = wrap_direction_offset(pOrder->Direction, pOrder->CombOffsetFlag[0]);
 	auto offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
 	auto is_today = (THOST_FTDC_OF_CloseToday == pOrder->CombOffsetFlag[0]);
-	
+	LOG_INFO("OnRtnOrder %llu %d %d %s %d %d %c \n", estid, pOrder->FrontID, pOrder->SessionID, pOrder->InstrumentID, direction, offset, pOrder->OrderStatus);
+
 	if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled || pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
 	{
 		auto it = _order_info.find(estid);
@@ -611,10 +613,12 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 				{
 					thawing_deduction(code, direction, pOrder->VolumeTotal + pOrder->VolumeTraded, is_today);
 				}
+				LOG_INFO("OnRtnOrder fire_event ET_OrderCancel %llu %s %d %d \n", estid, code.get_id(), direction, offset);
 				this->fire_event(ET_OrderCancel, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 			}
 			if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
 			{
+				LOG_INFO("OnRtnOrder fire_event ET_OrderTrade %llu %s %d %d \n", estid, code.get_id(), direction, offset);
 				this->fire_event(ET_OrderTrade, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 			}
 			_order_info.erase(it);
@@ -912,10 +916,10 @@ const position_info& ctp_trader::get_position(const code_t& code) const
 
 uint32_t ctp_trader::get_total_position()const
 {
-	uint32_t total = 0 ;
-	for(const auto& it : _position_info)
+	uint32_t total = 0;
+	for (const auto& it : _position_info)
 	{
-		total+=it.second.get_total();
+		total += it.second.get_total();
 	}
 	return total;
 }
@@ -962,18 +966,14 @@ void ctp_trader::submit_settlement()
 		LOG_ERROR("ctp_trader submit_settlement request failed: %d", iResult);
 	}
 }
-
-
-bool ctp_trader::get_instrument(const code_t& code)
+uint32_t ctp_trader::get_trading_day()const
 {
-	return false ;
+	if(_td_api)
+	{
+		return static_cast<uint32_t>(std::atoi(_td_api->GetTradingDay()));
+	}
+	return 0X0U;
 }
-
-bool ctp_trader::is_in_trading(const code_t& code)
-{
-	return true;
-}
-
 
 void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, offset_type offset_type,uint32_t volume,double_t price,bool is_today)
 {

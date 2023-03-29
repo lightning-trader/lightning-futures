@@ -149,11 +149,11 @@ private:
 
 	void load_data(const char* localdb_name);
 
+	void check_crossday();
+
 	void handle_account(const std::vector<std::any>& param);
 
 	void handle_position(const std::vector<std::any>& param);
-
-	void handle_crossday(const std::vector<std::any>& param);
 
 	void handle_settlement(const std::vector<std::any>& param);
 
@@ -181,7 +181,7 @@ private:
 
 protected:
 
-	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config);
+	bool init(boost::property_tree::ptree& localdb, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config, bool reset_trading_day=false);
 
 	virtual void update() = 0;
 
