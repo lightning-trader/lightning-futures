@@ -567,6 +567,10 @@ void context::handle_tick(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
+		if(!is_trading_ready())
+		{
+			check_crossday();
+		}
 		tick_info last_tick = std::any_cast<tick_info>(param[0]);
 		auto it = _previous_tick.find(last_tick.id);
 		if(it == _previous_tick.end())
