@@ -384,23 +384,19 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 		LOG_ERROR("OnRspQryInvestorPosition \tErrorID = [%d] ErrorMsg = [%s]\n", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 		return;
 	}
-	
+
 	if (pInvestorPosition)
-	{	
-		LOG_DEBUG("OnRspQryInvestorPosition %s %d %d %d\n", pInvestorPosition->InstrumentID, pInvestorPosition->TodayPosition, pInvestorPosition->Position, pInvestorPosition->TodayPosition);
+	{
+		LOG_DEBUG("OnRspQryInvestorPosition %s %d %d %d\n", pInvestorPosition->InstrumentID, pInvestorPosition->TodayPosition, pInvestorPosition->Position, pInvestorPosition->YdPosition);
 		code_t code(pInvestorPosition->InstrumentID, pInvestorPosition->ExchangeID);
 		position_info position;
 		position.id = code;
 		auto it = _position_info.find(code);
-		if(it != _position_info.end())
+		if (it != _position_info.end())
 		{
-			//如果是大商所这种不区分昨仓今仓这种，第一次发过来的认为是今仓，后面的为昨仓
-			//pInvestorPosition->PositionDate = THOST_FTDC_PSD_History;
 			position = it->second;
 		}
 		double_t avg_price = .0F;
-		
-		
 
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
@@ -408,16 +404,27 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			{
 				avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit);
 			}
-			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
+			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				if(position.today_long.postion + pInvestorPosition->TodayPosition!=0)
+				if (position.today_long.postion + pInvestorPosition->TodayPosition != 0)
 				{
 					position.today_long.price = (position.today_long.postion * position.today_long.price + avg_price * pInvestorPosition->TodayPosition) / (position.today_long.postion + pInvestorPosition->TodayPosition);
 				}
 				position.today_long.postion += pInvestorPosition->TodayPosition;
 				position.today_long.frozen += pInvestorPosition->ShortFrozen;
-				
-			}else
+				if (std::strcmp(pInvestorPosition->ExchangeID, EXCHANGE_ID_SHFE) != 0)
+				{
+					uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
+					//double_t r = (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit) / (pInvestorPosition->SettlementPrice * yestoday_position);
+					if (position.today_long.postion + yestoday_position != 0)
+					{
+						position.today_long.price = (position.today_long.price * position.today_long.postion + avg_price * yestoday_position) / (position.today_long.postion + yestoday_position);
+					}
+					position.today_long.postion += yestoday_position;
+				}
+
+			}
+			else
 			{
 				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
 				//double_t r = (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit) / (pInvestorPosition->SettlementPrice * yestoday_position);
@@ -437,24 +444,32 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			}
 			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				if(position.today_short.postion + pInvestorPosition->TodayPosition!=0)
+				if (position.today_short.postion + pInvestorPosition->TodayPosition != 0)
 				{
 					position.today_short.price = (position.today_short.price * position.today_short.postion + pInvestorPosition->TodayPosition * avg_price) / (position.today_short.postion + pInvestorPosition->TodayPosition);
 				}
 				position.today_short.postion += pInvestorPosition->TodayPosition;
 				position.today_short.frozen += pInvestorPosition->LongFrozen;
-				
+				if (std::strcmp(pInvestorPosition->ExchangeID, EXCHANGE_ID_SHFE) != 0)
+				{
+					uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
+					if (position.today_short.postion + yestoday_position != 0)
+					{
+						position.today_short.price = (position.today_short.price * position.today_short.postion + avg_price * yestoday_position) / (position.today_short.postion + yestoday_position);
+					}
+					position.today_short.postion += yestoday_position;
+				}
 			}
 			else
 			{
 				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-				if(position.yestoday_short.postion + yestoday_position!=0)
+				if (position.yestoday_short.postion + yestoday_position != 0)
 				{
 					position.yestoday_short.price = (position.yestoday_short.price * position.yestoday_short.postion + avg_price * yestoday_position) / (position.yestoday_short.postion + yestoday_position);
 				}
 				position.yestoday_short.postion += yestoday_position;
 				position.yestoday_short.frozen += pInvestorPosition->LongFrozen;
-				
+
 			}
 		}
 		_position_info[code] = position;

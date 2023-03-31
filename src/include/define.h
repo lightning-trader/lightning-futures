@@ -116,6 +116,10 @@ typedef uint64_t estid_t;
 
 #define INVALID_ESTID 0x0LLU 
 
+#define EXCHANGE_ID_SHFE	"SHFE"	//上期所
+#define EXCHANGE_ID_DCE		"DCE"	//大商所
+#define EXCHANGE_ID_CZCE	"CZCE"	//郑商所
+
 struct tick_info;
 
 struct deal_info;
