@@ -279,19 +279,25 @@ void context::cancel_order(estid_t order_id)
 	get_trader().cancel_order(order_id);
 }
 
+static position_info temporary_position;
 const position_info& context::get_position(const code_t& code)
 {
-	return get_trader().get_position(code);
+	temporary_position = get_trader().get_position(code);
+	return temporary_position;
 }
 
+static account_info temporary_account;
 const account_info& context::get_account()
 {
-	return get_trader().get_account();
+	temporary_account = get_trader().get_account();
+	return temporary_account;
 }
 
+static order_info temporary_order;
 const order_info& context::get_order(estid_t order_id)
 {
-	return get_trader().get_order(order_id);
+	temporary_order = get_trader().get_order(order_id);
+	return temporary_order;
 }
 
 void context::subscribe(const std::set<code_t>& codes)

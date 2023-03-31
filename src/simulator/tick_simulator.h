@@ -10,6 +10,7 @@
 #include <boost/pool/object_pool.hpp>
 #include "order_container.h"
 #include "contract_parser.h"
+#include "position_container.h"
 
 
 class tick_simulator : public simulator
@@ -46,8 +47,8 @@ private:
 	std::map<code_t,uint32_t> _last_frame_volume ;
 
 	account_info _account_info;
-
-	std::map<code_t, position_info> _position_info;
+	
+	position_container _position_info;
 
 	std::atomic<bool> _is_submit_return ;
 
@@ -106,13 +107,13 @@ public:
 
 	virtual void cancel_order(estid_t order_id) override;
 
-	virtual const account_info& get_account() const override;
+	virtual const account_info get_account() const override;
 
-	virtual const position_info& get_position(const code_t& code) const override;
+	virtual const position_info get_position(const code_t& code) const override;
 
 	virtual uint32_t get_total_position() const override;
 
-	virtual const order_info& get_order(estid_t order_id) const override;
+	virtual const order_info get_order(estid_t order_id) const override;
 
 	virtual void find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const override;
 

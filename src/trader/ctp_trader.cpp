@@ -914,12 +914,12 @@ void ctp_trader::cancel_order(estid_t order_id)
 	}
 }
 
-const account_info& ctp_trader::get_account() const
+const account_info ctp_trader::get_account() const
 {
 	return (_account_info);
 }
 
-const position_info& ctp_trader::get_position(const code_t& code) const
+const position_info ctp_trader::get_position(const code_t& code) const
 {
 	const auto& it = _position_info.find(code);
 	if (it != _position_info.end())
@@ -939,7 +939,7 @@ uint32_t ctp_trader::get_total_position()const
 	return total;
 }
 
-const order_info& ctp_trader::get_order(estid_t order_id) const
+const order_info ctp_trader::get_order(estid_t order_id) const
 {
 	auto it = _order_info.find(order_id);
 	if(it != _order_info.end())

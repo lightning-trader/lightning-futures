@@ -174,32 +174,29 @@ void tick_simulator::cancel_order(estid_t order_id)
 	
 }
 
-const account_info& tick_simulator::get_account() const
+const account_info tick_simulator::get_account() const
 {
 	return _account_info ;
 }
 
-const position_info& tick_simulator::get_position(const code_t& code) const
+const position_info tick_simulator::get_position(const code_t& code) const
 {
-	auto it = _position_info.find(code);
-	if(it != _position_info.end())
-	{
-		return (it->second);
-	}
-	return default_position;
+	return _position_info.get_position_info(code);
 }
 
 uint32_t tick_simulator::get_total_position()const
 {
+	std::vector<position_info> position ;
+	_position_info.get_all_position(position);
 	uint32_t total = 0;
-	for (const auto& it : _position_info)
+	for (const auto& it : position)
 	{
-		total += it.second.get_total();
+		total += it.get_total();
 	}
 	return total;
 }
 
-const order_info& tick_simulator::get_order(estid_t order_id) const
+const order_info tick_simulator::get_order(estid_t order_id) const
 {
 	static order_info order ;
 	_order_info.get_order_info(order,order_id);
@@ -634,16 +631,6 @@ void tick_simulator::handle_buy(const tick_info* tick, const order_match& match,
 
 void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_today)
 {
-	position_info pos ;
-	auto it = _position_info.find(order.code);
-	if(it == _position_info.end())
-	{
-		pos.id = order.code;
-	}
-	else
-	{
-		pos = it->second;
-	}
 	
 	auto contract_info = _contract_parser.get_contract_info(order.code);
 	if(contract_info == nullptr)
@@ -651,6 +638,7 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 		LOG_ERROR("tick_simulator order_deal cant find the contract_info for %s", order.code.get_id());
 		return;
 	}
+	const auto&& pos = _position_info.get_position_info(order.code);
 	double_t service_charge = contract_info->get_service_charge(order.price, order.offset, is_today);
 	if(order.offset == OT_OPEN)
 	{
@@ -660,8 +648,7 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 			
 			if(_account_info.money >= deal_volume * service_charge)
 			{
-				pos.today_long.price = (pos.today_long.price * pos.today_long.postion + order.price * deal_volume) / (pos.today_long.postion + deal_volume);
-				pos.today_long.postion += deal_volume;
+				_position_info.increase_position(order.code,order.direction, order.price, deal_volume);
 				_account_info.money -=  deal_volume * service_charge;
 			}
 			
@@ -670,8 +657,7 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 		{
 			if(_account_info.money >= deal_volume * service_charge)
 			{
-				pos.today_short.price = (pos.today_short.price * pos.today_short.postion + order.price * deal_volume) / (pos.today_short.postion + deal_volume);
-				pos.today_short.postion += deal_volume;
+				_position_info.increase_position(order.code, order.direction, order.price, deal_volume);
 				_account_info.money -= (deal_volume * service_charge);
 			}
 		}
@@ -683,17 +669,15 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 		{
 			
 			if (is_today)
-			{
+			{	
 				_account_info.money += (deal_volume * (order.price - pos.today_long.price) * contract_info->multiple);
-				pos.today_long.postion -= deal_volume;
-				pos.today_long.frozen -= deal_volume;
+				_position_info.reduce_position(order.code, order.direction, deal_volume,is_today);
 				_account_info.frozen_monery -= (deal_volume * pos.today_long.price * contract_info->multiple * contract_info->margin_rate);
 			}
 			else
 			{
 				_account_info.money += (deal_volume * (order.price - pos.yestoday_long.price) * contract_info->multiple);
-				pos.yestoday_long.postion -= deal_volume;
-				pos.yestoday_long.frozen -= deal_volume;
+				_position_info.reduce_position(order.code, order.direction, deal_volume, is_today);
 				_account_info.frozen_monery -= (deal_volume * pos.yestoday_long.price * contract_info->multiple * contract_info->margin_rate);
 			}
 			_account_info.money -= (deal_volume * service_charge);
@@ -704,32 +688,21 @@ void tick_simulator::order_deal(order_info& order, uint32_t deal_volume,bool is_
 			
 			if (is_today)
 			{
+				
 				_account_info.money += (deal_volume * (pos.today_short.price - order.price) * contract_info->multiple);
-				pos.today_short.postion -= deal_volume;
-				pos.today_short.frozen -= deal_volume;
+				_position_info.reduce_position(order.code, order.direction, deal_volume, is_today);
 				_account_info.frozen_monery -= (deal_volume * pos.today_short.price * contract_info->multiple * contract_info->margin_rate);
 			}
 			else
 			{
 				_account_info.money += (deal_volume * (pos.yestoday_short.price - order.price) * contract_info->multiple);
-				pos.yestoday_short.postion -= deal_volume;
-				pos.yestoday_short.frozen -= deal_volume;
+				_position_info.reduce_position(order.code, order.direction, deal_volume, is_today);
 				_account_info.frozen_monery -= (deal_volume * pos.yestoday_short.price * contract_info->multiple * contract_info->margin_rate);
 			}
 			_account_info.money -= deal_volume * service_charge;
 		}
 	}
-	if (!pos.empty())
-	{
-		_position_info[order.code] = pos;
-	}
-	else
-	{
-		if (it != _position_info.end())
-		{
-			_position_info.erase(it);
-		}
-	}
+	
 	order.last_volume =_order_info.set_last_volume(order.est_id,order.last_volume - deal_volume);
 	if(order.last_volume > 0)
 	{
@@ -787,25 +760,26 @@ uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offs
 	}
 	if (offset == OT_CLOSE)
 	{
-		auto& pos = _position_info[code];
+		
 		if (direction == DT_LONG)
 		{
 			if(is_today)
 			{
+				const auto&& pos = _position_info.get_position_info(code);
 				if (pos.today_long.postion - pos.today_long.frozen < count)
 				{
 					return 30U;
 				}
-				pos.today_long.frozen += count;
-				
+				_position_info.frozen_position(code, direction, count, is_today);
 			}
 			else
 			{
+				const auto&& pos = _position_info.get_position_info(code);
 				if (pos.yestoday_long.postion - pos.yestoday_long.frozen < count)
 				{
 					return 30U;
 				}
-				pos.yestoday_long.frozen += count;
+				_position_info.frozen_position(code, direction, count, is_today);
 			}
 			
 		}
@@ -813,24 +787,24 @@ uint32_t tick_simulator::frozen_deduction(estid_t est_id,const code_t& code,offs
 		{
 			if(is_today)
 			{
+				const auto&& pos = _position_info.get_position_info(code);
 				if (pos.today_short.postion - pos.today_short.frozen < count)
 				{
 					return 30U;
 				}
-				pos.today_short.frozen += count;
-				
+				_position_info.frozen_position(code, direction, count, is_today);
 			}
 			else
 			{
+				const auto&& pos = _position_info.get_position_info(code);
 				if (pos.yestoday_short.postion - pos.yestoday_short.frozen < count)
 				{
 					return 30U;
 				}
-				pos.yestoday_short.frozen += count;
+				_position_info.frozen_position(code, direction, count, is_today);
 			}
-			
 		}
-		this->fire_event(ET_PositionChange, pos);
+		this->fire_event(ET_PositionChange, _position_info.get_position_info(code));
 		return 0U;
 	}
 	return 23U;
@@ -853,29 +827,8 @@ bool tick_simulator::thawing_deduction(const code_t& code, offset_type offset, d
 	}
 	else if (offset == OT_CLOSE)
 	{
-		auto& pos = _position_info[code];
-		if (direction == DT_LONG)
-		{
-			if(is_today)
-			{
-				pos.today_long.frozen -= last_volume;
-			}else
-			{
-				pos.yestoday_long.frozen -= last_volume;
-			}
-			
-		}
-		else if (direction == DT_SHORT)
-		{
-			if (is_today)
-			{
-				pos.today_short.frozen -= last_volume;
-			}else
-			{
-				pos.yestoday_short.frozen -= last_volume;
-			}
-		}
-		this->fire_event(ET_PositionChange, pos);
+		_position_info.thawing_position(code, direction, last_volume, is_today);
+		this->fire_event(ET_PositionChange, _position_info.get_position_info(code));
 	}
 	this->fire_event(ET_AccountChange, _account_info);
 	return true;
@@ -895,26 +848,16 @@ void tick_simulator::crossday_settlement()
 		}
 	}
 	_order_info.clear();
-	for (auto& it : _position_info)
+	std::vector<position_info> all_position;
+	_position_info.get_all_position(all_position);
+	for (const auto& it : all_position)
 	{
 		//只有上期所区分昨仓今仓
-		if(std::strcmp(it.first.get_excg(),"SHFE")==0)
+		if(std::strcmp(it.id.get_excg(), EXCHANGE_ID_SHFE)==0)
 		{
-			if (it.second.yestoday_long.postion + it.second.today_long.postion > 0)
-			{
-				it.second.yestoday_long.price = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.today_long.postion * it.second.today_long.price) / (it.second.yestoday_long.postion + it.second.today_long.postion);
-				it.second.yestoday_long.postion += it.second.today_long.postion;
-				it.second.yestoday_long.frozen = 0;
-			}
-			if (it.second.yestoday_short.postion + it.second.today_short.postion > 0)
-			{
-				it.second.yestoday_short.price = (it.second.yestoday_short.postion * it.second.yestoday_short.price + it.second.today_short.postion * it.second.today_short.price) / (it.second.yestoday_short.postion + it.second.today_short.postion);
-				it.second.yestoday_short.postion += it.second.today_short.postion;
-				it.second.yestoday_short.frozen = 0;
-			}
-			it.second.today_long.clear();
-			it.second.today_short.clear();
-			this->fire_event(ET_PositionChange, it.second);
+			_position_info.reduce_position(it.id, DT_LONG, it.yestoday_long.postion, false);
+			_position_info.reduce_position(it.id, DT_SHORT, it.yestoday_short.postion, false);
+			this->fire_event(ET_PositionChange, it);
 		}
 		
 	}

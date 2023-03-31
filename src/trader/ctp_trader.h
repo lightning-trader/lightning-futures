@@ -41,13 +41,13 @@ public:
 
 	virtual void cancel_order(estid_t order_id) override ;
 
-	virtual const account_info& get_account() const override ;
+	virtual const account_info get_account() const override ;
 
-	virtual const position_info& get_position(const code_t& code) const override ;
+	virtual const position_info get_position(const code_t& code) const override ;
 
 	virtual uint32_t get_total_position() const override;
 
-	virtual const order_info& get_order(estid_t order_id) const override ;
+	virtual const order_info get_order(estid_t order_id) const override ;
 
 	virtual void find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const override;
 

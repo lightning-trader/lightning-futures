@@ -31,17 +31,17 @@ public:
 	/*
 	 *	获取账户信息
 	 */
-	virtual const account_info& get_account() const = 0;
+	virtual const account_info get_account() const = 0;
 	
 	/*
 	*	获取持仓信息
 	*/
-	virtual const position_info& get_position(const code_t& code) const = 0;
+	virtual const position_info get_position(const code_t& code) const = 0;
 	
 	/*
 	 *	获取订单信息
 	 */
-	virtual const order_info& get_order(estid_t order_id) const = 0;
+	virtual const order_info get_order(estid_t order_id) const = 0;
 
 	/*
 	*	获取账户信息
