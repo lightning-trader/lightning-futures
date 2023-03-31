@@ -13,6 +13,7 @@ void position_container::increase_position(const code_t& code, direction_type di
 {
 	spin_lock lock(_mutex);
 	auto& pos = _position_info[code];
+	pos.id = code ;
 	if(direction == DT_LONG)
 	{
 		pos.today_long.price = (pos.today_long.postion * pos.today_long.price + price * volume)/(pos.today_long.postion + volume);
@@ -141,7 +142,7 @@ void position_container::thawing_position(const code_t& code, direction_type dir
 
 position_info position_container::get_position_info(const code_t& code)const
 {
-	spin_lock lock(_mutex);
+	//spin_lock lock(_mutex);
 	auto it = _position_info.find(code);
 	if (it != _position_info.end())
 	{
@@ -152,7 +153,7 @@ position_info position_container::get_position_info(const code_t& code)const
 
 void position_container::get_all_position(std::vector<position_info>& position)const
 {
-	spin_lock lock(_mutex);
+	//spin_lock lock(_mutex);
 	for(auto&it : _position_info)
 	{
 		position.emplace_back(it.second);
