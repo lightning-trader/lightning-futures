@@ -396,10 +396,10 @@ void context::check_crossday()
 	if (_record_data)
 	{
 		uint32_t trading_day = get_trader().get_trading_day();
+		LOG_INFO("cross day %d", trading_day);
+		_section->init(trading_day, get_last_time());
 		if (trading_day != _record_data->trading_day)
 		{
-			LOG_INFO("cross day %d", trading_day);
-			_section->init(trading_day, get_last_time());
 			//记录结算数据
 			if (_recorder && trading_day > _record_data->trading_day)
 			{
