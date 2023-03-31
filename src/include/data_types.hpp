@@ -181,7 +181,7 @@ struct position_item
 struct position_info
 {
 	code_t id; //∫œ‘ºID
-
+	position_info(const code_t& code) :id(code) {}
 	//ΩÒ≤÷
 	position_item today_long;
 	position_item today_short;

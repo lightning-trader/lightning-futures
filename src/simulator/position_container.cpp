@@ -148,7 +148,7 @@ position_info position_container::get_position_info(const code_t& code)const
 	{
 		return it->second;
 	}
-	return default_position;
+	return position_info(code);
 }
 
 void position_container::get_all_position(std::vector<position_info>& position)const
