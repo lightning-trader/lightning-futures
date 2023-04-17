@@ -23,7 +23,7 @@ void demo_strategy::on_init()
 	{
 		subscribe(_expire);
 	}
-	use_custom_chain(TO_OPEN_TO_CLOSE, false);
+	use_custom_chain(TO_INVALID, false);
 	_order_data = static_cast<persist_data*>(get_userdata(sizeof(persist_data)));
 }
 
@@ -103,7 +103,7 @@ void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	if (tick.id == _expire)
 	{
 		//对于过期合约，只平仓不开仓
-		const position_info& expire_pos = get_position(_expire);
+		position_info expire_pos = get_position(_expire);
 
 		if (expire_pos.yestoday_long.usable() > 0)
 		{
@@ -116,7 +116,7 @@ void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 			sell_price = std::round(sell_price);
 			if (sell_price < tick.high_limit)
 			{
-				_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
+				_order_data->sell_order = sell_for_close(tick.id, sell_once, sell_price);
 			}
 		}
 
@@ -131,7 +131,7 @@ void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 			buy_price = std::round(buy_price);
 			if (buy_price > tick.low_limit)
 			{
-				_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
+				_order_data->buy_order = buy_for_close(tick.id, buy_once, buy_price);
 			}
 		}
 	}
@@ -139,8 +139,8 @@ void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	{
 
 		//对于普通合约，过期合约存在的情况下，不平仓只开仓
-		const position_info& pos = get_position(_code);
-		const position_info& expire_pos = get_position(_expire);
+		position_info pos = get_position(_code);
+		position_info expire_pos = get_position(_expire);
 		if (expire_pos.yestoday_long.usable() == 0)
 		{
 			if (pos.yestoday_long.usable() > 0)
@@ -155,7 +155,14 @@ void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 			sell_price = std::round(sell_price);
 			if (sell_price < tick.high_limit)
 			{
-				_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
+				if(pos.yestoday_long.usable() >= sell_once || pos.today_long.usable() >= sell_once)
+				{
+					_order_data->sell_order = sell_for_close(tick.id, sell_once, sell_price);
+				}
+				else
+				{
+					_order_data->sell_order = sell_for_open(tick.id, sell_once, sell_price);
+				}
 			}
 		}
 		if (expire_pos.yestoday_short.usable() == 0)
@@ -172,7 +179,13 @@ void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 			buy_price = std::round(buy_price);
 			if (buy_price > tick.low_limit)
 			{
-				_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
+				if (pos.yestoday_short.usable() >= buy_once || pos.today_short.usable() >= buy_once)
+				{
+					_order_data->buy_order = buy_for_close(tick.id, buy_once, buy_price);
+				}else
+				{
+					_order_data->buy_order = buy_for_open(tick.id, buy_once, buy_price);
+				}
 			}
 		}
 	}
