@@ -85,6 +85,9 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 	this->add_handle([this](event_type type, const std::vector<std::any>& param)->void {
 		switch (type)
 		{
+		case ET_LoadFinish:
+			handle_loadfinish(param);
+			break;
 		case ET_AccountChange:
 			handle_account(param);
 			break;
@@ -164,36 +167,10 @@ void context::stop_service()
 
 pod_chain* context::create_chain(trading_optimal opt, bool flag)
 {
-
 	pod_chain* chain = new verify_chain(*this);
 	if (flag)
 	{
-		switch (opt)
-		{
-		case TO_OPEN_TO_CLOSE:
-			chain = new price_to_cancel_chain(*this, new open_to_close_chain(*this, chain));
-			break;
-		case TO_CLOSE_TO_OPEN:
-			chain = new price_to_cancel_chain(*this, new close_to_open_chain(*this, chain));
-			break;
-		default:
-			chain = new price_to_cancel_chain(*this, chain);
-			break;
-		}
-	}
-	else
-	{
-		switch (opt)
-		{
-		case TO_OPEN_TO_CLOSE:
-			chain = new open_to_close_chain(*this, chain);
-			break;
-		case TO_CLOSE_TO_OPEN:
-			chain = new close_to_open_chain(*this, chain);
-			break;
-		default:
-			break;
-		}
+		chain = new price_to_cancel_chain(*this, chain);
 	}
 	return chain;
 }
@@ -279,25 +256,52 @@ void context::cancel_order(estid_t order_id)
 	get_trader().cancel_order(order_id);
 }
 
-static position_info temporary_position;
-const position_info& context::get_position(const code_t& code)
+const position_info& context::get_position(const code_t& code)const
 {
-	temporary_position = get_trader().get_position(code);
-	return temporary_position;
+	const auto& it = _position_info.find(code);
+	if (it != _position_info.end())
+	{
+		return (it->second);
+	}
+	return default_position;
 }
 
-static account_info temporary_account;
-const account_info& context::get_account()
+const account_info& context::get_account()const
 {
-	temporary_account = get_trader().get_account();
-	return temporary_account;
+	return (_account_info);
 }
 
-static order_info temporary_order;
-const order_info& context::get_order(estid_t order_id)
+const order_info& context::get_order(estid_t order_id)const
 {
-	temporary_order = get_trader().get_order(order_id);
-	return temporary_order;
+	auto it = _order_info.find(order_id);
+	if (it != _order_info.end())
+	{
+		return (it->second);
+	}
+	return default_order;
+}
+
+
+
+uint32_t context::get_total_position()const
+{
+	uint32_t total = 0;
+	for (const auto& it : _position_info)
+	{
+		total += it.second.get_total();
+	}
+	return total;
+}
+
+void context::find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const
+{
+	for (auto& it : _order_info)
+	{
+		if (func(it.second))
+		{
+			order_result.emplace_back(it.second);
+		}
+	}
 }
 
 void context::subscribe(const std::set<code_t>& codes)
@@ -409,7 +413,7 @@ void context::check_crossday()
 			//记录结算数据
 			if (_recorder && trading_day > _record_data->trading_day)
 			{
-				_recorder->record_crossday_flow(get_last_time(), _record_data->trading_day, _record_data->statistic_info, get_trader().get_account());
+				_recorder->record_crossday_flow(get_last_time(), _record_data->trading_day, _record_data->statistic_info, get_account());
 			}
 
 			_record_data->statistic_info.place_order_amount = 0;
@@ -438,11 +442,32 @@ void context::check_crossday()
 	}
 }
 
+void context::handle_loadfinish(const std::vector<std::any>& param)
+{
+	if (param.size() >= 3)
+	{
+		_account_info = std::any_cast<account_info>(param[0]);
+		const std::vector<order_info>& orders = std::any_cast<std::vector<order_info>>(param[1]);
+		_order_info.clear();
+		for(const auto& it : orders)
+		{
+			_order_info.insert(std::make_pair(it.est_id,it));
+		}
+		const std::vector<position_info>& positions = std::any_cast<std::vector<position_info>>(param[2]);
+		_position_info.clear();
+		for (const auto& it : positions)
+		{
+			_position_info.insert(std::make_pair(it.id, it));
+		}
+	}
+}
+
 void context::handle_account(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
 		const auto& account = std::any_cast<account_info>(param[0]);
+		_account_info = account;
 		if (_recorder)
 		{
 			_recorder->record_account_flow(get_last_time(), account);
@@ -456,6 +481,7 @@ void context::handle_position(const std::vector<std::any>& param)
 	if (param.size() >= 1)
 	{
 		auto position = std::any_cast<position_info>(param[0]);
+		_position_info[position.id] = position;
 		if (_recorder)
 		{
 			_recorder->record_position_flow(get_last_time(), position);
@@ -485,6 +511,7 @@ void context::handle_entrust(const std::vector<std::any>& param)
 	if (param.size() >= 1)
 	{
 		order_info order = std::any_cast<order_info>(param[0]);
+		_order_info[order.est_id] = order ;
 		if(this->on_entrust)
 		{
 			this->on_entrust(order);
@@ -508,6 +535,7 @@ void context::handle_deal(const std::vector<std::any>& param)
 		estid_t localid = std::any_cast<estid_t>(param[0]);
 		uint32_t deal_volume = std::any_cast<uint32_t>(param[1]);
 		uint32_t total_volume = std::any_cast<uint32_t>(param[2]);
+		_order_info[localid].last_volume = total_volume - total_volume;
 		if(this->on_deal)
 		{
 			this->on_deal(localid, deal_volume, total_volume);
@@ -526,6 +554,11 @@ void context::handle_trade(const std::vector<std::any>& param)
 		direction_type direction = std::any_cast<direction_type>(param[3]);
 		double_t price = std::any_cast<double_t>(param[4]);
 		uint32_t trade_volume = std::any_cast<uint32_t>(param[5]);
+		auto it = _order_info.find(localid);
+		if (it != _order_info.end())
+		{
+			_order_info.erase(it);
+		}
 		if(this->on_trade)
 		{
 			this->on_trade(localid, code, offset, direction, price, trade_volume);
@@ -553,6 +586,11 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		double_t price = std::any_cast<double_t>(param[4]);
 		uint32_t cancel_volume = std::any_cast<uint32_t>(param[5]);
 		uint32_t total_volume = std::any_cast<uint32_t>(param[6]);
+		auto it = _order_info.find(localid);
+		if (it != _order_info.end())
+		{
+			_order_info.erase(it);
+		}
 		if(this->on_cancel)
 		{
 			this->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
@@ -612,6 +650,14 @@ void context::handle_error(const std::vector<std::any>& param)
 		}
 		if (this->on_error)
 		{
+			if(type == ET_PLACE_ORDER)
+			{
+				auto it = _order_info.find(localid);
+				if(it != _order_info.end())
+				{
+					_order_info.erase(it);
+				}
+			}
 			this->on_error(type, localid, error_code);
 		}
 	}

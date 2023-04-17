@@ -9,6 +9,7 @@
 #include "trader_api.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/pool/pool_alloc.hpp>
 #include "trading_section.h"
 #include "pod_chain.h"
 
@@ -65,6 +66,17 @@ private:
 
 	std::map<code_t,tick_info> _previous_tick;
 
+	//仓位数据
+	typedef std::map<code_t, position_info, std::less<code_t>, boost::fast_pool_allocator<std::pair<code_t const, position_info>>> position_map;
+	position_map			_position_info;
+
+	//订单数据
+	typedef std::map<estid_t, order_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, order_info>>> entrust_map;
+	entrust_map				_order_info;
+
+
+	account_info			_account_info;
+
 public:
 
 	tick_callback on_tick ;
@@ -101,11 +113,15 @@ public:
 	
 	void cancel_order(estid_t order_id);
 	
-	const position_info& get_position(const code_t& code);
+	const position_info& get_position(const code_t& code)const;
 	
-	const account_info& get_account();
+	const account_info& get_account()const;
 	
-	const order_info& get_order(estid_t order_id);
+	const order_info& get_order(estid_t order_id)const;
+
+	uint32_t get_total_position()const;
+
+	void find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const;
 
 	void subscribe(const std::set<code_t>& codes);
 
@@ -150,6 +166,8 @@ private:
 	void load_data(const char* localdb_name);
 
 	void check_crossday();
+
+	void handle_loadfinish(const std::vector<std::any>& param);
 
 	void handle_account(const std::vector<std::any>& param);
 

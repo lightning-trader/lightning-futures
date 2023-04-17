@@ -108,6 +108,17 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 	query_account();
 	_process_signal.wait(_process_mutex);
 	_is_inited = true ;
+	std::vector<order_info> orders;
+	for(auto it:_order_info)
+	{
+		orders.emplace_back(it.second);
+	}
+	std::vector<position_info> positions;
+	for (auto it : _position_info)
+	{
+		positions.emplace_back(it.second);
+	}
+	fire_event(ET_LoadFinish, _account_info, orders, positions);
 	return true;
 }
 
@@ -473,6 +484,7 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			}
 		}
 		_position_info[code] = position;
+		this->fire_event(ET_PositionChange, position);
 	}
 	if (bIsLast && !_is_inited)
 	{
@@ -875,12 +887,14 @@ void ctp_trader::cancel_order(estid_t order_id)
 		LOG_ERROR("ctp_trader cancel_order _td_api nullptr : %llu", order_id);
 		return ;
 	}
-	auto order = get_order(order_id);
-	if (!order.is_valid())
+	auto it = _order_info.find(order_id);
+	if(it == _order_info.end())
 	{
 		LOG_ERROR("ctp_trader cancel_order order invalid : %llu", order_id);
 		return;
 	}
+	auto& order = it->second;
+	
 	uint32_t frontid = 0, sessionid = 0, orderref = 0;
 	extract_estid(order_id, frontid, sessionid, orderref);
 	CThostFtdcInputOrderActionField req;
@@ -911,51 +925,6 @@ void ctp_trader::cancel_order(estid_t order_id)
 	if (iResult != 0)
 	{
 		LOG_ERROR("ctp_trader order_action request failed: %d", iResult);
-	}
-}
-
-const account_info ctp_trader::get_account() const
-{
-	return (_account_info);
-}
-
-const position_info ctp_trader::get_position(const code_t& code) const
-{
-	const auto& it = _position_info.find(code);
-	if (it != _position_info.end())
-	{
-		return (it->second);
-	}
-	return default_position;
-}
-
-uint32_t ctp_trader::get_total_position()const
-{
-	uint32_t total = 0;
-	for (const auto& it : _position_info)
-	{
-		total += it.second.get_total();
-	}
-	return total;
-}
-
-const order_info ctp_trader::get_order(estid_t order_id) const
-{
-	auto it = _order_info.find(order_id);
-	if(it != _order_info.end())
-	{
-		return (it->second);
-	}
-	return default_order;
-}
-void ctp_trader::find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const
-{
-	for(auto& it : _order_info)
-	{
-		if(func(it.second))
-		{
-			order_result.emplace_back(it.second);
-		}
 	}
 }
 

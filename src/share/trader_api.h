@@ -28,35 +28,11 @@ public:
 	 */
 	virtual void cancel_order(estid_t order_id) = 0;
 
-	/*
-	 *	获取账户信息
-	 */
-	virtual const account_info get_account() const = 0;
-	
-	/*
-	*	获取持仓信息
-	*/
-	virtual const position_info get_position(const code_t& code) const = 0;
-	
-	/*
-	 *	获取订单信息
-	 */
-	virtual const order_info get_order(estid_t order_id) const = 0;
-
-	/*
-	*	获取账户信息
-	*/
-	virtual void find_orders(std::vector<order_info>& order_result,std::function<bool(const order_info&)> func) const = 0;
 
 	/*
 	 *	提交结算单
 	 */
 	virtual void submit_settlement() = 0 ;
-
-	/*
-	*	获取所有仓位
-	*/
-	virtual uint32_t get_total_position() const = 0;
 
 	/**
 	* 获取当前交易日

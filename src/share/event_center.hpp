@@ -8,6 +8,7 @@
 typedef enum event_type
 {
 	ET_Invalid,
+	ET_LoadFinish,
 	ET_TickReceived,
 	ET_AccountChange,
 	ET_PositionChange,

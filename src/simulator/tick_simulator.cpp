@@ -52,6 +52,12 @@ void tick_simulator::play(uint32_t tradeing_day)
 	//模拟跨天时候之前的订单失效
 	crossday_settlement();
 	
+	std::vector<order_info> orders;
+	_order_info.get_all_order(orders);
+	std::vector<position_info> positions;
+	_position_info.get_all_position(positions);
+	fire_event(ET_LoadFinish, _account_info, orders, positions);
+
 	_is_in_trading = true ;
 	while (_is_in_trading)
 	{
@@ -141,7 +147,7 @@ estid_t tick_simulator::place_order(offset_type offset, direction_type direction
 	bool is_today = true ;
 	if(offset== OT_CLOSE)
 	{
-		auto& pos = get_position(code);
+		const auto& pos = _position_info.get_position_info(code);
 		if(direction == DT_LONG)
 		{
 			is_today = (pos.yestoday_long.usable() < count) ;
@@ -172,49 +178,6 @@ void tick_simulator::cancel_order(estid_t order_id)
 		}
 	}
 	
-}
-
-const account_info tick_simulator::get_account() const
-{
-	return _account_info ;
-}
-
-const position_info tick_simulator::get_position(const code_t& code) const
-{
-	return _position_info.get_position_info(code);
-}
-
-uint32_t tick_simulator::get_total_position()const
-{
-	std::vector<position_info> position ;
-	_position_info.get_all_position(position);
-	uint32_t total = 0;
-	for (const auto& it : position)
-	{
-		total += it.get_total();
-	}
-	return total;
-}
-
-const order_info tick_simulator::get_order(estid_t order_id) const
-{
-	static order_info order ;
-	_order_info.get_order_info(order,order_id);
-	LOG_TRACE("tick_simulator get_order  %lld %s ",order.est_id, order.code.get_id());
-	return std::move(order);
-}
-
-void tick_simulator::find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const
-{
-	std::vector<order_info> all_order;
-	_order_info.get_all_order(all_order);
-	for (auto& it : all_order)
-	{
-		if (func(it))
-		{
-			order_result.emplace_back(it);
-		}
-	}
 }
 
 void tick_simulator::submit_settlement()
@@ -543,9 +506,6 @@ void tick_simulator::handle_sell(const tick_info* tick,const order_match& match,
 			}
 		}
 	}
-
-	
-
 }
 
 void tick_simulator::handle_buy(const tick_info* tick, const order_match& match, uint32_t max_volume)

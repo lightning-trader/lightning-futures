@@ -103,7 +103,7 @@ void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	if (tick.id == _expire)
 	{
 		//对于过期合约，只平仓不开仓
-		position_info expire_pos = get_position(_expire);
+		const auto& expire_pos = get_position(_expire);
 
 		if (expire_pos.yestoday_long.usable() > 0)
 		{
@@ -139,8 +139,8 @@ void demo_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	{
 
 		//对于普通合约，过期合约存在的情况下，不平仓只开仓
-		position_info pos = get_position(_code);
-		position_info expire_pos = get_position(_expire);
+		const auto& pos = get_position(_code);
+		const auto& expire_pos = get_position(_expire);
 		if (expire_pos.yestoday_long.usable() == 0)
 		{
 			if (pos.yestoday_long.usable() > 0)

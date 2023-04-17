@@ -15,8 +15,6 @@ public:
 
 	bool init_from_file(const std::string& config_path);
 
-	double get_money();
-
 	void playback_history(uint32_t tradeing_day);
 
 	virtual trader_api& get_trader() override;

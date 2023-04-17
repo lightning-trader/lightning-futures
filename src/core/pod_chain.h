@@ -30,30 +30,6 @@ protected:
 	
 };
 
-class close_to_open_chain : public pod_chain
-{
-	//最优服务费（平转开）
-
-public:
-	
-	close_to_open_chain(context& ctx,pod_chain* next) ;
-
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
-
-};
-
-class open_to_close_chain : public pod_chain
-{
-	//最优 保证金 （开转平）
-
-public:
-	open_to_close_chain(context& ctx, pod_chain* next) :pod_chain(ctx, next)
-	{}
-
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
-
-};
-
 class price_to_cancel_chain : public pod_chain
 {
 	

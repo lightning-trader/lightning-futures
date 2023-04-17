@@ -58,17 +58,6 @@ bool evaluate::init_from_file(const std::string& config_path)
 }
 
 
-
-double evaluate::get_money()
-{
-	if (_simulator)
-	{
-		auto acc = _simulator->get_account();
-		return acc.money;
-	}
-	return 0;
-}
-
 void evaluate::playback_history(uint32_t tradeing_day)
 {
 	if(_simulator)
