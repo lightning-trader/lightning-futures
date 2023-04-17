@@ -144,7 +144,7 @@ public:
 
 	time_t get_close_time();
 
-	void use_custom_chain(untid_t untid, trading_optimal opt, bool flag);
+	void use_custom_chain(untid_t untid, bool flag);
 
 	inline uint32_t get_max_position()const
 	{
@@ -191,7 +191,7 @@ private:
 
 	void remove_invalid_condition(estid_t order_id);
 
-	pod_chain * create_chain(trading_optimal opt, bool flag);
+	pod_chain * create_chain(bool flag);
 
 	pod_chain * get_chain(untid_t untid);
 

@@ -160,13 +160,13 @@ time_t strategy::get_last_time() const
 	return lt_get_last_time(_manager->get_lt());
 }
 
-void strategy::use_custom_chain(trading_optimal opt, bool flag)
+void strategy::use_custom_chain(bool flag)
 {
 	if (_manager == nullptr)
 	{
 		return ;
 	}
-	return lt_use_custom_chain(_manager->get_lt(),get_id(),opt,flag);
+	return lt_use_custom_chain(_manager->get_lt(),get_id(),flag);
 }
 
 void strategy::set_cancel_condition(estid_t order_id,std::function<bool(const tick_info&)> callback)

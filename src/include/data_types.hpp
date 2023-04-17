@@ -238,15 +238,6 @@ struct account_info
 };
 const account_info default_account;
 
-typedef enum trading_optimal
-{
-	TO_INVALID = 0,
-	//保证金最优（针对平今收取高手续费品种，平转开）
-	TO_CLOSE_TO_OPEN = 1,
-	//手续费最优（开转平，可以节约保证金做更多仓位）
-	TO_OPEN_TO_CLOSE = 2
-} trading_optimal;
-
 
 
 /*

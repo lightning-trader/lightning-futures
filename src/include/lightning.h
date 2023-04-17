@@ -173,6 +173,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	/**
 	* 使用自定义交易通道
 	*/
-	LT_INTERFACE_DECLARE(void, use_custom_chain, (const ltobj&, untid_t, trading_optimal, bool));
+	LT_INTERFACE_DECLARE(void, use_custom_chain, (const ltobj&, untid_t, bool));
 
 }

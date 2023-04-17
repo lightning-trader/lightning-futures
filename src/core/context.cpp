@@ -80,8 +80,7 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
 	
-
-	_default_chain = create_chain(TO_INVALID, false);
+	_default_chain = create_chain(false);
 	this->add_handle([this](event_type type, const std::vector<std::any>& param)->void {
 		switch (type)
 		{
@@ -165,7 +164,7 @@ void context::stop_service()
 
 
 
-pod_chain* context::create_chain(trading_optimal opt, bool flag)
+pod_chain* context::create_chain(bool flag)
 {
 	pod_chain* chain = new verify_chain(*this);
 	if (flag)
@@ -359,14 +358,14 @@ time_t context::get_close_time()
 	return _section->get_clase_time();
 }
 
-void context::use_custom_chain(untid_t untid,trading_optimal opt, bool flag)
+void context::use_custom_chain(untid_t untid,bool flag)
 {
 	auto it = _custom_chain.find(untid);
 	if(it != _custom_chain.end())
 	{
 		delete it->second;
 	}
-	auto chain = create_chain(opt, flag);
+	auto chain = create_chain(flag);
 	_custom_chain[untid] = chain;
 }
 

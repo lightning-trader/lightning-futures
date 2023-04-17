@@ -23,7 +23,7 @@ void demo_strategy::on_init()
 	{
 		subscribe(_expire);
 	}
-	use_custom_chain(TO_INVALID, false);
+	use_custom_chain(false);
 	_order_data = static_cast<persist_data*>(get_userdata(sizeof(persist_data)));
 }
 
