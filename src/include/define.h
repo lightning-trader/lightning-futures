@@ -8,6 +8,18 @@
 #include <stdint.h>
 #include <memory>
 #include <functional>
+#include <cstring>
+#include <cmath>
+#include <cstdarg>
+
+#ifndef WIN32
+#include "save_s.hpp"
+#define ENUM_TYPE_INT  : int
+#define ENUM_TYPE_CHAR  : char
+#else
+#define ENUM_TYPE_INT
+#define ENUM_TYPE_CHAR
+#endif
 
 #ifndef EXPORT_FLAG
 #ifdef _MSC_VER
@@ -114,11 +126,11 @@ typedef uint8_t untid_t;
 
 typedef uint64_t estid_t;
 
-#define INVALID_ESTID 0x0LLU 
+#define INVALID_ESTID 0x0LLU
 
-#define EXCHANGE_ID_SHFE	"SHFE"	//ÉÏÆÚËù
-#define EXCHANGE_ID_DCE		"DCE"	//´óÉÌËù
-#define EXCHANGE_ID_CZCE	"CZCE"	//Ö£ÉÌËù
+#define EXCHANGE_ID_SHFE	"SHFE"	//ä¸ŠæœŸæ‰€
+#define EXCHANGE_ID_DCE		"DCE"	//å¤§å•†æ‰€
+#define EXCHANGE_ID_CZCE	"CZCE"	//éƒ‘å•†æ‰€
 
 struct tick_info;
 
@@ -128,21 +140,21 @@ struct position_info;
 
 struct account_info;
 
-enum trading_optimal;
+enum trading_optimal ENUM_TYPE_INT;
 
-enum order_flag;
+enum order_flag ENUM_TYPE_CHAR;
 
-enum offset_type;
+enum offset_type ENUM_TYPE_CHAR;
 
-enum direction_type;
+enum direction_type ENUM_TYPE_CHAR;
 
-enum event_type;
+enum event_type ENUM_TYPE_INT;
 
-enum error_type;
+enum error_type ENUM_TYPE_INT;
 
-enum deal_direction ;
+enum deal_direction ENUM_TYPE_INT;
 
-enum deal_status;
+enum deal_status ENUM_TYPE_INT;
 
 typedef std::function<bool(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)> filter_function;
 
@@ -162,13 +174,13 @@ extern "C"
 	EXPORT_FLAG void log_format(log_level lv,const char* format, ...);
 }
 #ifndef NDEBUG
-#define LOG_TRACE(format, ...) log_format(LLV_TRACE,format, __VA_ARGS__);
-#define LOG_DEBUG(format, ...) log_format(LLV_DEBUG,format, __VA_ARGS__);
+#define LOG_TRACE(format, ...) log_format(LLV_TRACE, format, ##__VA_ARGS__);
+#define LOG_DEBUG(format, ...) log_format(LLV_DEBUG, format, ##__VA_ARGS__);
 #else
 #define LOG_DEBUG(format, ...)
 #define LOG_TRACE(format, ...)
 #endif
-#define LOG_INFO(format, ...) log_format(LLV_INFO,format, __VA_ARGS__);
-#define LOG_WARNING(format, ...) log_format(LLV_WARNING,format, __VA_ARGS__);
-#define LOG_ERROR(format, ...) log_format(LLV_ERROR,format, __VA_ARGS__);
-#define LOG_FATAL(format, ...) log_format(LLV_FATAL,format, __VA_ARGS__);
+#define LOG_INFO(format, ...) log_format(LLV_INFO, format, ##__VA_ARGS__);
+#define LOG_WARNING(format, ...) log_format(LLV_WARNING, format, ##__VA_ARGS__);
+#define LOG_ERROR(format, ...) log_format(LLV_ERROR, format, ##__VA_ARGS__);
+#define LOG_FATAL(format, ...) log_format(LLV_FATAL, format, ##__VA_ARGS__);

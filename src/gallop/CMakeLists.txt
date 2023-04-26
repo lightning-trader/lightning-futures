@@ -9,10 +9,11 @@ link_directories(${CMAKE_LIBRARY_PATH})
 
 AUX_SOURCE_DIRECTORY(strategy   STRATEGY_DIR_VAR)
 
+
 # 将源代码添加到此项目的可执行文件。
 add_executable (gallop "gallop.cpp" "pugixml.cpp" ${STRATEGY_DIR_VAR} )
 
-target_link_libraries(gallop "libltpp")
+target_link_libraries(gallop "libltpp" ${CTP_LIBS})
 
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

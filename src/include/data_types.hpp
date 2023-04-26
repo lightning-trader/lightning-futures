@@ -3,11 +3,11 @@
 
 struct tick_info
 {
-	code_t id; //ºÏÔ¼ID
+	code_t id; //åˆçº¦ID
 
-	time_t time; //Ê±¼ä
+	time_t time; //æ—¶é—´
 
-	uint32_t tick; //ºÁÃëÊı
+	uint32_t tick; //æ¯«ç§’æ•°
 
 	double_t price;  //pDepthMarketData->LastPrice
 
@@ -88,31 +88,31 @@ struct tick_info
 	}
 };
 
-typedef enum deal_direction
+typedef enum deal_direction ENUM_TYPE_INT
 {
-	DD_DOWN = -1,	//ÏòÏÂ
-	DD_FLAT = 0,	//Æ½
-	DD_UP = 1,		//ÏòÉÏ
-}deal_direction;
+	DD_DOWN = -1, //å‘ä¸‹
+	DD_FLAT = 0,  //å¹³
+	DD_UP = 1,	  //å‘ä¸Š
+} deal_direction;
 
-typedef enum deal_status
+typedef enum deal_status ENUM_TYPE_INT
 {
 	DS_INVALID,
-	DS_DOUBLE_OPEN, //Ë«¿ª
-	DS_OPEN,		//¿ª²Ö
-	DS_CHANGE,		//»»ÊÖ
-	DS_CLOSE,		//Æ½²Ö
-	DS_DOUBLE_CLOSE,//Ë«Æ½
+	DS_DOUBLE_OPEN, //åŒå¼€
+	DS_OPEN,		//å¼€ä»“
+	DS_CHANGE,		//æ¢æ‰‹
+	DS_CLOSE,		//å¹³ä»“
+	DS_DOUBLE_CLOSE,//åŒå¹³
 
 }deal_status;
 
 struct deal_info
 {
-	//ÏÖÊÖ
+	//ç°æ‰‹
 	uint32_t	volume_delta;
-	//Ôö²Ö
+	//å¢ä»“
 	double_t	interest_delta;
-	//·½Ïò
+	//æ–¹å‘
 	deal_direction	direction;
 
 	deal_info() :
@@ -147,11 +147,11 @@ struct deal_info
 };
 struct position_item
 {
-	//²ÖÎ»
+	//ä»“ä½
 	uint32_t	postion;
-	//¼Û¸ñ
+	//ä»·æ ¼
 	double_t	price;
-	//¶³½á
+	//å†»ç»“
 	uint32_t	frozen;
 
 	position_item() :
@@ -180,14 +180,14 @@ struct position_item
 
 struct position_info
 {
-	code_t id; //ºÏÔ¼ID
+	code_t id; //åˆçº¦ID
 	position_info(const code_t& code) :id(code) {}
-	//½ñ²Ö
+	//ä»Šä»“
 	position_item today_long;
 	position_item today_short;
 
 
-	//×ò²Ö
+	//æ˜¨ä»“
 	position_item yestoday_long;
 	position_item yestoday_short;
 
@@ -241,31 +241,31 @@ const account_info default_account;
 
 
 /*
- *	¶©µ¥±êÖ¾
+ *	è®¢å•æ ‡å¿—
  */
-typedef enum order_flag
+typedef enum order_flag ENUM_TYPE_CHAR
 {
-	OF_NOR = '0',		//ÆÕÍ¨¶©µ¥
-	OF_FAK,			//È«³ÉÈ«³·£¬²»µÈ´ı×Ô¶¯³·Ïú
-	OF_FOK,			//²¿³É²¿³·£¬²»µÈ´ı×Ô¶¯³·Ïú
+	OF_NOR = '0', //æ™®é€šè®¢å•
+	OF_FAK,		  //å…¨æˆå…¨æ’¤ï¼Œä¸ç­‰å¾…è‡ªåŠ¨æ’¤é”€
+	OF_FOK,		  //éƒ¨æˆéƒ¨æ’¤ï¼Œä¸ç­‰å¾…è‡ªåŠ¨æ’¤é”€
 } order_flag;
 
 /*
- *	¿ªÆ½·½Ïò
+ *	å¼€å¹³æ–¹å‘
  */
-typedef enum offset_type
+typedef enum offset_type ENUM_TYPE_CHAR
 {
-	OT_OPEN = '0',	//¿ª²Ö
-	OT_CLOSE		//Æ½²Ö,ÉÏÆÚÎªÆ½×ò
+	OT_OPEN = '0', //å¼€ä»“
+	OT_CLOSE	   //å¹³ä»“,ä¸ŠæœŸä¸ºå¹³æ˜¨
 } offset_type;
 
 /*
- *	¶à¿Õ·½Ïò
+ *	å¤šç©ºæ–¹å‘
  */
-typedef enum direction_type
+typedef enum direction_type ENUM_TYPE_CHAR
 {
-	DT_LONG = '0',	//×ö¶à
-	DT_SHORT		//×ö¿Õ
+	DT_LONG = '0', // åšå¤š
+	DT_SHORT	   // åšç©º
 } direction_type;
 
 struct order_info
@@ -308,19 +308,18 @@ struct order_info
 };
 const order_info default_order ;
 
-
-//¶©µ¥Í³¼ÆÊı¾İ
+//è®¢å•ç»Ÿè®¡æ•°æ®
 struct order_statistic
 {
-	//ÏÂµ¥ÊıÁ¿
+	//ä¸‹å•æ•°é‡
 	uint32_t place_order_amount;
-	//Î¯ÍĞÊıÁ¿
+	//å§”æ‰˜æ•°é‡
 	uint32_t entrust_amount;
-	//³É½»ÊıÁ¿
+	//æˆäº¤æ•°é‡
 	uint32_t trade_amount;
-	//³·µ¥ÊıÁ¿
+	//æ’¤å•æ•°é‡
 	uint32_t cancel_amount;
-	//´íÎóÊıÁ¿
+	//é”™è¯¯æ•°é‡
 	uint32_t error_amount;
 
 	order_statistic():
@@ -358,9 +357,9 @@ struct transfer_info
 };
 const transfer_info default_transfer;
 
-typedef enum error_type
+typedef enum error_type ENUM_TYPE_INT
 {
 	ET_PLACE_ORDER,
 	ET_CANCEL_ORDER,
 	ET_OTHER_ERROR
-}error_type;
+} error_type;

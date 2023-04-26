@@ -4,8 +4,7 @@
 #include <iostream>
 #include <boost/lockfree/spsc_queue.hpp>
 
-
-typedef enum event_type
+typedef enum event_type ENUM_TYPE_INT
 {
 	ET_Invalid,
 	ET_LoadFinish,

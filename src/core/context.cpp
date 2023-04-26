@@ -61,7 +61,7 @@ context::~context()
 
 bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config,bool reset_trading_day)
 {
-	auto& localdb_name = ctrl.get<std::string>("localdb_name");
+	auto localdb_name = ctrl.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
 	{
 		_userdata_size = ctrl.get<size_t>("userdata_size", 4096 * MAX_UNITID);

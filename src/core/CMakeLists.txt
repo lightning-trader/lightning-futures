@@ -5,4 +5,4 @@ link_directories(${CMAKE_LIBRARY_PATH})
 #target_sources(${target} PRIVATE ${A1_DIR_VAR})
 add_library(lightning SHARED "runtime.cpp" "evaluate.cpp" "pod_chain.cpp" "context.cpp"  "lightning.cpp" "log_wapper.cpp" "trading_section.cpp")
 
-target_link_libraries(lightning "market" "simulator" "trader" "recorder")
+target_link_libraries(lightning "market" "simulator" "trader" "recorder" ${SYS_LIBS} ${BOOST_LIBS} ${CTP_LIBS})
