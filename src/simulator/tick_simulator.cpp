@@ -1,4 +1,5 @@
 ﻿#include "tick_simulator.h"
+#include <thread>
 #include <data_types.hpp>
 #include <event_center.hpp>
 #include "contract_parser.h"

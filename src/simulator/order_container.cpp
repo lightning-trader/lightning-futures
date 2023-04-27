@@ -27,7 +27,7 @@ void order_container::add_order(const order_info& order,order_flag flag,bool is_
 void order_container::del_order(estid_t estid)
 {
 	spin_lock lock(_mutex);
-	auto& odit = _order_info.find(estid);
+	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
 	{
 		auto match = _order_match.find(odit->second.code);
@@ -50,7 +50,7 @@ void order_container::del_order(estid_t estid)
 void order_container::set_seat(estid_t estid, uint32_t seat)
 {
 	spin_lock lock(_mutex);
-	auto& odit = _order_info.find(estid);
+	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
 	{
 		auto it = _order_match.find(odit->second.code);
@@ -71,7 +71,7 @@ void order_container::set_seat(estid_t estid, uint32_t seat)
 void order_container::set_state(estid_t estid, order_state state)
 {
 	spin_lock lock(_mutex);
-	auto& odit = _order_info.find(estid);
+	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
 	{
 		auto it = _order_match.find(odit->second.code);
@@ -129,7 +129,7 @@ void order_container::get_order_match(std::vector<order_match>& match_list, cons
 const order_match* order_container::get_order_match(estid_t estid)const
 {
 	spin_lock lock(_mutex);
-	auto& odit = _order_info.find(estid);
+	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
 	{
 		auto it = _order_match.find(odit->second.code);
@@ -152,7 +152,7 @@ bool order_container::get_order_info(order_info& order, estid_t estid)const
 {
 	spin_lock lock(_mutex);
 	LOG_TRACE("order_container get_order_info  %lld %d ", estid, _order_info.size());
-	auto& odit = _order_info.find(estid);
+	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
 	{
 		order = odit->second;

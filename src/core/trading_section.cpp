@@ -2,7 +2,7 @@
 #include <time_utils.hpp>
 #include <define.h>
 
-trading_section::trading_section(const std::string& config_path):_config_csv(config_path, rapidcsv::LabelParams::LabelParams(0, 0))
+trading_section::trading_section(const std::string &config_path) : _config_csv(config_path, rapidcsv::LabelParams(0, 0))
 {
 
 }
@@ -19,7 +19,7 @@ void trading_section::init(uint32_t trading_day, time_t last_time)
 	time_t last_day_time = get_day_begin(last_time);
 	if(trading_day_time != last_day_time)
 	{
-		//trading_day_time != last_day_time ËµÃ÷ÊÇÇ°ÌìÍíÉÏ³õÊ¼»¯µÄ
+		// trading_day_time != last_day_time è¯´æ˜æ˜¯å‰å¤©æ™šä¸Šåˆå§‹åŒ–çš„
 		for (size_t i = 0; i < _config_csv.GetRowCount(); i++)
 		{
 			uint32_t is_day = _config_csv.GetCell<uint32_t>("day_or_night", i);
@@ -33,7 +33,7 @@ void trading_section::init(uint32_t trading_day, time_t last_time)
 			}
 			else
 			{
-				//Ò¹ÅÌÓÃµ±Ç°Ê±¼ä¼ÆËã
+				// å¤œç›˜ç”¨å½“å‰æ—¶é—´è®¡ç®—
 				time_t begin_time = make_datetime(last_day_time, begin_time_str.c_str());
 				_trading_section[begin_time] = get_next_time(begin_time, end_time_str.c_str());
 				LOG_DEBUG("trading_section : %s %s", datetime_to_string(begin_time).c_str(), datetime_to_string(_trading_section[begin_time]).c_str());
@@ -42,7 +42,7 @@ void trading_section::init(uint32_t trading_day, time_t last_time)
 	}
 	else
 	{
-		//µÚ¶şÌì°×Ìì³õÊ¼»¯µÄ ²»³õÊ¼»¯Ò¹ÅÌ£¨Ò¹ÅÌÒÑ¾­´í¹ıÁË£©
+		// ç¬¬äºŒå¤©ç™½å¤©åˆå§‹åŒ–çš„ ä¸åˆå§‹åŒ–å¤œç›˜ï¼ˆå¤œç›˜å·²ç»é”™è¿‡äº†ï¼‰
 		for (size_t i = 0; i < _config_csv.GetRowCount(); i++)
 		{
 			uint32_t is_day = _config_csv.GetCell<uint32_t>("day_or_night", i);

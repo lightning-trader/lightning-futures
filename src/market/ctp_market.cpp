@@ -81,7 +81,7 @@ void ctp_market::OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CTh
 	if(bIsLast)
 	{
 		LOG_INFO("UserLogin : Market data server logined, {%s} {%s}", pRspUserLogin->TradingDay, pRspUserLogin->UserID);
-		//订阅行情数据
+		//璁㈤槄琛屾儏鏁版嵁
 		do_subscribe();
 		if(!_is_inited)
 		{
@@ -113,7 +113,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	LOG_DEBUG("MarketData = [%s] [%f]\n", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice);
 	
 	tick_info tick ;
-	auto& excg_it = _instrument_id_list.find(pDepthMarketData->InstrumentID);
+	auto excg_it = _instrument_id_list.find(pDepthMarketData->InstrumentID);
 	if(excg_it != _instrument_id_list.end())
 	{
 		tick.id = code_t(pDepthMarketData->InstrumentID, excg_it->second.c_str());
@@ -122,7 +122,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	{
 		tick.id = code_t(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
 	}
-	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
+	//涓氬姟鏃ユ湡杩斿洖鐨勬槸绌猴紝鎵�浠ヨ繖閲岃嚜宸辫幏鍙栨湰鍦版棩鏈熷姞涓婃洿鏂版椂闂存潵璁＄畻涓氬姟鏃ユ湡鏃堕棿
 	tick.time = get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime);
 	tick.tick = pDepthMarketData->UpdateMillisec;
 	tick.price = pDepthMarketData->LastPrice;
@@ -198,14 +198,14 @@ void ctp_market::do_subscribe()
 		num++;
 		if (num == 500)
 		{
-			_md_api->SubscribeMarketData(id_list, num);//订阅行情
+			_md_api->SubscribeMarketData(id_list, num);//璁㈤槄琛屾儏
 			num = 0;
 		}
 		i++;
 	}
 	if (num > 0)
 	{
-		_md_api->SubscribeMarketData(id_list, num);//订阅行情
+		_md_api->SubscribeMarketData(id_list, num);//璁㈤槄琛屾儏
 		num = 0;
 	}
 }
@@ -220,13 +220,13 @@ void ctp_market::do_unsubscribe(const std::vector<code_t>& code_list)
 		num++;
 		if (num == 500)
 		{
-			_md_api->UnSubscribeMarketData(id_list, num);//订阅行情
+			_md_api->UnSubscribeMarketData(id_list, num);//璁㈤槄琛屾儏
 			num = 0;
 		}
 	}
 	if (num > 0)
 	{
-		_md_api->UnSubscribeMarketData(id_list, num);//订阅行情
+		_md_api->UnSubscribeMarketData(id_list, num);//璁㈤槄琛屾儏
 		num = 0;
 	}
 }

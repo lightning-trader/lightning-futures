@@ -2,6 +2,7 @@
 
 #include<string>
 #include<ctime>
+#include "save_s.hpp"
 
 #define ONE_DAY_SECONDS 86400
 #define ONE_MINUTE_SECONDS 60

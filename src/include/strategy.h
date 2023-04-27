@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 #include <define.h>
 #include <data_types.hpp>
 #include <lightning.h>
@@ -14,13 +15,14 @@ public :
 	public:
 		param(const char* str);
 
-		template< typename T>
-		T get(const std::string& key)const
+		template <typename T>
+		T get(const char key[]) const
 		{
-			return get<T>(key);
+			return get<T>(std::string(key));
 		}
-		template<>
-		const char* get(const std::string& key)const
+
+		template <typename T>
+		typename std::enable_if<std::is_same<T, const char *>::value, T>::type get(const std::string &key) const
 		{
 			auto it = _param.find(key);
 			if (it == _param.end())
@@ -30,8 +32,8 @@ public :
 			return it->second.c_str();
 		}
 
-		template<>
-		int32_t get(const std::string& key)const
+		template <typename T>
+		typename std::enable_if<std::is_same<T, int32_t>::value, T>::type get(const std::string &key) const
 		{
 			auto it = _param.find(key);
 			if (it == _param.end())
@@ -40,8 +42,9 @@ public :
 			}
 			return std::atoi(it->second.c_str());
 		}
-		template<>
-		uint32_t get(const std::string& key)const
+
+		template <typename T>
+		typename std::enable_if<std::is_same<T, uint32_t>::value, T>::type get(const std::string &key) const
 		{
 			auto it = _param.find(key);
 			if (it == _param.end())
@@ -51,8 +54,8 @@ public :
 			return static_cast<uint32_t>(std::atoi(it->second.c_str()));
 		}
 
-		template<>
-		double_t get(const std::string& key)const
+		template <typename T>
+		typename std::enable_if<std::is_same<T, double_t>::value, T>::type get(const std::string &key) const
 		{
 			auto it = _param.find(key);
 			if (it == _param.end())
@@ -61,8 +64,8 @@ public :
 			}
 			return std::atof(it->second.c_str());
 		}
-		template<>
-		int64_t get(const std::string& key)const
+		template <typename T>
+		typename std::enable_if<std::is_same<T, int64_t>::value, T>::type get(const std::string &key) const
 		{
 			auto it = _param.find(key);
 			if (it == _param.end())
@@ -71,8 +74,8 @@ public :
 			}
 			return std::atoll(it->second.c_str());
 		}
-		template<>
-		uint64_t get(const std::string& key)const
+		template <typename T>
+		typename std::enable_if<std::is_same<T, uint64_t>::value, T>::type get(const std::string &key) const
 		{
 			auto it = _param.find(key);
 			if (it == _param.end())
@@ -95,24 +98,22 @@ public:
 	virtual ~strategy();
 
 	/*
-	*	初始化
-	*/
+	 *	初始化
+	 */
 	void init(straid_t id,class strategy_manager* manager);
 
-	//回调函数
+	// 回调函数
 private:
-
 	/*
 	 *	初始化事件
 	 *	生命周期中只会回调一次
 	 */
-	virtual void on_init() {};
+	virtual void on_init(){};
 
 public:
-	
 	/*
-	*	交易日初始化完成
-	*/
+	 *	交易日初始化完成
+	 */
 	virtual void on_ready() {};
 
 	/*
@@ -120,7 +121,6 @@ public:
 	 */
 	virtual void on_tick(const tick_info& tick, const deal_info& deal) {}
 
-	
 	/*
 	 *	订单接收回报
 	 *  @is_success	是否成功
@@ -132,7 +132,7 @@ public:
 	 *	成交回报
 	 *
 	 *	@localid	本地订单id
-	*/
+	 */
 	virtual void on_deal(estid_t localid,uint32_t deal_volume, uint32_t total_volume) {}
 
 	/*
@@ -141,7 +141,6 @@ public:
 	 *	@localid	本地订单id
 	 */
 	virtual void on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume) {}
-
 
 	/*
 	 *	撤单
@@ -162,7 +161,7 @@ public:
 	virtual void on_destory() {}
 
 protected:
-	//功能函数
+	// 功能函数
 	/*
 	 *	开多单
 	 *	code 期货代码 SHFF.rb2301
@@ -200,9 +199,9 @@ protected:
 	estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
-	*	下单单
-	*	order_id 下单返回的id
-	*/
+	 *	下单单
+	 *	order_id 下单返回的id
+	 */
 	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 	/*
 	 *	撤单
@@ -210,36 +209,35 @@ protected:
 	 */
 	void cancel_order(estid_t order_id);
 
-	/**  
-	* 获取仓位信息
-	*/
+	/**
+	 * 获取仓位信息
+	 */
 	const position_info& get_position(const code_t& code) const;
 
 	/**
-	* 获取账户资金
-	*/
+	 * 获取账户资金
+	 */
 	const account_info& get_account() const;
 
-	/**  
-	* 获取委托订单
-	**/
+	/**
+	 * 获取委托订单
+	 **/
 	const order_info& get_order(estid_t order_id) const;
 
-
 	/**
-	* 订阅行情
-	**/
+	 * 订阅行情
+	 **/
 	void subscribe(const code_t& code) ;
 
 	/**
-	* 取消订阅行情
-	**/
+	 * 取消订阅行情
+	 **/
 	void unsubscribe(const code_t& code) ;
 
 	/**
-	* 获取时间
-	* 
-	*/
+	 * 获取时间
+	 *
+	 */
 	time_t get_last_time() const ;
 
 	/**
@@ -248,15 +246,14 @@ protected:
 	void use_custom_chain(bool flag);
 
 	/*
-	* 设置撤销条件(返回true时候撤销)
-	*/
+	 * 设置撤销条件(返回true时候撤销)
+	 */
 	void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info&)> callback);
 
-
 	/**
-	* 获取最后一次下单时间
-	*	跨交易日返回0
-	*/
+	 * 获取最后一次下单时间
+	 *	跨交易日返回0
+	 */
 	time_t last_order_time();
 
 
@@ -267,21 +264,21 @@ protected:
 	}
 
 	/**
-	* 获取用户数据，直接写入会被保存到共享内存中
-	*	注意多个策略时候id不能改变
-	*	ID最大值与localdb配置中的userdata_block对应
-	*/
+	 * 获取用户数据，直接写入会被保存到共享内存中
+	 *	注意多个策略时候id不能改变
+	 *	ID最大值与localdb配置中的userdata_block对应
+	 */
 
 	void* get_userdata(size_t size);
 
 	/**
-	* 获取交易日
-	*/
+	 * 获取交易日
+	 */
 	uint32_t get_trading_day()const;
 
 	/**
-	*	是否准备就绪
-	*/
+	 *	是否准备就绪
+	 */
 	bool is_trading_ready()const;
 
 };

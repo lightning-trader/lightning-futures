@@ -13,14 +13,14 @@ void contract_parser::init(const std::string& config_path)
 {
 	LOG_INFO("contract_parser init \n");
 	_contract_info.clear();
-	rapidcsv::Document config_csv(config_path, rapidcsv::LabelParams::LabelParams(0, -1));
+	rapidcsv::Document config_csv(config_path, rapidcsv::LabelParams(0, -1));
 	for (size_t i = 0; i < config_csv.GetRowCount(); i++)
 	{
 		contract_info info ;
 		const std::string& code_str = config_csv.GetCell<std::string>("code", i);
 		LOG_INFO("load contract code : %s \n", code_str.c_str());
 		info.code = code_t(code_str.c_str());
-		info.charge_type = static_cast<charge_type>(config_csv.GetCell<int32_t>("charge_type", i));
+		info.charge_type = static_cast<charge_type_t>(config_csv.GetCell<int32_t>("charge_type", i));
 		info.open_charge = config_csv.GetCell<double_t>("open_charge", i);
 		info.close_today_charge = config_csv.GetCell<double_t>("close_today_charge", i);
 		info.close_yestoday_charge = config_csv.GetCell<double_t>("close_yestoday_charge", i);

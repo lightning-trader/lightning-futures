@@ -8,15 +8,15 @@
 #include <ThostFtdcTraderApi.h>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/property_tree/ptree.hpp>
-
+#include <condition_variable>
 
 /*
- *	¶©µ¥²Ù×÷ÀàĞÍ
+ *	è®¢å•æ“ä½œç±»å‹
  */
 typedef enum action_flag
 {
-	AF_CANCEL = '0',	//³·Ïú
-	AF_MODIFY = '3',	//ĞŞ¸Ä
+	AF_CANCEL = '0',	//æ’¤é”€
+	AF_MODIFY = '3',	//ä¿®æ”¹
 } action_flag;
 
 
@@ -31,7 +31,7 @@ public:
 	bool init(const boost::property_tree::ptree& config);
 
 	//////////////////////////////////////////////////////////////////////////
-	//trader_api½Ó¿Ú
+	//trader_apiæ¥å£
 public:
 
 
@@ -46,7 +46,7 @@ public:
 	virtual uint32_t get_trading_day()const override;
 
 	//////////////////////////////////////////////////////////////////////////
-	//CTP½»Ò×½Ó¿ÚÊµÏÖ
+	//CTPäº¤æ˜“æ¥å£å®ç°
 public:
 	virtual void OnFrontConnected() override;
 
@@ -69,10 +69,10 @@ public:
 
 	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 	virtual void OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField* pInvestorPositionDetail, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) override;
-	///ÇëÇó²éÑ¯Í¶×ÊÕß³Ö²ÖÃ÷Ï¸ÏìÓ¦
+	///è¯·æ±‚æŸ¥è¯¢æŠ•èµ„è€…æŒä»“æ˜ç»†å“åº”
 	virtual void OnRspQryInvestorPositionCombineDetail(CThostFtdcInvestorPositionCombineDetailField* pInvestorPositionCombineDetail, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) override;
 
-	///ÇëÇó²éÑ¯³É½»ÏìÓ¦
+	///è¯·æ±‚æŸ¥è¯¢æˆäº¤å“åº”
 	virtual void OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
 	virtual void OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
@@ -92,9 +92,9 @@ public:
 
 private:
 
-	//ÈÏÖ¤
+	//è®¤è¯
 	bool do_auth();
-	//µÇÂ¼
+	//ç™»å½•
 	bool do_login();
 
 	bool logout();
@@ -161,7 +161,7 @@ private:
 			const auto& it = _position_info.find(code);
 			if (it != _position_info.end())
 			{
-				//TODO ÏÈ²»´¦Àí·Ö²Ö
+				//TODO å…ˆä¸å¤„ç†åˆ†ä»“
 				if (direction == DT_LONG)
 				{
 					if (it->second.yestoday_long.usable() >= volume)
@@ -262,11 +262,11 @@ protected:
 	std::string				_usernick;
 
 	time_t					_last_query_time;
-	uint32_t				_front_id;		//Ç°ÖÃ±àºÅ
-	uint32_t				_session_id;	//»á»°±àºÅ
-	std::atomic<uint32_t>	_order_ref;		//±¨µ¥ÒıÓÃ
+	uint32_t				_front_id;		//å‰ç½®ç¼–å·
+	uint32_t				_session_id;	//ä¼šè¯ç¼–å·
+	std::atomic<uint32_t>	_order_ref;		//æŠ¥å•å¼•ç”¨
 	typedef std::function<void()>	common_executer;
-	typedef std::queue<common_executer>	query_queue; //²éÑ¯¶ÓÁĞ
+	typedef std::queue<common_executer>	query_queue; //æŸ¥è¯¢é˜Ÿåˆ—
 	query_queue				_query_queue;
 
 	//boost::pool_allocator<code_t, position_info> a ;
@@ -280,7 +280,7 @@ protected:
 	entrust_map				_order_info;
 
 
-	//²éÑ¯×´Ì¬ºÍ¼ÆËã ºÏÔ¼±£Ö¤½ğÊ±ºòÊ¹ÓÃ
+	//æŸ¥è¯¢çŠ¶æ€å’Œè®¡ç®— åˆçº¦ä¿è¯é‡‘æ—¶å€™ä½¿ç”¨
 	std::unordered_map<std::string,bool> _instrument_state;
 
 	account_info			_account_info ;
