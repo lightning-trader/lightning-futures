@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <thread>
 #ifdef _WIN32
 #include <wtypes.h>

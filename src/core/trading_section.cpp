@@ -1,4 +1,4 @@
-#include "trading_section.h"
+﻿#include "trading_section.h"
 #include <time_utils.hpp>
 #include <define.h>
 

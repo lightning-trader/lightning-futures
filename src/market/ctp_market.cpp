@@ -1,10 +1,15 @@
-
+﻿
 #include "ctp_market.h"
 #include <file_wapper.hpp>
 #include <time_utils.hpp>
 
-#pragma comment (lib,"thostmduserapi_se.lib")
-
+#ifdef _WIN32
+#ifdef _WIN64
+#pragma comment (lib,"../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_winApi/traderapi/20220914_traderapi64_se_windows/thostmduserapi_se.lib")
+#else
+#pragma comment (lib,"../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_winApi/traderapi/20220914_traderapi_se_windows/thostmduserapi_se.lib")
+#endif
+#endif
 ctp_market::ctp_market()
 	:_md_api(nullptr)
 	,_reqid(0)

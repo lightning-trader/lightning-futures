@@ -1,12 +1,12 @@
-#pragma once
+﻿#pragma once
 #include <define.h>
 #include <data_types.hpp>
 
 /***  
 * 
-* �û�����һ���µ�����������ʵ�ֿ�ƽ��ת����ع��ܵĲ��
-* strategy ��Ϊ��������ͷ�ڵ㣬�м������������ڵ㣬exec_ctx ��Ϊ�������Ľ����ڵ�
-* ʵ�ֲ�ͬ�Ĺ��ܣ�ֻ��Ҫ���м����ӽڵ㼴��
+* 用户构造一个下单的责任链，实现开平互转等相关功能的拆分
+* strategy 作为任务链的头节点，中间可以增加任意节点，exec_ctx 作为责任链的结束节点
+* 实现不同的功能，只需要在中间增加节点即可
 */
 class pod_chain
 {
@@ -42,7 +42,7 @@ public:
 };
 
 
-//��֤
+//验证
 class verify_chain : public pod_chain
 {
 

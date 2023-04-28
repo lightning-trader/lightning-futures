@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <tick_loader.h>
 
 class csv_tick_loader: public tick_loader

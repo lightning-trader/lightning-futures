@@ -1,4 +1,4 @@
-#include "runtime.h"
+﻿#include "runtime.h"
 #include <define.h>
 #include <market_api.h>
 #include <trader_api.h>

@@ -1,4 +1,4 @@
-#include "context.h"
+ï»¿#include "context.h"
 #include <file_wapper.hpp>
 #include <market_api.h>
 #include <trader_api.h>
@@ -383,7 +383,7 @@ void context::load_data(const char* localdb_name)
 	_record_region = std::make_shared<boost::interprocess::mapped_region>(record_shdmem, boost::interprocess::read_write);
 	_record_data = static_cast<record_data*>(_record_region->get_address());
 
-	//ÓÃ»§Êý¾Ý
+	//ç”¨æˆ·æ•°æ®
 	std::string uesrdb_name = std::string("uesr_db") + localdb_name;
 	boost::interprocess::shared_memory_object userdb_shdmem
 	{
@@ -409,7 +409,7 @@ void context::check_crossday()
 		_section->init(trading_day, get_last_time());
 		if (trading_day != _record_data->trading_day)
 		{
-			//¼ÇÂ¼½áËãÊý¾Ý
+			//è®°å½•ç»“ç®—æ•°æ®
 			if (_recorder && trading_day > _record_data->trading_day)
 			{
 				_recorder->record_crossday_flow(get_last_time(), _record_data->trading_day, _record_data->statistic_info, get_account());

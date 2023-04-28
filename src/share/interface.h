@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "market_api.h"
 #include "trader_api.h"
 #include "simulator.h"

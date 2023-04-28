@@ -1,9 +1,9 @@
-#pragma once
+ï»¿#pragma once
 #include <define.h>
 #include <data_types.hpp>
 #include "event_center.hpp"
 
-//ÏÂµ¥½Ó¿Ú¹ÜÀí½Ó¿Ú
+//ä¸‹å•æ¥å£ç®¡ç†æ¥å£
 class trader_api
 {
 public:
@@ -12,30 +12,30 @@ public:
 public:
 
 	/*
-	 *	ÊÇ·ñ¿ÉÓÃ
+	 *	æ˜¯å¦å¯ç”¨
 	 */
 	virtual bool is_usable()const = 0;
 
 	/*
-	 *	ÏÂµ¥½Ó¿Ú
-	 *	entrust ÏÂµ¥µÄ¾ßÌåÊı¾İ½á¹¹
+	 *	ä¸‹å•æ¥å£
+	 *	entrust ä¸‹å•çš„å…·ä½“æ•°æ®ç»“æ„
 	 */
 	virtual estid_t place_order(offset_type offset, direction_type direction , const code_t& code, uint32_t count, double_t price , order_flag flag) = 0;
 
 	/*
-	 *	³·µ¥
-	 *	action	²Ù×÷µÄ¾ßÌåÊı¾İ½á¹¹
+	 *	æ’¤å•
+	 *	action	æ“ä½œçš„å…·ä½“æ•°æ®ç»“æ„
 	 */
 	virtual void cancel_order(estid_t order_id) = 0;
 
 
 	/*
-	 *	Ìá½»½áËãµ¥
+	 *	æäº¤ç»“ç®—å•
 	 */
 	virtual void submit_settlement() = 0 ;
 
 	/**
-	* »ñÈ¡µ±Ç°½»Ò×ÈÕ
+	* è·å–å½“å‰äº¤æ˜“æ—¥
 	*/
 	virtual uint32_t get_trading_day()const = 0;
 

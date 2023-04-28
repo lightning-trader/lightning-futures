@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "recorder.h"
 #include <define.h>
 #include <boost/property_tree/ptree.hpp>
@@ -37,18 +37,18 @@ public :
 	virtual ~recorder_proxy();
 	
 public:
-	//¶©µ¥±í
+	//è®¢å•è¡¨
 	virtual void record_order_entrust(time_t time, const order_info& order) override;
 	virtual void record_order_trade(time_t time, estid_t localid) override;
 	virtual void record_order_cancel(time_t time, estid_t localid, uint32_t last_volume) override;
 
-	//²ÖÎ»±í
+	//ä»“ä½è¡¨
 	virtual void record_position_flow(time_t time, const position_info& position) override;
 
-	//×Ê½ğ±í
+	//èµ„é‡‘è¡¨
 	virtual void record_account_flow(time_t time, const account_info& account) override;
 
-	//½áËã±í
+	//ç»“ç®—è¡¨
 	virtual void record_crossday_flow(time_t time, uint32_t trading_day, const order_statistic& statistic, const account_info& account) override;
 
 };

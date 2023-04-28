@@ -1,4 +1,4 @@
-#include "strategy.h"
+ï»¿#include "strategy.h"
 #include "lightning.h"
 #include "strategy_manager.h"
 
@@ -46,7 +46,7 @@ strategy::~strategy()
 }
 
 /*
-	*	³õÊ¼»¯
+	*	åˆå§‹åŒ–
 	*/
 void strategy::init(straid_t id, strategy_manager* manager)
 {

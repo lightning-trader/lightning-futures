@@ -1,4 +1,4 @@
-#include "contract_parser.h"
+﻿#include "contract_parser.h"
 
 contract_parser::contract_parser()
 {

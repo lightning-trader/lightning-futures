@@ -1,4 +1,4 @@
-#include "strategy_manager.h"
+﻿#include "strategy_manager.h"
 
 void strategy_manager::regist_strategy(straid_t straid, std::shared_ptr<strategy> stra)
 {

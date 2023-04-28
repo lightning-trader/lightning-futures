@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef __SAVE_S_H__
 #define __SAVE_S_H__
 

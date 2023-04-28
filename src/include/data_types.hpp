@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "define.h"
 
 struct tick_info

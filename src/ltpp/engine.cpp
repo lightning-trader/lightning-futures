@@ -1,4 +1,4 @@
-#include <runtime_engine.h>
+﻿#include <runtime_engine.h>
 #include "strategy_manager.h"
 #include <thread>
 

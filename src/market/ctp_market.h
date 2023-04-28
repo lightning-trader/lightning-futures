@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <define.h>
 #include <market_api.h>
 #include <event_center.hpp>
@@ -20,7 +20,7 @@ public:
 	
 	bool init(const boost::property_tree::ptree& config);
 
-//IMarketAPI ½Ó¿Ú
+//IMarketAPI æ¥å£
 public:
 
 
@@ -33,7 +33,7 @@ public:
 		return _last_tick_time;
 	}
 
-//CThostFtdcMdSpi ½Ó¿Ú
+//CThostFtdcMdSpi æ¥å£
 public:
 	virtual void OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast );
 
@@ -41,7 +41,7 @@ public:
 
 	virtual void OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast );
 
-	///µÇ³öÇëÇóÏìÓ¦
+	///ç™»å‡ºè¯·æ±‚å“åº”
 	virtual void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
 	virtual void OnFrontDisconnected( int nReason );
@@ -54,11 +54,11 @@ public:
 
 private:
 	/*
-	 *	·¢ËÍµÇÂ¼ÇëÇó
+	 *	å‘é€ç™»å½•è¯·æ±‚
 	 */
 	void do_userlogin();
 	/*
-	 *	¶©ÔÄÆ·ÖÖĞĞÇé
+	 *	è®¢é˜…å“ç§è¡Œæƒ…
 	 */
 	void do_subscribe();
 	

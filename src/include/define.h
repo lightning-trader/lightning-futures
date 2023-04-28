@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <stdio.h>
 #include <string>
 #include <set>
@@ -14,12 +14,10 @@
 
 #ifndef WIN32
 #include "save_s.hpp"
+#endif
+
 #define ENUM_TYPE_INT  : int
 #define ENUM_TYPE_CHAR  : char
-#else
-#define ENUM_TYPE_INT
-#define ENUM_TYPE_CHAR
-#endif
 
 #ifndef EXPORT_FLAG
 #ifdef _MSC_VER

@@ -1,4 +1,4 @@
-#include <define.h>
+﻿#include <define.h>
 #include <fstream>
 #include <boost/scoped_array.hpp>
 #include <boost/filesystem.hpp>

@@ -1,4 +1,4 @@
-#include "evaluate_engine.h"
+﻿#include "evaluate_engine.h"
 #include "strategy_manager.h"
 #include <chrono>
 #include <thread>

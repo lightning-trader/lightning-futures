@@ -1,10 +1,10 @@
-#pragma once
+ï»¿#pragma once
 #include "define.h"
 #include "event_center.hpp"
 #include "data_types.hpp"
 
 /*
- *	ĞĞÇé½âÎöÄ£¿é½Ó¿Ú
+ *	è¡Œæƒ…è§£ææ¨¡å—æ¥å£
  */
 class market_api 
 {
@@ -14,17 +14,17 @@ public:
 public:
 
 	/*
-	 *	¶©ÔÄºÏÔ¼ÁĞ±í
+	 *	è®¢é˜…åˆçº¦åˆ—è¡¨
 	 */
 	virtual void subscribe(const std::set<code_t>& codes) = 0;
 
 	/*
-	 *	ÍË¶©ºÏÔ¼ÁĞ±í
+	 *	é€€è®¢åˆçº¦åˆ—è¡¨
 	 */
 	virtual void unsubscribe(const std::set<code_t>& codes) = 0;
 
 	/***  
-	* »ñÈ¡Ê±¼ä
+	* è·å–æ—¶é—´
 	*/
 	virtual time_t last_tick_time()const = 0;
 

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "define.h"
 #include "data_types.hpp"
 
@@ -69,109 +69,109 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	
 	EXPORT_FLAG void lt_destory_context(ltobj& obj);
 	
-	/*Æô¶¯*/
+	/*å¯åŠ¨*/
 	LT_INTERFACE_DECLARE(void, start_service, (const ltobj&));
 	
-	/*Í£Ö¹*/
+	/*åœæ­¢*/
 	LT_INTERFACE_DECLARE(void, stop_service, (const ltobj&));
 	
 	/*
-	ÏÂµ¥
+	ä¸‹å•
 	*/
 	LT_INTERFACE_DECLARE(estid_t, place_order, (const ltobj&, untid_t, offset_type, direction_type, const code_t&, uint32_t, double_t, order_flag));
 	
 	/*
-	* ³·Ïú¶©µ¥
+	* æ’¤é”€è®¢å•
 	*/
 	LT_INTERFACE_DECLARE(void, cancel_order, (const ltobj&, estid_t));
 
 	/**
-	* »ñÈ¡²ÖÎ»ĞÅÏ¢
+	* è·å–ä»“ä½ä¿¡æ¯
 	*/
 	LT_INTERFACE_DECLARE(const position_info&, get_position, (const ltobj&, const code_t&));
 
 	/**
-	* »ñÈ¡ÕË»§×Ê½ğ
+	* è·å–è´¦æˆ·èµ„é‡‘
 	*/
 	LT_INTERFACE_DECLARE(const account_info&, get_account, (const ltobj&));
 
 	/**
-	* »ñÈ¡Î¯ÍĞ¶©µ¥
+	* è·å–å§”æ‰˜è®¢å•
 	**/
 	LT_INTERFACE_DECLARE(const order_info&, get_order, (const ltobj&, estid_t));
 	
 	/**
-	* ¶©ÔÄĞĞÇé
+	* è®¢é˜…è¡Œæƒ…
 	**/
 	LT_INTERFACE_DECLARE(void, subscribe, (const ltobj&, const code_t&));
 	
 	/**
-	* È¡Ïû¶©ÔÄĞĞÇé
+	* å–æ¶ˆè®¢é˜…è¡Œæƒ…
 	**/
 	LT_INTERFACE_DECLARE(void, unsubscribe, (const ltobj&, const code_t&));
 
 	/**
-	* »ñÈ¡Ê±¼ä
+	* è·å–æ—¶é—´
 	*
 	*/
 	LT_INTERFACE_DECLARE(time_t, get_last_time, (const ltobj&));
 	
 	/*
-	* ÉèÖÃ³·ÏúÌõ¼ş
+	* è®¾ç½®æ’¤é”€æ¡ä»¶
 	*/
 	LT_INTERFACE_DECLARE(void, set_cancel_condition, (const ltobj&, estid_t, condition_callback));
 
 	/*
-	* ÉèÖÃ½»Ò×¹ıÂËÆ÷
+	* è®¾ç½®äº¤æ˜“è¿‡æ»¤å™¨
 	*/
 	LT_INTERFACE_DECLARE(void, set_trading_filter, (const ltobj&, filter_callback));
 	
 	/*
-	* °ó¶¨»Øµ÷ 
+	* ç»‘å®šå›è°ƒ 
 	*/
 	LT_INTERFACE_DECLARE(void, bind_callback, (const ltobj&, tick_callback, entrust_callback, deal_callback 
 		, trade_callback, cancel_callback, error_callback, ready_callback));
 	
 	/**
-	* ²¥·ÅÀúÊ·Êı¾İ
+	* æ’­æ”¾å†å²æ•°æ®
 	*
 	*/
 	LT_INTERFACE_DECLARE(void, playback_history, (const ltobj& , uint32_t));
 	
 	/**
-	* »ñÈ¡×îºóÒ»´ÎÏÂµ¥Ê±¼ä
-	*	¿ç½»Ò×ÈÕ·µ»Ø0
+	* è·å–æœ€åä¸€æ¬¡ä¸‹å•æ—¶é—´
+	*	è·¨äº¤æ˜“æ—¥è¿”å›0
 	*/
 	LT_INTERFACE_DECLARE(time_t, last_order_time, (const ltobj&));
 	
 	/**
-	* »ñÈ¡µ±Ç°½»Ò×ÈÕµÄ¶©µ¥Í³¼Æ
-	*	¿ç½»Ò×ÈÕ»á±»Çå¿Õ
+	* è·å–å½“å‰äº¤æ˜“æ—¥çš„è®¢å•ç»Ÿè®¡
+	*	è·¨äº¤æ˜“æ—¥ä¼šè¢«æ¸…ç©º
 	*/
 	LT_INTERFACE_DECLARE(const order_statistic&, get_order_statistic, (const ltobj&));
 
 	/**
-	* »ñÈ¡ÓÃ»§Êı¾İÖ¸Õë
+	* è·å–ç”¨æˆ·æ•°æ®æŒ‡é’ˆ
 	*/
 	LT_INTERFACE_DECLARE(void*, get_userdata, (const ltobj& , uint32_t, size_t));
 
 	/**
-	* ÊÇ·ñÔÚ½»Ò×ÖĞ
+	* æ˜¯å¦åœ¨äº¤æ˜“ä¸­
 	*/
 	LT_INTERFACE_DECLARE(bool, is_trading_ready, (const ltobj&));
 	
 	/**
-	* »ñÈ¡½»Ò×ÈÕ
+	* è·å–äº¤æ˜“æ—¥
 	*/
 	LT_INTERFACE_DECLARE(uint32_t, get_trading_day, (const ltobj&));
 
 	/**
-	* »ñÈ¡ÊÕÅÌÊ±¼ä
+	* è·å–æ”¶ç›˜æ—¶é—´
 	*/
 	LT_INTERFACE_DECLARE(time_t, get_close_time, (const ltobj&));
 
 	/**
-	* Ê¹ÓÃ×Ô¶¨Òå½»Ò×Í¨µÀ
+	* ä½¿ç”¨è‡ªå®šä¹‰äº¤æ˜“é€šé“
 	*/
 	LT_INTERFACE_DECLARE(void, use_custom_chain, (const ltobj&, untid_t, bool));
 

@@ -1,9 +1,9 @@
-#pragma once
+ï»¿#pragma once
 #include <boost/filesystem.hpp>
 
 
 //////////////////////////////////////////////////////////////////////////
-//ÎÄ¼ş¸¨ÖúÀà
+//æ–‡ä»¶è¾…åŠ©ç±»
 class file_wapper
 {
 public:

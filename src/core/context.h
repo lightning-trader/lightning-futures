@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <define.h>
 #include <any>
 #include <recorder.h>
@@ -66,11 +66,11 @@ private:
 
 	std::map<code_t,tick_info> _previous_tick;
 
-	//²ÖÎ»Êı¾İ
+	//ä»“ä½æ•°æ®
 	typedef std::map<code_t, position_info, std::less<code_t>, boost::fast_pool_allocator<std::pair<code_t const, position_info>>> position_map;
 	position_map			_position_info;
 
-	//¶©µ¥Êı¾İ
+	//è®¢å•æ•°æ®
 	typedef std::map<estid_t, order_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, order_info>>> entrust_map;
 	entrust_map				_order_info;
 
@@ -93,19 +93,19 @@ public:
 
 	ready_callback on_ready;
 
-	/*Æô¶¯*/
+	/*å¯åŠ¨*/
 	void start_service() ;
 
-	/*Í£Ö¹*/
+	/*åœæ­¢*/
 	void stop_service();
 
 	/*
-	* ÉèÖÃ³·ÏúÌõ¼ş
+	* è®¾ç½®æ’¤é”€æ¡ä»¶
 	*/
 	void set_cancel_condition(estid_t order_id, condition_callback callback);
 
 	/*
-	* ÉèÖÃ½»Ò×¹ıÂËÆ÷
+	* è®¾ç½®äº¤æ˜“è¿‡æ»¤å™¨
 	*/
 	void set_trading_filter(filter_callback callback);
 

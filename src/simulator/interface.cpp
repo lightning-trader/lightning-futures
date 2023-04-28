@@ -1,4 +1,4 @@
-#include "tick_simulator.h"
+﻿#include "tick_simulator.h"
 
 simulator* create_simulator(const boost::property_tree::ptree& config)
 {

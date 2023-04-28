@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <rapidcsv.h>
 #include <define.h>
 #include <data_types.hpp>

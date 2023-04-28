@@ -1,4 +1,4 @@
-/*
+﻿/*
  * rapidcsv.h
  *
  * URL:      https://github.com/d99kris/rapidcsv

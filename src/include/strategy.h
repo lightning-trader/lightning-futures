@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <type_traits>
 #include <define.h>
 #include <data_types.hpp>
@@ -98,161 +98,161 @@ public:
 	virtual ~strategy();
 
 	/*
-	 *	³õÊ¼»¯
+	 *	åˆå§‹åŒ–
 	 */
 	void init(straid_t id,class strategy_manager* manager);
 
-	// »Øµ÷º¯Êı
+	// å›è°ƒå‡½æ•°
 private:
 	/*
-	 *	³õÊ¼»¯ÊÂ¼ş
-	 *	ÉúÃüÖÜÆÚÖĞÖ»»á»Øµ÷Ò»´Î
+	 *	åˆå§‹åŒ–äº‹ä»¶
+	 *	ç”Ÿå‘½å‘¨æœŸä¸­åªä¼šå›è°ƒä¸€æ¬¡
 	 */
 	virtual void on_init(){};
 
 public:
 	/*
-	 *	½»Ò×ÈÕ³õÊ¼»¯Íê³É
+	 *	äº¤æ˜“æ—¥åˆå§‹åŒ–å®Œæˆ
 	 */
 	virtual void on_ready() {};
 
 	/*
-	 *	tickÍÆËÍ
+	 *	tickæ¨é€
 	 */
 	virtual void on_tick(const tick_info& tick, const deal_info& deal) {}
 
 	/*
-	 *	¶©µ¥½ÓÊÕ»Ø±¨
-	 *  @is_success	ÊÇ·ñ³É¹¦
-	 *	@order	±¾µØ¶©µ¥
+	 *	è®¢å•æ¥æ”¶å›æŠ¥
+	 *  @is_success	æ˜¯å¦æˆåŠŸ
+	 *	@order	æœ¬åœ°è®¢å•
 	 */
 	virtual void on_entrust(const order_info& order) {};
 
 	/*
-	 *	³É½»»Ø±¨
+	 *	æˆäº¤å›æŠ¥
 	 *
-	 *	@localid	±¾µØ¶©µ¥id
+	 *	@localid	æœ¬åœ°è®¢å•id
 	 */
 	virtual void on_deal(estid_t localid,uint32_t deal_volume, uint32_t total_volume) {}
 
 	/*
-	 *	³É½»Íê³É»Ø±¨
+	 *	æˆäº¤å®Œæˆå›æŠ¥
 	 *
-	 *	@localid	±¾µØ¶©µ¥id
+	 *	@localid	æœ¬åœ°è®¢å•id
 	 */
 	virtual void on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume) {}
 
 	/*
-	 *	³·µ¥
-	 *	@localid	±¾µØ¶©µ¥id
+	 *	æ’¤å•
+	 *	@localid	æœ¬åœ°è®¢å•id
 	 */
 	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume) {}
 
 	/*
-	 *	´íÎó
-	 *	@localid	±¾µØ¶©µ¥id
-	 *	@error ´íÎó´úÂë
+	 *	é”™è¯¯
+	 *	@localid	æœ¬åœ°è®¢å•id
+	 *	@error é”™è¯¯ä»£ç 
 	 */
 	virtual void on_error(error_type type, estid_t localid, const uint32_t error) {}
 
 	/*
-	 *	Ïú»Ù
+	 *	é”€æ¯
 	 */
 	virtual void on_destory() {}
 
 protected:
-	// ¹¦ÄÜº¯Êı
+	// åŠŸèƒ½å‡½æ•°
 	/*
-	 *	¿ª¶àµ¥
-	 *	code ÆÚ»õ´úÂë SHFF.rb2301
-	 *  price Èç¹ûÊÇ0±íÊ¾ÊĞ¼Ûµ¥£¬ÆäËû±íÊ¾ÏÖ¼Ûµ¥
-	 *  flag Ä¬ÈÏÎªÕı³£µ¥
-	 *	@localid	±¾µØ¶©µ¥id
+	 *	å¼€å¤šå•
+	 *	code æœŸè´§ä»£ç  SHFF.rb2301
+	 *  price å¦‚æœæ˜¯0è¡¨ç¤ºå¸‚ä»·å•ï¼Œå…¶ä»–è¡¨ç¤ºç°ä»·å•
+	 *  flag é»˜è®¤ä¸ºæ­£å¸¸å•
+	 *	@localid	æœ¬åœ°è®¢å•id
 	 */
 	estid_t buy_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
-	 *	Æ½¶àµ¥
-	 *	code ÆÚ»õ´úÂë SHFF.rb2301
-	 *  price Èç¹ûÊÇ0±íÊ¾ÊĞ¼Ûµ¥£¬ÆäËû±íÊ¾ÏÖ¼Ûµ¥
-	 *  flag Ä¬ÈÏÎªÕı³£µ¥
-	 *	@localid	±¾µØ¶©µ¥id
+	 *	å¹³å¤šå•
+	 *	code æœŸè´§ä»£ç  SHFF.rb2301
+	 *  price å¦‚æœæ˜¯0è¡¨ç¤ºå¸‚ä»·å•ï¼Œå…¶ä»–è¡¨ç¤ºç°ä»·å•
+	 *  flag é»˜è®¤ä¸ºæ­£å¸¸å•
+	 *	@localid	æœ¬åœ°è®¢å•id
 	 */
 	estid_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
-	 *	¿ª¿Õµ¥
-	 *	code ÆÚ»õ´úÂë SHFF.rb2301
-	 *  price Èç¹ûÊÇ0±íÊ¾ÊĞ¼Ûµ¥£¬ÆäËû±íÊ¾ÏÖ¼Ûµ¥
-	 *  flag Ä¬ÈÏÎªÕı³£µ¥
-	 *	@localid	±¾µØ¶©µ¥id
+	 *	å¼€ç©ºå•
+	 *	code æœŸè´§ä»£ç  SHFF.rb2301
+	 *  price å¦‚æœæ˜¯0è¡¨ç¤ºå¸‚ä»·å•ï¼Œå…¶ä»–è¡¨ç¤ºç°ä»·å•
+	 *  flag é»˜è®¤ä¸ºæ­£å¸¸å•
+	 *	@localid	æœ¬åœ°è®¢å•id
 	 */
 	estid_t sell_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
-	 *	Æ½¿Õµ¥
-	 *	code ÆÚ»õ´úÂë SHFF.rb2301
-	 *  price Èç¹ûÊÇ0±íÊ¾ÊĞ¼Ûµ¥£¬ÆäËû±íÊ¾ÏÖ¼Ûµ¥
-	 *  flag Ä¬ÈÏÎªÕı³£µ¥
-	 *	@localid	±¾µØ¶©µ¥id
+	 *	å¹³ç©ºå•
+	 *	code æœŸè´§ä»£ç  SHFF.rb2301
+	 *  price å¦‚æœæ˜¯0è¡¨ç¤ºå¸‚ä»·å•ï¼Œå…¶ä»–è¡¨ç¤ºç°ä»·å•
+	 *  flag é»˜è®¤ä¸ºæ­£å¸¸å•
+	 *	@localid	æœ¬åœ°è®¢å•id
 	 */
 	estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 
 	/*
-	 *	ÏÂµ¥µ¥
-	 *	order_id ÏÂµ¥·µ»ØµÄid
+	 *	ä¸‹å•å•
+	 *	order_id ä¸‹å•è¿”å›çš„id
 	 */
 	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = OF_NOR);
 	/*
-	 *	³·µ¥
-	 *	order_id ÏÂµ¥·µ»ØµÄid
+	 *	æ’¤å•
+	 *	order_id ä¸‹å•è¿”å›çš„id
 	 */
 	void cancel_order(estid_t order_id);
 
 	/**
-	 * »ñÈ¡²ÖÎ»ĞÅÏ¢
+	 * è·å–ä»“ä½ä¿¡æ¯
 	 */
 	const position_info& get_position(const code_t& code) const;
 
 	/**
-	 * »ñÈ¡ÕË»§×Ê½ğ
+	 * è·å–è´¦æˆ·èµ„é‡‘
 	 */
 	const account_info& get_account() const;
 
 	/**
-	 * »ñÈ¡Î¯ÍĞ¶©µ¥
+	 * è·å–å§”æ‰˜è®¢å•
 	 **/
 	const order_info& get_order(estid_t order_id) const;
 
 	/**
-	 * ¶©ÔÄĞĞÇé
+	 * è®¢é˜…è¡Œæƒ…
 	 **/
 	void subscribe(const code_t& code) ;
 
 	/**
-	 * È¡Ïû¶©ÔÄĞĞÇé
+	 * å–æ¶ˆè®¢é˜…è¡Œæƒ…
 	 **/
 	void unsubscribe(const code_t& code) ;
 
 	/**
-	 * »ñÈ¡Ê±¼ä
+	 * è·å–æ—¶é—´
 	 *
 	 */
 	time_t get_last_time() const ;
 
 	/**
-	* Ê¹ÓÃ×Ô¶¨Òå½»Ò×Í¨µÀ
+	* ä½¿ç”¨è‡ªå®šä¹‰äº¤æ˜“é€šé“
 	*/
 	void use_custom_chain(bool flag);
 
 	/*
-	 * ÉèÖÃ³·ÏúÌõ¼ş(·µ»ØtrueÊ±ºò³·Ïú)
+	 * è®¾ç½®æ’¤é”€æ¡ä»¶(è¿”å›trueæ—¶å€™æ’¤é”€)
 	 */
 	void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info&)> callback);
 
 	/**
-	 * »ñÈ¡×îºóÒ»´ÎÏÂµ¥Ê±¼ä
-	 *	¿ç½»Ò×ÈÕ·µ»Ø0
+	 * è·å–æœ€åä¸€æ¬¡ä¸‹å•æ—¶é—´
+	 *	è·¨äº¤æ˜“æ—¥è¿”å›0
 	 */
 	time_t last_order_time();
 
@@ -264,20 +264,20 @@ protected:
 	}
 
 	/**
-	 * »ñÈ¡ÓÃ»§Êı¾İ£¬Ö±½ÓĞ´Èë»á±»±£´æµ½¹²ÏíÄÚ´æÖĞ
-	 *	×¢Òâ¶à¸ö²ßÂÔÊ±ºòid²»ÄÜ¸Ä±ä
-	 *	ID×î´óÖµÓëlocaldbÅäÖÃÖĞµÄuserdata_block¶ÔÓ¦
+	 * è·å–ç”¨æˆ·æ•°æ®ï¼Œç›´æ¥å†™å…¥ä¼šè¢«ä¿å­˜åˆ°å…±äº«å†…å­˜ä¸­
+	 *	æ³¨æ„å¤šä¸ªç­–ç•¥æ—¶å€™idä¸èƒ½æ”¹å˜
+	 *	IDæœ€å¤§å€¼ä¸localdbé…ç½®ä¸­çš„userdata_blockå¯¹åº”
 	 */
 
 	void* get_userdata(size_t size);
 
 	/**
-	 * »ñÈ¡½»Ò×ÈÕ
+	 * è·å–äº¤æ˜“æ—¥
 	 */
 	uint32_t get_trading_day()const;
 
 	/**
-	 *	ÊÇ·ñ×¼±¸¾ÍĞ÷
+	 *	æ˜¯å¦å‡†å¤‡å°±ç»ª
 	 */
 	bool is_trading_ready()const;
 

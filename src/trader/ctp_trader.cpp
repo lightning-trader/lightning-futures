@@ -1,9 +1,14 @@
-#include "ctp_trader.h"
+﻿#include "ctp_trader.h"
 #include <file_wapper.hpp>
 #include <time_utils.hpp>
 
-#pragma comment (lib,"thosttraderapi_se.lib")
-
+#ifdef _WIN32
+#ifdef _WIN64
+#pragma comment (lib,"../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_winApi/traderapi/20220914_traderapi64_se_windows/thosttraderapi_se.lib")
+#else
+#pragma comment (lib,"../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_winApi/traderapi/20220914_traderapi_se_windows/thosttraderapi_se.lib")
+#endif
+#endif
 ctp_trader::ctp_trader()
 	: _td_api(nullptr)
 	, _reqid(0)

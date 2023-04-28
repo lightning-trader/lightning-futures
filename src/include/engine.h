@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <define.h>
 #include <lightning.h>
 #include <strategy.h>
@@ -22,30 +22,30 @@ private:
 protected:
 	
 	/***
-	* ×¢²á²ßÂÔ
+	* æ³¨å†Œç­–ç•¥
 	*/
 	void regist_strategy(straid_t id, std::shared_ptr<strategy> stra);
 
 	/***
-	* È¡Ïû×¢²á²ßÂÔ
+	* å–æ¶ˆæ³¨å†Œç­–ç•¥
 	*/
 	void unregist_strategy(straid_t id);
 
 public:
 
 	/*
-	* ÉèÖÃ½»Ò×¹ıÂËÆ÷
+	* è®¾ç½®äº¤æ˜“è¿‡æ»¤å™¨
 	*/
 	void set_trading_filter(filter_function callback);
 
 	/**
-	* »ñÈ¡µ±Ç°½»Ò×ÈÕµÄ¶©µ¥Í³¼Æ
-	*	¿ç½»Ò×ÈÕ»á±»Çå¿Õ
+	* è·å–å½“å‰äº¤æ˜“æ—¥çš„è®¢å•ç»Ÿè®¡
+	*	è·¨äº¤æ˜“æ—¥ä¼šè¢«æ¸…ç©º
 	*/
 	const order_statistic& get_order_statistic()const;
 
 	/**
-	* »ñÈ¡²ÖÎ»ĞÅÏ¢
+	* è·å–ä»“ä½ä¿¡æ¯
 	*/
 	const position_info& get_position(const code_t& code) const;
 

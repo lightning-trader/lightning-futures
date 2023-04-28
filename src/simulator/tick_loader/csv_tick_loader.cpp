@@ -1,4 +1,4 @@
-#include <data_types.hpp>
+ï»¿#include <data_types.hpp>
 #include "csv_tick_loader.h"
 #include <rapidcsv.h>
 #include <time_utils.hpp>
@@ -23,49 +23,49 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 	rapidcsv::Document doc(buffer, rapidcsv::LabelParams(0, -1));
 	for(size_t i = 0;i < doc.GetRowCount();i++)
 	{
-		const auto& id = doc.GetCell<std::string>("ºÏÔ¼´úÂë", i);
+		const auto& id = doc.GetCell<std::string>("åˆçº¦ä»£ç ", i);
 		if(id != code.get_id())
 		{
 			continue;
 		}
 		tick_info tick ;
 		tick.id = code;
-		const std::string& date_str = doc.GetCell<std::string>("ÒµÎñÈÕÆÚ",i);
-		const std::string& time_str = doc.GetCell<std::string>("×îºóĞŞ¸ÄÊ±¼ä",i);
+		const std::string& date_str = doc.GetCell<std::string>("ä¸šåŠ¡æ—¥æœŸ",i);
+		const std::string& time_str = doc.GetCell<std::string>("æœ€åä¿®æ”¹æ—¶é—´",i);
 		tick.time = make_datetime(date_str.c_str(), time_str.c_str());
 		if(std::strcmp(code.get_excg(),"ZEC")&& tick.time == last_time)
 		{
-			//Ö£ÉÌËù Ã»ÓĞtickÎÊÌâ£¬ºóÒ»¸öÌîÉÏ500ºÍÉÏÆÚËùÒ»ÖÂ
+			//éƒ‘å•†æ‰€ æ²¡æœ‰tické—®é¢˜ï¼Œåä¸€ä¸ªå¡«ä¸Š500å’Œä¸ŠæœŸæ‰€ä¸€è‡´
 			tick.tick = 500;
 		}
 		else
 		{
-			tick.tick = doc.GetCell<uint32_t>("×îºóĞŞ¸ÄºÁÃë", i);
+			tick.tick = doc.GetCell<uint32_t>("æœ€åä¿®æ”¹æ¯«ç§’", i);
 			last_time = tick.time;
 		}
-		tick.price = doc.GetCell<double_t>("×îĞÂ¼Û",i);
-		tick.open = doc.GetCell<double_t>("½ñ¿ªÅÌ",i);
-		tick.close = doc.GetCell<double_t>("½ñÊÕÅÌ", i);
-		tick.high = doc.GetCell<double_t>("×î¸ß¼Û", i);
-		tick.low = doc.GetCell<double_t>("×îµÍ¼Û", i);
-		tick.high_limit = doc.GetCell<double_t>("ÕÇÍ£°å¼Û", i);
-		tick.low_limit = doc.GetCell<double_t>("µøÍ£°å¼Û", i);
-		tick.standard = doc.GetCell<double_t>("ÉÏ´Î½áËã¼Û", i);
-		tick.volume = doc.GetCell<uint32_t>("ÊıÁ¿", i);
-		tick.open_interest = doc.GetCell<uint32_t>("³Ö²ÖÁ¿", i);
-		tick.trading_day = doc.GetCell<uint32_t>("½»Ò×ÈÕ", i);
+		tick.price = doc.GetCell<double_t>("æœ€æ–°ä»·",i);
+		tick.open = doc.GetCell<double_t>("ä»Šå¼€ç›˜",i);
+		tick.close = doc.GetCell<double_t>("ä»Šæ”¶ç›˜", i);
+		tick.high = doc.GetCell<double_t>("æœ€é«˜ä»·", i);
+		tick.low = doc.GetCell<double_t>("æœ€ä½ä»·", i);
+		tick.high_limit = doc.GetCell<double_t>("æ¶¨åœæ¿ä»·", i);
+		tick.low_limit = doc.GetCell<double_t>("è·Œåœæ¿ä»·", i);
+		tick.standard = doc.GetCell<double_t>("ä¸Šæ¬¡ç»“ç®—ä»·", i);
+		tick.volume = doc.GetCell<uint32_t>("æ•°é‡", i);
+		tick.open_interest = doc.GetCell<uint32_t>("æŒä»“é‡", i);
+		tick.trading_day = doc.GetCell<uint32_t>("äº¤æ˜“æ—¥", i);
 	
-		tick.buy_order[0] = std::make_pair(doc.GetCell<double_t>("ÉêÂò¼ÛÒ»", i), doc.GetCell<uint32_t>("ÉêÂòÁ¿Ò»", i));
-		tick.buy_order[1] = std::make_pair(doc.GetCell<double_t>("ÉêÂò¼Û¶ş", i), doc.GetCell<uint32_t>("ÉêÂòÁ¿¶ş", i));
-		tick.buy_order[2] = std::make_pair(doc.GetCell<double_t>("ÉêÂò¼ÛÈı", i), doc.GetCell<uint32_t>("ÉêÂòÁ¿Èı", i));
-		tick.buy_order[3] = std::make_pair(doc.GetCell<double_t>("ÉêÂò¼ÛËÄ", i), doc.GetCell<uint32_t>("ÉêÂòÁ¿ËÄ", i));
-		tick.buy_order[4] = std::make_pair(doc.GetCell<double_t>("ÉêÂò¼ÛÎå", i), doc.GetCell<uint32_t>("ÉêÂòÁ¿Îå", i));
+		tick.buy_order[0] = std::make_pair(doc.GetCell<double_t>("ç”³ä¹°ä»·ä¸€", i), doc.GetCell<uint32_t>("ç”³ä¹°é‡ä¸€", i));
+		tick.buy_order[1] = std::make_pair(doc.GetCell<double_t>("ç”³ä¹°ä»·äºŒ", i), doc.GetCell<uint32_t>("ç”³ä¹°é‡äºŒ", i));
+		tick.buy_order[2] = std::make_pair(doc.GetCell<double_t>("ç”³ä¹°ä»·ä¸‰", i), doc.GetCell<uint32_t>("ç”³ä¹°é‡ä¸‰", i));
+		tick.buy_order[3] = std::make_pair(doc.GetCell<double_t>("ç”³ä¹°ä»·å››", i), doc.GetCell<uint32_t>("ç”³ä¹°é‡å››", i));
+		tick.buy_order[4] = std::make_pair(doc.GetCell<double_t>("ç”³ä¹°ä»·äº”", i), doc.GetCell<uint32_t>("ç”³ä¹°é‡äº”", i));
 		
-		tick.sell_order[0] = std::make_pair(doc.GetCell<double_t>("ÉêÂô¼ÛÒ»", i), doc.GetCell<uint32_t>("ÉêÂôÁ¿Ò»", i));
-		tick.sell_order[1] = std::make_pair(doc.GetCell<double_t>("ÉêÂô¼Û¶ş", i), doc.GetCell<uint32_t>("ÉêÂôÁ¿¶ş", i));
-		tick.sell_order[2] = std::make_pair(doc.GetCell<double_t>("ÉêÂô¼ÛÈı", i), doc.GetCell<uint32_t>("ÉêÂôÁ¿Èı", i));
-		tick.sell_order[3] = std::make_pair(doc.GetCell<double_t>("ÉêÂô¼ÛËÄ", i), doc.GetCell<uint32_t>("ÉêÂôÁ¿ËÄ", i));
-		tick.sell_order[4] = std::make_pair(doc.GetCell<double_t>("ÉêÂô¼ÛÎå", i), doc.GetCell<uint32_t>("ÉêÂôÁ¿Îå", i));
+		tick.sell_order[0] = std::make_pair(doc.GetCell<double_t>("ç”³å–ä»·ä¸€", i), doc.GetCell<uint32_t>("ç”³å–é‡ä¸€", i));
+		tick.sell_order[1] = std::make_pair(doc.GetCell<double_t>("ç”³å–ä»·äºŒ", i), doc.GetCell<uint32_t>("ç”³å–é‡äºŒ", i));
+		tick.sell_order[2] = std::make_pair(doc.GetCell<double_t>("ç”³å–ä»·ä¸‰", i), doc.GetCell<uint32_t>("ç”³å–é‡ä¸‰", i));
+		tick.sell_order[3] = std::make_pair(doc.GetCell<double_t>("ç”³å–ä»·å››", i), doc.GetCell<uint32_t>("ç”³å–é‡å››", i));
+		tick.sell_order[4] = std::make_pair(doc.GetCell<double_t>("ç”³å–ä»·äº”", i), doc.GetCell<uint32_t>("ç”³å–é‡äº”", i));
 		result.emplace_back(tick);
 	}
 
