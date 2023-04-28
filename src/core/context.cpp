@@ -402,7 +402,7 @@ void context::load_data(const char* localdb_name)
 
 void context::check_crossday()
 {
-	if (_record_data)
+	if (_record_data != nullptr)
 	{
 		uint32_t trading_day = get_trader().get_trading_day();
 		LOG_INFO("cross day %d", trading_day);

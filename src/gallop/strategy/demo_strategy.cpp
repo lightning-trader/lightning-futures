@@ -3,17 +3,18 @@
 
 demo_strategy::demo_strategy(const param& p) :
 	strategy(),
+	_code(p.get<const char*>("code")),
+	_open_once(p.get<uint32_t>("open_once")),
+	_open_delta(p.get<double_t>("open_delta")),
+	_yestoday_multiple(p.get<uint32_t>("yestoday_multiple")),
+	_yestoday_threshold (p.get<uint32_t>("yestoday_threshold")),
+	_yestoday_growth (p.get<double_t>("yestoday_growth")),
+	_expire(p.get<const char*>("expire")),
 	_order_data(nullptr),
 	_coming_to_close(0),
 	_random(0, p.get<uint32_t>("random_offset"))
 {
-	_code = p.get<const char*>("code");
-	_open_once = p.get<uint32_t>("open_once");
-	_open_delta = p.get<double_t>("open_delta");
-	_yestoday_multiple = p.get<uint32_t>("yestoday_multiple");
-	_yestoday_threshold = p.get<uint32_t>("yestoday_threshold");
-	_yestoday_growth = p.get<double_t>("yestoday_growth");
-	_expire = p.get<const char*>("expire");
+	
 };
 
 void demo_strategy::on_init()
