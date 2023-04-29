@@ -50,7 +50,7 @@ public:
 		size_t ed = 0;
 		memset(&_data, 0, sizeof(_data));
 		
-		for (size_t i=0; cd[i]!=NULL && i< CODE_DATA_LEN;i++)
+		for (size_t i=0; cd[i]!='\0' && i< CODE_DATA_LEN;i++)
 		{
 			char c = cd[i];
 			if(c == '.')
