@@ -12,12 +12,17 @@ IF(WIN32)
 ELSE(WIN32)
     IF(CMAKE_CL_64)
         SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} 
-        "${PROJECT_SOURCE_DIR}/../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_api_linux64/v6.6.9_20220914_api/v6.6.9_20220914_20220914_api_traderapi_se_linux64/" 
+        "${PROJECT_SOURCE_DIR}/../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_api_linux64/" 
+        )
+    ELSE(CMAKE_CL_64)
+        SET(CMAKE_INCLUDE_PATH 
+            ${CMAKE_INCLUDE_PATH} 
+            "${PROJECT_SOURCE_DIR}/../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_api_linux64/" 
         )
     ENDIF(CMAKE_CL_64)
 ENDIF(WIN32)
 
-message("TRADER INCLUDE PATH -> "${CMAKE_INCLUDE_PATH})
+message("TRADER INCLUDE PATH -> ${CMAKE_INCLUDE_PATH}")
 
 include_directories(${CMAKE_INCLUDE_PATH})
 
