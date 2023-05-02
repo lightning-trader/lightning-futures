@@ -33,6 +33,21 @@ public:
 	{
 		flag.store(false, std::memory_order_release);
 	}
+
+
+	template<typename T>
+	void safe_assign(T& l, const T& r)
+	{
+		lock();
+		l = r;
+		unlock();
+	}
+	void safe_call(std::function<void()> callback)
+	{
+		lock();
+		callback();
+		unlock();
+	}
 };
 
 class spin_lock

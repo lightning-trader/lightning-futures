@@ -10,6 +10,13 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 .vs/
-bin/
 out/
 run/
+bin/log/
+bin/light_test/
+bin/*.lib
+bin/*.a
+bin/td*
+bin/md*
+bin/*.pdb
+bin/record/

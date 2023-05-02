@@ -4,46 +4,32 @@
 #include <iostream>
 #include <boost/lockfree/spsc_queue.hpp>
 
-typedef enum event_type ENUM_TYPE_INT
-{
-	ET_Invalid,
-	ET_LoadFinish,
-	ET_TickReceived,
-	ET_AccountChange,
-	ET_PositionChange,
-	ET_SettlementCompleted,
-	ET_OrderCancel,
-	ET_OrderPlace,
-	ET_OrderDeal,
-	ET_OrderTrade,
-	ET_OrderError
-} event_type;
-
+template<typename T>
 struct event_data
 {
-	event_type type;
+	T type;
 	std::vector<std::any> param;
 };
 
-template<size_t N>
+template<typename T,size_t N>
 class event_source
 {
 private:
 
-	boost::lockfree::spsc_queue<event_data, boost::lockfree::capacity<N>>  _event_queue;
-	std::vector<std::function<void(event_type, const std::vector<std::any>& param)>> _handle_list;
+	boost::lockfree::spsc_queue<event_data<T>, boost::lockfree::capacity<N>>  _event_queue;
+	std::vector<std::function<void(T, const std::vector<std::any>& param)>> _handle_list;
 
 
 private:
 
-	void fire_event(event_data& data)
+	void fire_event(event_data<T>& data)
 	{
 		while (!_event_queue.push(data));
 	}
 
 
-	template<typename T, typename... Types>
-	void fire_event(event_data& data, const T& firstArg, const Types&... args) {
+	template<typename A, typename... Types>
+	void fire_event(event_data<T>& data, const A& firstArg, const Types&... args) {
 		data.param.emplace_back(firstArg);
 		fire_event(data, args...);
 	}
@@ -51,8 +37,8 @@ private:
 protected:
 
 	template<typename... Types>
-	void fire_event(event_type type, const Types&... args) {
-		event_data data;
+	void fire_event(T type, const Types&... args) {
+		event_data<T> data;
 		data.type = type;
 		fire_event(data, args...);
 	}
@@ -62,7 +48,7 @@ public:
 
 	void update()
 	{
-		event_data data;
+		event_data<T> data;
 		while (_event_queue.pop(data))
 		{
 			for (auto& handle : _handle_list)
@@ -72,10 +58,19 @@ public:
 		}
 	}
 
+	bool is_empty()const
+	{
+		return _event_queue.read_available() == 0;
+	}
+
+	bool is_full()const
+	{
+		return _event_queue.write_available() == 0;
+	}
 
 public:
 
-	void add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle)
+	void add_handle(std::function<void(T, const std::vector<std::any>&)> handle)
 	{
 		_handle_list.emplace_back(handle);
 	}

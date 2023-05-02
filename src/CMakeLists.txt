@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("gallop")
+project ("lightning")
 
 IF(WIN32)
     set(BOOST_ROOT "C:/Boost")
@@ -11,6 +11,7 @@ IF(WIN32)
     set(BOOST_LIBRARY_DIRS "${BOOST_ROOT}/lib")
 ELSEIF(UNIX)
     ADD_DEFINITIONS( "-fPIC" )
+    ADD_DEFINITIONS( "-DBOOST_LOG_DYN_LINK" )
     # set(Boost_NO_SYSTEM_PATHS ON)
     set(BOOST_ROOT "/usr/include/boost")
     set(Boost_INCLUDE_DIR "${BOOST_ROOT}/include")
@@ -33,7 +34,6 @@ FIND_PACKAGE(Boost REQUIRED)
 IF (Boost_FOUND)
     INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
     ADD_DEFINITIONS( "-DHAS_BOOST" )
-    #ADD_DEFINITIONS( "-DBOOST_LOG_DYN_LINK" )
     #ADD_DEFINITIONS( "-DBOOST_ALL_NO_LIB" )
 ENDIF()
 
@@ -49,7 +49,6 @@ SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
 )
 
 # 包含子项目。
-add_subdirectory ("gallop")
 
 add_subdirectory("trader")
 
@@ -58,7 +57,5 @@ add_subdirectory("core")
 add_subdirectory("market")
 
 add_subdirectory("simulator")
-
-add_subdirectory("ltpp")
 
 add_subdirectory("recorder")

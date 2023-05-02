@@ -10,7 +10,7 @@
 
 
 
-class ctp_market :	public futures_market,public CThostFtdcMdSpi
+class ctp_market :	public actual_market,public CThostFtdcMdSpi
 {
 public:
 
@@ -28,10 +28,6 @@ public:
 
 	virtual void unsubscribe(const std::set<code_t>& codes) override;
 
-	virtual time_t last_tick_time() const override
-	{
-		return _last_tick_time;
-	}
 
 //CThostFtdcMdSpi 接口
 public:
@@ -81,7 +77,6 @@ private:
 
 	std::unordered_map<std::string,std::string> _instrument_id_list;
 
-	time_t _last_tick_time ;
 
 	bool _is_inited ;
 

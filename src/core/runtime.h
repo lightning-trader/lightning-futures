@@ -4,12 +4,9 @@
 class runtime : public context
 {
 
+	class actual_market* _market;
 
-private:
-	
-	futures_market* _market_api;
-	
-	futures_trader* _trader_api;
+	class actual_trader* _trader;
 
 public:
 
@@ -24,9 +21,10 @@ public:
 
 	virtual market_api& get_market() override;
 
-protected:
+	virtual void on_update()override;
 
-	virtual void update() override;
+	virtual void add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle) override;
 
-	virtual void add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle) override;
+	virtual void add_trader_handle(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) override;
+
 };

@@ -6,7 +6,9 @@ class evaluate : public context
 
 private:
 	
-	class simulator * _simulator;
+	class dummy_market* _market_simulator;
+
+	class dummy_trader* _trader_simulator;
 
 public:
 	evaluate();
@@ -21,9 +23,10 @@ public:
 
 	virtual market_api& get_market() override;
 
-protected:
+	virtual void on_update() override;
 
-	virtual void update() override;
+	virtual void add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle) override;
 
-	virtual void add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle) override;
+	virtual void add_trader_handle(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) override;
+
 };

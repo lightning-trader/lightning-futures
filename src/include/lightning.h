@@ -49,6 +49,8 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef void (PORTER_FLAG * tick_callback)(const tick_info&, const deal_info&);
 
+	typedef void (PORTER_FLAG * bar_callback)(uint32_t ,const bar_info&);
+
 	typedef void (PORTER_FLAG * entrust_callback)(const order_info&);
 
 	typedef void (PORTER_FLAG * deal_callback)(estid_t, uint32_t , uint32_t);
@@ -63,7 +65,36 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef void (PORTER_FLAG * ready_callback)();
 
+	typedef void (PORTER_FLAG * update_callback)();
+
 	typedef bool (PORTER_FLAG * filter_callback)(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag);
+
+	typedef void (PORTER_FLAG * account_callback)(const account_info& account);
+
+	typedef void (PORTER_FLAG * position_callback)(const position_info& position);
+
+	struct order_event
+	{
+		entrust_callback on_entrust;
+
+		deal_callback on_deal;
+
+		trade_callback on_trade;
+
+		cancel_callback on_cancel;
+
+		error_callback on_error;
+
+		order_event() = default;
+		
+		/*:
+			on_entrust(nullptr),
+			on_deal(nullptr),
+			on_trade(nullptr),
+			on_cancel(nullptr),
+			on_error(nullptr)
+			{}*/
+	};
 
 	EXPORT_FLAG ltobj lt_create_context(context_type ctx_type, const char* config_path);
 	
@@ -103,12 +134,12 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	/**
 	* 订阅行情
 	**/
-	LT_INTERFACE_DECLARE(void, subscribe, (const ltobj&, const code_t&));
+	LT_INTERFACE_DECLARE(void, subscribe, (const ltobj&, const std::set<code_t>&, tick_callback, const std::map<code_t, std::set<uint32_t>>&, bar_callback));
 	
 	/**
 	* 取消订阅行情
 	**/
-	LT_INTERFACE_DECLARE(void, unsubscribe, (const ltobj&, const code_t&));
+	LT_INTERFACE_DECLARE(void, unsubscribe, (const ltobj&, const std::set<code_t>& , const std::map<code_t, std::set<uint32_t>>&));
 
 	/**
 	* 获取时间
@@ -127,10 +158,13 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	LT_INTERFACE_DECLARE(void, set_trading_filter, (const ltobj&, filter_callback));
 	
 	/*
-	* 绑定回调 
+	* 绑定实时回调 
 	*/
-	LT_INTERFACE_DECLARE(void, bind_callback, (const ltobj&, tick_callback, entrust_callback, deal_callback 
-		, trade_callback, cancel_callback, error_callback, ready_callback));
+	LT_INTERFACE_DECLARE(void, bind_realtime_event, (const ltobj&, const order_event&, ready_callback, update_callback));
+	/*
+	* 绑定延时回调
+	*/
+	LT_INTERFACE_DECLARE(void, bind_delayed_event, (const ltobj&, const order_event&, account_callback, position_callback));
 	
 	/**
 	* 播放历史数据
@@ -174,5 +208,15 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	* 使用自定义交易通道
 	*/
 	LT_INTERFACE_DECLARE(void, use_custom_chain, (const ltobj&, untid_t, bool));
+
+	/**
+	* 获取今日行情数据
+	*/
+	LT_INTERFACE_DECLARE(const today_market_info&, get_today_market_info, (const ltobj&,const code_t&));
+
+	/**
+	* 获取
+	*/
+	LT_INTERFACE_DECLARE(uint32_t, get_pending_position, (const ltobj&, const code_t& code, offset_type offset, direction_type direction));
 
 }

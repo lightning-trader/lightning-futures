@@ -13,14 +13,14 @@
 /*
  *	订单操作类型
  */
-typedef enum action_flag
+enum class action_flag
 {
 	AF_CANCEL = '0',	//撤销
 	AF_MODIFY = '3',	//修改
-} action_flag;
+};
 
 
-class ctp_trader : public futures_trader, public CThostFtdcTraderSpi
+class ctp_trader : public actual_trader, public CThostFtdcTraderSpi
 {
 public:
 	ctp_trader();
@@ -28,7 +28,7 @@ public:
 	virtual ~ctp_trader();
 
 
-	bool init(const boost::property_tree::ptree& config);
+	bool init(const boost::property_tree::ptree& config, trader_data& ret_data);
 
 	//////////////////////////////////////////////////////////////////////////
 	//trader_api接口
@@ -68,10 +68,7 @@ public:
 	virtual void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
 	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
-	virtual void OnRspQryInvestorPositionDetail(CThostFtdcInvestorPositionDetailField* pInvestorPositionDetail, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) override;
-	///请求查询投资者持仓明细响应
-	virtual void OnRspQryInvestorPositionCombineDetail(CThostFtdcInvestorPositionCombineDetailField* pInvestorPositionCombineDetail, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) override;
-
+	
 	///请求查询成交响应
 	virtual void OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
@@ -99,13 +96,13 @@ private:
 
 	bool logout();
 
-	void query_account();
+	void query_account(bool is_sync);
 
-	void query_positions();
+	void query_positions(bool is_sync);
 
-	void query_orders();
+	void query_orders(bool is_sync);
 
-	void query_trades();
+	void query_trades(bool is_sync);
 
 	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price, bool is_today);
 	void frozen_deduction(const code_t& code, direction_type dir_type, uint32_t volume, bool is_today);
@@ -116,13 +113,13 @@ private:
 
 	inline int wrap_direction_offset(direction_type dir_type, offset_type offset_type)
 	{
-		if (DT_LONG == dir_type)
-			if (offset_type == OT_OPEN)
+		if (direction_type::DT_LONG == dir_type)
+			if (offset_type == offset_type::OT_OPEN)
 				return THOST_FTDC_D_Buy;
 			else
 				return THOST_FTDC_D_Sell;
 		else
-			if (offset_type == OT_OPEN)
+			if (offset_type == offset_type::OT_OPEN)
 				return THOST_FTDC_D_Sell;
 			else
 				return THOST_FTDC_D_Buy;
@@ -132,37 +129,37 @@ private:
 	{
 		if (THOST_FTDC_D_Buy == dir_type)
 			if (offset_type == THOST_FTDC_OF_Open)
-				return DT_LONG;
+				return direction_type::DT_LONG;
 			else
-				return DT_SHORT;
+				return direction_type::DT_SHORT;
 		else
 			if (offset_type == THOST_FTDC_OF_Open)
-				return DT_SHORT;
+				return direction_type::DT_SHORT;
 			else
-				return DT_LONG;
+				return direction_type::DT_LONG;
 	}
 
 	inline direction_type wrap_position_direction(TThostFtdcPosiDirectionType dirType)
 	{
 		if (THOST_FTDC_PD_Long == dirType)
-			return DT_LONG;
+			return direction_type::DT_LONG;
 		else
-			return DT_SHORT;
+			return direction_type::DT_SHORT;
 	}
 
 	inline int wrap_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)
 	{
-		if (OT_OPEN == offset)
+		if (offset_type::OT_OPEN == offset)
 		{
 			return THOST_FTDC_OF_Open;
 		}
-		else if (OT_CLOSE == offset)
+		else if (offset_type::OT_CLOSE == offset)
 		{
 			const auto& it = _position_info.find(code);
 			if (it != _position_info.end())
 			{
 				//TODO 先不处理分仓
-				if (direction == DT_LONG)
+				if (direction == direction_type::DT_LONG)
 				{
 					if (it->second.yestoday_long.usable() >= volume)
 					{
@@ -185,14 +182,14 @@ private:
 	inline offset_type wrap_offset_type(TThostFtdcOffsetFlagType offset_type)
 	{
 		if (THOST_FTDC_OF_Open == offset_type)
-			return OT_OPEN;
+			return offset_type::OT_OPEN;
 		else
-			return OT_CLOSE;
+			return offset_type::OT_CLOSE;
 	}
 
 	inline int wrap_action_flag(action_flag action_flag)
 	{
-		if (AF_CANCEL == action_flag)
+		if (action_flag::AF_CANCEL == action_flag)
 			return THOST_FTDC_AF_Delete;
 		else
 			return THOST_FTDC_AF_Modify;
@@ -272,16 +269,10 @@ protected:
 	//boost::pool_allocator<code_t, position_info> a ;
 	//std::vector<int, boost::pool_allocator<int>> v;
 	//
-	typedef std::map<code_t, position_info, std::less<code_t>, boost::fast_pool_allocator<std::pair<code_t const, position_info>>> position_map;
 	position_map			_position_info;
 	
 	//
-	typedef std::map<estid_t, order_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, order_info>>> entrust_map;
 	entrust_map				_order_info;
-
-
-	//查询状态和计算 合约保证金时候使用
-	std::unordered_map<std::string,bool> _instrument_state;
 
 	account_info			_account_info ;
 
@@ -295,5 +286,6 @@ protected:
 	std::atomic<bool>				_is_in_query ;
 	bool							_is_inited ;
 	bool							_is_connected ;
+	std::atomic<bool>				_is_sync_wait;
 };
 

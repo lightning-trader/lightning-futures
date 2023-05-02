@@ -1,6 +1,94 @@
 ﻿#pragma once
 #include "define.h"
 
+
+constexpr size_t CODE_DATA_LEN = 24;
+#define EXCG_OFFSET_LEN	6
+#define EXCG_BEGIN_INDEX	CODE_DATA_LEN-EXCG_OFFSET_LEN
+
+#if defined(WIN32)
+#pragma  warning(disable:4996)
+#endif
+
+struct code_t
+{
+private:
+	char _data[CODE_DATA_LEN];
+
+public:
+
+	code_t(const char* cd)
+	{
+		size_t ed = 0;
+		std::memset(&_data, 0, sizeof(_data));
+
+		for (size_t i = 0; cd[i] != '\0' && i < CODE_DATA_LEN; i++)
+		{
+			char c = cd[i];
+			if (c == '.')
+			{
+				ed = i;
+				continue;
+			}
+			if (ed == 0)
+			{
+				_data[i + EXCG_BEGIN_INDEX] = cd[i];
+			}
+			else
+			{
+				_data[i - ed - 1] = cd[i];
+			}
+		}
+	}
+
+	code_t()
+	{
+		std::memset(&_data, 0, sizeof(_data));
+	}
+
+	code_t(const code_t& obj)
+	{
+		std::memcpy(_data, obj._data, CODE_DATA_LEN);
+	}
+	code_t(const char* id, const char* excg_id)
+	{
+		std::memset(&_data, 0, sizeof(_data));
+		if(std::strlen(id) < EXCG_BEGIN_INDEX)
+		{
+			std::strcpy(_data, id);
+		}
+		if (std::strlen(excg_id) < EXCG_BEGIN_INDEX)
+		{
+			std::strcpy(_data + EXCG_BEGIN_INDEX,excg_id);
+		}
+	}
+
+	bool operator < (const code_t& other)const
+	{
+		return std::memcmp(_data, other._data, CODE_DATA_LEN) < 0;
+	}
+	bool operator == (const code_t& other)const
+	{
+		return std::memcmp(_data, other._data, CODE_DATA_LEN) == 0;
+	}
+	bool operator != (const code_t& other)const
+	{
+		return std::memcmp(_data, other._data, CODE_DATA_LEN) != 0;
+	}
+
+	const char* get_id()const
+	{
+		return _data;
+	}
+	const char* get_excg()const
+	{
+		return _data + EXCG_BEGIN_INDEX;
+	}
+
+};
+
+const code_t default_code;
+
 struct tick_info
 {
 	code_t id; //合约ID
@@ -18,10 +106,6 @@ struct tick_info
 	double_t high;
 
 	double_t low;
-
-	double_t high_limit;
-
-	double_t low_limit;
 
 	double_t standard;
 
@@ -57,8 +141,6 @@ struct tick_info
 		close(0),
 		high(0),
 		low(0),
-		high_limit(0),
-		low_limit(0),
 		price(0),
 		standard(0),
 		volume(0),
@@ -86,16 +168,23 @@ struct tick_info
 		}
 		return reuslt;
 	}
+
+	bool invalid()const
+	{
+		return id==default_code;
+	}
 };
 
-typedef enum deal_direction ENUM_TYPE_INT
-{
-	DD_DOWN = -1, //向下
-	DD_FLAT = 0,  //平
-	DD_UP = 1,	  //向上
-} deal_direction;
+const tick_info default_tick_info;
 
-typedef enum deal_status ENUM_TYPE_INT
+enum class deal_direction
+{
+	DD_DOWN = -1,	//向下
+	DD_FLAT = 0,	//平
+	DD_UP = 1,		//向上
+};
+
+enum class deal_status
 {
 	DS_INVALID,
 	DS_DOUBLE_OPEN, //双开
@@ -104,7 +193,7 @@ typedef enum deal_status ENUM_TYPE_INT
 	DS_CLOSE,		//平仓
 	DS_DOUBLE_CLOSE,//双平
 
-}deal_status;
+};
 
 struct deal_info
 {
@@ -118,34 +207,87 @@ struct deal_info
 	deal_info() :
 		volume_delta(0),
 		interest_delta(.0F),
-		direction(DD_FLAT)
+		direction(deal_direction::DD_FLAT)
 	{}
 
 	deal_status get_status()
 	{
 		if(volume_delta == interest_delta && interest_delta > 0)
 		{
-			return DS_DOUBLE_OPEN;
+			return deal_status::DS_DOUBLE_OPEN;
 		}
 		if (volume_delta > interest_delta && interest_delta > 0)
 		{
-			return DS_OPEN;
+			return deal_status::DS_OPEN;
 		}
 		if (volume_delta > interest_delta && interest_delta == 0)
 		{
-			return DS_CHANGE;
+			return deal_status::DS_CHANGE;
 		}
 		if (volume_delta > -interest_delta && -interest_delta > 0)
 		{
-			return DS_CLOSE;
+			return deal_status::DS_CLOSE;
 		}
 		if (volume_delta == -interest_delta && -interest_delta > 0)
 		{
-			return DS_DOUBLE_CLOSE;
+			return deal_status::DS_DOUBLE_CLOSE;
 		}
 	}
 };
-struct position_item
+
+
+struct bar_info
+{
+	code_t id; //合约ID
+
+	time_t time; //时间
+
+	double_t open;
+
+	double_t close;
+
+	double_t high;
+
+	double_t low;
+
+	//成交量
+	uint32_t volume;
+
+	//订单流中delta（price_buy_volume - price_sell_volume）
+	int32_t delta ;
+
+	//订单流中poc (最大成交量的价格，表示bar重心)
+	double_t poc ;
+
+	//订单流中的明细
+	std::map<double_t, uint32_t> price_buy_volume;
+	std::map<double_t, uint32_t> price_sell_volume;
+
+	std::vector<double_t> buy_unbalance(uint32_t multiple)const
+	{
+		return std::vector<double_t>();
+	}
+	std::vector<double_t> sell_unbalance()const
+	{
+		
+		return std::vector<double_t>();
+	}
+	bar_info()
+		:time(0),
+		open(0),
+		close(0),
+		high(0),
+		low(0),
+		volume(0),
+		delta(0),
+		poc(.0F)
+	{}
+
+
+};
+
+
+struct position_cell
 {
 	//仓位
 	uint32_t	postion;
@@ -154,7 +296,7 @@ struct position_item
 	//冻结
 	uint32_t	frozen;
 
-	position_item() :
+	position_cell() :
 		postion(0),
 		price(.0F),
 		frozen(0)
@@ -181,15 +323,15 @@ struct position_item
 struct position_info
 {
 	code_t id; //合约ID
-	position_info(const code_t& code) :id(code) {}
+	position_info(const code_t& code):id(code) {}
 	//今仓
-	position_item today_long;
-	position_item today_short;
+	position_cell today_long;
+	position_cell today_short;
 
 
 	//昨仓
-	position_item yestoday_long;
-	position_item yestoday_short;
+	position_cell yestoday_long;
+	position_cell yestoday_short;
 
 	bool empty()const
 	{
@@ -203,7 +345,7 @@ struct position_info
 
 	uint32_t get_long_position()const
 	{
-		return today_long.postion+ yestoday_long.postion;
+		return today_long.postion + yestoday_long.postion;
 	}
 
 	uint32_t get_short_position()const
@@ -239,34 +381,33 @@ struct account_info
 const account_info default_account;
 
 
-
 /*
  *	订单标志
  */
-typedef enum order_flag ENUM_TYPE_CHAR
+enum class order_flag
 {
-	OF_NOR = '0', //普通订单
-	OF_FAK,		  //全成全撤，不等待自动撤销
-	OF_FOK,		  //部成部撤，不等待自动撤销
-} order_flag;
+	OF_NOR = '0',		//普通订单
+	OF_FAK,			//全成全撤，不等待自动撤销
+	OF_FOK,			//部成部撤，不等待自动撤销
+} ;
 
 /*
  *	开平方向
  */
-typedef enum offset_type ENUM_TYPE_CHAR
+enum class offset_type
 {
-	OT_OPEN = '0', //开仓
-	OT_CLOSE	   //平仓,上期为平昨
-} offset_type;
+	OT_OPEN = '0',	//开仓
+	OT_CLOSE		//平仓,上期为平昨
+};
 
 /*
  *	多空方向
  */
-typedef enum direction_type ENUM_TYPE_CHAR
+enum class direction_type
 {
-	DT_LONG = '0', // 做多
-	DT_SHORT	   // 做空
-} direction_type;
+	DT_LONG = '0',	//做多
+	DT_SHORT		//做空
+};
 
 struct order_info
 {
@@ -291,8 +432,8 @@ struct order_info
 
 	order_info() :
 		est_id(INVALID_ESTID),
-		offset(OT_OPEN),
-		direction(DT_LONG),
+		offset(offset_type::OT_OPEN),
+		direction(direction_type::DT_LONG),
 		total_volume(0),
 		last_volume(0),
 		create_time(0),
@@ -307,6 +448,7 @@ struct order_info
 	
 };
 const order_info default_order ;
+
 
 //订单统计数据
 struct order_statistic
@@ -335,31 +477,40 @@ struct order_statistic
 const order_statistic default_statistic;
 
 
-struct transfer_info
-{
-	code_t expire_code;
-	double_t price_offset;
-
-	transfer_info() :price_offset(.0F)
-	{}
-
-	transfer_info(const code_t expire, double_t offset) :expire_code(expire), price_offset(offset)
-	{}
-
-	bool operator == (const transfer_info& other)const
-	{
-		return expire_code == other.expire_code;
-	}
-	bool operator != (const transfer_info& other)const
-	{
-		return expire_code != other.expire_code;
-	}
-};
-const transfer_info default_transfer;
-
-typedef enum error_type ENUM_TYPE_INT
+enum class error_type
 {
 	ET_PLACE_ORDER,
 	ET_CANCEL_ORDER,
 	ET_OTHER_ERROR
-} error_type;
+};
+
+struct today_market_info
+{
+	code_t code ;
+	
+	std::map<double_t, uint32_t> volume_distribution;
+
+	std::vector<tick_info> today_tick_info;
+
+	std::map<uint32_t, std::vector<bar_info>> today_bar_info;
+
+	std::vector<bar_info>* get_history_bar(uint32_t period)
+	{
+
+		auto it = today_bar_info.find(period);
+		if (it == today_bar_info.end())
+		{
+			return nullptr;
+		}
+		return &it->second;
+	}
+
+	void clear()
+	{
+		volume_distribution.clear();
+		today_tick_info.clear();
+		today_bar_info.clear();
+	}
+};
+const today_market_info default_today_market_info;
+

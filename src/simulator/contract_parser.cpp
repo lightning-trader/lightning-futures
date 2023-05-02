@@ -20,7 +20,7 @@ void contract_parser::init(const std::string& config_path)
 		const std::string& code_str = config_csv.GetCell<std::string>("code", i);
 		LOG_INFO("load contract code : %s \n", code_str.c_str());
 		info.code = code_t(code_str.c_str());
-		info.charge_type = static_cast<charge_type_t>(config_csv.GetCell<int32_t>("charge_type", i));
+		info.crge_type = static_cast<charge_type>(config_csv.GetCell<int32_t>("charge_type", i));
 		info.open_charge = config_csv.GetCell<double_t>("open_charge", i);
 		info.close_today_charge = config_csv.GetCell<double_t>("close_today_charge", i);
 		info.close_yestoday_charge = config_csv.GetCell<double_t>("close_yestoday_charge", i);

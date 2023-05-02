@@ -70,9 +70,9 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(const order_info&, default_order, context, get_order, (const ltobj& lt, estid_t est_id), (est_id));
 
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, subscribe, (const ltobj& lt, const code_t& code), ({ code }));
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, subscribe, (const ltobj& lt, const std::set<code_t>& tick_data, tick_callback tick_cb, const std::map<code_t, std::set<uint32_t>>& bar_data,bar_callback bar_cb), (tick_data, tick_cb, bar_data, bar_cb));
 
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, unsubscribe, (const ltobj& lt, const code_t& code), ({ code }));
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, unsubscribe, (const ltobj& lt, const std::set<code_t>& tick_data, const std::map<code_t, std::set<uint32_t>>& bar_data), (tick_data, bar_data));
 
 	LT_INTERFACE_IMPLEMENTATION(time_t, 0, context, get_last_time, (const ltobj& lt), ());
 
@@ -80,19 +80,9 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, set_trading_filter, (const ltobj& lt, filter_callback callback), (callback));
 
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, bind_realtime_event, (const ltobj& lt, const order_event& od_evt,ready_callback ready_cb,update_callback update_cb), (od_evt, ready_cb, update_cb));
 
-	void lt_bind_callback(const ltobj& lt, tick_callback tick_cb, entrust_callback entrust_cb, deal_callback deal_cb
-		, trade_callback trade_cb, cancel_callback cancel_cb, error_callback error_cb, ready_callback ready_cb)
-	{
-		LT_INTERFACE_CHECK(context, VOID_DEFAULT)
-		c->on_tick = tick_cb;
-		c->on_entrust = entrust_cb;
-		c->on_deal = deal_cb;
-		c->on_trade = trade_cb;
-		c->on_cancel = cancel_cb;
-		c->on_error = error_cb;
-		c->on_ready = ready_cb;
-	}
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, bind_delayed_event, (const ltobj& lt, const order_event& od_evt,account_callback account_cb, position_callback position_cb), (od_evt, account_cb, position_cb));
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, playback_history, (const ltobj& lt, uint32_t trading_day), (trading_day));
 
@@ -109,5 +99,9 @@ extern "C"
 	LT_INTERFACE_IMPLEMENTATION(time_t, 0, context, get_close_time, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, use_custom_chain, (const ltobj& lt, untid_t untid, bool flag), (untid, flag));
+
+	LT_INTERFACE_IMPLEMENTATION(const today_market_info&, default_today_market_info, context, get_today_market_info, (const ltobj& lt, const code_t& code), (code));
+
+	LT_INTERFACE_IMPLEMENTATION(uint32_t, 0U, context, get_pending_position, (const ltobj& lt, const code_t& code, offset_type offset, direction_type direction), (code, offset, direction));
 
 }

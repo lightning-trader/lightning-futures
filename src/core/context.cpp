@@ -11,25 +11,24 @@
 
 context::context():
 	_is_runing(false),
-	_strategy_thread(nullptr),
+	_realtime_thread(nullptr),
+	_delayed_thread(nullptr),
 	_max_position(10000),
 	_default_chain(nullptr),
 	_trading_filter(nullptr),
 	_userdata_size(1024 * MAX_UNITID),
 	_recorder(nullptr),
 	_is_trading_ready(false),
-	on_tick(nullptr),
-	on_entrust(nullptr),
-	on_deal(nullptr),
-	on_trade(nullptr),
-	on_cancel(nullptr),
-	on_error(nullptr),
-	on_ready(nullptr),
+	_tick_callback(nullptr),
 	_record_region(nullptr),
 	_record_data(nullptr),
 	_section(nullptr),
 	_fast_mode(false),
-	_loop_interval(1)
+	_loop_interval(1),
+	_ready_callback(nullptr),
+	_update_callback(nullptr),
+	_last_tick_time(0),
+	realtime_event()
 {
 
 }
@@ -59,9 +58,10 @@ context::~context()
 	}
 }
 
-bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config,bool reset_trading_day)
+void context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config, 
+	const trader_data& trader,bool reset_trading_day)
 {
-	auto localdb_name = ctrl.get<std::string>("localdb_name");
+	auto&& localdb_name = ctrl.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
 	{
 		_userdata_size = ctrl.get<size_t>("userdata_size", 4096 * MAX_UNITID);
@@ -71,58 +71,81 @@ bool context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 			_record_data->trading_day = 0;
 		}
 	}
-	_max_position = ctrl.get<uint16_t>("position_limit", 10000);
+	_max_position = ctrl.get<uint32_t>("position_limit", 10000);
 	_fast_mode = ctrl.get<bool>("fast_mode", false);
 	_loop_interval = ctrl.get<uint32_t>("loop_interval", 1);
-
 	_recorder = create_recorder(rcd_config);
-
+	_account_info = trader.account;
+	_order_info.clear();
+	for(const auto& it : trader.orders)
+	{
+		_order_info[it.est_id] = it;
+	}
+	_position_info.clear();
+	for(const auto& it : trader.positions)
+	{
+		_position_info[it.id] = it ;
+	}
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
-	
 	_default_chain = create_chain(false);
-	this->add_handle([this](event_type type, const std::vector<std::any>& param)->void {
+
+	add_trader_handle([this](trader_event_type type, const std::vector<std::any>& param)->void {
+
+		LOG_INFO("event_type %d\n", type);
 		switch (type)
 		{
-		case ET_LoadFinish:
-			handle_loadfinish(param);
-			break;
-		case ET_AccountChange:
-			handle_account(param);
-			break;
-		case ET_PositionChange:
-			handle_position(param);
-			break;
-		case ET_SettlementCompleted:
+		case trader_event_type::TET_SettlementCompleted:
 			handle_settlement(param);
 			break;
-		case ET_TickReceived:
-			handle_tick(param);
+		case trader_event_type::TET_AccountChange:
+			handle_account(param);
 			break;
-		case ET_OrderCancel:
+		case trader_event_type::TET_PositionChange:
+			handle_position(param);
+			break;
+		case trader_event_type::TET_OrderCancel:
 			handle_cancel(param);
 			break;
-		case ET_OrderPlace:
+		case trader_event_type::TET_OrderPlace:
 			handle_entrust(param);
 			break;
-		case ET_OrderDeal:
+		case trader_event_type::TET_OrderDeal:
 			handle_deal(param);
 			break;
-		case ET_OrderTrade:
+		case trader_event_type::TET_OrderTrade:
 			handle_trade(param);
 			break;
-		case ET_OrderError:
+		case trader_event_type::TET_OrderError:
 			handle_error(param);
 			break;
 		}
 		});
-	return true ;
+
+	add_market_handle([this](market_event_type type, const std::vector<std::any>& param)->void {
+	
+		switch (type)
+		{
+		case market_event_type::MET_TickReceived:
+			handle_tick(param);
+			break;
+		}
+		});
+
+	//将事件数据注册到延时分发器上去
+	add_trader_handle([this](trader_event_type type, const std::vector<std::any>& param)->void {
+		if(_distributor)
+		{
+			_distributor->fire(type, param);
+		}
+	});
 }
 
 void context::start_service()
 {
+	_is_trading_ready = false;
 	_is_runing = true;
-	_strategy_thread = new std::thread([this]()->void{
+	_realtime_thread = new std::thread([this]()->void{
 		if(_fast_mode)
 		{
 			int core = cpu_helper::get_cpu_cores();
@@ -131,7 +154,6 @@ void context::start_service()
 				LOG_ERROR("Binding to core {%d} failed", core);
 			}
 		}
-		_is_trading_ready = false ;
 		while (_is_runing)
 		{
 
@@ -148,29 +170,64 @@ void context::start_service()
 			}
 		}
 	});
-	//_strategy_thread->detach();
+	_delayed_thread = new std::thread([this]()->void {
+		
+		if (!_distributor)
+		{
+			return;
+		}
+		while (_is_runing || !_distributor->is_empty())
+		{
+			auto begin = std::chrono::system_clock::now();
+			auto use_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - begin);
+			auto duration = std::chrono::milliseconds(_loop_interval);
+			_distributor->update();
+			if (use_time < duration)
+			{
+				std::this_thread::sleep_for(duration - use_time);
+			}
+		}
+		});
+}
+
+void context::update()
+{
+	this->on_update();
+	if (is_trading_ready())
+	{
+		if (this->_update_callback)
+		{
+			this->_update_callback();
+		}
+	}
 }
 
 void context::stop_service()
 {
 	_is_runing = false ;
-	if(_strategy_thread)
+	if(_realtime_thread)
 	{
-		_strategy_thread->join();
-		delete _strategy_thread;
-		_strategy_thread = nullptr;
+		_realtime_thread->join();
+		delete _realtime_thread;
+		_realtime_thread = nullptr;
+	}
+	if (_delayed_thread)
+	{
+		_delayed_thread->join();
+		delete _delayed_thread;
+		_delayed_thread = nullptr;
 	}
 }
 
-
-
 pod_chain* context::create_chain(bool flag)
 {
+
 	pod_chain* chain = new verify_chain(*this);
 	if (flag)
 	{
 		chain = new price_to_cancel_chain(*this, chain);
 	}
+	
 	return chain;
 }
 
@@ -188,13 +245,13 @@ deal_direction context::get_deal_direction(const tick_info& prev, const tick_inf
 {
 	if(tick.price >= prev.sell_price() || tick.price >= tick.sell_price())
 	{
-		return DD_UP;
+		return deal_direction::DD_UP;
 	}
 	if (tick.price <= prev.buy_price() || tick.price <= tick.buy_price())
 	{
-		return DD_DOWN;
+		return deal_direction::DD_DOWN;
 	}
-	return DD_FLAT;
+	return deal_direction::DD_FLAT;
 }
 
 void context::set_cancel_condition(estid_t order_id, condition_callback callback)
@@ -218,7 +275,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 	}
 	if(!_section->is_in_trading(get_last_time()))
 	{
-		LOG_DEBUG("place_order code in trading %s", code.get_id());
+		LOG_DEBUG("place_order code not in trading %s", code.get_id());
 		return INVALID_ESTID;
 	}
 
@@ -230,7 +287,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 	}
 	if(_record_region)
 	{
-		_record_data->last_order_time = get_market().last_tick_time();
+		_record_data->last_order_time = _last_tick_time;
 		_record_data->statistic_info.place_order_amount++;
 	}
 	return chain->place_order(offset, direction, code, count, price, flag);
@@ -280,18 +337,6 @@ const order_info& context::get_order(estid_t order_id)const
 	return default_order;
 }
 
-
-
-uint32_t context::get_total_position()const
-{
-	uint32_t total = 0;
-	for (const auto& it : _position_info)
-	{
-		total += it.second.get_total();
-	}
-	return total;
-}
-
 void context::find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const
 {
 	for (auto& it : _order_info)
@@ -303,18 +348,56 @@ void context::find_orders(std::vector<order_info>& order_result, std::function<b
 	}
 }
 
-void context::subscribe(const std::set<code_t>& codes)
+uint32_t context::get_total_position() const
 {
-	get_market().subscribe(codes);
+	uint32_t total = 0;
+	for (const auto& it : _position_info)
+	{
+		total += it.second.get_total();
+	}
+	return total;
+}
+void context::subscribe(const std::set<code_t>& tick_data, tick_callback tick_cb, const std::map<code_t, std::set<uint32_t>>& bar_data, bar_callback bar_cb)
+{
+	this->_tick_callback = tick_cb;
+	get_market().subscribe(tick_data);
+	for(auto& it : bar_data)
+	{
+		for(auto& s_it : it.second)
+		{
+			_bar_generator[it.first][s_it] = std::make_shared<bar_generator>(s_it,[this, s_it, &bar_cb](const bar_info& bar)->void{
+				this->_today_market_info[bar.id].today_bar_info[s_it].emplace_back(bar);
+				if(bar_cb)
+				{
+					bar_cb(s_it, bar);
+				}
+			});
+		}
+	}
 }
 
-void context::unsubscribe(const std::set<code_t>& codes)
+void context::unsubscribe(const std::set<code_t>& tick_data, const std::map<code_t, std::set<uint32_t>>& bar_data)
 {
-	get_market().unsubscribe(codes);
+	get_market().unsubscribe(tick_data);
+	for (auto& it : bar_data)
+	{
+		auto s = _bar_generator.find(it.first);
+		if(s != _bar_generator.end())
+		{
+			for (auto& s_it : it.second)
+			{
+				auto a = s->second.find(s_it);
+				if(a != s->second.end())
+				{
+					s->second.erase(a);
+				}
+			}
+		}
+	}
 }
 time_t context::get_last_time()
 {
-	return const_cast<const market_api&>(get_market()).last_tick_time();
+	return _last_tick_time;
 }
 
 time_t context::last_order_time()
@@ -369,6 +452,44 @@ void context::use_custom_chain(untid_t untid,bool flag)
 	_custom_chain[untid] = chain;
 }
 
+const today_market_info& context::get_today_market_info(const code_t& id)const
+{
+	auto it = _today_market_info.find(id);
+	if (it == _today_market_info.end())
+	{
+		return default_today_market_info;
+	}
+	return it->second;
+}
+
+
+uint32_t context::get_pending_position(const code_t& code, offset_type offset, direction_type direction)
+{
+	std::vector<order_info> order_list;
+	find_orders(order_list, [&code,offset, direction](const order_info& order)->bool {
+		return order.code==code && order.offset == offset && order.direction == direction;
+		});
+	uint32_t res = 0;
+	for (auto& it : order_list)
+	{
+		res += it.last_volume;
+	}
+	return res;
+}
+
+uint32_t context::get_open_pending()
+{
+	std::vector<order_info> order_list;
+	find_orders(order_list, [](const order_info& order)->bool {
+		return order.offset == offset_type::OT_OPEN;
+		});
+	uint32_t res = 0;
+	for (auto& it : order_list)
+	{
+		res += it.last_volume;
+	}
+	return res;
+}
 
 void context::load_data(const char* localdb_name)
 {
@@ -400,15 +521,14 @@ void context::load_data(const char* localdb_name)
 	}
 }
 
-void context::check_crossday()
+void context::check_crossday(uint32_t trading_day)
 {
-	if (_record_data != nullptr)
+	if (_record_data)
 	{
-		uint32_t trading_day = get_trader().get_trading_day();
-		LOG_INFO("cross day %d", trading_day);
-		_section->init(trading_day, get_last_time());
 		if (trading_day != _record_data->trading_day)
 		{
+			LOG_INFO("cross day %d", trading_day);
+			
 			//记录结算数据
 			if (_recorder && trading_day > _record_data->trading_day)
 			{
@@ -431,34 +551,30 @@ void context::check_crossday()
 				_is_trading_ready = true;
 			}
 
-			if (on_ready)
+			if (this->_ready_callback)
 			{
-				on_ready();
+				this->_ready_callback();
 			}
 			LOG_INFO("trading ready");
 		}
 
 	}
+
 }
 
-void context::handle_loadfinish(const std::vector<std::any>& param)
+void context::handle_settlement(const std::vector<std::any>& param)
 {
-	if (param.size() >= 3)
+	if (!_is_trading_ready)
 	{
-		_account_info = std::any_cast<account_info>(param[0]);
-		const std::vector<order_info>& orders = std::any_cast<std::vector<order_info>>(param[1]);
-		_order_info.clear();
-		for(const auto& it : orders)
-		{
-			_order_info.insert(std::make_pair(it.est_id,it));
-		}
-		const std::vector<position_info>& positions = std::any_cast<std::vector<position_info>>(param[2]);
-		_position_info.clear();
-		for (const auto& it : positions)
-		{
-			_position_info.insert(std::make_pair(it.id, it));
-		}
+		_is_trading_ready = true ;
 	}
+	
+	if(this->_ready_callback)
+	{
+		this->_ready_callback();
+	}
+	LOG_INFO("trading ready");
+	
 }
 
 void context::handle_account(const std::vector<std::any>& param)
@@ -472,7 +588,7 @@ void context::handle_account(const std::vector<std::any>& param)
 			_recorder->record_account_flow(get_last_time(), account);
 		}
 	}
-	
+
 }
 
 void context::handle_position(const std::vector<std::any>& param)
@@ -486,34 +602,18 @@ void context::handle_position(const std::vector<std::any>& param)
 			_recorder->record_position_flow(get_last_time(), position);
 		}
 	}
-	
-}
 
-void context::handle_settlement(const std::vector<std::any>& param)
-{
-	if (!_is_trading_ready)
-	{
-		_is_trading_ready = true ;
-	}
-	
-	if(on_ready)
-	{
-		on_ready();
-	}
-	LOG_INFO("trading ready");
-	
 }
-
 
 void context::handle_entrust(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
 		order_info order = std::any_cast<order_info>(param[0]);
-		_order_info[order.est_id] = order ;
-		if(this->on_entrust)
+		_order_info[order.est_id] = (order);
+		if(realtime_event.on_entrust)
 		{
-			this->on_entrust(order);
+			realtime_event.on_entrust(order);
 		}
 		if(_record_data)
 		{
@@ -534,10 +634,9 @@ void context::handle_deal(const std::vector<std::any>& param)
 		estid_t localid = std::any_cast<estid_t>(param[0]);
 		uint32_t deal_volume = std::any_cast<uint32_t>(param[1]);
 		uint32_t total_volume = std::any_cast<uint32_t>(param[2]);
-		_order_info[localid].last_volume = total_volume - total_volume;
-		if(this->on_deal)
+		if(realtime_event.on_deal)
 		{
-			this->on_deal(localid, deal_volume, total_volume);
+			realtime_event.on_deal(localid, deal_volume, total_volume);
 		}
 	}
 }
@@ -558,9 +657,9 @@ void context::handle_trade(const std::vector<std::any>& param)
 		{
 			_order_info.erase(it);
 		}
-		if(this->on_trade)
+		if(realtime_event.on_trade)
 		{
-			this->on_trade(localid, code, offset, direction, price, trade_volume);
+			realtime_event.on_trade(localid, code, offset, direction, price, trade_volume);
 		}
 		remove_invalid_condition(localid);
 		if (_record_data)
@@ -586,13 +685,13 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		uint32_t cancel_volume = std::any_cast<uint32_t>(param[5]);
 		uint32_t total_volume = std::any_cast<uint32_t>(param[6]);
 		auto it = _order_info.find(localid);
-		if (it != _order_info.end())
+		if(it != _order_info.end())
 		{
 			_order_info.erase(it);
 		}
-		if(this->on_cancel)
+		if(realtime_event.on_cancel)
 		{
-			this->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
+			realtime_event.on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
 		}
 		remove_invalid_condition(localid);
 		if (_record_data)
@@ -610,11 +709,18 @@ void context::handle_tick(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
-		if(!is_trading_ready())
+		tick_info&& last_tick = std::any_cast<tick_info>(param[0]);
+		if (!is_trading_ready())
 		{
-			check_crossday();
+			uint32_t trading_day = get_trader().get_trading_day();
+			_section->init(trading_day, last_tick.time);
+			check_crossday(trading_day);
 		}
-		tick_info last_tick = std::any_cast<tick_info>(param[0]);
+		if(!_section->is_in_trading(last_tick.time))
+		{
+			return;
+		}
+		_last_tick_time = last_tick.time;
 		auto it = _previous_tick.find(last_tick.id);
 		if(it == _previous_tick.end())
 		{
@@ -622,14 +728,31 @@ void context::handle_tick(const std::vector<std::any>& param)
 			return;
 		}
 		tick_info& prev_tick = it->second;
-		if(this->on_tick)
-		{	
+		
+		if (last_tick.trading_day != _record_data->trading_day)
+		{
+			_today_market_info.clear();
+		}
+		auto& current_market_info = _today_market_info[last_tick.id];
+		current_market_info.today_tick_info.emplace_back(last_tick);
+		current_market_info.volume_distribution[last_tick.price] += (last_tick.volume - prev_tick.volume);
+		if (this->_tick_callback)
+		{
 			deal_info deal_info;
 			deal_info.volume_delta = last_tick.volume - prev_tick.volume;
 			deal_info.interest_delta = last_tick.open_interest - prev_tick.open_interest;
 			deal_info.direction = get_deal_direction(prev_tick, last_tick);
-			this->on_tick(last_tick, deal_info);
+			this->_tick_callback(last_tick, deal_info);
 		}
+		auto tk_it = _bar_generator.find(last_tick.id);
+		if (tk_it != _bar_generator.end())
+		{
+			for (auto bg_it : tk_it->second)
+			{
+				bg_it.second->insert_tick(last_tick);
+			}
+		}
+		
 		check_order_condition(last_tick);
 		it->second = last_tick;
 	}
@@ -647,17 +770,17 @@ void context::handle_error(const std::vector<std::any>& param)
 		{
 			_record_data->statistic_info.error_amount++;
 		}
-		if (this->on_error)
+		if(type == error_type::ET_PLACE_ORDER)
 		{
-			if(type == ET_PLACE_ORDER)
+			auto it = _order_info.find(localid);
+			if (it != _order_info.end())
 			{
-				auto it = _order_info.find(localid);
-				if(it != _order_info.end())
-				{
-					_order_info.erase(it);
-				}
+				_order_info.erase(it);
 			}
-			this->on_error(type, localid, error_code);
+		}
+		if (realtime_event.on_error)
+		{
+			realtime_event.on_error(type, localid, error_code);
 		}
 	}
 }

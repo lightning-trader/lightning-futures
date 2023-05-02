@@ -6,7 +6,7 @@
 #include <time_utils.hpp>
 #include <boost/lexical_cast.hpp>
 
-csv_recorder::csv_recorder(const char *basic_path) : _is_dirty(false), _order_lifecycle_csv(std::string(), rapidcsv::LabelParams((ssize_t)0, (ssize_t)0))
+csv_recorder::csv_recorder(const char* basic_path) :_is_dirty(false), _order_lifecycle_csv(std::string(),rapidcsv::LabelParams(0,0))
 {
 	if (!file_wapper::exists(basic_path))
 	{

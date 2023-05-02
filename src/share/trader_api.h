@@ -2,6 +2,34 @@
 #include <define.h>
 #include <data_types.hpp>
 #include "event_center.hpp"
+#include <boost/pool/pool_alloc.hpp>
+
+enum class trader_event_type
+{
+	TET_Invalid,
+	TET_AccountChange,
+	TET_PositionChange,
+	TET_SettlementCompleted,
+	TET_OrderCancel,
+	TET_OrderPlace,
+	TET_OrderDeal,
+	TET_OrderTrade,
+	TET_OrderError
+};
+
+struct trader_data
+{
+	account_info account;
+
+	std::vector<order_info> orders;
+
+	std::vector<position_info> positions;
+
+};
+
+typedef std::map<code_t, position_info, std::less<code_t>, boost::fast_pool_allocator<std::pair<code_t const, position_info>>> position_map;
+//
+typedef std::map<estid_t, order_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, order_info>>> entrust_map;
 
 //下单接口管理接口
 class trader_api
@@ -28,7 +56,6 @@ public:
 	 */
 	virtual void cancel_order(estid_t order_id) = 0;
 
-
 	/*
 	 *	提交结算单
 	 */
@@ -41,7 +68,18 @@ public:
 
 };
 
-class futures_trader : public trader_api, public event_source<32>
+class actual_trader : public trader_api , public event_source<trader_event_type, 128>
 {
+
+};
+
+class dummy_trader : public trader_api , public event_source<trader_event_type, 4>
+{
+
+public:
+	
+	virtual void push_tick(const tick_info& tick) = 0;
+
+	virtual void crossday(uint32_t trading_day) = 0;
 
 };

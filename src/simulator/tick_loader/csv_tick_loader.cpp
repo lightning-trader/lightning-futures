@@ -14,7 +14,7 @@ bool csv_tick_loader::init(const std::string& root_path)
 void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& code, uint32_t trade_day)
 {
 	char buffer[128];
-	sprintf_s(buffer, 128, _root_path.c_str(), code.get_id(), trade_day);
+	sprintf(buffer, _root_path.c_str(), code.get_id(), trade_day);
 	if (!file_wapper::exists(buffer))
 	{
 		return ;
@@ -48,8 +48,6 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		tick.close = doc.GetCell<double_t>("今收盘", i);
 		tick.high = doc.GetCell<double_t>("最高价", i);
 		tick.low = doc.GetCell<double_t>("最低价", i);
-		tick.high_limit = doc.GetCell<double_t>("涨停板价", i);
-		tick.low_limit = doc.GetCell<double_t>("跌停板价", i);
 		tick.standard = doc.GetCell<double_t>("上次结算价", i);
 		tick.volume = doc.GetCell<uint32_t>("数量", i);
 		tick.open_interest = doc.GetCell<uint32_t>("持仓量", i);

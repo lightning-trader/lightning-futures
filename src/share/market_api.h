@@ -3,6 +3,11 @@
 #include "event_center.hpp"
 #include "data_types.hpp"
 
+enum class market_event_type
+{
+	MET_Invalid,
+	MET_TickReceived,
+};
 /*
  *	行情解析模块接口
  */
@@ -23,14 +28,19 @@ public:
 	 */
 	virtual void unsubscribe(const std::set<code_t>& codes) = 0;
 
-	/***  
-	* 获取时间
-	*/
-	virtual time_t last_tick_time()const = 0;
 
 };
 
-class futures_market : public market_api, public event_source<64>
+class actual_market : public market_api, public event_source<market_event_type, 1024>
 {
+
+};
+
+class dummy_market : public market_api , public event_source<market_event_type, 4>
+{
+
+public:
+
+	virtual void play(uint32_t tradeing_day,std::function<void (const tick_info& info)> publish_callback) = 0;
 
 };

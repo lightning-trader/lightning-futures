@@ -14,7 +14,6 @@ ctp_market::ctp_market()
 	:_md_api(nullptr)
 	,_reqid(0)
 	,_process_mutex(_mutex)
-	,_last_tick_time(0)
 	, _is_inited(false)
 {
 }
@@ -47,7 +46,7 @@ bool ctp_market::init(const boost::property_tree::ptree& config)
 	}
 
 	char path_buff[64] = {0};
-	sprintf_s(path_buff, 64, "md_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
+	sprintf(path_buff, "md_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
 	if (!file_wapper::exists(path_buff))
 	{
 		file_wapper::create_directories(path_buff);
@@ -137,8 +136,6 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	tick.close = pDepthMarketData->ClosePrice;
 	tick.high = pDepthMarketData->HighestPrice;
 	tick.low = pDepthMarketData->LowestPrice;
-	tick.high_limit = pDepthMarketData->UpperLimitPrice;
-	tick.low_limit = pDepthMarketData->LowerLimitPrice;
 	tick.open_interest = pDepthMarketData->OpenInterest;
 
 	tick.buy_order[0] = std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1);
@@ -153,8 +150,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	tick.sell_order[3] = std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4);
 	tick.sell_order[4] = std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5);
 	tick.trading_day = std::atoi(pDepthMarketData->TradingDay);
-	_last_tick_time = tick.time;
-	this->fire_event(ET_TickReceived, tick);
+	this->fire_event(market_event_type::MET_TickReceived, tick);
 	
 }
 
@@ -183,9 +179,9 @@ void ctp_market::do_userlogin()
 
 	CThostFtdcReqUserLoginField req;
 	memset(&req, 0, sizeof(req));
-	strcpy_s(req.BrokerID, _broker_id.c_str());
-	strcpy_s(req.UserID, _userid.c_str());
-	strcpy_s(req.Password, _password.c_str());
+	strcpy(req.BrokerID, _broker_id.c_str());
+	strcpy(req.UserID, _userid.c_str());
+	strcpy(req.Password, _password.c_str());
 	int iResult = _md_api->ReqUserLogin(&req, ++_reqid);
 	if(iResult != 0)
 	{

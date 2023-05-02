@@ -1,22 +1,28 @@
 ﻿#pragma once
 #include "market_api.h"
 #include "trader_api.h"
-#include "simulator.h"
 #include "recorder.h"
 #include <boost/property_tree/ptree.hpp>
 
 
-futures_market* create_market_api(const boost::property_tree::ptree& config);
+actual_market* create_actual_market(const boost::property_tree::ptree& config);
 
-void destory_market_api(futures_market*& api);
+void destory_actual_market(actual_market*& api);
 
-futures_trader* create_trader_api(const boost::property_tree::ptree& config);
+actual_trader* create_actual_trader(const boost::property_tree::ptree& config, trader_data& ret_data);
 
-void destory_trader_api(futures_trader*& api);
+void destory_actual_trader(actual_trader*& api);
 
-simulator* create_simulator(const boost::property_tree::ptree& config);
 
-void destory_simulator(simulator*& smlt);
+dummy_trader* create_dummy_trader(const boost::property_tree::ptree& config, trader_data& ret_data);
+
+void destory_dummy_trader(dummy_trader*& api);
+
+dummy_market* create_dummy_market(const boost::property_tree::ptree& config);
+
+void destory_dummy_market(dummy_market*& api);
+
+
 
 recorder* create_recorder(const boost::property_tree::ptree& config);
 

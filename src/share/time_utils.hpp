@@ -2,20 +2,20 @@
 
 #include<string>
 #include<ctime>
-#include "save_s.hpp"
 
 #define ONE_DAY_SECONDS 86400
 #define ONE_MINUTE_SECONDS 60
 #define ONE_HOUR_SECONDS 3600
 
-
+#if defined(WIN32)
+#pragma  warning(disable:4996)
+#endif
 
 static std::string datetime_to_string(time_t timestamp,const char* format = "%Y-%m-%d %H:%M:%S")
 {
 	char buffer[64] = { 0 };
-	struct tm info;
-	localtime_s(&info, &timestamp);
-	strftime(buffer, sizeof buffer, format, &info);
+	struct tm* info = localtime(&timestamp);
+	strftime(buffer, sizeof buffer, format, info);
 	return std::string(buffer);
 }
 
@@ -36,9 +36,9 @@ static time_t make_datetime(const char* date, const char* time)
 	if (date != nullptr && time != nullptr)
 	{
 		int year, month, day;
-		sscanf_s(date, "%4d%2d%2d", &year, &month, &day);
+		sscanf(date, "%4d%2d%2d", &year, &month, &day);
 		int hour, minute, second;
-		sscanf_s(time, "%2d:%2d:%2d", &hour, &minute, &second);
+		sscanf(time, "%2d:%2d:%2d", &hour, &minute, &second);
 		time_t t = make_datetime(year, month, day, hour, minute, second);
 		return t;
 	}
@@ -53,7 +53,7 @@ static time_t make_datetime(uint32_t date, const char* time)
 		month = date % 10000 / 100;
 		day = date % 100;
 		int hour, minute, second;
-		sscanf_s(time, "%2d:%2d:%2d", &hour, &minute, &second);
+		sscanf(time, "%2d:%2d:%2d", &hour, &minute, &second);
 		time_t t = make_datetime(year, month, day, hour, minute, second);
 		return t;
 	}
@@ -63,7 +63,7 @@ static time_t make_datetime(uint32_t date, const char* time)
 static time_t make_time(const char* time)
 {
 	int hour, minute, second;
-	sscanf_s(time, "%2d:%2d:%2d", &hour, &minute, &second);
+	sscanf(time, "%2d:%2d:%2d", &hour, &minute, &second);
 	return hour * ONE_HOUR_SECONDS + minute * ONE_MINUTE_SECONDS + second;
 }
 static time_t make_datetime(time_t date_begin, const char* time)

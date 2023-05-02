@@ -14,11 +14,11 @@ void position_container::increase_position(const code_t& code, direction_type di
 	spin_lock lock(_mutex);
 	auto& pos = _position_info[code];
 	pos.id = code ;
-	if(direction == DT_LONG)
+	if(direction == direction_type::DT_LONG)
 	{
 		pos.today_long.price = (pos.today_long.postion * pos.today_long.price + price * volume)/(pos.today_long.postion + volume);
 		pos.today_long.postion += volume;
-	}else if(direction == DT_SHORT)
+	}else if(direction == direction_type::DT_SHORT)
 	{
 		pos.today_short.price = (pos.today_short.postion * pos.today_short.price + price * volume) / (pos.today_short.postion + volume);
 		pos.today_short.postion += volume;
@@ -35,7 +35,7 @@ void position_container::reduce_position(const code_t& code, direction_type dire
 	}
 	if(is_today)
 	{
-		if (direction == DT_LONG)
+		if (direction == direction_type::DT_LONG)
 		{
 			it->second.today_long.postion -= std::min<uint32_t>(volume, it->second.today_long.postion);
 			if(is_reduce_frozen)
@@ -43,7 +43,7 @@ void position_container::reduce_position(const code_t& code, direction_type dire
 				it->second.today_long.frozen -= std::min<uint32_t>(volume, it->second.today_long.frozen);
 			}
 		}
-		else if (direction == DT_SHORT)
+		else if (direction == direction_type::DT_SHORT)
 		{
 			it->second.today_short.postion -= std::min<uint32_t>(volume, it->second.today_short.postion);
 			if (is_reduce_frozen)
@@ -54,7 +54,7 @@ void position_container::reduce_position(const code_t& code, direction_type dire
 	}
 	else
 	{
-		if (direction == DT_LONG)
+		if (direction == direction_type::DT_LONG)
 		{
 			it->second.yestoday_long.postion -= std::min<uint32_t>(volume, it->second.yestoday_long.postion);
 			if (is_reduce_frozen)
@@ -62,7 +62,7 @@ void position_container::reduce_position(const code_t& code, direction_type dire
 				it->second.yestoday_long.frozen -= std::min<uint32_t>(volume, it->second.yestoday_long.frozen);
 			}
 		}
-		else if (direction == DT_SHORT)
+		else if (direction == direction_type::DT_SHORT)
 		{
 			it->second.yestoday_short.postion -= std::min<uint32_t>(volume, it->second.yestoday_short.postion);
 			if (is_reduce_frozen)
@@ -87,21 +87,21 @@ void position_container::frozen_position(const code_t& code, direction_type dire
 	}
 	if (is_today)
 	{
-		if (direction == DT_LONG)
+		if (direction == direction_type::DT_LONG)
 		{
 			it->second.today_long.frozen += std::min<uint32_t>(volume, it->second.today_long.postion);
 		}
-		else if(direction == DT_SHORT)
+		else if(direction == direction_type::DT_SHORT)
 		{
 			it->second.today_short.frozen += std::min<uint32_t>(volume, it->second.today_short.postion);
 		}
 	}else
 	{
-		if (direction == DT_LONG)
+		if (direction == direction_type::DT_LONG)
 		{
 			it->second.yestoday_long.frozen += std::min<uint32_t>(volume, it->second.yestoday_long.postion);
 		}
-		else if (direction == DT_SHORT)
+		else if (direction == direction_type::DT_SHORT)
 		{
 			it->second.yestoday_short.frozen += std::min<uint32_t>(volume, it->second.yestoday_short.postion);
 		}
@@ -118,22 +118,22 @@ void position_container::thawing_position(const code_t& code, direction_type dir
 	}
 	if (is_today)
 	{
-		if (direction == DT_LONG)
+		if (direction == direction_type::DT_LONG)
 		{
 			it->second.today_long.frozen -= std::min<uint32_t>(volume, it->second.today_long.frozen);
 		}
-		else if (direction == DT_SHORT)
+		else if (direction == direction_type::DT_SHORT)
 		{
 			it->second.today_short.frozen -= std::min<uint32_t>(volume, it->second.today_short.frozen);
 		}
 	}
 	else
 	{
-		if (direction == DT_LONG)
+		if (direction == direction_type::DT_LONG)
 		{
 			it->second.yestoday_long.frozen -= std::min<uint32_t>(volume, it->second.yestoday_long.frozen);
 		}
-		else if (direction == DT_SHORT)
+		else if (direction == direction_type::DT_SHORT)
 		{
 			it->second.yestoday_short.frozen -= std::min<uint32_t>(volume, it->second.yestoday_short.frozen);
 		}
@@ -142,7 +142,7 @@ void position_container::thawing_position(const code_t& code, direction_type dir
 
 position_info position_container::get_position_info(const code_t& code)const
 {
-	//spin_lock lock(_mutex);
+	spin_lock lock(_mutex);
 	auto it = _position_info.find(code);
 	if (it != _position_info.end())
 	{
@@ -153,7 +153,7 @@ position_info position_container::get_position_info(const code_t& code)const
 
 void position_container::get_all_position(std::vector<position_info>& position)const
 {
-	//spin_lock lock(_mutex);
+	spin_lock lock(_mutex);
 	for(auto&it : _position_info)
 	{
 		position.emplace_back(it.second);

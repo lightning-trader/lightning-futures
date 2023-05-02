@@ -10,20 +10,18 @@
 #pragma comment (lib,"market.lib")
 
 
-runtime::runtime():_market_api(nullptr), _trader_api(nullptr)
+runtime::runtime():_market(nullptr), _trader(nullptr)
 {
 }
 runtime::~runtime()
 {
-	if (_market_api)
+	if (_market)
 	{
-		destory_market_api(_market_api);
-		_market_api = nullptr;
+		destory_actual_market(_market);
 	}
-	if (_trader_api)
+	if (_trader)
 	{
-		destory_trader_api(_trader_api);
-		_trader_api = nullptr;
+		destory_actual_trader(_trader);
 	}
 
 }
@@ -45,8 +43,8 @@ bool runtime::init_from_file(const std::string& config_path)
 	{
 		boost::property_tree::ptree config_root;
 		boost::property_tree::ini_parser::read_ini(config_path, config_root);
-		market_config = config_root.get_child("market_api");
-		trader_config = config_root.get_child("trader_api");
+		market_config = config_root.get_child("actual_market");
+		trader_config = config_root.get_child("actual_trader");
 		recorder_config = config_root.get_child("recorder");
 		control_config = config_root.get_child("control");
 		include_config = config_root.get_child("include");
@@ -56,58 +54,63 @@ bool runtime::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file read_ini error : %s", config_path.c_str());
 		return false;
 	}
-
+	trader_data trader_info;
 	//trader
-	_trader_api = create_trader_api(trader_config);
-	if (_trader_api == nullptr)
+	_trader = create_actual_trader(trader_config, trader_info);
+	if (_trader == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
 		return false;
 	}
 
 	//market
-	_market_api = create_market_api(market_config);
-	if (_market_api == nullptr)
+	_market = create_actual_market(market_config);
+	if (_market == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
 		return false;
 	}
-	return this->init(control_config, include_config, recorder_config);
+	this->init(control_config, include_config, recorder_config, trader_info);
+	return true;
 }
 
 trader_api& runtime::get_trader()
 {
-	return *_trader_api;
+	return *_trader;
 }
 
 market_api& runtime::get_market()
 {
-	return *_market_api;
+	return *_market;
 }
 
-void runtime::update()
+void runtime::on_update()
 {
-	if (_market_api)
+	if (_market)
 	{
-		_market_api->update();
+		_market->update();
 	}
-	if(is_in_trading()&&is_trading_ready())
+	if (is_in_trading() && _trader)
 	{
-		if (_trader_api)
+		while (!_trader->is_empty())
 		{
-			_trader_api->update();
+			_trader->update();
 		}
 	}
 }
 
-void runtime::add_handle(std::function<void(event_type, const std::vector<std::any>&)> handle)
+void runtime::add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle)
 {
-	if (_trader_api)
+	if(_market)
 	{
-		_trader_api->add_handle(handle);
+		_market->add_handle(handle);
 	}
-	if (_market_api)
+}
+
+void runtime::add_trader_handle(std::function<void(trader_event_type, const std::vector<std::any>&)> handle)
+{
+	if (_trader)
 	{
-		_market_api->add_handle(handle);
+		_trader->add_handle(handle);
 	}
 }

@@ -23,12 +23,9 @@ public:
 	virtual ~pod_chain();
 	
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) = 0;
-
-protected:
-
-	uint32_t get_open_pending()const;
 	
 };
+
 
 class price_to_cancel_chain : public pod_chain
 {
