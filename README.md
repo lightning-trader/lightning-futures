@@ -19,11 +19,15 @@ lightning-trader专为高频设计，采用3线程模型，一个主线程控制
 
 #### 使用文档
 
-1、官方wiki：[点击这里](https://gitee.com/pursue-wealth/lightning-trader/wikis)
-2、知乎架构设计
-    [Lightning Trader架构设计](https://zhuanlan.zhihu.com/p/622262304)
-    [高频交易中如何处理低延时](https://zhuanlan.zhihu.com/p/622293141)
-    [多线程程序设计的两种架构](https://zhuanlan.zhihu.com/p/622423099)
+
+1. 官方wiki：[点击这里](https://gitee.com/pursue-wealth/lightning-trader/wikis)
+2. 知乎架构设计
+
+    
+- [Lightning Trader架构设计](https://zhuanlan.zhihu.com/p/622262304)
+- [高频交易中如何处理低延时](https://zhuanlan.zhihu.com/p/622293141)
+- [多线程程序设计的两种架构](https://zhuanlan.zhihu.com/p/622423099)
+
 
 #### 参与贡献
 
