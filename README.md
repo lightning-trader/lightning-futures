@@ -1,20 +1,35 @@
 # lightning-trader
 
 #### 介绍
-轻量级期货量化开发框架，适合高频交易
-QQ交流群:980550304
-开发者QQ:137336521
+lightning-trader轻量级期货量化开发库，适合高频交易，提供了通用的C语言接口供其他语言调用，以下是基于lightning-trader的多语言封装
+
+- [ltpp，提供策略管理及对lightning-trader接口c++的封装](http://https://gitee.com/pursue-wealth/ltpp)
+- [ltpy，为了方python提供策略框架，适合中低频高频不推荐（正在开发中）](http://https://gitee.com/pursue-wealth/ltpp)
+- [ltcs，为了图形化页面方便（正在开发中）](http://https://gitee.com/pursue-wealth/ltpp)
+- [ltrl，提供基于lightning-trader的模拟器的gym（正在开发中）](http://https://gitee.com/pursue-wealth/ltpp)
+
+- QQ交流群:980550304
+- 开发者QQ:137336521
+
 
 #### 软件架构
+
 lightning-trader框架自下而上分3层架构(lightning.dll)
-最底层是ctpapi以及高频测试用的高精度模拟器
-中间层基于交易通道，封装了对订单的一系列处理逻辑，封装了共享内存使用逻辑，统一的事件机制，线程绑核，以及一个记录器
-上层提供了C语言接口方便其他语言接入和集成
+
+- 最底层是ctpapi以及高频测试用的高精度模拟器
+- 中间层基于交易通道，封装了对订单的一系列处理逻辑，封装了共享内存使用逻辑，统一的事件机制，线程绑核，以及一个记录器
+- 上层提供了C语言接口方便其他语言接入和集成
+
 ![输入图片说明](doc/images/%E6%9E%B6%E6%9E%84%E5%9B%BE.png)
 
 #### 线程模型
 
-lightning-trader专为高频设计，采用3线程模型，一个主线程控制程序流程，一个低延时线程开启fast_mode以后会绑定的CPU，执行高频量化策略，一个高延时线程负责做一些订单记录通知等功能
+lightning-trader专为高频设计，采用3线程模型；
+
+- 一个主线程控制程序流程；
+- 一个低延时线程开启fast_mode以后会绑定的CPU，执行高频量化策略；
+- 一个高延时线程负责做一些订单记录通知等功能
+
 ![输入图片说明](doc/images/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B.png)
 
 #### 使用文档
