@@ -6,22 +6,24 @@ QQ交流群:980550304
 开发者QQ:137336521
 
 #### 软件架构
-1、lightning框架自下而上分3层架构(lightning.dll)
+lightning-trader框架自下而上分3层架构(lightning.dll)
 最底层是ctpapi以及高频测试用的高精度模拟器
 中间层基于交易通道，封装了对订单的一系列处理逻辑，封装了共享内存使用逻辑，统一的事件机制，线程绑核，以及一个记录器
 上层提供了C语言接口方便其他语言接入和集成
+![输入图片说明](doc/images/%E6%9E%B6%E6%9E%84%E5%9B%BE.png)
 
+#### 线程模型
 
-#### 安装教程
+lightning-trader专为高频设计，采用3线程模型，一个主线程控制程序流程，一个低延时线程开启fast_mode以后会绑定的CPU，执行高频量化策略，一个高延时线程负责做一些订单记录通知等功能
+![输入图片说明](doc/images/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B.png)
 
-1、本项目目前采用cmake构建，只在win平台开发测试，如果需要在linux平台部署，需要自行编译测试
-2、项目构建需要安装boost库，请自行安装
-3、安装vs2022社区版，通过集成git工具克隆本项目，编译生成即可
+#### 使用文档
 
-#### 使用说明
-
-1、doc文件夹下有编译好的二进制和配置文件实例以及2022年8月份螺纹钢测试数据，可用作参考
-2、doc附带了demo策略2023年01月03日到2023年02月28日的实盘数据报告，可以用做参考
+1、官方wiki：[点击这里](https://gitee.com/pursue-wealth/lightning-trader/wikis)
+2、知乎架构设计
+    [Lightning Trader架构设计](https://zhuanlan.zhihu.com/p/622262304)
+    [高频交易中如何处理低延时](https://zhuanlan.zhihu.com/p/622293141)
+    [多线程程序设计的两种架构](https://zhuanlan.zhihu.com/p/622423099)
 
 #### 参与贡献
 
