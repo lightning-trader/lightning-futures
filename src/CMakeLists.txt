@@ -59,3 +59,5 @@ add_subdirectory("market")
 add_subdirectory("simulator")
 
 add_subdirectory("recorder")
+
+add_subdirectory("example")
