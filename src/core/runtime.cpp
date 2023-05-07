@@ -6,9 +6,6 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <interface.h>
 
-#pragma comment (lib,"trader.lib")
-#pragma comment (lib,"market.lib")
-
 
 runtime::runtime():_market(nullptr), _trader(nullptr)
 {
@@ -54,9 +51,8 @@ bool runtime::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file read_ini error : %s", config_path.c_str());
 		return false;
 	}
-	trader_data trader_info;
 	//trader
-	_trader = create_actual_trader(trader_config, trader_info);
+	_trader = create_actual_trader(trader_config);
 	if (_trader == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
@@ -70,7 +66,7 @@ bool runtime::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
 		return false;
 	}
-	this->init(control_config, include_config, recorder_config, trader_info);
+	this->init(control_config, include_config, recorder_config);
 	return true;
 }
 
@@ -97,6 +93,15 @@ void runtime::on_update()
 			_trader->update();
 		}
 	}
+}
+
+bool runtime::is_terminaled()
+{
+	if (_trader)
+	{
+		return _trader->is_empty();
+	}
+	return false;
 }
 
 void runtime::add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle)

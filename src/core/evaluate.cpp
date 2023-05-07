@@ -5,8 +5,6 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <interface.h>
 
-#pragma comment (lib,"simulator.lib")
-
 evaluate::evaluate():_market_simulator(nullptr), _trader_simulator(nullptr)
 {
 }
@@ -52,8 +50,8 @@ bool evaluate::init_from_file(const std::string& config_path)
 	}
 	//simulator
 
-	trader_data trader_info;
-	_trader_simulator = create_dummy_trader(trader_config, trader_info);
+	
+	_trader_simulator = create_dummy_trader(trader_config);
 	if (_trader_simulator == nullptr)
 	{
 		LOG_ERROR("evaluate_driver init_from_file create_dummy_trader error : %s", config_path.c_str());
@@ -66,7 +64,7 @@ bool evaluate::init_from_file(const std::string& config_path)
 		LOG_ERROR("evaluate_driver init_from_file create_dummy_market error : %s", config_path.c_str());
 		return false;
 	}
-	this->init(control_config, include_config, recorder_config, trader_info, true);
+	this->init(control_config, include_config, recorder_config, true);
 	return true;
 }
 
@@ -108,6 +106,15 @@ void evaluate::on_update()
 			_trader_simulator->update();
 		}
 	}
+}
+
+bool evaluate::is_terminaled()
+{
+	if(_trader_simulator)
+	{
+		return _trader_simulator->is_empty();
+	}
+	return false;
 }
 
 void evaluate::add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle)

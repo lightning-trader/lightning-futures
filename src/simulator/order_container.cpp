@@ -18,7 +18,7 @@ void order_container::add_order(const order_info& order,order_flag flag,bool is_
 {
 	spin_lock lock(_mutex);
 	_order_info[order.est_id] = order;
-	LOG_TRACE("order_container add_order  %lld %d ", order.est_id, _order_info.size());
+	LOG_TRACE("order_container add_order %s %lld %d ", order.code.get_id(), order.est_id, _order_info.size());
 	auto omh = new order_match((_order_info[order.est_id]), flag);
 	omh->is_today = is_today;
 	_order_match[order.code].emplace_back(omh);
@@ -42,7 +42,7 @@ void order_container::del_order(estid_t estid)
 				match->second.erase(mch_odr);
 			}
 		}
-		LOG_TRACE("order_container del_order %lld ", estid);
+		LOG_INFO("order_container del_order %lld ", estid);
 		_order_info.erase(odit);
 	}
 }
@@ -169,7 +169,19 @@ void order_container::get_all_order(std::vector<order_info>& order)const
 	{
 		for (auto mh : it.second)
 		{
-			if(mh->state != OS_CANELED&& mh->state != OS_INVALID)
+			order.emplace_back(mh->order);
+		}
+	}
+}
+
+void order_container::get_valid_order(std::vector<order_info>& order)const
+{
+	spin_lock lock(_mutex);
+	for (auto it : _order_match)
+	{
+		for (auto mh : it.second)
+		{
+			if (mh->state != OS_CANELED && mh->state != OS_INVALID)
 			{
 				order.emplace_back(mh->order);
 			}
@@ -189,4 +201,15 @@ void order_container::clear()
 		}
 	}
 	_order_match.clear();
+}
+
+bool order_container::exist(estid_t estid)
+{
+	spin_lock lock(_mutex);
+	auto it = _order_info.find(estid);
+	if(it != _order_info.end())
+	{
+		return true;
+	}
+	return false ;
 }

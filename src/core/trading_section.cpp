@@ -61,7 +61,7 @@ void trading_section::init(uint32_t trading_day, time_t last_time)
 
 bool trading_section::is_in_trading(time_t last_time)
 {
-	LOG_TRACE("trading_section is_in_trading : %s ", datetime_to_string(last_time).c_str());
+	//LOG_TRACE("trading_section is_in_trading : %s ", datetime_to_string(last_time).c_str());
 
 	for(const auto& it: _trading_section)
 	{

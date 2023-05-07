@@ -63,6 +63,9 @@ public:
 	
 	void get_all_order(std::vector<order_info>& order)const;
 
+	void get_valid_order(std::vector<order_info>& order)const;
+
 	void clear();
 
+	bool exist(estid_t estid);
 };

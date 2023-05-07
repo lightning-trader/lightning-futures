@@ -24,10 +24,10 @@ void destory_dummy_market(dummy_market*& api)
 		api = nullptr;
 	}
 }
-dummy_trader* create_dummy_trader(const boost::property_tree::ptree& config, trader_data& ret_data)
+dummy_trader* create_dummy_trader(const boost::property_tree::ptree& config)
 {
 	trader_simulator* api = new trader_simulator();
-	if (api->init(config, ret_data))
+	if (api->init(config))
 	{
 		return api;
 	}

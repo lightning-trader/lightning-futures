@@ -5,10 +5,8 @@
 #include "./tick_loader/csv_tick_loader.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-bool trader_simulator::init(const boost::property_tree::ptree& config,trader_data& ret_data)
+bool trader_simulator::init(const boost::property_tree::ptree& config)
 {
-	std::string loader_type ;
-	std::string csv_data_path ;
 	try
 	{
 		_account_info.money = config.get<double_t>("initial_capital");
@@ -21,11 +19,6 @@ bool trader_simulator::init(const boost::property_tree::ptree& config,trader_dat
 		LOG_ERROR("tick_simulator init error ");
 		return false;
 	}
-
-	ret_data.account = _account_info;
-	_order_info.get_all_order(ret_data.orders);
-	_position_info.get_all_position(ret_data.positions);
-	
 	return true;
 }
 
@@ -38,18 +31,26 @@ void trader_simulator::push_tick(const tick_info& tick)
 }
 void trader_simulator::crossday(uint32_t trading_day)
 {
-	std::vector<order_info> order_info;
-	_order_info.get_all_order(order_info);
-	for (auto it : order_info)
+	std::vector<order_info> order;
+	_order_info.get_all_order(order);
+	for (auto it : order)
 	{
 		std::vector<order_match> match;
 		_order_info.get_order_match(match, it.code);
 		for (const order_match& mit : match)
 		{
-			order_cancel(it, mit.is_today);
+			if(mit.state != OS_INVALID)
+			{
+				order_cancel(it, mit.is_today);
+			}
 		}
 	}
-	_order_info.clear();
+	std::vector<order_info> residue_order;
+	_order_info.get_all_order(residue_order);
+	if(residue_order.size()>0)
+	{
+		_order_info.clear();
+	}
 	std::vector<position_info> all_position;
 	_position_info.get_all_position(all_position);
 	for (const auto& it : all_position)
@@ -59,7 +60,7 @@ void trader_simulator::crossday(uint32_t trading_day)
 		{
 			_position_info.reduce_position(it.id, direction_type::DT_LONG, it.yestoday_long.postion, false);
 			_position_info.reduce_position(it.id, direction_type::DT_SHORT, it.yestoday_short.postion, false);
-			this->fire_event(trader_event_type::TET_PositionChange, it);
+			this->fire_event(trader_event_type::TET_PositionChange, _position_info.get_position_info(it.id));
 		}
 
 	}
@@ -135,10 +136,17 @@ void trader_simulator::cancel_order(estid_t order_id)
 
 void trader_simulator::submit_settlement()
 {
-	
 	while (!_is_submit_return.exchange(false));
 }
 
+std::shared_ptr<trader_data> trader_simulator::get_trader_data()const
+{
+	auto result = std::make_shared<trader_data>();
+	result->account = _account_info;
+	_order_info.get_valid_order(result->orders);
+	_position_info.get_all_position(result->positions);
+	return result;
+}
 
 void trader_simulator::handle_submit()
 {
@@ -444,7 +452,9 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume,bool i
 			if(_account_info.money >= deal_volume * service_charge)
 			{
 				_position_info.increase_position(order.code,order.direction, order.price, deal_volume);
+				this->fire_event(trader_event_type::TET_PositionChange, _position_info.get_position_info(order.code));
 				_account_info.money -=  deal_volume * service_charge;
+				this->fire_event(trader_event_type::TET_AccountChange, _account_info);
 			}
 			
 		}
@@ -453,7 +463,9 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume,bool i
 			if(_account_info.money >= deal_volume * service_charge)
 			{
 				_position_info.increase_position(order.code, order.direction, order.price, deal_volume);
+				this->fire_event(trader_event_type::TET_PositionChange, _position_info.get_position_info(order.code));
 				_account_info.money -= (deal_volume * service_charge);
+				this->fire_event(trader_event_type::TET_AccountChange, _account_info);
 			}
 		}
 	}
@@ -475,8 +487,9 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume,bool i
 				_position_info.reduce_position(order.code, order.direction, deal_volume, is_today);
 				_account_info.frozen_monery -= (deal_volume * pos.yestoday_long.price * contract_info->multiple * contract_info->margin_rate);
 			}
+			this->fire_event(trader_event_type::TET_PositionChange, _position_info.get_position_info(order.code));
 			_account_info.money -= (deal_volume * service_charge);
-			
+			this->fire_event(trader_event_type::TET_AccountChange, _account_info);
 		}
 		else if (order.direction == direction_type::DT_SHORT)
 		{
@@ -494,7 +507,9 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume,bool i
 				_position_info.reduce_position(order.code, order.direction, deal_volume, is_today);
 				_account_info.frozen_monery -= (deal_volume * pos.yestoday_short.price * contract_info->multiple * contract_info->margin_rate);
 			}
+			this->fire_event(trader_event_type::TET_PositionChange, _position_info.get_position_info(order.code));
 			_account_info.money -= deal_volume * service_charge;
+			this->fire_event(trader_event_type::TET_AccountChange, _account_info);
 		}
 	}
 	
@@ -506,24 +521,33 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume,bool i
 	}
 	else
 	{
+		LOG_TRACE(" order_deal _order_info.del_order %llu", order.est_id);
 		//全部成交
 		this->fire_event(trader_event_type::TET_OrderTrade, order.est_id, order.code, order.offset, order.direction, order.price, order.total_volume);
 		_order_info.del_order(order.est_id);
 	}
-	this->fire_event(trader_event_type::TET_PositionChange, pos);
-	this->fire_event(trader_event_type::TET_AccountChange,_account_info);
+	
 }
 void trader_simulator::order_error(error_type type,estid_t estid,uint32_t err)
 {
 	this->fire_event(trader_event_type::TET_OrderError, type, estid, err);
-	_order_info.del_order(estid);
+	if (_order_info.exist(estid))
+	{
+		LOG_TRACE(" order_error _order_info.del_order %llu", estid);
+		_order_info.del_order(estid);
+	}
 }
 void trader_simulator::order_cancel(const order_info& order,bool is_today)
 {
+	if(!_order_info.exist(order.est_id))
+	{
+		return;
+	}
 	if(order.last_volume>0)
 	{
 		if(thawing_deduction(order.code, order.offset, order.direction, order.last_volume, order.price, is_today))
 		{
+			LOG_INFO(" order_cancel _order_info.del_order %llu", order.est_id);
 			this->fire_event(trader_event_type::TET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
 			_order_info.del_order(order.est_id);
 		}
@@ -561,7 +585,8 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			if(is_today)
 			{
 				const auto&& pos = _position_info.get_position_info(code);
-				if (pos.today_long.postion - pos.today_long.frozen < count)
+				LOG_TRACE("frozen_deduction long today %s %llu %u", code.get_id(), est_id, pos.today_long.usable());
+				if (pos.today_long.usable() < count)
 				{
 					return 30U;
 				}
@@ -570,7 +595,8 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			else
 			{
 				const auto&& pos = _position_info.get_position_info(code);
-				if (pos.yestoday_long.postion - pos.yestoday_long.frozen < count)
+				LOG_TRACE("frozen_deduction long yestoday %s %llu %u", code.get_id(), est_id, pos.yestoday_long.usable());
+				if (pos.yestoday_long.usable() < count)
 				{
 					return 30U;
 				}
@@ -583,7 +609,8 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			if(is_today)
 			{
 				const auto&& pos = _position_info.get_position_info(code);
-				if (pos.today_short.postion - pos.today_short.frozen < count)
+				LOG_TRACE("frozen_deduction short today %s %llu %u", code.get_id(), est_id, pos.today_short.usable());
+				if (pos.today_short.usable() < count)
 				{
 					return 30U;
 				}
@@ -592,7 +619,8 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			else
 			{
 				const auto&& pos = _position_info.get_position_info(code);
-				if (pos.yestoday_short.postion - pos.yestoday_short.frozen < count)
+				LOG_TRACE("frozen_deduction short yestoday %s %llu %u", code.get_id(), est_id, pos.yestoday_short.usable());
+				if (pos.yestoday_short.usable() < count)
 				{
 					return 30U;
 				}
@@ -618,13 +646,16 @@ bool trader_simulator::thawing_deduction(const code_t& code, offset_type offset,
 	{
 		double_t delta = (last_volume * price * contract_info->multiple * contract_info->margin_rate);
 		//撤单 取消冻结保证金
+		LOG_TRACE("thawing_deduction 1 %f %f %u %f", _account_info.frozen_monery, delta, last_volume , price);
 		_account_info.frozen_monery -= delta;
+		LOG_TRACE("thawing_deduction 2 %f %f", _account_info.frozen_monery, delta);
+		this->fire_event(trader_event_type::TET_AccountChange, _account_info);
 	}
 	else if (offset == offset_type::OT_CLOSE)
 	{
 		_position_info.thawing_position(code, direction, last_volume, is_today);
 		this->fire_event(trader_event_type::TET_PositionChange, _position_info.get_position_info(code));
 	}
-	this->fire_event(trader_event_type::TET_AccountChange, _account_info);
+	
 	return true;
 }

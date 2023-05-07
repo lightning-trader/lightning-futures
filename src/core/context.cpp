@@ -59,7 +59,7 @@ context::~context()
 }
 
 void context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config, 
-	const trader_data& trader,bool reset_trading_day)
+	bool reset_trading_day)
 {
 	auto&& localdb_name = ctrl.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
@@ -75,20 +75,24 @@ void context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 	_fast_mode = ctrl.get<bool>("fast_mode", false);
 	_loop_interval = ctrl.get<uint32_t>("loop_interval", 1);
 	_recorder = create_recorder(rcd_config);
-	_account_info = trader.account;
-	_order_info.clear();
-	for(const auto& it : trader.orders)
-	{
-		_order_info[it.est_id] = it;
-	}
-	_position_info.clear();
-	for(const auto& it : trader.positions)
-	{
-		_position_info[it.id] = it ;
-	}
 	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
 	_section = std::make_shared<trading_section>(section_config);
 	_default_chain = create_chain(false);
+	auto trader_data = get_trader().get_trader_data();
+	if (trader_data)
+	{
+		_account_info = trader_data->account;
+		_order_info.clear();
+		for (const auto& it : trader_data->orders)
+		{
+			_order_info[it.est_id] = it;
+		}
+		_position_info.clear();
+		for (const auto& it : trader_data->positions)
+		{
+			_position_info[it.id] = it;
+		}
+	}
 
 	add_trader_handle([this](trader_event_type type, const std::vector<std::any>& param)->void {
 
@@ -154,7 +158,7 @@ void context::start_service()
 				LOG_ERROR("Binding to core {%d} failed", core);
 			}
 		}
-		while (_is_runing)
+		while (_is_runing||!is_terminaled())
 		{
 
 			auto begin = std::chrono::system_clock::now();
@@ -204,6 +208,7 @@ void context::update()
 
 void context::stop_service()
 {
+	_is_trading_ready = false ;
 	_is_runing = false ;
 	if(_realtime_thread)
 	{
@@ -602,7 +607,6 @@ void context::handle_position(const std::vector<std::any>& param)
 			_recorder->record_position_flow(get_last_time(), position);
 		}
 	}
-
 }
 
 void context::handle_entrust(const std::vector<std::any>& param)
@@ -634,6 +638,11 @@ void context::handle_deal(const std::vector<std::any>& param)
 		estid_t localid = std::any_cast<estid_t>(param[0]);
 		uint32_t deal_volume = std::any_cast<uint32_t>(param[1]);
 		uint32_t total_volume = std::any_cast<uint32_t>(param[2]);
+		auto it = _order_info.find(localid);
+		if (it != _order_info.end())
+		{
+			it->second.last_volume = total_volume - deal_volume;
+		}
 		if(realtime_event.on_deal)
 		{
 			realtime_event.on_deal(localid, deal_volume, total_volume);

@@ -66,6 +66,10 @@ public:
 	*/
 	virtual uint32_t get_trading_day()const = 0;
 
+	/**
+	* 获取交易数据
+	*/
+	virtual std::shared_ptr<trader_data> get_trader_data()const = 0;
 };
 
 class actual_trader : public trader_api , public event_source<trader_event_type, 128>

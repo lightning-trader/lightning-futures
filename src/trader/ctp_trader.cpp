@@ -46,7 +46,7 @@ ctp_trader::~ctp_trader()
 	_order_info.clear();
 }
 
-bool ctp_trader::init(const boost::property_tree::ptree& config, trader_data& ret_data)
+bool ctp_trader::init(const boost::property_tree::ptree& config)
 {
 	try
 	{
@@ -110,16 +110,6 @@ bool ctp_trader::init(const boost::property_tree::ptree& config, trader_data& re
 	query_positions(true);
 	query_orders(true);
 	query_account(true);
-	ret_data.account = _account_info;
-	for (auto it : _order_info)
-	{
-		ret_data.orders.emplace_back(it.second);
-	}
-	std::vector<position_info> positions;
-	for (auto it : _position_info)
-	{
-		ret_data.positions.emplace_back(it.second);
-	}
 	_is_inited = true ;
 	return true;
 }
@@ -866,7 +856,7 @@ void ctp_trader::cancel_order(estid_t order_id)
 	strcpy(req.InvestorID, _userid.c_str());
 	strcpy(req.UserID, _userid.c_str());
 	///报单引用
-	sprintf(req.OrderRef, "%d", orderref);
+	sprintf(req.OrderRef, "%u", orderref);
 	///请求编号
 	///前置编号
 	req.FrontID = frontid;
@@ -920,6 +910,21 @@ uint32_t ctp_trader::get_trading_day()const
 		return static_cast<uint32_t>(std::atoi(_td_api->GetTradingDay()));
 	}
 	return 0X0U;
+}
+
+std::shared_ptr<trader_data> ctp_trader::get_trader_data()const
+{
+	auto result = std::make_shared<trader_data>();
+	result->account = _account_info;
+	for (auto it : _order_info)
+	{
+		result->orders.emplace_back(it.second);
+	}
+	for (auto it : _position_info)
+	{
+		result->positions.emplace_back(it.second);
+	}
+	return result ;
 }
 
 void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, offset_type offset_type,uint32_t volume,double_t price,bool is_today)

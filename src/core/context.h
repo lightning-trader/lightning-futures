@@ -220,7 +220,7 @@ private:
 protected:
 
 	void init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config,
-		const trader_data& trader, bool reset_trading_day = false);
+		bool reset_trading_day = false);
 
 public:
 
@@ -229,6 +229,8 @@ public:
 	virtual market_api& get_market() = 0;
 
 	virtual void on_update() = 0;
+
+	virtual bool is_terminaled() = 0;
 
 	virtual void add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle) = 0;
 

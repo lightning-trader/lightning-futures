@@ -28,7 +28,7 @@ public:
 	virtual ~ctp_trader();
 
 
-	bool init(const boost::property_tree::ptree& config, trader_data& ret_data);
+	bool init(const boost::property_tree::ptree& config);
 
 	//////////////////////////////////////////////////////////////////////////
 	//trader_api接口
@@ -44,6 +44,8 @@ public:
 	virtual void submit_settlement() override;
 
 	virtual uint32_t get_trading_day()const override;
+
+	virtual std::shared_ptr<trader_data> get_trader_data()const override;
 
 	//////////////////////////////////////////////////////////////////////////
 	//CTP交易接口实现

@@ -53,7 +53,7 @@ public:
 	{
 	}
 
-	bool init(const boost::property_tree::ptree& config, trader_data& ret_data);
+	bool init(const boost::property_tree::ptree& config);
 
 	
 
@@ -76,6 +76,7 @@ public:
 
 	virtual void submit_settlement() override;
 
+	virtual std::shared_ptr<trader_data> get_trader_data()const override;
 
 private:
 
