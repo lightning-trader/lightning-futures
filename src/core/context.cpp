@@ -365,16 +365,17 @@ uint32_t context::get_total_position() const
 void context::subscribe(const std::set<code_t>& tick_data, tick_callback tick_cb, const std::map<code_t, std::set<uint32_t>>& bar_data, bar_callback bar_cb)
 {
 	this->_tick_callback = tick_cb;
+	this->_bar_callback = bar_cb;
 	get_market().subscribe(tick_data);
 	for(auto& it : bar_data)
 	{
 		for(auto& s_it : it.second)
 		{
-			_bar_generator[it.first][s_it] = std::make_shared<bar_generator>(s_it,[this, s_it, &bar_cb](const bar_info& bar)->void{
-				this->_today_market_info[bar.id].today_bar_info[s_it].emplace_back(bar);
-				if(bar_cb)
+			_bar_generator[it.first][s_it] = std::make_shared<bar_generator>(s_it,[this, s_it](const bar_info& bar)->void{
+				_today_market_info[bar.id].today_bar_info[s_it].emplace_back(bar);
+				if(_bar_callback)
 				{
-					bar_cb(s_it, bar);
+					_bar_callback(s_it, bar);
 				}
 			});
 		}

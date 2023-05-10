@@ -25,7 +25,7 @@ private:
 	
 public:
 
-	bar_generator(uint32_t period,std::function<void(const bar_info& )> bar_finish) :_period(period), _minute(0), _prev_volume(0) {}
+	bar_generator(uint32_t period,std::function<void(const bar_info& )> bar_finish) :_period(period), _minute(0), _prev_volume(0), _bar_finish(bar_finish) {}
 
 	void insert_tick(const tick_info& tick);
 };

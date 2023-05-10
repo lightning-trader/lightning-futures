@@ -7,6 +7,7 @@ void bar_generator::insert_tick(const tick_info& tick)
 	if(_bar.open == .0F)
 	{
 		_poc_data.clear();
+		_bar.id = tick.id;
 		_bar.open = tick.price;
 		_bar.time = _minute * ONE_MINUTE_SECONDS;
 		_poc_data[tick.price] = delta_volume;

@@ -38,6 +38,7 @@ private:
 
 	// (实时)
 	tick_callback _tick_callback;
+	bar_callback	_bar_callback;
 	ready_callback _ready_callback;
 	update_callback _update_callback;
 	//实时事件，高频策略使用
