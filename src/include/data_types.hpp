@@ -272,6 +272,21 @@ struct bar_info
 		
 		return std::vector<double_t>();
 	}
+
+	void clear() 
+	{
+		time = 0;
+		open = .0F;
+		high = .0F;
+		low = .0F;
+		close = .0F;
+		volume = 0;
+		delta = 0;
+		poc = 0;
+		price_buy_volume.clear();
+		price_sell_volume.clear();
+	}
+
 	bar_info()
 		:time(0),
 		open(0),

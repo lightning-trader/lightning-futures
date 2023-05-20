@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("lightning")
+project ("lightning-trader")
 
 IF(WIN32)
     set(BOOST_ROOT "C:/Boost")
@@ -59,5 +59,7 @@ add_subdirectory("market")
 add_subdirectory("simulator")
 
 add_subdirectory("recorder")
+
+add_subdirectory("framework")
 
 add_subdirectory("example")

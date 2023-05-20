@@ -10,6 +10,6 @@ ENDIF()
 link_directories(${CMAKE_LIBRARY_PATH})
 #AUX_SOURCE_DIRECTORY("driver"   DRIVER_DIR_VAR)
 #target_sources(${target} PRIVATE ${A1_DIR_VAR})
-add_library(lightning SHARED "runtime.cpp" "evaluate.cpp" "pod_chain.cpp" "context.cpp"  "lightning.cpp" "log_wapper.cpp" "trading_section.cpp" "bar_generator.cpp" "delayed_distributor.cpp")
+add_library(lt_core SHARED "runtime.cpp" "evaluate.cpp" "pod_chain.cpp" "context.cpp"  "lightning.cpp" "log_wapper.cpp" "trading_section.cpp" "bar_generator.cpp" "delayed_distributor.cpp")
 
-target_link_libraries(lightning "market" "simulator" "trader" "recorder" ${SYS_LIBS} ${BOOST_LIBS} ${CTP_LIBS})
+target_link_libraries(lt_core "lt_market" "lt_simulator" "lt_trader" "lt_recorder" ${SYS_LIBS} ${BOOST_LIBS} ${CTP_LIBS})
