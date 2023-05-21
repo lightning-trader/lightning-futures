@@ -22,7 +22,7 @@ public:
 	pod_chain(context& ctx, pod_chain* next);
 	virtual ~pod_chain();
 	
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) = 0;
+	virtual por_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) = 0;
 	
 };
 
@@ -34,7 +34,7 @@ public:
 	price_to_cancel_chain(context& ctx, pod_chain* next) :pod_chain(ctx, next)
 	{}
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+	virtual por_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 };
 
@@ -49,7 +49,7 @@ public:
 	{}
 
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+	virtual por_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 
 };

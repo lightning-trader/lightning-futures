@@ -122,7 +122,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		estid_t buy_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		por_t buy_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
 		/*
 		 *	平多单
@@ -131,7 +131,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		estid_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		por_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
 		/*
 		 *	开空单
@@ -140,7 +140,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		estid_t sell_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		por_t sell_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
 		/*
 		 *	平空单
@@ -149,7 +149,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		por_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
 
 		/*

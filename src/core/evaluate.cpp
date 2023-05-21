@@ -64,7 +64,9 @@ bool evaluate::init_from_file(const std::string& config_path)
 		LOG_ERROR("evaluate_driver init_from_file create_dummy_market error : %s", config_path.c_str());
 		return false;
 	}
-	this->init(control_config, include_config, recorder_config, true);
+	const auto& recorder_path = recorder_config.get<std::string>("basic_path", "./");
+	_recorder = std::make_shared<csv_recorder>(recorder_path.c_str());
+	this->init(control_config, include_config, true);
 	return true;
 }
 
@@ -80,6 +82,12 @@ void evaluate::playback_history(uint32_t tradeing_day)
 		_market_simulator->play(tradeing_day,[this](const tick_info& tick)->void{
 			_trader_simulator->push_tick(tick);
 		});
+		rapidcsv::Document _crossday_flow_csv;
+		//记录结算数据
+		if (_recorder)
+		{
+			_recorder->record_crossday_flow(get_last_time(), tradeing_day, get_order_statistic(), get_account());
+		}
 	}
 }
 

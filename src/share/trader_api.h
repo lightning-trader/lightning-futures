@@ -23,7 +23,7 @@ struct trader_data
 
 	std::vector<order_info> orders;
 
-	std::vector<position_info> positions;
+	std::map<code_t,position_info> positions;
 
 };
 
@@ -48,7 +48,7 @@ public:
 	 *	下单接口
 	 *	entrust 下单的具体数据结构
 	 */
-	virtual estid_t place_order(offset_type offset, direction_type direction , const code_t& code, uint32_t count, double_t price , order_flag flag) = 0;
+	virtual por_t place_order(offset_type offset, direction_type direction , const code_t& code, uint32_t count, double_t price , order_flag flag) = 0;
 
 	/*
 	 *	撤单

@@ -171,15 +171,18 @@ const order_statistic& lt::engine::get_order_statistic()const
 }
 
 
-estid_t engine::place_order(untid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
+por_t engine::place_order(untid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	LOG_DEBUG("place_order : %s , %d, %d, %f\n", code.get_id(), offset, direction, price);
-	estid_t estid = lt_place_order(_lt, id, offset, direction, code, count, price, flag);
-	if (estid != INVALID_ESTID)
+	por_t por = lt_place_order(_lt, id, offset, direction, code, count, price, flag);
+	for (auto& it : por)
 	{
-		regist_estid_strategy(estid, id);
+		if (it != INVALID_ESTID)
+		{
+			regist_estid_strategy(it, id);
+		}
 	}
-	return estid;
+	return por;
 }
 
 

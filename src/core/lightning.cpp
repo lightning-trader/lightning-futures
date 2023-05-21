@@ -60,7 +60,7 @@ extern "C"
 	
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, stop_service, (const ltobj& lt), ());
 
-	LT_INTERFACE_IMPLEMENTATION(estid_t, INVALID_ESTID, context, place_order, (const ltobj& lt, untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag), (untid, offset, direction, code, count, price, flag));
+	LT_INTERFACE_IMPLEMENTATION(por_t, INVALID_POR, context, place_order, (const ltobj& lt, untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag), (untid, offset, direction, code, count, price, flag));
 	
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, cancel_order, (const ltobj& lt, estid_t est_id), (est_id));
 	

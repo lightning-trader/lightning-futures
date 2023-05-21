@@ -70,7 +70,7 @@ public:
 	// td
 	virtual bool is_usable()const override;
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+	virtual por_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 	virtual void cancel_order(estid_t order_id) override;
 

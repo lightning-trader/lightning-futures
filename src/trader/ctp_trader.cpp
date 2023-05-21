@@ -42,7 +42,8 @@ ctp_trader::~ctp_trader()
 		//_td_api->Join();
 		_td_api = nullptr;
 	}
-	_position_info.clear();
+	_today_position.clear();
+	_history_position.clear();
 	_order_info.clear();
 }
 
@@ -134,6 +135,83 @@ bool ctp_trader::do_login()
 		return false ;
 	}
 	return true;
+}
+
+estid_t ctp_trader::do_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag, bool is_close_history)
+{
+	estid_t est_id = generate_estid();
+
+	CThostFtdcInputOrderField req;
+	memset(&req, 0, sizeof(req));
+	strcpy(req.BrokerID, _broker_id.c_str());
+	strcpy(req.InvestorID, _userid.c_str());
+
+	strcpy(req.InstrumentID, code.get_id());
+	strcpy(req.ExchangeID, code.get_excg());
+
+	uint32_t order_ref = 0, season_id = 0, front_id = 0;
+	extract_estid(est_id, front_id, season_id, order_ref);
+	///报单引用
+	sprintf(req.OrderRef, "%u", order_ref);
+
+	if (price != .0F)
+	{
+		///报单价格条件: 限价
+		req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
+
+	}
+	else
+	{
+		req.OrderPriceType = THOST_FTDC_OPT_BestPrice;
+	}
+	///买卖方向: 
+	req.Direction = wrap_direction_offset(direction, offset);
+	///组合开平标志: 开仓
+	req.CombOffsetFlag[0] = wrap_offset(code, offset, is_close_history);
+	///组合投机套保标志
+	req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation;
+	///价格
+	req.LimitPrice = price;
+	///数量: 1
+	req.VolumeTotalOriginal = count;
+
+	if (flag == order_flag::OF_NOR)
+	{
+		req.TimeCondition = THOST_FTDC_TC_GFD;
+		req.VolumeCondition = THOST_FTDC_VC_AV;
+		req.MinVolume = 1;
+	}
+	else if (flag == order_flag::OF_FAK)
+	{
+		req.TimeCondition = THOST_FTDC_TC_IOC;
+		req.VolumeCondition = THOST_FTDC_VC_AV;
+		req.MinVolume = 1;
+	}
+	else if (flag == order_flag::OF_FOK)
+	{
+		req.TimeCondition = THOST_FTDC_TC_IOC;
+		req.VolumeCondition = THOST_FTDC_VC_CV;
+		req.MinVolume = count;
+	}
+
+
+	///触发条件: 立即
+	req.ContingentCondition = THOST_FTDC_CC_Immediately;
+	///强平原因: 非强平
+	req.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;
+	///自动挂起标志: 否
+	req.IsAutoSuspend = 0;
+	///用户强评标志: 否
+	req.UserForceClose = 0;
+
+	int iResult = _td_api->ReqOrderInsert(&req, genreqid());
+	if (iResult != 0)
+	{
+		LOG_ERROR("ctp_trader order_insert request failed: %d", iResult);
+		return INVALID_ESTID;
+	}
+	LOG_INFO("ctp_trader place_order : %llu", est_id);
+	return est_id;
 }
 
 bool ctp_trader::logout()
@@ -383,7 +461,8 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 	if (_is_in_query)
 	{
 		while (!_is_in_query.exchange(false));
-		_position_info.clear();
+		_today_position.clear();
+		_history_position.clear();
 	}
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
@@ -392,93 +471,59 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 	}
 	
 	if (pInvestorPosition)
-	{	
+	{
 		LOG_DEBUG("OnRspQryInvestorPosition %s %d %d %d\n", pInvestorPosition->InstrumentID, pInvestorPosition->TodayPosition, pInvestorPosition->Position, pInvestorPosition->YdPosition);
 		code_t code(pInvestorPosition->InstrumentID, pInvestorPosition->ExchangeID);
-		position_info position;
-		position.id = code;
-		auto it = _position_info.find(code);
-		if(it != _position_info.end())
+		if (code.is_split_position())
 		{
-			position = it->second;
-		}
-		double_t avg_price = .0F;
-		
-		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
-		{
-			if (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit != 0)
-			{
-				avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit);
-			}
-			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
-			{
-				if(position.today_long.postion + pInvestorPosition->TodayPosition!=0)
-				{
-					position.today_long.price = (position.today_long.postion * position.today_long.price + avg_price * pInvestorPosition->TodayPosition) / (position.today_long.postion + pInvestorPosition->TodayPosition);
-				}
-				position.today_long.postion += pInvestorPosition->TodayPosition;
-				position.today_long.frozen += pInvestorPosition->ShortFrozen;
-				if (std::strcmp(pInvestorPosition->ExchangeID, EXCHANGE_ID_SHFE) != 0)
-				{
-					uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-					//double_t r = (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit) / (pInvestorPosition->SettlementPrice * yestoday_position);
-					if (position.today_long.postion + yestoday_position != 0)
-					{
-						position.today_long.price = (position.today_long.price * position.today_long.postion + avg_price * yestoday_position) / (position.today_long.postion + yestoday_position);
-					}
-					position.today_long.postion += yestoday_position;
-				}
-				
-			}
-			else
-			{
-				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-				//double_t r = (pInvestorPosition->PositionCost + pInvestorPosition->PositionProfit) / (pInvestorPosition->SettlementPrice * yestoday_position);
-				if (position.yestoday_long.postion + yestoday_position != 0)
-				{
-					position.yestoday_long.price = (position.yestoday_long.price * position.yestoday_long.postion + avg_price * yestoday_position) / (position.yestoday_long.postion + yestoday_position);
-				}
-				position.yestoday_long.postion += yestoday_position;
-				position.yestoday_long.frozen += pInvestorPosition->ShortFrozen;
-			}
-		}
-		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
-		{
-			if (pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit != 0)
-			{
-				avg_price = (pInvestorPosition->OpenCost * pInvestorPosition->SettlementPrice) / (pInvestorPosition->PositionCost - pInvestorPosition->PositionProfit);
-			}
 			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				if(position.today_short.postion + pInvestorPosition->TodayPosition!=0)
+				position_info& position = _today_position[code];
+				position.id = code;
+				if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 				{
-					position.today_short.price = (position.today_short.price * position.today_short.postion + pInvestorPosition->TodayPosition * avg_price) / (position.today_short.postion + pInvestorPosition->TodayPosition);
+					position.long_cell.volume += pInvestorPosition->TodayPosition;
+					position.long_cell.frozen += pInvestorPosition->ShortFrozen;
 				}
-				position.today_short.postion += pInvestorPosition->TodayPosition;
-				position.today_short.frozen += pInvestorPosition->LongFrozen;
-				if(std::strcmp(pInvestorPosition->ExchangeID, EXCHANGE_ID_SHFE) != 0)
+				else
 				{
-					uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-					if (position.today_short.postion + yestoday_position != 0)
-					{
-						position.today_short.price = (position.today_short.price * position.today_short.postion + avg_price * yestoday_position) / (position.today_short.postion + yestoday_position);
-					}
-					position.today_short.postion += yestoday_position;
+					position.short_cell.volume += pInvestorPosition->TodayPosition;
+					position.short_cell.frozen += pInvestorPosition->LongFrozen;
 				}
 			}
 			else
 			{
+				position_info& position = _history_position[code];
+				position.id = code;
 				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-				if(position.yestoday_short.postion + yestoday_position!=0)
+				if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 				{
-					position.yestoday_short.price = (position.yestoday_short.price * position.yestoday_short.postion + avg_price * yestoday_position) / (position.yestoday_short.postion + yestoday_position);
+					position.long_cell.volume += yestoday_position;
+					position.long_cell.frozen += pInvestorPosition->ShortFrozen;
 				}
-				position.yestoday_short.postion += yestoday_position;
-				position.yestoday_short.frozen += pInvestorPosition->LongFrozen;
-				
+				else
+				{
+					position.short_cell.volume += yestoday_position;
+					position.short_cell.frozen += pInvestorPosition->LongFrozen;
+				}
 			}
 		}
-		_position_info[code] = position;
+		else
+		{
+			position_info& position = _today_position[code];
+			position.id = code;
+			uint32_t history_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
+			if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
+			{
+				position.long_cell.volume += pInvestorPosition->TodayPosition + history_position;
+				position.long_cell.frozen += pInvestorPosition->ShortFrozen;
+			}
+			else
+			{
+				position.short_cell.volume += pInvestorPosition->TodayPosition + history_position;
+				position.short_cell.frozen += pInvestorPosition->LongFrozen;
+			}
+		}
 	}
 	if (bIsLast && _is_sync_wait)
 	{
@@ -522,8 +567,8 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		order.code = code_t(pOrder->InstrumentID , pOrder->ExchangeID);
 		order.create_time = make_datetime(pOrder->InsertDate, pOrder->InsertTime);
 		order.est_id = estid;
-		order.direction = wrap_position_direction(pOrder->Direction);
-		order.offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
+		order.direction = convert_direction(pOrder->Direction);
+		order.offset = convert_offset(pOrder->CombOffsetFlag[0]);
 		order.last_volume = pOrder->VolumeTotal;
 		order.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;
 		order.price = pOrder->LimitPrice;
@@ -562,8 +607,8 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 
 	auto estid = generate_estid(pOrder->FrontID, pOrder->SessionID, strtoul(pOrder->OrderRef, NULL, 10));
 	auto code = code_t(pOrder->InstrumentID, pOrder->ExchangeID);
-	auto direction = wrap_direction_offset(pOrder->Direction, pOrder->CombOffsetFlag[0]);
-	auto offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
+	auto direction = convert_direction_offset(pOrder->Direction, pOrder->CombOffsetFlag[0]);
+	auto offset = convert_offset(pOrder->CombOffsetFlag[0]);
 	auto is_today = (THOST_FTDC_OF_CloseToday == pOrder->CombOffsetFlag[0]);
 	LOG_INFO("OnRtnOrder %llu %d %d %s %d %d %c \n", estid, pOrder->FrontID, pOrder->SessionID, pOrder->InstrumentID, direction, offset, pOrder->OrderStatus);
 
@@ -750,88 +795,39 @@ bool ctp_trader::is_usable()const
 }
 
 
-estid_t ctp_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
+por_t ctp_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
 {
 	LOG_INFO("ctp_trader place_order %s %d",code.get_id(), volume);
 
 	if (_td_api == nullptr)
 	{
-		return INVALID_ESTID;
+		return INVALID_POR;
 	}
-	estid_t est_id = generate_estid();
-	
-	CThostFtdcInputOrderField req;
-	memset(&req, 0, sizeof(req));
-	strcpy(req.BrokerID, _broker_id.c_str());
-	strcpy(req.InvestorID, _userid.c_str());
-
-	strcpy(req.InstrumentID, code.get_id());
-	strcpy(req.ExchangeID, code.get_excg());
-
-	uint32_t order_ref = 0, season_id = 0, front_id = 0;
-	extract_estid(est_id, front_id, season_id, order_ref);
-	///报单引用
-	sprintf(req.OrderRef, "%u", order_ref);
-
-	if(price != .0F)
+	if (offset == offset_type::OT_CLOSE)
 	{
-		///报单价格条件: 限价
-		req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
-
+		auto pos = _history_position.find(code);
+		if (pos != _history_position.end())
+		{
+			auto posval = pos->second.get_volume(direction);
+			if (posval>0)
+			{
+				if (posval < volume)
+				{
+					//需要拆单
+					estid_t history_estid = do_order(offset, direction, code, posval, price, flag, true);
+					estid_t today_estid = do_order(offset, direction, code, volume - posval, price, flag, false);
+					return { today_estid, history_estid };
+				}
+				else
+				{
+					estid_t history_estid = do_order(offset, direction, code, posval, price, flag, true);
+					return { INVALID_ESTID, history_estid };
+				}
+			}
+		}
 	}
-	else
-	{
-		req.OrderPriceType = THOST_FTDC_OPT_BestPrice;
-	}
-	///买卖方向: 
-	req.Direction = wrap_direction_offset(direction, offset);
-	///组合开平标志: 开仓
-	req.CombOffsetFlag[0] = wrap_offset_type(code,volume,offset, direction);
-	///组合投机套保标志
-	req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation;
-	///价格
-	req.LimitPrice = price;
-	///数量: 1
-	req.VolumeTotalOriginal = volume;
-
-	if (flag == order_flag::OF_NOR)
-	{
-		req.TimeCondition = THOST_FTDC_TC_GFD;
-		req.VolumeCondition = THOST_FTDC_VC_AV;
-		req.MinVolume = 1;
-	}
-	else if (flag == order_flag::OF_FAK)
-	{
-		req.TimeCondition = THOST_FTDC_TC_IOC;
-		req.VolumeCondition = THOST_FTDC_VC_AV;
-		req.MinVolume = 1;
-	}
-	else if (flag == order_flag::OF_FOK)
-	{
-		req.TimeCondition = THOST_FTDC_TC_IOC;
-		req.VolumeCondition = THOST_FTDC_VC_CV;
-		req.MinVolume = volume;
-	}
-
-
-	///触发条件: 立即
-	req.ContingentCondition = THOST_FTDC_CC_Immediately;
-	///强平原因: 非强平
-	req.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;
-	///自动挂起标志: 否
-	req.IsAutoSuspend = 0;
-	///用户强评标志: 否
-	req.UserForceClose = 0;
-
-	int iResult = _td_api->ReqOrderInsert(&req, genreqid());
-	if (iResult != 0)
-	{
-		LOG_ERROR("ctp_trader order_insert request failed: %d", iResult);
-		return INVALID_ESTID;
-	}
-	LOG_INFO("ctp_trader place_order : %llu", est_id);
-	return est_id;
-
+	estid_t today_estid = do_order(offset, direction, code, volume, price, flag ,false);
+	return { today_estid, INVALID_ESTID };
 }
 
 void ctp_trader::cancel_order(estid_t order_id)
@@ -920,9 +916,17 @@ std::shared_ptr<trader_data> ctp_trader::get_trader_data()const
 	{
 		result->orders.emplace_back(it.second);
 	}
-	for (auto it : _position_info)
+	for (auto it : _today_position)
 	{
-		result->positions.emplace_back(it.second);
+		result->positions[it.first]=it.second;
+	}
+	for (auto it : _history_position)
+	{
+		auto& current = result->positions[it.first];
+		current.long_cell.volume = it.second.long_cell.volume;
+		current.long_cell.frozen = it.second.long_cell.frozen;
+		current.short_cell.volume = it.second.short_cell.volume;
+		current.short_cell.frozen = it.second.short_cell.frozen;
 	}
 	return result ;
 }
@@ -930,229 +934,237 @@ std::shared_ptr<trader_data> ctp_trader::get_trader_data()const
 void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, offset_type offset_type,uint32_t volume,double_t price,bool is_today)
 {
 	LOG_INFO("calculate_position %s %d %d %d %f %d", code.get_id(), dir_type, offset_type, volume, price, is_today);
-	position_info p ;
-	auto it = _position_info.find(code);
-	if(it != _position_info.end())
-	{
-		p = it->second;
-	}
-	else
-	{
-		p.id = code;
-	}
+	
 	if (offset_type == offset_type::OT_OPEN)
 	{
+		position_info& p = _today_position[code];
+		p.id = code;
 		if (dir_type == direction_type::DT_LONG)
 		{
-			if(p.today_long.postion + volume > 0)
-			{
-				p.today_long.price = (p.today_long.price * p.today_long.postion + volume * price) / (p.today_long.postion + volume);
-			}
-			p.today_long.postion += volume;
-
-		}else
+			p.long_cell.volume += volume;
+		}
+		else
 		{
-			if(p.today_short.postion + volume>0)
-			{
-				p.today_short.price = (p.today_short.price * p.today_short.postion + volume * price) / (p.today_short.postion + volume);
-			}
-			p.today_short.postion += volume;
+			p.short_cell.volume += volume;
 		}
 	}
 	else
 	{
 		if (is_today)
 		{
+			position_info& p = _today_position[code];
+			p.id = code;
 			if (dir_type == direction_type::DT_LONG)
 			{
-				if (p.today_long.postion > volume)
+				if (p.long_cell.volume > volume)
 				{
-					p.today_long.postion -= volume;
+					p.long_cell.volume -= volume;
 				}
 				else
 				{
-					p.today_long.postion = 0;
+					p.long_cell.volume = 0;
 				}
-				if (p.today_long.frozen > volume)
+				if (p.long_cell.frozen > volume)
 				{
-					p.today_long.frozen -= volume;
+					p.long_cell.frozen -= volume;
 				}
 				else
 				{
-					p.today_long.frozen = 0;
+					p.long_cell.frozen = 0;
 				}
 			}
 			else if (dir_type == direction_type::DT_SHORT)
 			{
-				if (p.today_short.postion > volume)
+				if (p.short_cell.volume > volume)
 				{
-					p.today_short.postion -= volume;
+					p.short_cell.volume -= volume;
 				}
 				else
 				{
-					p.today_short.postion = 0;
+					p.short_cell.volume = 0;
 				}
-				if (p.today_short.frozen > volume)
+				if (p.short_cell.frozen > volume)
 				{
-					p.today_short.frozen -= volume;
+					p.short_cell.frozen -= volume;
 				}
 				else
 				{
-					p.today_short.frozen = 0;
+					p.short_cell.frozen = 0;
+				}
+			}
+			if (p.empty())
+			{
+				auto it = _today_position.find(code);
+				if (it != _today_position.end())
+				{
+					_today_position.erase(it);
+
 				}
 			}
 		}
 		else
 		{
+			position_info& p = _history_position[code];
+			p.id = code;
 			if (dir_type == direction_type::DT_LONG)
 			{
-				if (p.yestoday_long.postion > volume)
+				if (p.long_cell.volume > volume)
 				{
-					p.yestoday_long.postion -= volume;
+					p.long_cell.volume -= volume;
 				}
 				else
 				{
-					p.yestoday_long.postion = 0;
+					p.long_cell.volume = 0;
 				}
-				if (p.yestoday_long.frozen > volume)
+				if (p.long_cell.frozen > volume)
 				{
-					p.yestoday_long.frozen -= volume;
+					p.long_cell.frozen -= volume;
 				}
 				else
 				{
-					p.yestoday_long.frozen = 0;
+					p.long_cell.frozen = 0;
 				}
 			}
 			else if (dir_type == direction_type::DT_SHORT)
 			{
-				if (p.yestoday_short.postion > volume)
+				if (p.short_cell.volume > volume)
 				{
-					p.yestoday_short.postion -= volume;
+					p.short_cell.volume -= volume;
 				}
 				else
 				{
-					p.yestoday_short.postion = 0;
+					p.short_cell.volume = 0;
 				}
-				if (p.yestoday_short.frozen > volume)
+				if (p.short_cell.frozen > volume)
 				{
-					p.yestoday_short.frozen -= volume;
+					p.short_cell.frozen -= volume;
 				}
 				else
 				{
-					p.yestoday_short.frozen = 0;
+					p.short_cell.frozen = 0;
+				}
+			}
+			if (p.empty())
+			{
+				auto it = _history_position.find(code);
+				if (it != _history_position.end())
+				{
+					_history_position.erase(it);
+
 				}
 			}
 		}
-		
 	}
-	if (!p.empty())
-	{
-		_position_info[code] = p;
-	}
-	else
-	{
-		if (it != _position_info.end())
-		{
-			_position_info.erase(it);
-		}
-	}
+
 	print_position("calculate_position");
-	this->fire_event(trader_event_type::TET_PositionChange, p);
+	this->fire_event(trader_event_type::TET_PositionChange, get_merge_position(code));
 }
 
 void ctp_trader::frozen_deduction(const code_t& code, direction_type dir_type, uint32_t volume,bool is_today)
 {
-	auto it = _position_info.find(code);
-	if (it == _position_info.end())
-	{
-		return ;
-	}
-	position_info pos = it->second;
+
 	if(is_today)
 	{
+		auto it = _today_position.find(code);
+		if (it == _today_position.end())
+		{
+			return;
+		}
+		position_info& pos = it->second;
 		if (dir_type == direction_type::DT_LONG)
 		{
-			pos.today_long.frozen += volume;
+			pos.long_cell.frozen += volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			pos.today_short.frozen += volume;
+			pos.short_cell.frozen += volume;
 		}
 	}
 	else
 	{
+		auto it = _history_position.find(code);
+		if (it == _history_position.end())
+		{
+			return;
+		}
+		position_info& pos = it->second;
 		if (dir_type == direction_type::DT_LONG)
 		{
-			pos.yestoday_long.frozen += volume;
+			pos.long_cell.frozen += volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			pos.yestoday_short.frozen += volume;
+			pos.short_cell.frozen += volume;
 		}
 	}
-
-	_position_info[code] = pos;
 	print_position("frozen_deduction");
-	this->fire_event(trader_event_type::TET_PositionChange, pos);
+	this->fire_event(trader_event_type::TET_PositionChange, get_merge_position(code));
+
 }
 void ctp_trader::thawing_deduction(const code_t& code, direction_type dir_type, uint32_t volume,bool is_today)
 {
-	auto it = _position_info.find(code);
-	if (it == _position_info.end())
-	{
-		return;
-	}
-	position_info pos = it->second;
+
 	if(is_today)
 	{
+		auto it = _today_position.find(code);
+		if (it == _today_position.end())
+		{
+			return;
+		}
+		position_info& pos = it->second;
 		if (dir_type == direction_type::DT_LONG)
 		{
-			if(pos.today_long.frozen > volume)
+			if(pos.long_cell.frozen > volume)
 			{
-				pos.today_long.frozen -= volume;
+				pos.long_cell.frozen -= volume;
 			}else
 			{
-				pos.today_long.frozen = 0;
+				pos.long_cell.frozen = 0;
 			}
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			if (pos.today_short.frozen > volume)
+			if (pos.short_cell.frozen > volume)
 			{
-				pos.today_short.frozen -= volume;
+				pos.short_cell.frozen -= volume;
 			}
 			else
 			{
-				pos.today_short.frozen = 0;
+				pos.short_cell.frozen = 0;
 			}
 		}
 	}
 	else
 	{
+		auto it = _history_position.find(code);
+		if (it == _history_position.end())
+		{
+			return;
+		}
+		position_info& pos = it->second;
 		if (dir_type == direction_type::DT_LONG)
 		{
-			if (pos.yestoday_long.frozen > volume)
+			if (pos.long_cell.frozen > volume)
 			{
-				pos.yestoday_long.frozen -= volume;
+				pos.long_cell.frozen -= volume;
 			}
 			else
 			{
-				pos.yestoday_long.frozen = 0;
+				pos.long_cell.frozen = 0;
 			}
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			if (pos.yestoday_short.frozen > volume)
+			if (pos.short_cell.frozen > volume)
 			{
-				pos.yestoday_short.frozen -= volume;
+				pos.short_cell.frozen -= volume;
 			}
 			else
 			{
-				pos.yestoday_short.frozen = 0;
+				pos.short_cell.frozen = 0;
 			}
 		}
 	}
-	_position_info[code] = pos;
 	print_position("thawing_deduction");
-	this->fire_event(trader_event_type::TET_PositionChange, pos);
+	this->fire_event(trader_event_type::TET_PositionChange, get_merge_position(code));
 }

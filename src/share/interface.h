@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "market_api.h"
 #include "trader_api.h"
-#include "recorder.h"
 #include <boost/property_tree/ptree.hpp>
 
 
@@ -22,8 +21,3 @@ dummy_market* create_dummy_market(const boost::property_tree::ptree& config);
 
 void destory_dummy_market(dummy_market*& api);
 
-
-
-recorder* create_recorder(const boost::property_tree::ptree& config);
-
-void destory_recorder(recorder*& rcd);

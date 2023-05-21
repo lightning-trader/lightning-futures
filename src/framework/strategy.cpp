@@ -27,38 +27,38 @@ void strategy::destory(unsubscriber& unsuber)
 	this->on_destory(unsuber);
 }
 
-estid_t strategy::buy_for_open(const code_t& code,uint32_t count ,double_t price , order_flag flag )
+por_t strategy::buy_for_open(const code_t& code,uint32_t count ,double_t price , order_flag flag )
 {
 	if(!_openable)
 	{
-		return INVALID_ESTID ;
+		return INVALID_POR ;
 	}
 	return _engine.place_order(_id, offset_type::OT_OPEN, direction_type::DT_LONG, code, count, price, flag);
 }
 
-estid_t strategy::sell_for_close(const code_t& code, uint32_t count, double_t price , order_flag flag )
+por_t strategy::sell_for_close(const code_t& code, uint32_t count, double_t price , order_flag flag )
 {
 	if (!_closeable)
 	{
-		return INVALID_ESTID;
+		return INVALID_POR;
 	}
 	return _engine.place_order(_id, offset_type::OT_CLOSE, direction_type::DT_LONG, code, count, price, flag);
 }
 
-estid_t strategy::sell_for_open(const code_t& code, uint32_t count, double_t price , order_flag flag )
+por_t strategy::sell_for_open(const code_t& code, uint32_t count, double_t price , order_flag flag )
 {
 	if (!_openable)
 	{
-		return INVALID_ESTID;
+		return INVALID_POR;
 	}
 	return _engine.place_order(_id, offset_type::OT_OPEN, direction_type::DT_SHORT, code, count, price, flag);
 }
 
-estid_t strategy::buy_for_close(const code_t& code, uint32_t count, double_t price , order_flag flag )
+por_t strategy::buy_for_close(const code_t& code, uint32_t count, double_t price , order_flag flag )
 {
 	if (!_closeable)
 	{
-		return INVALID_ESTID;
+		return INVALID_POR;
 	}
 	return _engine.place_order(_id, offset_type::OT_CLOSE, direction_type::DT_SHORT,code, count, price, flag);
 }

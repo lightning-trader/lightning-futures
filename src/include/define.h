@@ -40,6 +40,11 @@ typedef uint64_t estid_t;
 
 constexpr estid_t INVALID_ESTID = 0x0LLU;
 
+//place order result
+typedef std::array<estid_t, 2> por_t;
+
+constexpr por_t INVALID_POR = std::array<estid_t, 2>();
+
 #define EXCHANGE_ID_SHFE	"SHFE"	//上期所
 #define EXCHANGE_ID_DCE		"DCE"	//大商所
 #define EXCHANGE_ID_CZCE	"CZCE"	//郑商所
@@ -54,6 +59,8 @@ struct deal_info;
 struct position_info;
 
 struct account_info;
+
+struct order_statistic;
 
 struct today_market_info;
 

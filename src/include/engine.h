@@ -310,9 +310,9 @@ namespace lt
 
 		/*
 		*	下单单
-		*	order_id 下单返回的id
+		*	por_t 下单返回的id
 		*/
-		estid_t place_order(untid_t id, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		por_t place_order(untid_t id, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 		/*
 		 *	撤单
 		 *	order_id 下单返回的id

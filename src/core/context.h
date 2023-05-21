@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <define.h>
 #include <any>
-#include <recorder.h>
 #include <lightning.h>
 #include <thread>
 #include "event_center.hpp"
@@ -70,8 +69,6 @@ private:
 
 	std::vector<std::shared_ptr<boost::interprocess::mapped_region>> _userdata_region ;
 
-	recorder* _recorder ;
-
 	bool _is_trading_ready ;
 
 	std::shared_ptr<trading_section> _section ;
@@ -124,7 +121,7 @@ public:
 	*/
 	void set_trading_filter(filter_callback callback);
 
-	estid_t place_order(untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
+	por_t place_order(untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
 	
 	void cancel_order(estid_t order_id);
 	
@@ -220,8 +217,7 @@ private:
 
 protected:
 
-	void init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, boost::property_tree::ptree& rcd_config,
-		bool reset_trading_day = false);
+	void init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, bool reset_trading_day = false);
 
 public:
 
