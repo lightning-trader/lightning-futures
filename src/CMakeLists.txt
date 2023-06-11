@@ -49,6 +49,7 @@ SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
 )
 
 # 包含子项目。
+add_subdirectory ("example")
 
 add_subdirectory("trader")
 
@@ -60,4 +61,3 @@ add_subdirectory("simulator")
 
 add_subdirectory("framework")
 
-add_subdirectory("example")

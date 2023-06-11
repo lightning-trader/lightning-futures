@@ -37,7 +37,7 @@ public:
 
 	virtual bool is_usable() const override;
 
-	virtual por_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
 	virtual void cancel_order(estid_t order_id) override ;
 
@@ -96,8 +96,6 @@ private:
 	//登录
 	bool do_login();
 
-	estid_t do_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag,bool is_close_history);
-
 	bool logout();
 
 	void query_account(bool is_sync);
@@ -129,7 +127,7 @@ private:
 				return THOST_FTDC_D_Buy;
 	}
 
-	inline direction_type convert_direction_offset(TThostFtdcDirectionType dir_type, TThostFtdcOffsetFlagType offset_type)
+	inline direction_type wrap_direction_offset(TThostFtdcDirectionType dir_type, TThostFtdcOffsetFlagType offset_type)
 	{
 		if (THOST_FTDC_D_Buy == dir_type)
 			if (offset_type == THOST_FTDC_OF_Open)
@@ -143,7 +141,7 @@ private:
 				return direction_type::DT_LONG;
 	}
 
-	inline direction_type convert_direction(TThostFtdcPosiDirectionType dirType)
+	inline direction_type wrap_position_direction(TThostFtdcPosiDirectionType dirType)
 	{
 		if (THOST_FTDC_PD_Long == dirType)
 			return direction_type::DT_LONG;
@@ -151,7 +149,7 @@ private:
 			return direction_type::DT_SHORT;
 	}
 
-	inline int wrap_offset(const code_t& code,offset_type offset, bool is_close_history)
+	inline int wrap_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)
 	{
 		if (offset_type::OT_OPEN == offset)
 		{
@@ -159,23 +157,31 @@ private:
 		}
 		else if (offset_type::OT_CLOSE == offset)
 		{
-			if (code.is_split_position())
+			const auto& it = _position_info.find(code);
+			if (it != _position_info.end())
 			{
-				if (is_close_history)
+				//TODO 先不处理分仓
+				if (direction == direction_type::DT_LONG)
 				{
-					return THOST_FTDC_OF_CloseYesterday;
+					if (it->second.yestoday_long.usable() >= volume)
+					{
+						return THOST_FTDC_OF_CloseYesterday;
+					}
 				}
 				else
 				{
-					return THOST_FTDC_OF_CloseToday;
+					if (it->second.yestoday_short.usable() >= volume)
+					{
+						return THOST_FTDC_OF_CloseYesterday;
+					}
 				}
 			}
-			return THOST_FTDC_OF_Close;
 		}
-		return THOST_FTDC_OF_ForceClose;
+		
+		return THOST_FTDC_OF_CloseToday;
 	}
 
-	inline offset_type convert_offset(TThostFtdcOffsetFlagType offset_type)
+	inline offset_type wrap_offset_type(TThostFtdcOffsetFlagType offset_type)
 	{
 		if (THOST_FTDC_OF_Open == offset_type)
 			return offset_type::OT_OPEN;
@@ -222,47 +228,21 @@ private:
 		return _reqid.fetch_add(1);
 	}
 
-
 	inline void print_position(const char* title)
 	{
-		LOG_INFO("print_position %s \n", title);
-		for (const auto& it : _today_position)
+		if(!_position_info.empty())
+		{
+			LOG_INFO("print_position %s \n", title);
+		}
+		for (const auto& it : _position_info)
 		{
 			const auto& pos = it.second;
-			LOG_INFO("position : %s today_long(%d %d) today_short(%d %d) ", pos.id.get_id(),
-				pos.long_cell.volume, pos.long_cell.frozen,pos.short_cell.volume, pos.short_cell.frozen);
+			LOG_INFO("position : %s today_long(%d %d %f) today_short(%d %d %f) yestoday_long(%d %d %f) yestoday_short(%d %d %f)", pos.id.get_id(),
+				pos.today_long.postion, pos.today_long.frozen, pos.today_long.price,
+				pos.today_short.postion, pos.today_short.frozen, pos.today_short.price,
+				pos.yestoday_long.postion, pos.yestoday_long.frozen, pos.yestoday_long.price,
+				pos.yestoday_short.postion, pos.yestoday_short.frozen, pos.yestoday_short.price);
 		}
-		for (const auto& it : _history_position)
-		{
-			const auto& pos = it.second;
-			LOG_INFO("position : %s yestoday_long(%d %d) yestoday_short(%d %d)", pos.id.get_id(),
-				pos.long_cell.volume, pos.long_cell.frozen,pos.short_cell.volume, pos.short_cell.frozen);
-		}
-	}
-
-	inline position_info get_merge_position(const code_t& code)const 
-	{
-		auto it = _today_position.find(code);
-		if (it == _today_position.end())
-		{
-			auto yit = _history_position.find(code);
-			if (yit == _history_position.end())
-			{
-				return position_info(code);
-			}
-			return yit->second;
-		}
-		auto yit = _history_position.find(code);
-		if (yit == _history_position.end())
-		{
-			return it->second;
-		}
-		position_info result = it->second;
-		result.long_cell.volume += yit->second.long_cell.volume;
-		result.long_cell.frozen += yit->second.long_cell.frozen;
-		result.short_cell.volume += yit->second.short_cell.volume;
-		result.short_cell.frozen += yit->second.short_cell.frozen;
-		return result;
 	}
 
 protected:
@@ -288,10 +268,11 @@ protected:
 	typedef std::queue<common_executer>	query_queue; //查询队列
 	query_queue				_query_queue;
 
-
-	position_map			_today_position;
-	position_map			_history_position;
-
+	//boost::pool_allocator<code_t, position_info> a ;
+	//std::vector<int, boost::pool_allocator<int>> v;
+	//
+	position_map			_position_info;
+	
 	//
 	entrust_map				_order_info;
 

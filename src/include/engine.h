@@ -5,7 +5,6 @@
 #include <strategy.h>
 #include "notify.h"
 
-
 namespace lt
 {
 
@@ -50,7 +49,7 @@ namespace lt
 	{
 		friend subscriber;
 		friend unsubscriber;
-
+		friend strategy;
 	private:
 
 		static inline filter_function _filter_function = nullptr;
@@ -279,6 +278,20 @@ namespace lt
 			}
 		}
 
+	protected:
+
+		/***
+		* 注册策略
+		*/
+		void regist_strategy(const std::vector<std::shared_ptr<lt::strategy>>& strategys);
+
+		/***
+		* 取消注册策略
+		*/
+		void clear_strategy();
+
+
+
 	private:
 
 
@@ -291,10 +304,6 @@ namespace lt
 		engine(context_type ctx_type, const char* config_path);
 
 		~engine();
-
-		void init(const std::map<straid_t, std::shared_ptr<strategy>>& stra_map);
-
-		void destory();
 
 		/*
 		* 设置交易过滤器
@@ -310,9 +319,9 @@ namespace lt
 
 		/*
 		*	下单单
-		*	por_t 下单返回的id
+		*	order_id 下单返回的id
 		*/
-		por_t place_order(untid_t id, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		estid_t place_order(untid_t id, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 		/*
 		 *	撤单
 		 *	order_id 下单返回的id
@@ -375,7 +384,6 @@ namespace lt
 		*	是否准备就绪
 		*/
 		bool is_trading_ready()const;
-
 
 		/*
 		* 获取今日行情数据

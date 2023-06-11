@@ -58,17 +58,21 @@ namespace lt
 	private:
 
 		/*
-		 *	初始化事件
-		 *	生命周期中只会回调一次
-		 */
+		*	初始化事件
+		*	生命周期中只会回调一次
+		*/
 		virtual void on_init(subscriber& suber) {};
 
-
-		virtual void on_update() {};
 		/*
-		*	销毁
+		*	周期更新函数
 		*/
-		virtual void on_destory(unsubscriber& unsuber) {}
+		virtual void on_update() {};
+		
+		/*
+		 *	销毁
+		 */
+		virtual void on_destory(unsubscriber& unsuber) {};
+
 
 	public:
 
@@ -122,7 +126,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		por_t buy_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		estid_t buy_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
 		/*
 		 *	平多单
@@ -131,7 +135,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		por_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		estid_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
 		/*
 		 *	开空单
@@ -140,7 +144,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		por_t sell_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		estid_t sell_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
 		/*
 		 *	平空单
@@ -149,7 +153,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		por_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
 
 		/*
@@ -216,6 +220,7 @@ namespace lt
 		*/
 		bool is_trading_ready()const;
 
+		
 		/*
 		* 最新tick
 		*/

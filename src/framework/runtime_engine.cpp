@@ -12,8 +12,9 @@ runtime_engine::~runtime_engine()
 }
 
 
-void runtime_engine::run_to_close()
+void runtime_engine::run_to_close(const std::vector<std::shared_ptr<lt::strategy>>& strategys)
 {
+	regist_strategy(strategys);
 	lt_start_service(_lt);
 	while (!is_trading_ready())
 	{
@@ -29,4 +30,5 @@ void runtime_engine::run_to_close()
 	}
 	std::this_thread::sleep_for(std::chrono::seconds(1));
 	lt_stop_service(_lt);
+	clear_strategy();
 }

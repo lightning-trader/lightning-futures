@@ -120,27 +120,27 @@ engine::~engine()
 	lt_destory_context(_lt);
 }
 
-void engine::init(const std::map<straid_t, std::shared_ptr<strategy>>& stra_map)
+
+void engine::regist_strategy(const std::vector<std::shared_ptr<lt::strategy>>& strategys)
 {
 	subscriber suber(_tick_receiver, _bar_receiver);
-	for (auto& it : stra_map)
+	for (auto it : strategys)
 	{
-		it.second->init(suber);
-		_strategy_map[it.first] = (it.second);
+		it->init(suber);
+		_strategy_map[it->get_id()] = (it);
 	}
 	subscribe(suber.tick_subscrib, suber.bar_subscrib);
 }
-
-void engine::destory()
+void engine::clear_strategy()
 {
-	unsubscriber unsubr(_tick_receiver, _bar_receiver);
-	for (auto& it : _strategy_map)
+	unsubscriber unsuber(_tick_receiver, _bar_receiver);
+	for (auto it : _strategy_map)
 	{
-		it.second->destory(unsubr);
-		_strategy_map[it.first] = (it.second);
+		it.second->destory(unsuber);
 	}
-	unsubscribe(unsubr.tick_unsubscrib, unsubr.bar_unsubscrib);
 	_strategy_map.clear();
+	unsubscribe(unsuber.tick_unsubscrib, unsuber.bar_unsubscrib);
+	
 }
 
 
@@ -171,18 +171,15 @@ const order_statistic& lt::engine::get_order_statistic()const
 }
 
 
-por_t engine::place_order(untid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
+estid_t engine::place_order(untid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	LOG_DEBUG("place_order : %s , %d, %d, %f\n", code.get_id(), offset, direction, price);
-	por_t por = lt_place_order(_lt, id, offset, direction, code, count, price, flag);
-	for (auto& it : por)
+	estid_t estid = lt_place_order(_lt, id, offset, direction, code, count, price, flag);
+	if (estid != INVALID_ESTID)
 	{
-		if (it != INVALID_ESTID)
-		{
-			regist_estid_strategy(it, id);
-		}
+		regist_estid_strategy(estid, id);
 	}
-	return por;
+	return estid;
 }
 
 

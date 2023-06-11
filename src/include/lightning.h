@@ -109,7 +109,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	/*
 	下单
 	*/
-	LT_INTERFACE_DECLARE(por_t, place_order, (const ltobj&, untid_t, offset_type, direction_type, const code_t&, uint32_t, double_t, order_flag));
+	LT_INTERFACE_DECLARE(estid_t, place_order, (const ltobj&, untid_t, offset_type, direction_type, const code_t&, uint32_t, double_t, order_flag));
 	
 	/*
 	* 撤销订单

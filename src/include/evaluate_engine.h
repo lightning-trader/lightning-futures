@@ -17,7 +17,7 @@ namespace lt
 
 	public:
 
-		void back_test(uint32_t trading_day);
+		void back_test(const std::vector<std::shared_ptr<lt::strategy>>& strategys, uint32_t trading_day);
 
 
 

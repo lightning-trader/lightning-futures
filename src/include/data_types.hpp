@@ -85,14 +85,6 @@ public:
 		return _data + EXCG_BEGIN_INDEX;
 	}
 
-	inline bool is_split_position()const
-	{
-		if (std::strcmp(get_excg(), EXCHANGE_ID_SHFE) == 0)
-		{
-			return true;
-		}
-		return false;
-	}
 };
 
 const code_t default_code;
@@ -184,35 +176,6 @@ struct tick_info
 };
 
 const tick_info default_tick_info;
-
-
-/*
- *	订单标志
- */
-enum class order_flag
-{
-	OF_NOR = '0',		//普通订单
-	OF_FAK,			//全成全撤，不等待自动撤销
-	OF_FOK,			//部成部撤，不等待自动撤销
-};
-
-/*
- *	开平方向
- */
-enum class offset_type
-{
-	OT_OPEN = '0',	//开仓
-	OT_CLOSE		//平仓,上期为平昨
-};
-
-/*
- *	多空方向
- */
-enum class direction_type
-{
-	DT_LONG = '0',	//做多
-	DT_SHORT		//做空
-};
 
 enum class deal_direction
 {
@@ -342,78 +305,82 @@ struct bar_info
 struct position_cell
 {
 	//仓位
-	uint32_t	volume;
+	uint32_t	postion;
+	//价格
+	double_t	price;
 	//冻结
 	uint32_t	frozen;
 
 	position_cell() :
-		volume(0),
+		postion(0),
+		price(.0F),
 		frozen(0)
 	{}
 
 	uint32_t usable()const
 	{
-		return volume - frozen;
+		return postion - frozen;
 	}
 
 	bool empty()const
 	{
-		return volume == 0;
+		return postion == 0;
 	}
 
 	void clear()
 	{
-		volume = 0;
+		postion = 0;
+		price = .0F;
 		frozen = 0 ;
 	}
-
-
 };
 
 struct position_info
 {
 	code_t id; //合约ID
 	position_info(const code_t& code):id(code) {}
-	//仓位
-	position_cell long_cell;
-	position_cell short_cell;
+	//今仓
+	position_cell today_long;
+	position_cell today_short;
 
+
+	//昨仓
+	position_cell yestoday_long;
+	position_cell yestoday_short;
 
 	bool empty()const
 	{
-		return long_cell.empty()&& short_cell.empty();
+		return today_long.empty()&& today_short.empty()&& yestoday_long.empty()&& yestoday_short.empty();
 	}
 
 	uint32_t get_total()const 
 	{
-		return long_cell.volume + short_cell.volume;
+		return today_long.postion + today_short.postion + yestoday_long.postion + yestoday_short.postion;
 	}
-
-	uint32_t get_volume(direction_type direction)const
+	
+	int32_t get_real()const
 	{
-		if (direction == direction_type::DT_LONG)
-		{
-			return long_cell.volume;
-		}
-		else 
-		{
-			return short_cell.volume;
-		}
+		return today_long.postion + yestoday_long.postion - (today_short.postion + yestoday_short.postion);
 	}
 
-	uint32_t get_frozen(direction_type direction)const
+	uint32_t get_long_position()const
 	{
-		if (direction == direction_type::DT_LONG)
-		{
-			return long_cell.frozen;
-		}
-		else
-		{
-			return short_cell.frozen;
-		}
-		
+		return today_long.postion + yestoday_long.postion;
 	}
 
+	uint32_t get_short_position()const
+	{
+		return today_short.postion + yestoday_short.postion;
+	}
+	uint32_t get_long_frozen()const
+	{
+		return today_long.frozen + yestoday_long.frozen;
+	}
+
+	uint32_t get_short_frozen()const
+	{
+		return today_short.frozen + yestoday_short.frozen;
+	}
 	position_info()
 	{}
 };
@@ -432,6 +399,35 @@ struct account_info
 	{}
 };
 const account_info default_account;
+
+
+/*
+ *	订单标志
+ */
+enum class order_flag
+{
+	OF_NOR = '0',		//普通订单
+	OF_FAK,			//全成全撤，不等待自动撤销
+	OF_FOK,			//部成部撤，不等待自动撤销
+} ;
+
+/*
+ *	开平方向
+ */
+enum class offset_type
+{
+	OT_OPEN = '0',	//开仓
+	OT_CLOSE		//平仓,上期为平昨
+};
+
+/*
+ *	多空方向
+ */
+enum class direction_type
+{
+	DT_LONG = '0',	//做多
+	DT_SHORT		//做空
+};
 
 struct order_info
 {

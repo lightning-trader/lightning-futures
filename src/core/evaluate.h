@@ -1,17 +1,16 @@
 ﻿#pragma once
 #include "context.h"
-#include "csv_recorder.h"
 
 class evaluate : public context
 {
 
 private:
 	
-	std::shared_ptr<csv_recorder> _recorder;
-
 	class dummy_market* _market_simulator;
 
 	class dummy_trader* _trader_simulator;
+
+	std::shared_ptr<class csv_recorder> _recorder;
 
 public:
 	evaluate();

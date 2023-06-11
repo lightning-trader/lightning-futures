@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <define.h>
 #include <any>
+#include <recorder.h>
 #include <lightning.h>
 #include <thread>
 #include "event_center.hpp"
@@ -121,7 +122,7 @@ public:
 	*/
 	void set_trading_filter(filter_callback callback);
 
-	por_t place_order(untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
+	estid_t place_order(untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
 	
 	void cancel_order(estid_t order_id);
 	
@@ -217,7 +218,8 @@ private:
 
 protected:
 
-	void init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config, bool reset_trading_day = false);
+	void init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config,
+		bool reset_trading_day = false);
 
 public:
 

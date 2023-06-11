@@ -2,6 +2,7 @@
 #include <file_wapper.hpp>
 #include <market_api.h>
 #include <trader_api.h>
+#include <recorder.h>
 #include <cpu_helper.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include "pod_chain.h"
@@ -50,9 +51,11 @@ context::~context()
 		delete it.second;
 	}
 	_custom_chain.clear();
+	
 }
 
-void context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config,bool reset_trading_day)
+void context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config,
+	bool reset_trading_day)
 {
 	auto&& localdb_name = ctrl.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
@@ -82,7 +85,7 @@ void context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 		_position_info.clear();
 		for (const auto& it : trader_data->positions)
 		{
-			_position_info[it.first] = it.second;
+			_position_info[it.id] = it;
 		}
 	}
 
@@ -262,25 +265,25 @@ void context::set_trading_filter(filter_callback callback)
 	_trading_filter = callback;
 }
 
-por_t context::place_order(untid_t untid,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
+estid_t context::place_order(untid_t untid,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	
 	if (!_is_trading_ready)
 	{
 		LOG_DEBUG("place_order _is_trading_ready");
-		return INVALID_POR;
+		return INVALID_ESTID;
 	}
 	if(!_section->is_in_trading(get_last_time()))
 	{
 		LOG_DEBUG("place_order code not in trading %s", code.get_id());
-		return INVALID_POR;
+		return INVALID_ESTID;
 	}
 
 	auto chain = get_chain(untid);
 	if (chain == nullptr)
 	{
 		LOG_ERROR("place_order _chain nullptr");
-		return INVALID_POR;
+		return INVALID_ESTID;
 	}
 	if(_record_region)
 	{
@@ -526,7 +529,8 @@ void context::check_crossday(uint32_t trading_day)
 		if (trading_day != _record_data->trading_day)
 		{
 			LOG_INFO("cross day %d", trading_day);
-
+			
+			
 			_record_data->statistic_info.place_order_amount = 0;
 			_record_data->statistic_info.entrust_amount = 0;
 			_record_data->statistic_info.trade_amount = 0;
@@ -576,6 +580,7 @@ void context::handle_account(const std::vector<std::any>& param)
 		const auto& account = std::any_cast<account_info>(param[0]);
 		_account_info = account;
 	}
+
 }
 
 void context::handle_position(const std::vector<std::any>& param)

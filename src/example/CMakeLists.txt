@@ -12,9 +12,9 @@ ENDIF()
 include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
 
-add_executable(example "example.cpp" "example.h")
+add_executable(example "example.cpp" "marketing_strategy.cpp")
 
-target_link_libraries(example "lightning")
+target_link_libraries(example "framework")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET example PROPERTY CXX_STANDARD 20)

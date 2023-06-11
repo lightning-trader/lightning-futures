@@ -116,3 +116,11 @@ static std::string datetime_to_string(const char* date, const char* time)
 	}
 	return "";
 }
+
+static uint32_t time_to_uint(time_t t)
+{
+	char buffer[16] = { 0 };
+	struct tm* info = localtime(&t);
+	strftime(buffer, sizeof buffer, "%Y%m%d", info);
+	return std::atoi(buffer);
+}

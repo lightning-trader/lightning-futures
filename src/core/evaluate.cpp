@@ -1,5 +1,6 @@
 ﻿#include "evaluate.h"
 #include "context.h"
+#include "csv_recorder.h"
 #include <market_api.h>
 #include <file_wapper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -39,7 +40,6 @@ bool evaluate::init_from_file(const std::string& config_path)
 		boost::property_tree::ini_parser::read_ini(config_path, config_root);
 		market_config = config_root.get_child("dummy_market");
 		trader_config = config_root.get_child("dummy_trader");
-		recorder_config = config_root.get_child("recorder");
 		control_config = config_root.get_child("control");
 		include_config = config_root.get_child("include");
 	}
