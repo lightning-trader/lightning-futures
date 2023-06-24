@@ -494,7 +494,7 @@ uint32_t context::get_open_pending()
 
 void context::load_data(const char* localdb_name)
 {
-	std::string record_dbname = std::string("record_db:") + localdb_name;
+	std::string record_dbname = std::string("record_db_") + localdb_name;
 	boost::interprocess::shared_memory_object record_shdmem
 	{
 		boost::interprocess::open_or_create,
@@ -506,7 +506,7 @@ void context::load_data(const char* localdb_name)
 	_record_data = static_cast<record_data*>(_record_region->get_address());
 
 	//用户数据
-	std::string uesrdb_name = std::string("uesr_db:") + localdb_name;
+	std::string uesrdb_name = std::string("uesr_db_") + localdb_name;
 	boost::interprocess::shared_memory_object userdb_shdmem
 	{
 		boost::interprocess::open_or_create, 
