@@ -18,6 +18,7 @@ context::context():
 	_userdata_size(1024 * MAX_UNITID),
 	_is_trading_ready(false),
 	_tick_callback(nullptr),
+	_bar_callback(nullptr),
 	_record_region(nullptr),
 	_record_data(nullptr),
 	_section(nullptr),
@@ -284,7 +285,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		LOG_ERROR("place_order _chain nullptr");
 		return INVALID_ESTID;
 	}
-	if(_record_region)
+	if(_record_data)
 	{
 		_record_data->last_order_time = _last_tick_time;
 		_record_data->statistic_info.place_order_amount++;
@@ -493,7 +494,7 @@ uint32_t context::get_open_pending()
 
 void context::load_data(const char* localdb_name)
 {
-	std::string record_dbname = std::string("record_db") + localdb_name;
+	std::string record_dbname = std::string("record_db:") + localdb_name;
 	boost::interprocess::shared_memory_object record_shdmem
 	{
 		boost::interprocess::open_or_create,
@@ -505,7 +506,7 @@ void context::load_data(const char* localdb_name)
 	_record_data = static_cast<record_data*>(_record_region->get_address());
 
 	//用户数据
-	std::string uesrdb_name = std::string("uesr_db") + localdb_name;
+	std::string uesrdb_name = std::string("uesr_db:") + localdb_name;
 	boost::interprocess::shared_memory_object userdb_shdmem
 	{
 		boost::interprocess::open_or_create, 
