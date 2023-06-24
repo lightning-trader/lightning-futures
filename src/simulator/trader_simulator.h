@@ -18,8 +18,6 @@ private:
 
 	time_t _current_time;
 
-	boost::lockfree::spsc_queue<tick_info, boost::lockfree::capacity<4>>  _pending_tick_info;
-	
 	uint32_t _order_ref;
 
 	order_container _order_info;
