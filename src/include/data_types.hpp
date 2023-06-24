@@ -460,11 +460,36 @@ struct order_info
 		price(.0f)
 	{}
 
-	bool is_valid()
+	bool is_valid()const
 	{
 		return est_id != INVALID_ESTID;
 	}
 
+	bool is_buy()const
+	{
+		if (direction == direction_type::DT_LONG && offset == offset_type::OT_OPEN)
+		{
+			return true;
+		}
+		if (direction == direction_type::DT_SHORT && offset == offset_type::OT_CLOSE)
+		{
+			return true;
+		}
+		return false ;
+	}
+
+	bool is_sell()const
+	{
+		if (direction == direction_type::DT_SHORT && offset == offset_type::OT_OPEN)
+		{
+			return true;
+		}
+		if (direction == direction_type::DT_LONG && offset == offset_type::OT_CLOSE)
+		{
+			return true;
+		}
+		return false;
+	}
 	
 };
 const order_info default_order ;

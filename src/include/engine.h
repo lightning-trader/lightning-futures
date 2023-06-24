@@ -96,7 +96,7 @@ namespace lt
 				auto b_it = it->second.find(perid);
 				if (b_it != it->second.end())
 				{
-					b_it->second->on_bar(bar);
+					b_it->second->on_bar(perid,bar);
 				}
 			}
 		}

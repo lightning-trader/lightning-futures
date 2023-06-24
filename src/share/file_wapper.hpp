@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -12,7 +12,7 @@ public:
 		if (exists(name))
 			return true;
 
-		return boost::filesystem::create_directory(boost::filesystem::path(name));
+		return std::filesystem::create_directory(std::filesystem::path(name));
 	}
 
 	static bool create_directories(const char* name)
@@ -20,11 +20,11 @@ public:
 		if (exists(name))
 			return true;
 
-		return boost::filesystem::create_directories(boost::filesystem::path(name));
+		return std::filesystem::create_directories(std::filesystem::path(name));
 	}
 
 	static bool exists(const char* name)
 	{
-		return boost::filesystem::exists(boost::filesystem::path(name));
+		return std::filesystem::exists(std::filesystem::path(name));
 	}
 };

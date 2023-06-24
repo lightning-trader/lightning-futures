@@ -10,7 +10,7 @@ namespace lt
 
 	struct bar_receiver
 	{
-		virtual void on_bar(const bar_info& bar) = 0;
+		virtual void on_bar(uint32_t period,const bar_info& bar) = 0;
 	};
 }
 

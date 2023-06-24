@@ -64,15 +64,11 @@ namespace lt
 		virtual void on_init(subscriber& suber) {};
 
 		/*
-		*	周期更新函数
-		*/
-		virtual void on_update() {};
-		
-		/*
 		 *	销毁
 		 */
 		virtual void on_destory(unsubscriber& unsuber) {};
 
+		virtual void on_update() {};
 
 	public:
 
