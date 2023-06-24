@@ -1,8 +1,8 @@
 ﻿#include "runtime.h"
 #include <define.h>
+#include <filesystem>
 #include <market_api.h>
 #include <trader_api.h>
-#include <file_wapper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <interface.h>
 
@@ -30,7 +30,7 @@ bool runtime::init_from_file(const std::string& config_path)
 	boost::property_tree::ptree  control_config;
 	boost::property_tree::ptree  include_config;
 
-	if (!file_wapper::exists(config_path.c_str()))
+	if (!std::filesystem::exists(config_path.c_str()))
 	{
 		LOG_ERROR("runtime_engine init_from_file config_path not exit : %s", config_path.c_str());
 		return false;

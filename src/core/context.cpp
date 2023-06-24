@@ -1,5 +1,4 @@
 ﻿#include "context.h"
-#include <file_wapper.hpp>
 #include <market_api.h>
 #include <trader_api.h>
 #include <recorder.h>

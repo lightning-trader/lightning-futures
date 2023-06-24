@@ -1,5 +1,5 @@
 ﻿#include "ctp_trader.h"
-#include <file_wapper.hpp>
+#include <filesystem>
 #include <time_utils.hpp>
 
 #ifdef _WIN32
@@ -66,9 +66,9 @@ bool ctp_trader::init(const boost::property_tree::ptree& config)
 	
 	char path_buff[64];
 	sprintf(path_buff,"td_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
-	if (!file_wapper::exists(path_buff))
+	if (!std::filesystem::exists(path_buff))
 	{
-		file_wapper::create_directories(path_buff);
+		std::filesystem::create_directories(path_buff);
 	}
 	_td_api = CThostFtdcTraderApi::CreateFtdcTraderApi(path_buff);
 	_td_api->RegisterSpi(this);

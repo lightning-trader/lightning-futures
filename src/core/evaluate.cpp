@@ -1,8 +1,8 @@
 ﻿#include "evaluate.h"
 #include "context.h"
+#include <filesystem>
 #include "csv_recorder.h"
 #include <market_api.h>
-#include <file_wapper.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <interface.h>
 
@@ -29,7 +29,7 @@ bool evaluate::init_from_file(const std::string& config_path)
 	boost::property_tree::ptree  control_config;
 	boost::property_tree::ptree  include_config;
 
-	if (!file_wapper::exists(config_path.c_str()))
+	if (!std::filesystem::exists(config_path.c_str()))
 	{
 		LOG_ERROR("evaluate_driver init_from_file config_path not exit : %s", config_path.c_str());
 		return false;

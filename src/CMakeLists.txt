@@ -18,7 +18,7 @@ ELSEIF(UNIX)
     set(BOOST_LIBRARY_DIRS "${BOOST_ROOT}/lib")
     set(CTP_LIBS thostmduserapi_se thosttraderapi_se)
     set(SYS_LIBS pthread rt)
-    set(BOOST_LIBS boost_log boost_log_setup boost_system boost_filesystem boost_thread)
+    set(BOOST_LIBS boost_log boost_log_setup boost_system boost_thread)
 ENDIF()
 
 

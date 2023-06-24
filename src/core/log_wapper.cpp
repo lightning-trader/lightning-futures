@@ -1,7 +1,7 @@
 ﻿#include <define.h>
 #include <fstream>
+#include <filesystem>
 #include <boost/scoped_array.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/from_stream.hpp>
@@ -16,7 +16,7 @@ bool _is_log_ready = false ;
 bool init_log_environment(std::string _cfg)
 {
 	
-	if (!boost::filesystem::exists(_cfg))
+	if (!std::filesystem::exists(_cfg))
 	{
 		return false;
 	}
@@ -24,9 +24,9 @@ bool init_log_environment(std::string _cfg)
 	namespace logging = boost::log;
 	using namespace logging::trivial;
 
-	if (!boost::filesystem::exists("./log/"))
+	if (!std::filesystem::exists("./log/"))
 	{
-		boost::filesystem::create_directory("./log/");
+		std::filesystem::create_directory("./log/");
 	}
 	logging::add_common_attributes();
 

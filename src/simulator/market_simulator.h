@@ -27,8 +27,6 @@ private:
 
 	size_t _current_index ;
 
-	boost::object_pool<tick_info> _tick_pool;
-
 	uint32_t	_interval;			//间隔毫秒数
 	
 	bool _is_runing;
