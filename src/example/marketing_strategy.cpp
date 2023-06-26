@@ -78,6 +78,7 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _order_data->buy_order, _order_data->sell_order);
 		return;
 	}
+	
 	double_t sell_price = tick.sell_price() + _open_delta + _random(_random_engine);
 	double_t buy_price = tick.buy_price() - _open_delta - _random(_random_engine);
 	const auto& pos = get_position(_code);

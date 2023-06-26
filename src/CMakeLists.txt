@@ -7,7 +7,7 @@ project ("lightning-trader")
 
 IF(WIN32)
     set(BOOST_ROOT "C:/Boost")
-    set(Boost_INCLUDE_DIR "${BOOST_ROOT}/include/boost-1_80")
+    set(Boost_INCLUDE_DIR "${BOOST_ROOT}/include/boost-1_82")
     set(BOOST_LIBRARY_DIRS "${BOOST_ROOT}/lib")
 ELSEIF(UNIX)
     ADD_DEFINITIONS( "-fPIC" )
