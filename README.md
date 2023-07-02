@@ -3,10 +3,7 @@
 #### 介绍
 lightning-trader轻量级期货量化开发库，适合高频交易，提供了通用的C语言接口供其他语言调用，以下是基于lightning-trader的多语言封装
 
-- [ltpp，提供策略管理及对lightning-trader接口c++的封装](https://gitee.com/pursue-wealth/ltpp)
-- [ltpy，为了方python提供策略框架，适合中低频高频不推荐（正在开发中）](https://gitee.com/pursue-wealth/ltpp)
-- [ltcs，为了图形化页面方便（正在开发中）](https://gitee.com/pursue-wealth/ltpp)
-- [ltrl，提供基于lightning-trader的模拟器的gym（正在开发中）](https://gitee.com/pursue-wealth/ltpp)
+- [lightning-strategy，提供基于lightning-trader的开源策略](https://gitee.com/pursue-wealth/lightning-strategy)
 
 - QQ交流群:980550304
 - 开发者QQ:137336521
