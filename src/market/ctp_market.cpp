@@ -192,17 +192,16 @@ void ctp_market::do_userlogin()
 void ctp_market::do_subscribe()
 {
 	char* id_list[500];
-	int i = 0, num = 0;
+	int num = 0;
 	for (auto& it : _instrument_id_list)
 	{
-		id_list[i] = const_cast<char*>(it.first.c_str());
+		id_list[num] = const_cast<char*>(it.first.c_str());
 		num++;
 		if (num == 500)
 		{
 			_md_api->SubscribeMarketData(id_list, num);//订阅行情
 			num = 0;
 		}
-		i++;
 	}
 	if (num > 0)
 	{
@@ -217,7 +216,7 @@ void ctp_market::do_unsubscribe(const std::vector<code_t>& code_list)
 	int num = 0;
 	for (size_t i = 0; i < code_list.size(); i++)
 	{
-		id_list[i] = const_cast<char*>(code_list[i].get_id());
+		id_list[num] = const_cast<char*>(code_list[i].get_id());
 		num++;
 		if (num == 500)
 		{
