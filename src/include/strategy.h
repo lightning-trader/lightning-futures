@@ -52,7 +52,7 @@ namespace lt
 		/*
 		*	销毁
 		*/
-		void destory(unsubscriber& unsuber);
+		void destroy(unsubscriber& unsuber);
 
 		//回调函数
 	private:
@@ -66,7 +66,7 @@ namespace lt
 		/*
 		 *	销毁
 		 */
-		virtual void on_destory(unsubscriber& unsuber) {};
+		virtual void on_destroy(unsubscriber& unsuber) {};
 
 		virtual void on_update() {};
 
@@ -203,9 +203,8 @@ namespace lt
 		*	注意多个策略时候id不能改变
 		*	ID最大值与localdb配置中的userdata_block对应
 		*/
-
 		void* get_userdata(size_t size);
-
+		
 		/**
 		* 获取交易日
 		*/

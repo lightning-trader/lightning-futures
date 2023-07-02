@@ -136,7 +136,7 @@ void engine::clear_strategy()
 	unsubscriber unsuber(_tick_receiver, _bar_receiver);
 	for (auto it : _strategy_map)
 	{
-		it.second->destory(unsuber);
+		it.second->destroy(unsuber);
 	}
 	_strategy_map.clear();
 	unsubscribe(unsuber.tick_unsubscrib, unsuber.bar_unsubscrib);

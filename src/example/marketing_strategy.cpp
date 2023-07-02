@@ -7,7 +7,6 @@ using namespace lt;
 void marketing_strategy::on_init(subscriber& suber)
 {
 	suber.regist_tick_receiver(_code,this);
-
 	use_custom_chain(false);
 	_order_data = static_cast<persist_data*>(get_userdata(sizeof(persist_data)));
 }
@@ -72,44 +71,47 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
 		return;
 	}
-	//LOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
-	if (_order_data->buy_order != INVALID_ESTID || _order_data->sell_order != INVALID_ESTID)
-	{
-		LOG_DEBUG("_buy_order or _sell_order not null  %s %llu %llu\n", tick.id.get_id(), _order_data->buy_order, _order_data->sell_order);
-		return;
-	}
-	double_t sell_price = tick.sell_price() + _open_delta + _random(_random_engine);
-	double_t buy_price = tick.buy_price() - _open_delta - _random(_random_engine);
 	const auto& pos = get_position(_code);
-	//多头
-	if (pos.yestoday_short.usable() > 0)
+	//LOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
+	if (_order_data->buy_order == INVALID_ESTID)
 	{
-		uint32_t buy_once = std::min(pos.yestoday_short.usable(), _open_once);
-		_order_data->buy_order = buy_for_close(tick.id, buy_once, buy_price);
+		double_t buy_price = tick.buy_price() - _open_delta - _random(_random_engine);
+
+		//多头
+		if (pos.yestoday_short.usable() > 0)
+		{
+			uint32_t buy_once = std::min(pos.yestoday_short.usable(), _open_once);
+			_order_data->buy_order = buy_for_close(tick.id, buy_once, buy_price);
+		}
+		else if (pos.today_short.usable() > 0)
+		{
+			uint32_t buy_once = std::min(pos.today_short.usable(), _open_once);
+			_order_data->buy_order = buy_for_close(tick.id, buy_once, buy_price);
+		}
+		else
+		{
+			_order_data->buy_order = buy_for_open(tick.id, _open_once, buy_price);
+		}
 	}
-	else if (pos.today_short.usable() > 0)
+	if (_order_data->sell_order == INVALID_ESTID)
 	{
-		uint32_t buy_once = std::min(pos.today_short.usable(), _open_once);
-		_order_data->buy_order = buy_for_close(tick.id, buy_once, buy_price);
-	}
-	else
-	{
-		_order_data->buy_order = buy_for_open(tick.id, _open_once, buy_price);
-	}
-	//空头
-	if (pos.yestoday_long.usable() > 0)
-	{
-		uint32_t sell_once = std::min(pos.yestoday_long.usable(), _open_once);
-		_order_data->sell_order = sell_for_close(tick.id, sell_once, sell_price);
-	}
-	else if (pos.today_long.usable() > 0)
-	{
-		uint32_t sell_once = std::min(pos.today_long.usable(), _open_once);
-		_order_data->sell_order = sell_for_close(tick.id, sell_once, sell_price);
-	}
-	else
-	{
-		_order_data->sell_order = sell_for_open(tick.id, _open_once, sell_price);
+		double_t sell_price = tick.sell_price() + _open_delta + _random(_random_engine);
+
+		//空头
+		if (pos.yestoday_long.usable() > 0)
+		{
+			uint32_t sell_once = std::min(pos.yestoday_long.usable(), _open_once);
+			_order_data->sell_order = sell_for_close(tick.id, sell_once, sell_price);
+		}
+		else if (pos.today_long.usable() > 0)
+		{
+			uint32_t sell_once = std::min(pos.today_long.usable(), _open_once);
+			_order_data->sell_order = sell_for_close(tick.id, sell_once, sell_price);
+		}
+		else
+		{
+			_order_data->sell_order = sell_for_open(tick.id, _open_once, sell_price);
+		}
 	}
 }
 
@@ -178,7 +180,7 @@ void marketing_strategy::on_error(error_type type, estid_t localid, const uint32
 	
 }
 
-void marketing_strategy::on_destory(lt::unsubscriber& unsuber)
+void marketing_strategy::on_destroy(lt::unsubscriber& unsuber)
 {
 	unsuber.unregist_tick_receiver(_code, this);
 }

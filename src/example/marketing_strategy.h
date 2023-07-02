@@ -14,12 +14,6 @@ class marketing_strategy : public lt::strategy,public lt::tick_receiver
 		uint32_t trading_day;
 		estid_t sell_order;
 		estid_t buy_order;
-
-		persist_data() :
-			trading_day(0x0U),
-			sell_order(INVALID_ESTID),
-			buy_order(INVALID_ESTID)
-		{}
 	};
 public:
 
@@ -92,7 +86,7 @@ public:
 	/*
 	 *	Ïú»Ù
 	 */
-	virtual void on_destory(lt::unsubscriber& unsuber)override;
+	virtual void on_destroy(lt::unsubscriber& unsuber)override;
 
 private:
 

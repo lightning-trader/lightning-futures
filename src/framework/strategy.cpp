@@ -22,9 +22,9 @@ void strategy::update()
 	this->on_update();
 }
 
-void strategy::destory(unsubscriber& unsuber)
+void strategy::destroy(unsubscriber& unsuber)
 {
-	this->on_destory(unsuber);
+	this->on_destroy(unsuber);
 }
 
 estid_t strategy::buy_for_open(const code_t& code,uint32_t count ,double_t price , order_flag flag )
@@ -101,17 +101,14 @@ void strategy::set_cancel_condition(estid_t order_id, std::function<bool(const t
 	return _engine.set_cancel_condition( order_id, callback);
 }
 
-
+void* strategy::get_userdata(size_t size)
+{
+	return _engine.get_userdata(_id, size);
+}
 
 time_t strategy::last_order_time()
 {
 	return _engine.last_order_time();
-}
-
-
-void* strategy::get_userdata(size_t size)
-{
-	return _engine.get_userdata( _id, size);;
 }
 
 uint32_t strategy::get_trading_day()const
