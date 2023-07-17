@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include<string>
 #include<ctime>
@@ -28,6 +28,7 @@ static time_t make_datetime(int year, int month, int day, int hour=0, int minute
 	t.tm_hour = hour;
 	t.tm_min = minute;
 	t.tm_sec = second;
+    t.tm_isdst = -1;//添加这一行，初始化tm_isdst，不然mktime返回值恒为-1
 	return mktime(&t);
 }
 
