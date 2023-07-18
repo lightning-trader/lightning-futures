@@ -7,12 +7,12 @@
 #include "event_center.hpp"
 #include "market_api.h"
 #include <trader_api.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/interprocess/mapped_region.hpp>
+#include <params.hpp>
 #include "trading_section.h"
 #include "pod_chain.h"
 #include "bar_generator.h"
 #include "delayed_distributor.h"
+
 
 
 struct record_data
@@ -22,6 +22,13 @@ struct record_data
 	order_statistic statistic_info;
 
 	record_data():trading_day(0U),last_order_time(0) {}
+
+	std::ostream& operator>>(std::ostream& os)
+	{
+		os << trading_day << last_order_time;
+		statistic_info>>os;
+		return os ;
+	}
 
 };
 
@@ -63,12 +70,6 @@ private:
 	filter_callback _trading_filter;
 
 	record_data* _record_data;
-
-	std::shared_ptr<boost::interprocess::mapped_region> _record_region;
-
-	size_t _userdata_size ;
-
-	std::vector<std::shared_ptr<boost::interprocess::mapped_region>> _userdata_region ;
 
 	bool _is_trading_ready ;
 
@@ -146,8 +147,6 @@ public:
 
 	const order_statistic& get_order_statistic();
 
-	void* get_userdata(untid_t index, size_t size);
-
 	bool is_trading_ready()
 	{
 		return _is_trading_ready;
@@ -184,8 +183,7 @@ public:
 
 private:
 
-	void load_data(const char* localdb_name);
-
+	
 	void check_crossday(uint32_t trading_day);
 
 	void handle_settlement(const std::vector<std::any>& param);
@@ -218,8 +216,7 @@ private:
 
 protected:
 
-	void init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config,
-		bool reset_trading_day = false);
+	void context::init(const params& control_config, const params& include_config, bool reset_trading_day=false);
 
 public:
 

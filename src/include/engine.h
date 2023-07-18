@@ -4,6 +4,7 @@
 #include <receiver.h>
 #include <strategy.h>
 #include "notify.h"
+#include <log_wapper.hpp>
 
 namespace lt
 {
@@ -78,7 +79,9 @@ namespace lt
 				{
 					if (trc)
 					{
+						LOG_PROFILE(tick.id.get_id());
 						trc->on_tick(tick, deal);
+						LOG_PROFILE(tick.id.get_id());
 					}
 				}
 
@@ -366,14 +369,6 @@ namespace lt
 		*	跨交易日返回0
 		*/
 		time_t last_order_time();
-
-		/**
-		* 获取用户数据，直接写入会被保存到共享内存中
-		*	注意多个策略时候id不能改变
-		*	ID最大值与localdb配置中的userdata_block对应
-		*/
-
-		void* get_userdata(untid_t id, size_t size);
 
 		/**
 		* 获取交易日

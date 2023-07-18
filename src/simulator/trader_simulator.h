@@ -1,8 +1,7 @@
 ﻿#pragma once
 #include <define.h>
 #include <trader_api.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/pool/object_pool.hpp>
+#include <params.hpp>
 #include "order_container.h"
 #include "contract_parser.h"
 #include "position_container.h"
@@ -17,7 +16,7 @@ private:
 	uint32_t _current_trading_day ;
 
 	time_t _current_time;
-
+	
 	uint32_t _order_ref;
 
 	order_container _order_info;
@@ -51,7 +50,7 @@ public:
 	{
 	}
 
-	bool init(const boost::property_tree::ptree& config);
+	bool init(const params& config);
 
 	
 

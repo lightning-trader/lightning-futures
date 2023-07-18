@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "define.h"
+#include "log_wapper.hpp"
 #include <lightning.h>
 #include "trader_api.h"
 #include "event_center.hpp"
@@ -45,7 +46,7 @@ public:
 	{
 		add_handle([this](trader_event_type type, const std::vector<std::any>& param)->void {
 
-			LOG_INFO("event_type %d\n", type);
+			LOG_INFO("event_type", static_cast<uint8_t>(type));
 			switch (type)
 			{
 			case trader_event_type::TET_AccountChange:

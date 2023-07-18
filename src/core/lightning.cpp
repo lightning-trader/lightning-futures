@@ -90,8 +90,6 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(const order_statistic&, default_statistic, context, get_order_statistic, (const ltobj& lt), ());
 
-	LT_INTERFACE_IMPLEMENTATION(void*, nullptr, context, get_userdata, (const ltobj& lt, uint32_t index, size_t size), (index, size));
-
 	LT_INTERFACE_IMPLEMENTATION(bool, false, context, is_trading_ready, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(uint32_t, 0U, context, get_trading_day, (const ltobj& lt), ());

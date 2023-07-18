@@ -1,4 +1,5 @@
 ﻿#include "contract_parser.h"
+#include <log_wapper.hpp>
 
 contract_parser::contract_parser()
 {
@@ -11,14 +12,14 @@ contract_parser::~contract_parser()
 
 void contract_parser::init(const std::string& config_path)
 {
-	LOG_INFO("contract_parser init \n");
+	LOG_INFO("contract_parser init");
 	_contract_info.clear();
 	rapidcsv::Document config_csv(config_path, rapidcsv::LabelParams(0, -1));
 	for (size_t i = 0; i < config_csv.GetRowCount(); i++)
 	{
 		contract_info info ;
 		const std::string& code_str = config_csv.GetCell<std::string>("code", i);
-		LOG_INFO("load contract code : %s \n", code_str.c_str());
+		LOG_INFO("load contract code :", code_str.c_str());
 		info.code = code_t(code_str.c_str());
 		info.crge_type = static_cast<charge_type>(config_csv.GetCell<int32_t>("charge_type", i));
 		info.open_charge = config_csv.GetCell<double_t>("open_charge", i);

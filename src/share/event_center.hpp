@@ -1,14 +1,15 @@
 ﻿#pragma once
 #include <any>
 #include <vector>
-#include <iostream>
-#include <boost/lockfree/spsc_queue.hpp>
+#include "ringbuffer.hpp"
 
 template<typename T>
 struct event_data
 {
 	T type;
 	std::vector<std::any> param;
+
+	event_data() = default;
 };
 
 template<typename T,size_t N>
@@ -16,7 +17,7 @@ class event_source
 {
 private:
 
-	boost::lockfree::spsc_queue<event_data<T>, boost::lockfree::capacity<N>>  _event_queue;
+	Ringbuffer<event_data<T>, N>  _event_queue;
 	std::vector<std::function<void(T, const std::vector<std::any>& param)>> _handle_list;
 
 
@@ -24,7 +25,7 @@ private:
 
 	void fire_event(event_data<T>& data)
 	{
-		while (!_event_queue.push(data));
+		while (!_event_queue.insert(data));
 	}
 
 
@@ -48,8 +49,8 @@ public:
 
 	void update()
 	{
-		event_data<T> data;
-		while (_event_queue.pop(data))
+		event_data<T> data ;
+		while (_event_queue.remove(data))
 		{
 			for (auto& handle : _handle_list)
 			{
@@ -60,12 +61,12 @@ public:
 
 	bool is_empty()const
 	{
-		return _event_queue.read_available() == 0;
+		return _event_queue.isEmpty();
 	}
 
 	bool is_full()const
 	{
-		return _event_queue.write_available() == 0;
+		return _event_queue.isFull();
 	}
 
 public:

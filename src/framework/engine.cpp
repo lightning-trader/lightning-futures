@@ -173,7 +173,8 @@ const order_statistic& lt::engine::get_order_statistic()const
 
 estid_t engine::place_order(untid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
-	LOG_DEBUG("place_order : %s , %d, %d, %f\n", code.get_id(), offset, direction, price);
+	LOG_PROFILE(code.get_id());
+	LOG_INFO("place_order : ", code.get_id(), offset, direction, price);
 	estid_t estid = lt_place_order(_lt, id, offset, direction, code, count, price, flag);
 	if (estid != INVALID_ESTID)
 	{
@@ -185,7 +186,7 @@ estid_t engine::place_order(untid_t id,offset_type offset, direction_type direct
 
 void engine::cancel_order(estid_t order_id)
 {
-	LOG_DEBUG("cancel_order : %llu\n", order_id);
+	LOG_DEBUG("cancel_order : ", order_id);
 
 	lt_cancel_order(_lt, order_id);
 }
@@ -219,7 +220,7 @@ void engine::use_custom_chain(untid_t id,bool flag)
 
 void engine::set_cancel_condition(estid_t order_id, std::function<bool(const tick_info&)> callback)
 {
-	LOG_DEBUG("set_cancel_condition : %llu\n", order_id);
+	LOG_DEBUG("set_cancel_condition : ", order_id);
 	engine::_condition_function[order_id] = callback;
 	lt_set_cancel_condition(_lt, order_id, engine::_condition_callback);
 }
@@ -231,11 +232,6 @@ time_t engine::last_order_time()
 	return lt_last_order_time(_lt);
 }
 
-
-void* engine::get_userdata(untid_t id,size_t size)
-{
-	return lt_get_userdata(_lt, id, size);;
-}
 
 uint32_t engine::get_trading_day()const
 {

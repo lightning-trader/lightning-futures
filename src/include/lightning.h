@@ -185,11 +185,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	LT_INTERFACE_DECLARE(const order_statistic&, get_order_statistic, (const ltobj&));
 
 	/**
-	* 获取用户数据指针
-	*/
-	LT_INTERFACE_DECLARE(void*, get_userdata, (const ltobj& , uint32_t, size_t));
-
-	/**
 	* 是否在交易中
 	*/
 	LT_INTERFACE_DECLARE(bool, is_trading_ready, (const ltobj&));

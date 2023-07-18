@@ -1,5 +1,7 @@
 #include "marketing_strategy.h"
 #include "time_utils.hpp"
+#include <string_helper.hpp>
+#include <mmf_wapper.hpp>
 
 using namespace lt;
 
@@ -8,7 +10,7 @@ void marketing_strategy::on_init(subscriber& suber)
 {
 	suber.regist_tick_receiver(_code,this);
 	use_custom_chain(false);
-	_order_data = static_cast<persist_data*>(get_userdata(sizeof(persist_data)));
+	_order_data = maping_file<persist_data>(string_helper::format("./marketing_strategy_{0}.mmf", get_id()).c_str());
 }
 
 void marketing_strategy::on_ready()
@@ -63,12 +65,12 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 {
 	if (!is_trading_ready())
 	{
-		LOG_DEBUG("is_trading_ready not ready %s\n", tick.id.get_id());
+		LOG_DEBUG("is_trading_ready not ready", tick.id.get_id());
 		return;
 	}
 	if (tick.time > _coming_to_close)
 	{
-		LOG_DEBUG("time > _coming_to_close %s %d %d\n", tick.id.get_id(), tick.time, _coming_to_close);
+		LOG_DEBUG("time > _coming_to_close", tick.id.get_id(), tick.time, _coming_to_close);
 		return;
 	}
 	const auto& pos = get_position(_code);
@@ -119,7 +121,7 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 
 void marketing_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("on_entrust : %llu %s %d %d %f %d/%d\n", order.est_id, order.code, order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LOG_INFO("on_entrust :", order.est_id, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 
 	if (order.est_id == _order_data->buy_order || order.est_id == _order_data->sell_order)
 	{
@@ -136,7 +138,7 @@ void marketing_strategy::on_entrust(const order_info& order)
 
 void marketing_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_INFO("on_trade : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, volume);
+	LOG_INFO("on_trade :", localid, code.get_id(), direction, offset, price, volume);
 	if (localid == _order_data->buy_order)
 	{
 		cancel_order(_order_data->sell_order);
@@ -151,7 +153,7 @@ void marketing_strategy::on_trade(estid_t localid, const code_t& code, offset_ty
 
 void marketing_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
-	LOG_INFO("on_cancel : %llu %s %d %d %f %d\n", localid, code, direction, offset, price, cancel_volume);
+	LOG_INFO("on_cancel :", localid, code.get_id(), direction, offset, price, cancel_volume);
 
 	if (localid == _order_data->buy_order)
 	{
@@ -165,7 +167,7 @@ void marketing_strategy::on_cancel(estid_t localid, const code_t& code, offset_t
 
 void marketing_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
 {
-	LOG_ERROR("on_error : %llu %d \n", localid, error);
+	LOG_ERROR("on_error :", localid, error);
 	if (type == error_type::ET_PLACE_ORDER)
 	{
 		if (localid == _order_data->buy_order)
@@ -183,4 +185,5 @@ void marketing_strategy::on_error(error_type type, estid_t localid, const uint32
 void marketing_strategy::on_destroy(lt::unsubscriber& unsuber)
 {
 	unsuber.unregist_tick_receiver(_code, this);
+	unmaping_file(_order_data);
 }

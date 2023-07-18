@@ -3,16 +3,16 @@
 #include <event_center.hpp>
 #include "contract_parser.h"
 #include "./tick_loader/csv_tick_loader.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <log_wapper.hpp>
 
-bool trader_simulator::init(const boost::property_tree::ptree& config)
+bool trader_simulator::init(const params& config)
 {
 	try
 	{
 		_account_info.money = config.get<double_t>("initial_capital");
 		auto contract_file = config.get<std::string>("contract_config");
 		_contract_parser.init(contract_file);
-		_interval = config.get<uint32_t>("interval",1);
+		_interval = config.get<uint32_t>("interval");
 	}
 	catch (...)
 	{
@@ -83,14 +83,12 @@ estid_t trader_simulator::place_order(offset_type offset, direction_type directi
 	
 	//boost::posix_time::ptime pt2 = boost::posix_time::microsec_clock::local_time();
 	//std::cout << "place_order : " << pt2 - pt << est_id.to_str() << std::endl;
-	//LOG_DEBUG("tick_simulator::place_order 1 %s \n", est_id.to_str());
-
-	//spin_lock lock(_mutex);
 	
-
+	//spin_lock lock(_mutex);
+	LOG_PROFILE(code.get_id());
 	order_info order;
 	order.est_id = make_estid();
-	LOG_DEBUG("tick_simulator::place_order %llu \n", order.est_id);
+	LOG_DEBUG("tick_simulator::place_order", order.est_id);
 	order.code = code ;
 	order.create_time = _current_time;
 	order.offset = offset;
@@ -119,7 +117,7 @@ estid_t trader_simulator::place_order(offset_type offset, direction_type directi
 
 void trader_simulator::cancel_order(estid_t order_id)
 {
-	LOG_DEBUG("tick_simulator cancel_order %lld", order_id);
+	LOG_DEBUG("tick_simulator cancel_order", order_id);
 	auto match = _order_info.get_order_match(order_id);
 	if(match)
 	{
@@ -438,7 +436,7 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume,bool i
 	auto contract_info = _contract_parser.get_contract_info(order.code);
 	if(contract_info == nullptr)
 	{
-		LOG_ERROR("tick_simulator order_deal cant find the contract_info for %s", order.code.get_id());
+		LOG_ERROR("tick_simulator order_deal cant find the contract_info for", order.code.get_id());
 		return;
 	}
 	const auto&& pos = _position_info.get_position_info(order.code);
@@ -521,7 +519,7 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume,bool i
 	}
 	else
 	{
-		LOG_TRACE(" order_deal _order_info.del_order %llu", order.est_id);
+		LOG_TRACE(" order_deal _order_info.del_order", order.est_id);
 		//全部成交
 		this->fire_event(trader_event_type::TET_OrderTrade, order.est_id, order.code, order.offset, order.direction, order.price, order.total_volume);
 		_order_info.del_order(order.est_id);
@@ -533,7 +531,7 @@ void trader_simulator::order_error(error_type type,estid_t estid,uint32_t err)
 	this->fire_event(trader_event_type::TET_OrderError, type, estid, err);
 	if (_order_info.exist(estid))
 	{
-		LOG_TRACE(" order_error _order_info.del_order %llu", estid);
+		LOG_TRACE(" order_error _order_info.del_order", estid);
 		_order_info.del_order(estid);
 	}
 }
@@ -547,7 +545,7 @@ void trader_simulator::order_cancel(const order_info& order,bool is_today)
 	{
 		if(thawing_deduction(order.code, order.offset, order.direction, order.last_volume, order.price, is_today))
 		{
-			LOG_INFO(" order_cancel _order_info.del_order %llu", order.est_id);
+			LOG_INFO(" order_cancel _order_info.del_order", order.est_id);
 			this->fire_event(trader_event_type::TET_OrderCancel, order.est_id, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
 			_order_info.del_order(order.est_id);
 		}
@@ -562,7 +560,7 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)
 	{
-		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for %s", code.get_id());
+		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", code.get_id());
 		return 10000U;
 	}
 	if (offset == offset_type::OT_OPEN)
@@ -585,7 +583,7 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			if(is_today)
 			{
 				const auto&& pos = _position_info.get_position_info(code);
-				LOG_TRACE("frozen_deduction long today %s %llu %u", code.get_id(), est_id, pos.today_long.usable());
+				LOG_TRACE("frozen_deduction long today", code.get_id(), est_id, pos.today_long.usable());
 				if (pos.today_long.usable() < count)
 				{
 					return 30U;
@@ -595,7 +593,7 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			else
 			{
 				const auto&& pos = _position_info.get_position_info(code);
-				LOG_TRACE("frozen_deduction long yestoday %s %llu %u", code.get_id(), est_id, pos.yestoday_long.usable());
+				LOG_TRACE("frozen_deduction long yestoday", code.get_id(), est_id, pos.yestoday_long.usable());
 				if (pos.yestoday_long.usable() < count)
 				{
 					return 30U;
@@ -609,7 +607,7 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			if(is_today)
 			{
 				const auto&& pos = _position_info.get_position_info(code);
-				LOG_TRACE("frozen_deduction short today %s %llu %u", code.get_id(), est_id, pos.today_short.usable());
+				LOG_TRACE("frozen_deduction short today", code.get_id(), est_id, pos.today_short.usable());
 				if (pos.today_short.usable() < count)
 				{
 					return 30U;
@@ -619,7 +617,7 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			else
 			{
 				const auto&& pos = _position_info.get_position_info(code);
-				LOG_TRACE("frozen_deduction short yestoday %s %llu %u", code.get_id(), est_id, pos.yestoday_short.usable());
+				LOG_TRACE("frozen_deduction short yestoday", code.get_id(), est_id, pos.yestoday_short.usable());
 				if (pos.yestoday_short.usable() < count)
 				{
 					return 30U;
@@ -637,7 +635,7 @@ bool trader_simulator::thawing_deduction(const code_t& code, offset_type offset,
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)
 	{
-		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for %s", code.get_id());
+		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for ", code.get_id());
 		return false;
 	}
 	//double_t service_charge = contract_info->get_service_charge(price, offset, is_today);
@@ -646,9 +644,9 @@ bool trader_simulator::thawing_deduction(const code_t& code, offset_type offset,
 	{
 		double_t delta = (last_volume * price * contract_info->multiple * contract_info->margin_rate);
 		//撤单 取消冻结保证金
-		LOG_TRACE("thawing_deduction 1 %f %f %u %f", _account_info.frozen_monery, delta, last_volume , price);
+		LOG_TRACE("thawing_deduction 1", _account_info.frozen_monery, delta, last_volume , price);
 		_account_info.frozen_monery -= delta;
-		LOG_TRACE("thawing_deduction 2 %f %f", _account_info.frozen_monery, delta);
+		LOG_TRACE("thawing_deduction 2", _account_info.frozen_monery, delta);
 		this->fire_event(trader_event_type::TET_AccountChange, _account_info);
 	}
 	else if (offset == offset_type::OT_CLOSE)

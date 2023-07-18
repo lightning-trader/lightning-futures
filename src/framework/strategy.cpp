@@ -101,15 +101,13 @@ void strategy::set_cancel_condition(estid_t order_id, std::function<bool(const t
 	return _engine.set_cancel_condition( order_id, callback);
 }
 
-void* strategy::get_userdata(size_t size)
-{
-	return _engine.get_userdata(_id, size);
-}
+
 
 time_t strategy::last_order_time()
 {
 	return _engine.last_order_time();
 }
+
 
 uint32_t strategy::get_trading_day()const
 {

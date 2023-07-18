@@ -3,9 +3,11 @@
 #include <trader_api.h>
 #include <recorder.h>
 #include <cpu_helper.hpp>
-#include <boost/interprocess/shared_memory_object.hpp>
 #include "pod_chain.h"
 #include <interface.h>
+#include <params.hpp>
+#include <filesystem>
+#include <mmf_wapper.hpp>
 
 
 context::context():
@@ -15,11 +17,9 @@ context::context():
 	_max_position(10000),
 	_default_chain(nullptr),
 	_trading_filter(nullptr),
-	_userdata_size(1024 * MAX_UNITID),
 	_is_trading_ready(false),
 	_tick_callback(nullptr),
 	_bar_callback(nullptr),
-	_record_region(nullptr),
 	_record_data(nullptr),
 	_section(nullptr),
 	_fast_mode(false),
@@ -29,18 +29,11 @@ context::context():
 	_last_tick_time(0),
 	realtime_event()
 {
-
+	_record_data = maping_file<record_data>("./record_data.mmf");
 }
 context::~context()
 {
-	if(_record_region)
-	{
-		_record_region->flush();
-	}
-	for(auto it : _userdata_region)
-	{
-		it->flush();
-	}
+	unmaping_file(_record_data);
 	if(_default_chain)
 	{
 		delete _default_chain;
@@ -54,23 +47,20 @@ context::~context()
 	
 }
 
-void context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptree& include_config,
-	bool reset_trading_day)
+void context::init(const params& control_config, const params& include_config,bool reset_trading_day)
 {
-	auto&& localdb_name = ctrl.get<std::string>("localdb_name");
+	auto&& localdb_name = control_config.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
 	{
-		_userdata_size = ctrl.get<size_t>("userdata_size", 4096 * MAX_UNITID);
-		load_data(localdb_name.c_str());
 		if(reset_trading_day)
 		{
 			_record_data->trading_day = 0;
 		}
 	}
-	_max_position = ctrl.get<uint32_t>("position_limit", 10000);
-	_fast_mode = ctrl.get<bool>("fast_mode", false);
-	_loop_interval = ctrl.get<uint32_t>("loop_interval", 1);
-	const auto& section_config = include_config.get<std::string>("section_config", "./section.csv");
+	_max_position = control_config.get<uint32_t>("position_limit");
+	_fast_mode = control_config.get<bool>("fast_mode");
+	_loop_interval = control_config.get<uint32_t>("loop_interval");
+	const auto& section_config = include_config.get<std::string>("section_config");
 	_section = std::make_shared<trading_section>(section_config);
 	_default_chain = create_chain(false);
 	auto trader_data = get_trader().get_trader_data();
@@ -91,7 +81,7 @@ void context::init(boost::property_tree::ptree& ctrl, boost::property_tree::ptre
 
 	add_trader_handle([this](trader_event_type type, const std::vector<std::any>& param)->void {
 
-		LOG_INFO("event_type %d\n", type);
+		LOG_INFO("event_type : ", static_cast<uint8_t>(type));
 		switch (type)
 		{
 		case trader_event_type::TET_SettlementCompleted:
@@ -158,14 +148,11 @@ void context::start_service()
 
 			auto begin = std::chrono::system_clock::now();
 			this->update();
-			if (!_fast_mode)
+			auto use_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
+			auto duration = std::chrono::microseconds(_loop_interval);
+			if (use_time < duration)
 			{
-				auto use_time =  std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
-				auto duration = std::chrono::microseconds(_loop_interval);
-				if(use_time < duration)
-				{
-					std::this_thread::sleep_for(duration - use_time);
-				}
+				std::this_thread::sleep_for(duration - use_time);
 			}
 		}
 	});
@@ -199,6 +186,7 @@ void context::update()
 			this->_update_callback();
 		}
 	}
+	
 }
 
 void context::stop_service()
@@ -256,7 +244,7 @@ deal_direction context::get_deal_direction(const tick_info& prev, const tick_inf
 
 void context::set_cancel_condition(estid_t order_id, condition_callback callback)
 {
-	LOG_DEBUG("context set_cancel_condition : %llu\n", order_id);
+	LOG_DEBUG("context set_cancel_condition", order_id);
 	_need_check_condition[order_id] = callback;
 }
 
@@ -267,7 +255,7 @@ void context::set_trading_filter(filter_callback callback)
 
 estid_t context::place_order(untid_t untid,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
-	
+	LOG_PROFILE(code.get_id());
 	if (!_is_trading_ready)
 	{
 		LOG_DEBUG("place_order _is_trading_ready");
@@ -290,6 +278,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		_record_data->last_order_time = _last_tick_time;
 		_record_data->statistic_info.place_order_amount++;
 	}
+	LOG_PROFILE(code.get_id());
 	return chain->place_order(offset, direction, code, count, price, flag);
 }
 
@@ -305,10 +294,10 @@ void context::cancel_order(estid_t order_id)
 	}
 	if (!_section->is_in_trading(get_last_time()))
 	{
-		LOG_DEBUG("cancel_order code in trading %lld", order_id);
+		LOG_DEBUG("cancel_order code in trading ", order_id);
 		return ;
 	}
-	LOG_DEBUG("context cancel_order : %llu\n", order_id);
+	LOG_DEBUG("context cancel_order : ", order_id);
 	get_trader().cancel_order(order_id);
 }
 
@@ -419,14 +408,6 @@ const order_statistic& context::get_order_statistic()
 	return default_statistic;
 }
 
-void* context::get_userdata(untid_t index,size_t size)
-{
-	if(size > _userdata_size)
-	{
-		return nullptr;
-	}
-	return _userdata_region[index]->get_address();
-}
 
 uint32_t context::get_trading_day()
 {
@@ -490,36 +471,6 @@ uint32_t context::get_open_pending()
 		res += it.last_volume;
 	}
 	return res;
-}
-
-void context::load_data(const char* localdb_name)
-{
-	std::string record_dbname = std::string("record_db_") + localdb_name;
-	boost::interprocess::shared_memory_object record_shdmem
-	{
-		boost::interprocess::open_or_create,
-		record_dbname.c_str(),
-		boost::interprocess::read_write
-	};
-	record_shdmem.truncate(sizeof(record_data));
-	_record_region = std::make_shared<boost::interprocess::mapped_region>(record_shdmem, boost::interprocess::read_write);
-	_record_data = static_cast<record_data*>(_record_region->get_address());
-
-	//用户数据
-	std::string uesrdb_name = std::string("uesr_db_") + localdb_name;
-	boost::interprocess::shared_memory_object userdb_shdmem
-	{
-		boost::interprocess::open_or_create, 
-		uesrdb_name.c_str(),
-		boost::interprocess::read_write 
-	};
-	userdb_shdmem.truncate(_userdata_size * MAX_UNITID);
-	for(size_t i=0;i < MAX_UNITID;i++)
-	{
-		boost::interprocess::offset_t offset = i * _userdata_size;
-		auto region = std::make_shared<boost::interprocess::mapped_region>(userdb_shdmem, boost::interprocess::read_write, offset, _userdata_size);
-		_userdata_region.emplace_back(region);
-	}
 }
 
 void context::check_crossday(uint32_t trading_day)
@@ -686,9 +637,12 @@ void context::handle_cancel(const std::vector<std::any>& param)
 
 void context::handle_tick(const std::vector<std::any>& param)
 {
+	
 	if (param.size() >= 1)
 	{
+		LOG_PROFILE("pDepthMarketData->InstrumentID");
 		tick_info&& last_tick = std::any_cast<tick_info>(param[0]);
+		LOG_PROFILE(last_tick.id.get_id());
 		if (!is_trading_ready())
 		{
 			uint32_t trading_day = get_trader().get_trading_day();
@@ -721,6 +675,7 @@ void context::handle_tick(const std::vector<std::any>& param)
 			deal_info.volume_delta = last_tick.volume - prev_tick.volume;
 			deal_info.interest_delta = last_tick.open_interest - prev_tick.open_interest;
 			deal_info.direction = get_deal_direction(prev_tick, last_tick);
+			LOG_PROFILE(last_tick.id.get_id());
 			this->_tick_callback(last_tick, deal_info);
 		}
 		auto tk_it = _bar_generator.find(last_tick.id);

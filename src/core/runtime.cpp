@@ -3,8 +3,8 @@
 #include <filesystem>
 #include <market_api.h>
 #include <trader_api.h>
-#include <boost/property_tree/ini_parser.hpp>
 #include <interface.h>
+#include "inipp.h"
 
 
 runtime::runtime():_market(nullptr), _trader(nullptr)
@@ -25,46 +25,55 @@ runtime::~runtime()
 
 bool runtime::init_from_file(const std::string& config_path)
 {
-	boost::property_tree::ptree	market_config;
-	boost::property_tree::ptree	trader_config;
-	boost::property_tree::ptree  control_config;
-	boost::property_tree::ptree  include_config;
-
 	if (!std::filesystem::exists(config_path.c_str()))
 	{
 		LOG_ERROR("runtime_engine init_from_file config_path not exit : %s", config_path.c_str());
 		return false;
 	}
-	try
+	inipp::Ini<char> ini;
+	std::ifstream is(config_path.c_str());
+	ini.parse(is);
+	auto it = ini.sections.find("include");
+	if (it == ini.sections.end())
 	{
-		boost::property_tree::ptree config_root;
-		boost::property_tree::ini_parser::read_ini(config_path, config_root);
-		market_config = config_root.get_child("actual_market");
-		trader_config = config_root.get_child("actual_trader");
-		control_config = config_root.get_child("control");
-		include_config = config_root.get_child("include");
+		LOG_ERROR("runtime_engine init_from_file cant find [include]", config_path.c_str());
+		return false;
 	}
-	catch (...)
+	params include_patams(it->second);
+	it = ini.sections.find("actual_market");
+	if (it == ini.sections.end())
 	{
-		LOG_ERROR("runtime_engine init_from_file read_ini error : %s", config_path.c_str());
+		LOG_ERROR("runtime_engine init_from_file cant find [actual_market]", config_path.c_str());
+		return false;
+	}
+	//market
+	_market = create_actual_market(it->second);
+	if (_market == nullptr)
+	{
+		LOG_ERROR("runtime_engine init_from_file create_market_api ", config_path.c_str());
+		return false;
+	}
+	it = ini.sections.find("actual_trader");
+	if (it == ini.sections.end())
+	{
+		LOG_ERROR("runtime_engine init_from_file cant find [actual_trader]", config_path.c_str());
 		return false;
 	}
 	//trader
-	_trader = create_actual_trader(trader_config);
+	_trader = create_actual_trader(it->second);
 	if (_trader == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());
 		return false;
 	}
-
-	//market
-	_market = create_actual_market(market_config);
-	if (_market == nullptr)
+	it = ini.sections.find("control");
+	if (it == ini.sections.end())
 	{
-		LOG_ERROR("runtime_engine init_from_file create_market_api error : %s", config_path.c_str());
+		LOG_ERROR("runtime_engine init_from_filecant find [control]", config_path.c_str());
 		return false;
 	}
-	this->init(control_config, include_config);
+	params control_patams(it->second);
+	this->init(control_patams, include_patams);
 	return true;
 }
 

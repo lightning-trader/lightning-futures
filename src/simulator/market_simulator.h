@@ -4,8 +4,7 @@
 #include <define.h>
 #include <market_api.h>
 #include <tick_loader.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/pool/object_pool.hpp>
+#include <params.hpp>
 
 
 class market_simulator : public dummy_market
@@ -50,7 +49,7 @@ public:
 		}
 	}
 
-	bool init(const boost::property_tree::ptree& config);
+	bool init(const params& config);
 
 public:
 

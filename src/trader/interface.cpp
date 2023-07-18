@@ -2,7 +2,7 @@
 #include "ctp_trader.h"
 #include <interface.h>
 
-actual_trader* create_actual_trader(const boost::property_tree::ptree& config)
+actual_trader* create_actual_trader(const params& config)
 {
 	auto trader_type = config.get<std::string>("trader");
 	if (trader_type == "ctp")

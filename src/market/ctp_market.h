@@ -5,8 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <ThostFtdcMdApi.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/pool/object_pool.hpp>
+#include <params.hpp>
 
 
 
@@ -18,7 +17,7 @@ public:
 
 	virtual ~ctp_market();
 	
-	bool init(const boost::property_tree::ptree& config);
+	bool init(const params& config);
 
 //IMarketAPI 接口
 public:

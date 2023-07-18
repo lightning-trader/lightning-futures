@@ -1,5 +1,6 @@
 ﻿#include "position_container.h"
 #include <data_types.hpp>
+#include <log_wapper.hpp>
 
 position_container::position_container()
 {
@@ -106,7 +107,7 @@ void position_container::frozen_position(const code_t& code, direction_type dire
 			it->second.yestoday_short.frozen += std::min<uint32_t>(volume, it->second.yestoday_short.postion);
 		}
 	}
-	LOG_INFO("position_container::frozen_position %s %d %d %d %d", code.get_id(), it->second.today_long.postion, it->second.today_long.frozen, it->second.today_short.postion, it->second.today_long.frozen);
+	LOG_INFO("position_container::frozen_position ", code.get_id(), it->second.today_long.postion, it->second.today_long.frozen, it->second.today_short.postion, it->second.today_long.frozen);
 }
 
 void position_container::thawing_position(const code_t& code, direction_type direction, uint32_t volume, bool is_today)
@@ -139,7 +140,7 @@ void position_container::thawing_position(const code_t& code, direction_type dir
 			it->second.yestoday_short.frozen -= std::min<uint32_t>(volume, it->second.yestoday_short.frozen);
 		}
 	}
-	LOG_INFO("position_container::thawing_position %s %d %d %d %d", code.get_id(), it->second.today_long.postion, it->second.today_long.frozen, it->second.today_short.postion, it->second.today_short.frozen);
+	LOG_INFO("position_container::thawing_position ", code.get_id(), it->second.today_long.postion, it->second.today_long.frozen, it->second.today_short.postion, it->second.today_short.frozen);
 }
 
 position_info position_container::get_position_info(const code_t& code)const

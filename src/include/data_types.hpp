@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "define.h"
+#include <ostream>
 
 
 constexpr size_t CODE_DATA_LEN = 24;
@@ -84,7 +85,10 @@ public:
 	{
 		return _data + EXCG_BEGIN_INDEX;
 	}
-
+	std::ostream& operator<<(std::ostream& os)
+	{
+		return os << get_id();
+	}
 };
 
 const code_t default_code;
@@ -517,6 +521,13 @@ struct order_statistic
 		error_amount(0)
 	{}
 
+public:
+	std::ostream& operator>>(std::ostream& os)
+	{
+		os << place_order_amount << entrust_amount;
+		os << trade_amount << cancel_amount << error_amount;
+		return os;
+	}
 };
 
 const order_statistic default_statistic;

@@ -2,7 +2,7 @@
 #include "trader_simulator.h"
 #include <interface.h>
 
-dummy_market* create_dummy_market(const boost::property_tree::ptree& config)
+dummy_market* create_dummy_market(const params& config)
 {
 	market_simulator* api = new market_simulator();
 	if (api->init(config))
@@ -24,7 +24,7 @@ void destory_dummy_market(dummy_market*& api)
 		api = nullptr;
 	}
 }
-dummy_trader* create_dummy_trader(const boost::property_tree::ptree& config)
+dummy_trader* create_dummy_trader(const params& config)
 {
 	trader_simulator* api = new trader_simulator();
 	if (api->init(config))

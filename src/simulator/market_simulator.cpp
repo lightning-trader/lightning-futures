@@ -3,14 +3,15 @@
 #include <event_center.hpp>
 #include <thread>
 #include "./tick_loader/csv_tick_loader.h"
+#include <log_wapper.hpp>
 
-bool market_simulator::init(const boost::property_tree::ptree& config)
+bool market_simulator::init(const params& config)
 {
 	std::string loader_type ;
 	std::string csv_data_path ;
 	try
 	{
-		_interval = config.get<uint32_t>("interval",1);
+		_interval = config.get<uint32_t>("interval");
 		loader_type = config.get<std::string>("loader_type");
 		csv_data_path = config.get<std::string>("csv_data_path");
 	}
@@ -114,6 +115,7 @@ void market_simulator::publish_tick(std::function<void(const tick_info& info)> p
 		{
 			_current_trading_day = tick->trading_day;
 		}
+		LOG_PROFILE(tick->id.get_id());
 		this->fire_event(market_event_type::MET_TickReceived, *tick);
 		if(publish_callback)
 		{

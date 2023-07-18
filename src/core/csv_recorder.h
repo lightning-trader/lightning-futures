@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <data_types.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include <params.hpp>
 #include <rapidcsv.h>
 
 class csv_recorder 

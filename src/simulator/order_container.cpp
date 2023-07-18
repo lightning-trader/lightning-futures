@@ -1,4 +1,5 @@
 ﻿#include "order_container.h"
+#include <log_wapper.hpp>
 
 order_container::order_container()
 {}
@@ -18,7 +19,7 @@ void order_container::add_order(const order_info& order,order_flag flag,bool is_
 {
 	spin_lock lock(_mutex);
 	_order_info[order.est_id] = order;
-	LOG_TRACE("order_container add_order %s %lld %d ", order.code.get_id(), order.est_id, _order_info.size());
+	LOG_TRACE("order_container add_order", order.code.get_id(), order.est_id, _order_info.size());
 	auto omh = new order_match((_order_info[order.est_id]), flag);
 	omh->is_today = is_today;
 	_order_match[order.code].emplace_back(omh);
@@ -42,7 +43,7 @@ void order_container::del_order(estid_t estid)
 				match->second.erase(mch_odr);
 			}
 		}
-		LOG_INFO("order_container del_order %lld ", estid);
+		LOG_INFO("order_container del_order", estid);
 		_order_info.erase(odit);
 	}
 }
@@ -151,7 +152,7 @@ const order_match* order_container::get_order_match(estid_t estid)const
 bool order_container::get_order_info(order_info& order, estid_t estid)const
 {
 	spin_lock lock(_mutex);
-	LOG_TRACE("order_container get_order_info  %lld %d ", estid, _order_info.size());
+	LOG_TRACE("order_container get_order_info", estid, _order_info.size());
 	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
 	{

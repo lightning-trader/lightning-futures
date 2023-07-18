@@ -2,9 +2,8 @@
 #include <define.h>
 #include <data_types.hpp>
 #include "event_center.hpp"
-#include <boost/pool/pool_alloc.hpp>
 
-enum class trader_event_type
+enum class trader_event_type : uint8_t
 {
 	TET_Invalid,
 	TET_AccountChange,
@@ -27,9 +26,9 @@ struct trader_data
 
 };
 
-typedef std::map<code_t, position_info, std::less<code_t>, boost::fast_pool_allocator<std::pair<code_t const, position_info>>> position_map;
+typedef std::map<code_t, position_info> position_map;
 //
-typedef std::map<estid_t, order_info, std::less<estid_t>, boost::fast_pool_allocator<std::pair<estid_t const, order_info>>> entrust_map;
+typedef std::map<estid_t, order_info> entrust_map;
 
 //下单接口管理接口
 class trader_api

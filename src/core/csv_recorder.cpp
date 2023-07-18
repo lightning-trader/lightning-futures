@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <data_types.hpp>
 #include <time_utils.hpp>
+#include <log_wapper.hpp>
 
 csv_recorder::csv_recorder(const char* basic_path) :_crossday_flow_csv(std::string(),rapidcsv::LabelParams(0,0))
 {
@@ -51,6 +52,6 @@ void csv_recorder::record_crossday_flow(time_t time, uint32_t trading_day, const
 	}
 	catch (const std::exception& e)
 	{
-		LOG_ERROR("csv_recorder record_crossday_flow exception : %s", e.what());
+		LOG_ERROR("csv_recorder record_crossday_flow exception : ", e.what());
 	}
 }

@@ -1,8 +1,8 @@
-﻿#include <data_types.hpp>
-#include "csv_tick_loader.h"
+﻿#include "csv_tick_loader.h"
+#include <filesystem>
+#include <data_types.hpp>
 #include <rapidcsv.h>
 #include <time_utils.hpp>
-#include <filesystem>
 
 bool csv_tick_loader::init(const std::string& root_path)
 {

@@ -3,11 +3,11 @@
 #include <stdint.h>
 #include <thread>
 #include <define.h>
+#include <log_wapper.hpp>
 #include <trader_api.h>
 #include <data_types.hpp>
 #include <ThostFtdcTraderApi.h>
-#include <boost/pool/pool_alloc.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include <params.hpp>
 #include <condition_variable>
 
 /*
@@ -28,7 +28,7 @@ public:
 	virtual ~ctp_trader();
 
 
-	bool init(const boost::property_tree::ptree& config);
+	bool init(const params& config);
 
 	//////////////////////////////////////////////////////////////////////////
 	//trader_api接口
@@ -232,16 +232,12 @@ private:
 	{
 		if(!_position_info.empty())
 		{
-			LOG_INFO("print_position %s \n", title);
+			LOG_INFO("print_position : ", title);
 		}
 		for (const auto& it : _position_info)
 		{
 			const auto& pos = it.second;
-			LOG_INFO("position : %s today_long(%d %d %f) today_short(%d %d %f) yestoday_long(%d %d %f) yestoday_short(%d %d %f)", pos.id.get_id(),
-				pos.today_long.postion, pos.today_long.frozen, pos.today_long.price,
-				pos.today_short.postion, pos.today_short.frozen, pos.today_short.price,
-				pos.yestoday_long.postion, pos.yestoday_long.frozen, pos.yestoday_long.price,
-				pos.yestoday_short.postion, pos.yestoday_short.frozen, pos.yestoday_short.price);
+			LOG_INFO("position :", pos.id.get_id(), "today_long(", pos.today_long.postion, pos.today_long.frozen, ") today_short(",pos.today_short.postion, pos.today_short.frozen, ") yestoday_long(", pos.yestoday_long.postion, pos.yestoday_long.frozen, ") yestoday_short(", pos.yestoday_short.postion, pos.yestoday_short.frozen,")");
 		}
 	}
 

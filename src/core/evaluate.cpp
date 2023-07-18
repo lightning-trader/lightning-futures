@@ -1,10 +1,11 @@
 ﻿#include "evaluate.h"
-#include "context.h"
 #include <filesystem>
+#include "context.h"
 #include "csv_recorder.h"
 #include <market_api.h>
-#include <boost/property_tree/ini_parser.hpp>
 #include <interface.h>
+#include "inipp.h"
+#include <params.hpp>
 
 evaluate::evaluate():_market_simulator(nullptr), _trader_simulator(nullptr)
 {
@@ -23,50 +24,62 @@ evaluate::~evaluate()
 
 bool evaluate::init_from_file(const std::string& config_path)
 {
-	boost::property_tree::ptree		market_config;
-	boost::property_tree::ptree		trader_config;
-	boost::property_tree::ptree  recorder_config;
-	boost::property_tree::ptree  control_config;
-	boost::property_tree::ptree  include_config;
-
+	
 	if (!std::filesystem::exists(config_path.c_str()))
 	{
 		LOG_ERROR("evaluate_driver init_from_file config_path not exit : %s", config_path.c_str());
 		return false;
 	}
-	try
-	{
-		boost::property_tree::ptree config_root;
-		boost::property_tree::ini_parser::read_ini(config_path, config_root);
-		market_config = config_root.get_child("dummy_market");
-		trader_config = config_root.get_child("dummy_trader");
-		control_config = config_root.get_child("control");
-		include_config = config_root.get_child("include");
-	}
-	catch (...)
-	{
-		LOG_ERROR("evaluate_driver init_from_file read_ini error : %s", config_path.c_str());
-		return false;
-	}
-	//simulator
-
+	inipp::Ini<char> ini;
+	std::ifstream is(config_path.c_str());
+	ini.parse(is);
 	
-	_trader_simulator = create_dummy_trader(trader_config);
-	if (_trader_simulator == nullptr)
+	auto it = ini.sections.find("include");
+	if (it == ini.sections.end())
 	{
-		LOG_ERROR("evaluate_driver init_from_file create_dummy_trader error : %s", config_path.c_str());
+		LOG_ERROR("init_from_file cant find [include]", config_path.c_str());
 		return false;
 	}
-
-	_market_simulator = create_dummy_market(market_config);
+	params include_patams(it->second);
+	it = ini.sections.find("dummy_market");
+	if (it == ini.sections.end())
+	{
+		LOG_ERROR("init_from_file cant find [dummy_market]", config_path.c_str());
+		return false;
+	}
+	_market_simulator = create_dummy_market(it->second);
 	if (_market_simulator == nullptr)
 	{
-		LOG_ERROR("evaluate_driver init_from_file create_dummy_market error : %s", config_path.c_str());
+		LOG_ERROR("init_from_file create_dummy_market error : %s", config_path.c_str());
 		return false;
 	}
-	const auto& recorder_path = recorder_config.get<std::string>("basic_path", "./");
-	_recorder = std::make_shared<csv_recorder>(recorder_path.c_str());
-	this->init(control_config, include_config, true);
+	it = ini.sections.find("dummy_trader");
+	if (it == ini.sections.end())
+	{
+		LOG_ERROR("init_from_file cant find [dummy_trader]", config_path.c_str());
+		return false;
+	}
+	_trader_simulator = create_dummy_trader(it->second);
+	if (_trader_simulator == nullptr)
+	{
+		LOG_ERROR("init_from_file create_dummy_trader error : %s", config_path.c_str());
+		return false;
+	}
+	it = ini.sections.find("recorder");
+	if (it != ini.sections.end())
+	{
+		params recorder_patams(it->second);
+		const auto& recorder_path = recorder_patams.get<std::string>("basic_path");
+		_recorder = std::make_shared<csv_recorder>(recorder_path.c_str());
+	}
+	it = ini.sections.find("control");
+	if (it == ini.sections.end())
+	{
+		LOG_ERROR("init_from_file cant find [control]", config_path.c_str());
+		return false;
+	}
+	params control_patams(it->second);
+	this->init(control_patams, include_patams,true);
 	return true;
 }
 

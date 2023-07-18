@@ -2,6 +2,8 @@
 #include "ctp_market.h"
 #include <filesystem>
 #include <time_utils.hpp>
+#include <params.hpp>
+#include <log_wapper.hpp>
 
 #ifdef _WIN32
 #ifdef _WIN64
@@ -24,13 +26,13 @@ ctp_market::~ctp_market()
 	if (_md_api)
 	{
 		_md_api->RegisterSpi(nullptr);
-		_md_api->Release();
 		//_md_api->Join();
+		_md_api->Release();
 		_md_api = nullptr;
 	}
 }
 
-bool ctp_market::init(const boost::property_tree::ptree& config)
+bool ctp_market::init(const params& config)
 {
 	try
 	{
@@ -114,8 +116,9 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	{
 		return;
 	}
-	LOG_DEBUG("MarketData = [%s] [%f]\n", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice);
 	
+	LOG_PROFILE(pDepthMarketData->InstrumentID);
+	LOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice);
 	tick_info tick ;
 	auto excg_it = _instrument_id_list.find(pDepthMarketData->InstrumentID);
 	if(excg_it != _instrument_id_list.end())
@@ -150,6 +153,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	tick.sell_order[3] = std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4);
 	tick.sell_order[4] = std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5);
 	tick.trading_day = std::atoi(pDepthMarketData->TradingDay);
+	LOG_PROFILE(pDepthMarketData->InstrumentID);
 	this->fire_event(market_event_type::MET_TickReceived, tick);
 	
 }

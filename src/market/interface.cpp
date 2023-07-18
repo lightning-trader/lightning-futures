@@ -1,7 +1,7 @@
 ﻿#include <market_api.h>
 #include "ctp_market.h"
 
-actual_market* create_actual_market(const boost::property_tree::ptree& config)
+actual_market* create_actual_market(const params& config)
 {
 	auto market_type = config.get<std::string>("market");
 	if (market_type == "ctp")
