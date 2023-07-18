@@ -1,4 +1,4 @@
-﻿#include "ctp_trader.h"
+#include "ctp_trader.h"
 #include <filesystem>
 #include <time_utils.hpp>
 
@@ -373,8 +373,8 @@ void ctp_trader::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingA
 	if (bIsLast && _is_sync_wait)
 	{
 		print_position("OnRspQryInvestorPosition");
+        while (!_is_sync_wait.exchange(false));
 		_process_signal.notify_all();
-		while (!_is_sync_wait.exchange(false));
 	}
 }
 
@@ -483,8 +483,8 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 	if (bIsLast && _is_sync_wait)
 	{
 		print_position("OnRspQryInvestorPosition");
-		_process_signal.notify_all();
-		while (!_is_sync_wait.exchange(false));
+        while (!_is_sync_wait.exchange(false));
+        _process_signal.notify_all();	
 	}
 }
 
@@ -503,8 +503,8 @@ void ctp_trader::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoFi
 	if (bIsLast && _is_sync_wait)
 	{
 		print_position("OnRspQryTrade");
-		_process_signal.notify_all();
-		while (!_is_sync_wait.exchange(false));
+        while (!_is_sync_wait.exchange(false));
+        _process_signal.notify_all();	
 	}
 }
 
@@ -534,8 +534,8 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 	if (bIsLast && _is_sync_wait)
 	{
 		print_position("OnRspQryTrade");
-		_process_signal.notify_all();
-		while (!_is_sync_wait.exchange(false));
+        while (!_is_sync_wait.exchange(false));
+        _process_signal.notify_all();
 	}
 }
 
