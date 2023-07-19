@@ -20,7 +20,7 @@ public:
 
 	time_t get_open_time();
 
-	time_t get_clase_time();
+	time_t get_close_time();
 
 };
 

@@ -85,7 +85,7 @@ time_t trading_section::get_open_time()
 	return frist_one->second;
 }
 
-time_t trading_section::get_clase_time()
+time_t trading_section::get_close_time()
 {
 	auto last_one = _trading_section.rbegin();
 	if(last_one == _trading_section.rend())

@@ -422,7 +422,7 @@ time_t context::get_close_time()
 	{
 		return 0;
 	}
-	return _section->get_clase_time();
+	return _section->get_close_time();
 }
 
 void context::use_custom_chain(untid_t untid,bool flag)
