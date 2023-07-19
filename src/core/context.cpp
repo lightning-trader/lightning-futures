@@ -273,13 +273,15 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		LOG_ERROR("place_order _chain nullptr");
 		return INVALID_ESTID;
 	}
-	if(_record_data)
+
+	estid_t estid = chain->place_order(offset, direction, code, count, price, flag);
+	if (_record_data&& estid != INVALID_ESTID)
 	{
 		_record_data->last_order_time = _last_tick_time;
 		_record_data->statistic_info.place_order_amount++;
 	}
 	LOG_PROFILE(code.get_id());
-	return chain->place_order(offset, direction, code, count, price, flag);
+	return estid ;
 }
 
 void context::cancel_order(estid_t order_id)
