@@ -42,7 +42,7 @@ add_subdirectory("simulator")
 
 add_subdirectory("framework")
 
-add_subdirectory("log")
+add_subdirectory("loger")
 
 add_subdirectory("persist")
 

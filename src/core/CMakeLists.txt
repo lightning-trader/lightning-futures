@@ -11,4 +11,4 @@ link_directories(${CMAKE_LIBRARY_PATH})
 #target_sources(${target} PRIVATE ${A1_DIR_VAR})
 add_library(lt_core SHARED "runtime.cpp" "evaluate.cpp" "pod_chain.cpp" "context.cpp"  "lightning.cpp" "trading_section.cpp" "bar_generator.cpp" "delayed_distributor.cpp" "csv_recorder.cpp")
 
-target_link_libraries(lt_core "lt_market" "lt_simulator" "lt_trader" "lt_log" "lt_persist" ${SYS_LIBS} ${CTP_LIBS})
+target_link_libraries(lt_core "lt_market" "lt_simulator" "lt_trader" "lt_loger" "lt_persist" ${SYS_LIBS} ${CTP_LIBS})

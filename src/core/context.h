@@ -216,7 +216,7 @@ private:
 
 protected:
 
-	void context::init(const params& control_config, const params& include_config, bool reset_trading_day=false);
+	void init(const params& control_config, const params& include_config, bool reset_trading_day=false);
 
 public:
 

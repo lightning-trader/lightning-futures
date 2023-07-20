@@ -21,7 +21,7 @@
 #ifndef MIO_MMAP_HEADER
 #define MIO_MMAP_HEADER
 
-#include "mio/page.hpp"
+#include "page.hpp"
 
 #include <iterator>
 #include <string>

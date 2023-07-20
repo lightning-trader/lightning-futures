@@ -21,9 +21,9 @@
 #ifndef MIO_BASIC_MMAP_IMPL
 #define MIO_BASIC_MMAP_IMPL
 
-#include "mio/mmap.hpp"
-#include "mio/page.hpp"
-#include "mio/detail/string_util.hpp"
+#include "../mmap.hpp"
+#include "../page.hpp"
+#include "string_util.hpp"
 
 #include <algorithm>
 

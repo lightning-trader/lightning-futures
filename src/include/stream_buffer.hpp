@@ -13,7 +13,10 @@
 typedef std::tuple <bool, char, unsigned char, short, unsigned short, int, unsigned int, long long, unsigned long long, float, double, const char*> type_table;
 
 template < typename T, typename Tuple >
-struct type_index;
+struct type_index 
+{
+	static constexpr const std::size_t value = 0;
+};
 
 template < typename T, typename ... Types >
 struct type_index < T, std::tuple < T, Types... > >
@@ -104,7 +107,7 @@ public:
 		}
 
 
-		template <>
+		//template <>
 		void extract(std::ostream& os, const char* strptr)
 		{
 			/*
