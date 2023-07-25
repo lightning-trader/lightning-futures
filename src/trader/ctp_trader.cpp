@@ -4,9 +4,9 @@
 
 #ifdef _WIN32
 #ifdef _WIN64
-#pragma comment (lib,"../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_winApi/traderapi/20220914_traderapi64_se_windows/thosttraderapi_se.lib")
+#pragma comment (lib,"../api/CTPv6.6.9_traderapi_20220920/win64/thosttraderapi_se.lib")
 #else
-#pragma comment (lib,"../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_winApi/traderapi/20220914_traderapi_se_windows/thosttraderapi_se.lib")
+#pragma comment (lib,"../api/CTPv6.6.9_traderapi_20220920/win32/thosttraderapi_se.lib")
 #endif
 #endif
 ctp_trader::ctp_trader()
@@ -699,7 +699,12 @@ void ctp_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, C
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_ERROR("OnErrRtnOrderAction \tErrorID = ",pRspInfo->ErrorID," ErrorMsg =", pRspInfo->ErrorMsg);
+		if(pOrderAction)
+		{
+			LOG_ERROR("OnErrRtnOrderAction ", pOrderAction->OrderRef, pOrderAction->RequestID, pOrderAction->SessionID, pOrderAction->FrontID);
+		}
 		print_position("OnErrRtnOrderAction");
+		return ;
 	}
 	if (pOrderAction && pRspInfo)
 	{
@@ -873,11 +878,11 @@ void ctp_trader::cancel_order(estid_t order_id)
 
 	//strcpy_s(req.OrderSysID, change.order_id.c_str());
 	strcpy(req.ExchangeID, order.code.get_excg());
-
+	LOG_INFO("ctp_trader ReqOrderAction :", req.ExchangeID, req.InstrumentID, req.FrontID, req.SessionID, req.OrderRef, req.BrokerID, req.InvestorID, req.UserID, order_id);
 	int iResult = _td_api->ReqOrderAction(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_trader order_action request failed: %d", iResult);
+		LOG_ERROR("ctp_trader order_action request failed:", iResult);
 	}
 }
 

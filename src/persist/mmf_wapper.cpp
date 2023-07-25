@@ -13,7 +13,10 @@ void* maping_file(const char* path, size_t size)
 	if (!std::filesystem::exists(path))
 	{
 		std::ofstream file(path);
-		file<<0;
+		for(size_t i=0;i< size;i++)
+		{
+			file << (unsigned char)0;
+		}
 	}
 	std::error_code error;
 	auto mms = mio::make_mmap_sink(

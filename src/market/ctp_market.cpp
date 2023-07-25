@@ -7,9 +7,9 @@
 
 #ifdef _WIN32
 #ifdef _WIN64
-#pragma comment (lib,"../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_winApi/traderapi/20220914_traderapi64_se_windows/thostmduserapi_se.lib")
+#pragma comment (lib,"../api/CTPv6.6.9_traderapi_20220920/win64/thostmduserapi_se.lib")
 #else
-#pragma comment (lib,"../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_winApi/traderapi/20220914_traderapi_se_windows/thostmduserapi_se.lib")
+#pragma comment (lib,"../api/CTPv6.6.9_traderapi_20220920/win32/thostmduserapi_se.lib")
 #endif
 #endif
 ctp_market::ctp_market()

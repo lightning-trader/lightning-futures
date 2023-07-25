@@ -1,0 +1,48 @@
+﻿版本号：CTPIIMini API V1.6.4
+后台版本：V1.6.4及以上版本
+注意：V1.6.4API连接CTPIIMini后台需为V1.6.4及以上版本。
+
+变更说明：（请各终端厂商根据自身情况进行开发）
+
+（一）本次版本新增加广期所业务支持：
+1)头文件ThostFtdcUserApiStruct.h中的struct CthostFtdcRspUserLoginField增加了广期所官方要求的广期所时间字段：
+	///广期所时间
+	TThostFtdcTimeType	GFEXTime;	
+	完整结构如下：
+	struct CThostFtdcRspUserLoginField
+	{
+		///交易日
+		TThostFtdcDateType	TradingDay;
+		///登录成功时间
+		TThostFtdcTimeType	LoginTime;
+		///经纪公司代码
+		TThostFtdcBrokerIDType	BrokerID;
+		///用户代码
+		TThostFtdcUserIDType	UserID;
+		///交易系统名称
+		TThostFtdcSystemNameType	SystemName;
+		///前置编号
+		TThostFtdcFrontIDType	FrontID;
+		///会话编号
+		TThostFtdcSessionIDType	SessionID;
+		///最大报单引用
+		TThostFtdcOrderRefType	MaxOrderRef;
+		///上期所时间
+		TThostFtdcTimeType	SHFETime;
+		///大商所时间
+		TThostFtdcTimeType	DCETime;
+		///郑商所时间
+		TThostFtdcTimeType	CZCETime;
+		///中金所时间
+		TThostFtdcTimeType	FFEXTime;
+		///能源中心时间
+		TThostFtdcTimeType	INETime;
+		///广期所时间
+		TThostFtdcTimeType	GFEXTime;	
+	};
+2）受影响接口为：OnRspUserLogin；
+3）本变更兼容之前CTPIIMini API版本；
+
+
+
+文档更新日期：2023年2月20日
