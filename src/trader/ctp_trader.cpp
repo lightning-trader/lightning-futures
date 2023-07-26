@@ -1,4 +1,4 @@
-﻿#include "ctp_trader.h"
+#include "ctp_trader.h"
 #include <filesystem>
 #include <time_utils.hpp>
 
@@ -314,7 +314,7 @@ void ctp_trader::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostF
 
 void ctp_trader::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-	if (pRspInfo)
+	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_DEBUG("OnRspSettlementInfoConfirm\tErrorID =", pRspInfo->ErrorID, "ErrorMsg =", pRspInfo->ErrorMsg);
 	}
