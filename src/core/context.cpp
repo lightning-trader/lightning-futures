@@ -81,7 +81,7 @@ void context::init(const params& control_config, const params& include_config,bo
 
 	add_trader_handle([this](trader_event_type type, const std::vector<std::any>& param)->void {
 
-		LOG_INFO("event_type : ", static_cast<uint8_t>(type));
+		//LOG_INFO("event_type : ", type);
 		switch (type)
 		{
 		case trader_event_type::TET_SettlementCompleted:
@@ -299,7 +299,7 @@ void context::cancel_order(estid_t order_id)
 		LOG_DEBUG("cancel_order code in trading ", order_id);
 		return ;
 	}
-	LOG_DEBUG("context cancel_order : ", order_id);
+	LOG_INFO("context cancel_order : ", order_id);
 	get_trader().cancel_order(order_id);
 }
 

@@ -152,6 +152,22 @@ struct tick_info
 		open_interest(.0F)
 	{}
 
+	tick_info(const code_t& cod,time_t tm,uint32_t tk,double_t op, double_t cls, double_t hi, double_t lo, double_t prs, double_t std, uint32_t vlm,uint32_t td,uint32_t ist, std::array<std::pair<double_t, uint32_t>, 5>&& buy_ord, std::array<std::pair<double_t, uint32_t>, 5>&& sell_ord)
+		:id(cod),
+		time(tm),
+		tick(tk),
+		open(op),
+		close(cls),
+		high(hi),
+		low(lo),
+		price(prs),
+		standard(std),
+		volume(vlm),
+		trading_day(td),
+		open_interest(ist),
+		buy_order(buy_ord),
+		sell_order(sell_ord)
+	{}
 
 	int32_t total_buy_valume()const
 	{

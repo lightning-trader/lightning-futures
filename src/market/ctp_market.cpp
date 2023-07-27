@@ -7,9 +7,9 @@
 
 #ifdef _WIN32
 #ifdef _WIN64
-#pragma comment (lib,"../api/CTPv6.6.9_traderapi_20220920/win64/thostmduserapi_se.lib")
+#pragma comment (lib,"../api/CTP_V6.6.9_20220920/win64/thostmduserapi_se.lib")
 #else
-#pragma comment (lib,"../api/CTPv6.6.9_traderapi_20220920/win32/thostmduserapi_se.lib")
+#pragma comment (lib,"../api/CTP_V6.6.9_20220920/win32/thostmduserapi_se.lib")
 #endif
 #endif
 ctp_market::ctp_market()
@@ -119,40 +119,49 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	
 	LOG_PROFILE(pDepthMarketData->InstrumentID);
 	LOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice);
-	tick_info tick ;
+	code_t code ;
 	auto excg_it = _instrument_id_list.find(pDepthMarketData->InstrumentID);
-	if(excg_it != _instrument_id_list.end())
+	if (excg_it != _instrument_id_list.end())
 	{
-		tick.id = code_t(pDepthMarketData->InstrumentID, excg_it->second.c_str());
+		code = code_t(pDepthMarketData->InstrumentID, excg_it->second.c_str());
 	}
 	else
 	{
-		tick.id = code_t(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
+		code = code_t(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
 	}
+
+	tick_info tick(
+		code,
+		get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime),
+		pDepthMarketData->UpdateMillisec,
+		pDepthMarketData->OpenPrice,
+		pDepthMarketData->ClosePrice,
+		pDepthMarketData->HighestPrice,
+		pDepthMarketData->LowestPrice,
+		pDepthMarketData->LastPrice,
+		pDepthMarketData->PreSettlementPrice,
+		pDepthMarketData->Volume,
+		std::atoi(pDepthMarketData->TradingDay),
+		pDepthMarketData->OpenInterest,
+		{
+			std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1),
+			std::make_pair(pDepthMarketData->BidPrice2, pDepthMarketData->BidVolume2),
+			std::make_pair(pDepthMarketData->BidPrice3, pDepthMarketData->BidVolume3),
+			std::make_pair(pDepthMarketData->BidPrice4, pDepthMarketData->BidVolume4),
+			std::make_pair(pDepthMarketData->BidPrice5, pDepthMarketData->BidVolume5)
+		},
+		{
+			std::make_pair(pDepthMarketData->AskPrice1, pDepthMarketData->AskVolume1),
+			std::make_pair(pDepthMarketData->AskPrice2, pDepthMarketData->AskVolume2),
+			std::make_pair(pDepthMarketData->AskPrice3, pDepthMarketData->AskVolume3),
+			std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4),
+			std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5)
+		}
+	);
+	
+
 	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
-	tick.time = get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime);
-	tick.tick = pDepthMarketData->UpdateMillisec;
-	tick.price = pDepthMarketData->LastPrice;
-	tick.standard = pDepthMarketData->PreSettlementPrice ;
-	tick.volume = pDepthMarketData->Volume;
-	tick.open = pDepthMarketData->OpenPrice;
-	tick.close = pDepthMarketData->ClosePrice;
-	tick.high = pDepthMarketData->HighestPrice;
-	tick.low = pDepthMarketData->LowestPrice;
-	tick.open_interest = pDepthMarketData->OpenInterest;
 
-	tick.buy_order[0] = std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1);
-	tick.buy_order[1] = std::make_pair(pDepthMarketData->BidPrice2, pDepthMarketData->BidVolume2);
-	tick.buy_order[2] = std::make_pair(pDepthMarketData->BidPrice3, pDepthMarketData->BidVolume3);
-	tick.buy_order[3] = std::make_pair(pDepthMarketData->BidPrice4, pDepthMarketData->BidVolume4);
-	tick.buy_order[4] = std::make_pair(pDepthMarketData->BidPrice5, pDepthMarketData->BidVolume5);
-
-	tick.sell_order[0] = std::make_pair(pDepthMarketData->AskPrice1, pDepthMarketData->AskVolume1);
-	tick.sell_order[1] = std::make_pair(pDepthMarketData->AskPrice2, pDepthMarketData->AskVolume2);
-	tick.sell_order[2] = std::make_pair(pDepthMarketData->AskPrice3, pDepthMarketData->AskVolume3);
-	tick.sell_order[3] = std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4);
-	tick.sell_order[4] = std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5);
-	tick.trading_day = std::atoi(pDepthMarketData->TradingDay);
 	LOG_PROFILE(pDepthMarketData->InstrumentID);
 	this->fire_event(market_event_type::MET_TickReceived, tick);
 	

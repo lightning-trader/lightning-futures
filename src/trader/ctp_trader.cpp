@@ -4,9 +4,9 @@
 
 #ifdef _WIN32
 #ifdef _WIN64
-#pragma comment (lib,"../api/CTPv6.6.9_traderapi_20220920/win64/thosttraderapi_se.lib")
+#pragma comment (lib,"../api/CTP_V6.6.9_20220920/win64/thosttraderapi_se.lib")
 #else
-#pragma comment (lib,"../api/CTPv6.6.9_traderapi_20220920/win32/thosttraderapi_se.lib")
+#pragma comment (lib,"../api/CTP_V6.6.9_20220920/win32/thosttraderapi_se.lib")
 #endif
 #endif
 ctp_trader::ctp_trader()

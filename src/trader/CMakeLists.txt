@@ -1,7 +1,7 @@
 ﻿    
  SET(CMAKE_INCLUDE_PATH 
       ${CMAKE_INCLUDE_PATH} 
-      "${PROJECT_SOURCE_DIR}/../api/CTPv6.6.9_traderapi_20220920/" 
+      "${PROJECT_SOURCE_DIR}/../api/CTP_V6.6.9_20220920/" 
  )
 
 message("TRADER INCLUDE PATH -> ${CMAKE_INCLUDE_PATH}")
