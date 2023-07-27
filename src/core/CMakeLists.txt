@@ -1,9 +1,9 @@
-﻿
+
 include_directories(${CMAKE_INCLUDE_PATH})
 
 IF(UNIX)
     SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} 
-        "${PROJECT_SOURCE_DIR}/../api/v6.6.9_traderapi_20220920/v6.6.9_20220914_api_linux64/" 
+        "${PROJECT_SOURCE_DIR}/../api/CTPv6.6.9_traderapi_20220920/linux64/" 
     )
 ENDIF()
 link_directories(${CMAKE_LIBRARY_PATH})
