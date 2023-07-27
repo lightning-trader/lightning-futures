@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <define.h>
 #include <chrono>
 #include <stream_buffer.hpp>
@@ -97,4 +97,4 @@ public:
 #define LOG_ERROR(...) logline(LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_FATAL(...) logline(LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #endif
-#define LOG_PROFILE(msg) log_profile(LLV_FATAL,__FILE__,__func__,__LINE__,msg);
+#define LOG_PROFILE(msg) log_profile(LLV_INFO,__FILE__,__func__,__LINE__,msg);
