@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include<string>
-#include<ctime>
+#include<chrono>
 //#include "stringbuilder.h"
 #define ONE_DAY_SECONDS 86400
 #define ONE_MINUTE_SECONDS 60
@@ -36,12 +36,33 @@ static time_t make_datetime(const char* date, const char* time)
 {
 	if (date != nullptr && time != nullptr)
 	{
-		int year, month, day;
-		sscanf(date, "%4d%2d%2d", &year, &month, &day);
-		int hour, minute, second;
-		sscanf(time, "%2d:%2d:%2d", &hour, &minute, &second);
-		time_t t = make_datetime(year, month, day, hour, minute, second);
-		return t;
+		uint32_t date_value = std::atoi(date);
+		int year = date_value / 10000;
+		int month = date_value % 10000 / 100;
+		int day = date_value % 100;
+		
+		int time_value[3]={0};
+		char tmp[3]={'\0'};
+		size_t i = 0;
+		size_t q = 0;
+		size_t p = 0;
+		while(time[p] !='\0')
+		{
+			if(time[p] == ':')
+			{
+				tmp[p - q]='\0';
+				time_value[i++] = atoi(tmp);
+				q = p+1;
+			}
+			else
+			{
+				tmp[p - q] = time[p];
+			}
+			p++;
+		}
+		tmp[p - q] = '\0';
+		time_value[i++] = atoi(tmp);
+		return make_datetime(year, month, day, time_value[0], time_value[1], time_value[2]);
 	}
 	return -1;
 }
@@ -49,12 +70,13 @@ static time_t make_datetime(uint32_t date, const char* time)
 {
 	if (time != nullptr && time != "")
 	{
-		int year, month, day;
-		year = date / 10000;
-		month = date % 10000 / 100;
-		day = date % 100;
-		int hour, minute, second;
-		sscanf(time, "%2d:%2d:%2d", &hour, &minute, &second);
+		int year = date / 10000;
+		int month = date % 10000 / 100;
+		int day = date % 100;
+		uint32_t time_value = std::atoi(time);
+		int hour = time_value / 10000;
+		int minute = time_value / 100 % 100;
+		int second = time_value % 100;
 		time_t t = make_datetime(year, month, day, hour, minute, second);
 		return t;
 	}
@@ -63,8 +85,11 @@ static time_t make_datetime(uint32_t date, const char* time)
 
 static time_t make_time(const char* time)
 {
-	int hour, minute, second;
-	sscanf(time, "%2d:%2d:%2d", &hour, &minute, &second);
+	uint32_t time_value = std::atoi(time);
+	int hour = time_value / 10000;
+	int minute = time_value / 100 % 100;
+	int second = time_value % 100;
+	//sscanf(time, "%2d:%2d:%2d", &hour, &minute, &second);
 	return hour * ONE_HOUR_SECONDS + minute * ONE_MINUTE_SECONDS + second;
 }
 static time_t make_datetime(time_t date_begin, const char* time)
@@ -82,9 +107,7 @@ static time_t make_date(uint32_t date)
 
 static time_t get_now()
 {
-	time_t t;
-	time(&t);
-	return t;
+	return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 }
 
 static time_t get_day_begin(time_t cur)

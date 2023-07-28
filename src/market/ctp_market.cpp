@@ -119,19 +119,16 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	
 	LOG_PROFILE(pDepthMarketData->InstrumentID);
 	LOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice);
-	code_t code ;
+	const char * excg_id = pDepthMarketData->ExchangeID;
 	auto excg_it = _instrument_id_list.find(pDepthMarketData->InstrumentID);
 	if (excg_it != _instrument_id_list.end())
 	{
-		code = code_t(pDepthMarketData->InstrumentID, excg_it->second.c_str());
+		excg_id = excg_it->second.c_str();
 	}
-	else
-	{
-		code = code_t(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
-	}
-
+	LOG_PROFILE(pDepthMarketData->InstrumentID);
+	
 	tick_info tick(
-		code,
+		code_t(pDepthMarketData->InstrumentID, excg_id),
 		get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime),
 		pDepthMarketData->UpdateMillisec,
 		pDepthMarketData->OpenPrice,
@@ -164,7 +161,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 
 	LOG_PROFILE(pDepthMarketData->InstrumentID);
 	this->fire_event(market_event_type::MET_TickReceived, tick);
-	
+	LOG_PROFILE(pDepthMarketData->InstrumentID);
 }
 
 void ctp_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )

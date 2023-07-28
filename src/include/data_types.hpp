@@ -120,6 +120,7 @@ struct tick_info
 	double_t open_interest;
 
 	std::array<std::pair<double_t, uint32_t>, 5> buy_order;
+	
 	std::array<std::pair<double_t, uint32_t>, 5> sell_order;
 
 	double_t buy_price()const

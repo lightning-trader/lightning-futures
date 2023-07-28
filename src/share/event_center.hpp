@@ -8,8 +8,6 @@ struct event_data
 {
 	T type;
 	std::vector<std::any> param;
-
-	event_data() = default;
 };
 
 template<typename T,size_t N>

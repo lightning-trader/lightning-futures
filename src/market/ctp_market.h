@@ -76,7 +76,6 @@ private:
 
 	std::unordered_map<std::string,std::string> _instrument_id_list;
 
-
 	bool _is_inited ;
 
 };
