@@ -19,4 +19,6 @@ bin/*.a
 bin/td*
 bin/md*
 bin/*.pdb
+bin/*.exp
+bin/*.ilk
 bin/record/
