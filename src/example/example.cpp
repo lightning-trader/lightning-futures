@@ -41,10 +41,7 @@ void start_evaluate(const char* account_config, const code_t& code, const std::v
 
 int main(int argc, char* argv[])
 {
-	auto a = get_now();
-	a = get_day_begin(get_now()) + make_time("12:12:14"),
-	LOG_INFO(a);
-	return 0;
+
 	if (argc > 1)
 	{
 		start_runtime("runtime.ini", "SHFE.rb2310");
