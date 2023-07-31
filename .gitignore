@@ -12,13 +12,3 @@ _deps
 .vs/
 out/
 run/
-bin/log/
-bin/light_test/
-bin/*.lib
-bin/*.a
-bin/td*
-bin/md*
-bin/*.pdb
-bin/*.exp
-bin/*.ilk
-bin/record/
