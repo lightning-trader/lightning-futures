@@ -5,11 +5,14 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("lightning-trader")
 
-IF(UNIX)
+IF(APPLE)
+    MESSAGE(STATUS "MacOS!!!")
+    ADD_DEFINITIONS( "-fPIC" )
+    set(SYS_LIBS pthread)
+ELSEIF(UNIX)
     ADD_DEFINITIONS( "-fPIC" )
     set(CTP_LIBS thostmduserapi_se thosttraderapi_se)
-    set(SYS_LIBS pthread rt)
- 
+    set(SYS_LIBS pthread tr)
 ENDIF()
 
 

@@ -31,6 +31,15 @@ public:
 		DWORD_PTR mask = SetThreadAffinityMask(hThread, (DWORD_PTR)(1LLU << i));
 		return (mask != 0);
 	}
+
+/*ct hacked fixme: macos make error*/
+#elif __APPLE__
+
+	static bool bind_core(uint32_t i)
+	{
+		return false;
+	}
+
 #else
 
 	static bool bind_core(uint32_t i)

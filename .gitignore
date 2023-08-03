@@ -27,3 +27,6 @@ bin/*.exe
 bin/*.ilk
 bin/*.mmf
 bin/record/
+.idea
+build
+cmake-build-debug

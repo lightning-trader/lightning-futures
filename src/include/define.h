@@ -11,6 +11,7 @@
 #include <cstring>
 #include <cmath>
 #include <cstdarg>
+#include <unordered_map>
 
 #ifndef EXPORT_FLAG
 #ifdef _MSC_VER
