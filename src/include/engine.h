@@ -163,6 +163,11 @@ namespace lt
 				{
 					stra->on_trade(localid, code, offset, direction, price, volume);
 				}
+				auto cdn_it = _condition_function.find(localid);
+				if (cdn_it != _condition_function.end())
+				{
+					_condition_function.erase(cdn_it);
+				}
 				_self->unregist_estid_strategy(localid);
 			}
 		}
@@ -180,6 +185,11 @@ namespace lt
 				if (stra)
 				{
 					stra->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
+				}
+				auto cdn_it = _condition_function.find(localid);
+				if (cdn_it != _condition_function.end())
+				{
+					_condition_function.erase(cdn_it);
 				}
 				_self->unregist_estid_strategy(localid);
 			}
@@ -199,7 +209,16 @@ namespace lt
 				{
 					stra->on_error(type, localid, error);
 				}
-				_self->unregist_estid_strategy(localid);
+				if(type == error_type::ET_PLACE_ORDER)
+				{
+					auto it = _condition_function.find(localid);
+					if (it != _condition_function.end())
+					{
+						_condition_function.erase(it);
+					}
+					_self->unregist_estid_strategy(localid);
+				}
+				
 			}
 		}
 

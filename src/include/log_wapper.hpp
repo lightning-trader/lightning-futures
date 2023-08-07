@@ -84,17 +84,13 @@ public:
 #ifndef NDEBUG
 #define LOG_TRACE(...) logline(LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_DEBUG(...) logline(LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_INFO(...) logline(LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_WARNING(...) logline(LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_ERROR(...) logline(LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_FATAL(...) logline(LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #else
-#define LOG_DEBUG(format, ...)
-#define LOG_TRACE(format, ...)
-
+#define LOG_TRACE(...) 
+#define LOG_DEBUG(...) 
+#endif
 #define LOG_INFO(...) logline(LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_WARNING(...) logline(LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_ERROR(...) logline(LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_FATAL(...) logline(LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#endif
-#define LOG_PROFILE(msg) log_profile(LLV_INFO,__FILE__,__func__,__LINE__,msg);
+
+#define LOG_PROFILE(msg) //log_profile(LLV_FATAL,__FILE__,__func__,__LINE__,msg);
