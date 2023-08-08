@@ -29,12 +29,12 @@ unsigned char* alloc_log_buffer()
 	return alloc_buffer();
 }
 
-void free_log_buffer(unsigned char* dataptr)
+void free_log_buffer(unsigned char*& dataptr)
 {
 	free_buffer(dataptr);
 }
 
-void log_print(log_level lv, const char* file, char const* func, uint32_t line, const unsigned char * msg_data)
+void log_print(log_level lv, const char* file, char const* func, uint32_t line, unsigned char * msg_data)
 {
 	if(!_is_log_ready)
 	{

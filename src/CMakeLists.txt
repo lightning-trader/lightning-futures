@@ -5,30 +5,30 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("lightning-trader")
 
-IF(APPLE)
-    MESSAGE(STATUS "MacOS!!!")
-    ADD_DEFINITIONS( "-fPIC" )
+if(APPLE)
+    message(STATUS "MacOS!!!")
+    add_definitions( "-fPIC" )
     set(SYS_LIBS pthread)
-ELSEIF(UNIX)
-    ADD_DEFINITIONS( "-fPIC" )
+elseif(UNIX)
+    add_definitions( "-fPIC" )
     set(CTP_LIBS thostmduserapi_se thosttraderapi_se)
     set(SYS_LIBS pthread tr)
-ENDIF()
+endif()
 
 
 set(CMAKE_CXX_STANDARD 17)
 
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../bin)
-SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin)
-SET(CMAKE_DEBUG_POSTFIX "_d")
+set(CMAKE_DEBUG_POSTFIX "_d")
+#set(CMAKE_CXX_FLAGS_RELEASE"-O2")
 
-
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH}
+set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH}
     "${PROJECT_SOURCE_DIR}/share" 
     "${PROJECT_SOURCE_DIR}/include"
 )
-SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
     "${PROJECT_SOURCE_DIR}/../bin"
 )
 

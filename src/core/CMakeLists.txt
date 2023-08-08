@@ -1,7 +1,7 @@
 
 include_directories(${CMAKE_INCLUDE_PATH})
 
-IF(APPLE)
+if(APPLE)
     set(LIBS_PATH "${PROJECT_SOURCE_DIR}/../api/CTP_V6.6.9_20220920/macos")
     SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} 
         "${PROJECT_SOURCE_DIR}/../api/CTP_V6.6.9_20220920/macos/"
@@ -12,11 +12,11 @@ IF(APPLE)
     find_library(thostmduserapi_mac_lib NAMES thostmduserapi_mac PATHS ${LIBS_PATH} NO_DEFAULT_PATH)
     find_library(thosttraderapi_mac_lib NAMES thosttraderapi_mac PATHS ${LIBS_PATH} NO_DEFAULT_PATH)
     SET(CTP_LIBS ${comunicationkey_lib} ${crypto_lib} ${ssl_lib} ${thostmduserapi_mac_lib} ${thosttraderapi_mac_lib})
-ELSEIF(UNIX)
+elseif(UNIX)
     SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} 
         "${PROJECT_SOURCE_DIR}/../api/CTP_V6.6.9_20220920/linux64/" 
     )
-ENDIF()
+endif()
 link_directories(${CMAKE_LIBRARY_PATH})
 #AUX_SOURCE_DIRECTORY("driver"   DRIVER_DIR_VAR)
 #target_sources(${target} PRIVATE ${A1_DIR_VAR})

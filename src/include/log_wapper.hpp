@@ -18,9 +18,9 @@ extern "C"
 {
 	EXPORT_FLAG unsigned char* alloc_log_buffer();
 	
-	EXPORT_FLAG void free_log_buffer(unsigned char* dataptr);
+	EXPORT_FLAG void free_log_buffer(unsigned char*& dataptr);
 
-	EXPORT_FLAG void log_print(log_level lv, const char* file, char const* func, uint32_t line, const unsigned char* msg_data);
+	EXPORT_FLAG void log_print(log_level lv, const char* file, char const* func, uint32_t line, unsigned char* msg_data);
 
 	EXPORT_FLAG void log_profile(log_level lv, const char* file, char const* func, uint32_t line, const char* msg);
 }

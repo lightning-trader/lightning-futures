@@ -66,7 +66,7 @@ namespace nanolog
 
 		NanoLogLine();
 
-		NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line, const unsigned char* msg_data);
+		NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line, unsigned char* msg_data);
 
 		~NanoLogLine();
 
@@ -76,6 +76,8 @@ namespace nanolog
 
 		void stringify(std::ostream& os, uint8_t field);
 
+		unsigned char* m_buffer;
+
 	private:
 		uint64_t m_timestamp;
 		std::thread::id m_thread_id;
@@ -83,7 +85,7 @@ namespace nanolog
 		const char* m_source_file;
 		const char* m_function;
 		uint32_t	m_source_line;
-		const unsigned char* m_buffer;
+		
 	};
 
 	void add_logline(NanoLogLine&& logline);
@@ -94,7 +96,7 @@ namespace nanolog
 
 	unsigned char* alloc_buffer();
 
-	void free_buffer(unsigned char* dataptr);
+	void free_buffer(unsigned char*& dataptr);
 
 	/*
 	 * Non guaranteed logging. Uses a ring buffer to hold log lines.

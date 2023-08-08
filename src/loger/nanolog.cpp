@@ -109,7 +109,7 @@ namespace nanolog
 		m_thread_id = this_thread_id();
 	}
 	
-	NanoLogLine::NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line,const unsigned char * msg_data)
+	NanoLogLine::NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line,unsigned char * msg_data)
 		: m_log_level(level)
 		, m_source_file(file)
 		,m_function(function)
@@ -149,12 +149,10 @@ namespace nanolog
 		{
 			os << '[' << m_function << ':' << m_source_line << "] ";
 		}
-		stream_buffer sd(const_cast<unsigned char *>(m_buffer),1024);
+		stream_buffer sd(m_buffer,1024);
 		sd.out(os);
 		os << std::endl;
-		free_buffer(const_cast<unsigned char*>(m_buffer));
-		if (m_log_level >= LogLevel::LOG_TRACE)
-			os.flush();
+		os.flush();
 	}
 
 	
@@ -521,6 +519,7 @@ namespace nanolog
 					logline.stringify(std::cout,m_log_field);
 				}
 			}
+			free_buffer(logline.m_buffer);
 		}
 
 
@@ -584,9 +583,10 @@ namespace nanolog
 		//return _buffer_pool.alloc_buffer();
 	}
 
-	void free_buffer(unsigned char dataptr[])
+	void free_buffer(unsigned char*& dataptr)
 	{
-		//delete[] dataptr;
+		delete[] dataptr;
+		dataptr = nullptr;
 		//_buffer_pool.return_buffer(dataptr);
 	}
 
