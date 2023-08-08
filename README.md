@@ -5,7 +5,8 @@ lightning-trader轻量级期货量化开发库，适合高频交易，提供了�
 
 - [lightning-strategy，提供基于lightning-trader的开源策略](https://gitee.com/pursue-wealth/lightning-strategy)
 
-- QQ交流群:980550304
+- QQ技术交流群:980550304
+- QQ吹水交流群:367822869
 - 开发者QQ:137336521
 
 
