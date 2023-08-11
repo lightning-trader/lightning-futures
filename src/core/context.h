@@ -18,7 +18,7 @@
 struct record_data
 {
 	uint32_t trading_day;
-	time_t last_order_time;
+	daytm_t last_order_time;
 	order_statistic statistic_info;
 
 	record_data():trading_day(0U),last_order_time(0) {}
@@ -57,7 +57,7 @@ private:
 	std::thread * _delayed_thread;
 	std::shared_ptr<delayed_distributor> _distributor;
 
-	time_t _last_tick_time;
+	daytm_t _last_tick_time;
 
 	uint32_t _max_position;
 	
@@ -141,9 +141,9 @@ public:
 
 	void unsubscribe(const std::set<code_t>& tick_data, const std::map<code_t, std::set<uint32_t>>& bar_data);
 	
-	time_t get_last_time();
+	daytm_t get_last_time();
 
-	time_t last_order_time();
+	daytm_t last_order_time();
 
 	const order_statistic& get_order_statistic();
 
@@ -154,7 +154,7 @@ public:
 
 	uint32_t get_trading_day();
 
-	time_t get_close_time();
+	daytm_t get_close_time();
 
 	void use_custom_chain(untid_t untid, bool flag);
 
@@ -184,7 +184,7 @@ public:
 private:
 
 	
-	void check_crossday(uint32_t trading_day);
+	void check_crossday();
 
 	void handle_settlement(const std::vector<std::any>& param);
 	
@@ -204,7 +204,7 @@ private:
 
 	void handle_error(const std::vector<std::any>& param);
 
-	void check_order_condition(const tick_info& tick);
+	void check_order_condition();
 
 	void remove_invalid_condition(estid_t order_id);
 

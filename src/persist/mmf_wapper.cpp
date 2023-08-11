@@ -18,6 +18,15 @@ void* maping_file(const char* path, size_t size)
 			file << (unsigned char)0;
 		}
 	}
+	//自动扩容
+	if(std::filesystem::file_size(path)<size)
+	{
+		std::ofstream file(path, std::ios::app);
+		for (size_t i = std::filesystem::file_size(path); i < size; i++)
+		{
+			file << (unsigned char)0;
+		}
+	}
 	std::error_code error;
 	auto mms = mio::make_mmap_sink(
 		path, 0, mio::map_entire_file, error);

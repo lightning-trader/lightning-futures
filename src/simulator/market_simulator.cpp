@@ -36,7 +36,6 @@ bool market_simulator::init(const params& config)
 void market_simulator::play(uint32_t tradeing_day, std::function<void(const tick_info& info)> publish_callback)
 {
 	_current_time = 0;
-	_current_tick = 0;
 	_current_index = 0;
 	_pending_tick_info.clear();
 
@@ -101,7 +100,6 @@ void market_simulator::publish_tick(std::function<void(const tick_info& info)> p
 	{
 		tick = &(_pending_tick_info[_current_index]);
 		_current_time = tick->time;
-		_current_tick = tick->tick;
 	}
 	else
 	{
@@ -109,13 +107,13 @@ void market_simulator::publish_tick(std::function<void(const tick_info& info)> p
 		_is_runing = false;
 		return;
 	}
-	while(_current_time == tick->time && _current_tick == tick->tick)
+	while(_current_time == tick->time)
 	{
 		if(tick->trading_day != _current_trading_day)
 		{
 			_current_trading_day = tick->trading_day;
 		}
-		LOG_PROFILE(tick->id.get_id());
+		PROFILE_DEBUG(tick->id.get_id());
 		this->fire_event(market_event_type::MET_TickReceived, *tick);
 		if(publish_callback)
 		{

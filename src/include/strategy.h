@@ -27,6 +27,10 @@ namespace lt
 
 		bool _closeable;
 
+		daytm_t _coming_to_close;
+
+		daytm_t _close_daytime;
+
 	public:
 
 		strategy(straid_t id, engine& engine, bool openable, bool closeable);
@@ -174,12 +178,18 @@ namespace lt
 		**/
 		const order_info& get_order(estid_t order_id) const;
 
+		/**
+		* 是否即将收盘
+		*/
+		bool is_coming_to_close(daytm_t dtm) const ;
+
+		bool is_coming_to_close() const ;
 
 		/**
 		* 获取时间
 		*
 		*/
-		time_t get_last_time() const;
+		daytm_t get_last_time() const;
 
 		/**
 		* 使用自定义交易通道
@@ -189,14 +199,14 @@ namespace lt
 		/*
 		* 设置撤销条件(返回true时候撤销)
 		*/
-		void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info&)> callback);
+		void set_cancel_condition(estid_t order_id, std::function<bool()> callback);
 
 
 		/**
 		* 获取最后一次下单时间
 		*	跨交易日返回0
 		*/
-		time_t last_order_time();
+		daytm_t last_order_time();
 
 
 		/**

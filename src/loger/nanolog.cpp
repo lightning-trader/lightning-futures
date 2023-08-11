@@ -127,8 +127,6 @@ namespace nanolog
 
 	void NanoLogLine::stringify(std::ostream& os,uint8_t field)
 	{
-
-
 		if (field & static_cast<uint8_t>(LogField::TIME_SPAMP))
 		{
 			format_timestamp(os, m_timestamp);

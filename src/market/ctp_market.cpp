@@ -117,7 +117,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 		return;
 	}
 	
-	LOG_PROFILE(pDepthMarketData->InstrumentID);
+	PROFILE_INFO(pDepthMarketData->InstrumentID);
 	LOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice);
 	const char * excg_id = pDepthMarketData->ExchangeID;
 	auto excg_it = _instrument_id_list.find(pDepthMarketData->InstrumentID);
@@ -125,12 +125,11 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	{
 		excg_id = excg_it->second.c_str();
 	}
-	LOG_PROFILE(pDepthMarketData->InstrumentID);
+	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
 	
 	tick_info tick(
 		code_t(pDepthMarketData->InstrumentID, excg_id),
-		get_day_begin(get_now()) + make_time(pDepthMarketData->UpdateTime),
-		pDepthMarketData->UpdateMillisec,
+		make_daytm(pDepthMarketData->UpdateTime,pDepthMarketData->UpdateMillisec),
 		pDepthMarketData->OpenPrice,
 		pDepthMarketData->ClosePrice,
 		pDepthMarketData->HighestPrice,
@@ -159,9 +158,9 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 
 	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
 
-	LOG_PROFILE(pDepthMarketData->InstrumentID);
+	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
 	this->fire_event(market_event_type::MET_TickReceived, tick);
-	LOG_PROFILE(pDepthMarketData->InstrumentID);
+	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
 }
 
 void ctp_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )

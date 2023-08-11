@@ -20,9 +20,7 @@ private:
 
 	std::vector<tick_info> _pending_tick_info ;
 
-	time_t _current_time ;
-
-	uint32_t _current_tick ;
+	daytm_t _current_time ;
 
 	size_t _current_index ;
 
@@ -35,7 +33,6 @@ public:
 	market_simulator():_loader(nullptr),
 		_current_trading_day(0), 
 		_current_time(0),
-		_current_tick(0),
 		_current_index(0),
 		_interval(1),
 		_is_runing(false)

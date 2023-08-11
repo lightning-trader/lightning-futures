@@ -18,6 +18,6 @@ public :
 public:
 
 	//结算表
-	void record_crossday_flow(time_t time, uint32_t trading_day, const order_statistic& statistic, const account_info& account);
+	void record_crossday_flow(uint32_t trading_day, const order_statistic& statistic, const account_info& account);
 
 };

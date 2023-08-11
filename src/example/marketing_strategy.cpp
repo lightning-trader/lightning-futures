@@ -16,7 +16,6 @@ void marketing_strategy::on_init(subscriber& suber)
 void marketing_strategy::on_ready()
 {
 	uint32_t trading_day = get_trading_day();
-	_coming_to_close = make_datetime(trading_day, "14:58:00");
 	if (_order_data->trading_day != trading_day)
 	{
 		_order_data->trading_day = trading_day;
@@ -28,9 +27,9 @@ void marketing_strategy::on_ready()
 		auto& buy_order = get_order(_order_data->buy_order);
 		if (buy_order.est_id != INVALID_ESTID)
 		{
-			set_cancel_condition(buy_order.est_id, [this](const tick_info& tick)->bool {
+			set_cancel_condition(buy_order.est_id, [this]()->bool {
 
-				if (tick.time > _coming_to_close)
+				if (is_coming_to_close())
 				{
 					return true;
 				}
@@ -44,9 +43,9 @@ void marketing_strategy::on_ready()
 		auto& sell_order = get_order(_order_data->sell_order);
 		if (sell_order.est_id != INVALID_ESTID)
 		{
-			set_cancel_condition(sell_order.est_id, [this](const tick_info& tick)->bool {
+			set_cancel_condition(sell_order.est_id, [this]()->bool {
 
-				if (tick.time > _coming_to_close)
+				if (is_coming_to_close())
 				{
 					return true;
 				}
@@ -68,9 +67,9 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		LOG_DEBUG("is_trading_ready not ready", tick.id.get_id());
 		return;
 	}
-	if (tick.time > _coming_to_close)
+	if (is_coming_to_close())
 	{
-		LOG_DEBUG("time > _coming_to_close", tick.id.get_id(), tick.time, _coming_to_close);
+		LOG_DEBUG("time > _coming_to_close", tick.id.get_id(), tick.time);
 		return;
 	}
 	const auto& pos = get_position(_code);
@@ -125,9 +124,9 @@ void marketing_strategy::on_entrust(const order_info& order)
 
 	if (order.est_id == _order_data->buy_order || order.est_id == _order_data->sell_order)
 	{
-		set_cancel_condition(order.est_id, [this](const tick_info& tick)->bool {
+		set_cancel_condition(order.est_id, [this]()->bool {
 
-			if (tick.time > _coming_to_close)
+			if (is_coming_to_close())
 			{
 				return true;
 			}

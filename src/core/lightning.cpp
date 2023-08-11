@@ -74,7 +74,7 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, unsubscribe, (const ltobj& lt, const std::set<code_t>& tick_data, const std::map<code_t, std::set<uint32_t>>& bar_data), (tick_data, bar_data));
 
-	LT_INTERFACE_IMPLEMENTATION(time_t, 0, context, get_last_time, (const ltobj& lt), ());
+	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, get_last_time, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, set_cancel_condition, (const ltobj& lt, estid_t est_id, condition_callback callback), (est_id, callback));
 
@@ -86,7 +86,9 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, playback_history, (const ltobj& lt, uint32_t trading_day), (trading_day));
 
-	LT_INTERFACE_IMPLEMENTATION(time_t, 0, context, last_order_time, (const ltobj& lt), ());
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, crossday_settlement, (const ltobj& lt, uint32_t trading_day), (trading_day));
+
+	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, last_order_time, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(const order_statistic&, default_statistic, context, get_order_statistic, (const ltobj& lt), ());
 
@@ -94,7 +96,7 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(uint32_t, 0U, context, get_trading_day, (const ltobj& lt), ());
 
-	LT_INTERFACE_IMPLEMENTATION(time_t, 0, context, get_close_time, (const ltobj& lt), ());
+	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, get_close_time, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, use_custom_chain, (const ltobj& lt, untid_t untid, bool flag), (untid, flag));
 

@@ -23,7 +23,6 @@ public:
 		_open_once(open_once),
 		_open_delta(open_detla),
 		_order_data(nullptr),
-		_coming_to_close(0),
 		_random(0, 1)
 	{
 
@@ -95,8 +94,6 @@ private:
 	double_t _open_delta;
 
 	uint32_t _open_once;
-
-	time_t _coming_to_close;
 
 	persist_data* _order_data;
 

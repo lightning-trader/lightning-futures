@@ -84,13 +84,15 @@ public:
 #ifndef NDEBUG
 #define LOG_TRACE(...) logline(LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_DEBUG(...) logline(LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define PROFILE_DEBUG(msg) log_profile(LLV_DEBUG,__FILE__,__func__,__LINE__,msg);
 #else
 #define LOG_TRACE(...) 
 #define LOG_DEBUG(...) 
+#define PROFILE_DEBUG(msg) 
 #endif
 #define LOG_INFO(...) logline(LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_WARNING(...) logline(LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_ERROR(...) logline(LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_FATAL(...) logline(LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 
-#define LOG_PROFILE(msg) //log_profile(LLV_FATAL,__FILE__,__func__,__LINE__,msg);
+#define PROFILE_INFO(msg) log_profile(LLV_INFO,__FILE__,__func__,__LINE__,msg);

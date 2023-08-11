@@ -85,7 +85,7 @@ estid_t trader_simulator::place_order(offset_type offset, direction_type directi
 	//std::cout << "place_order : " << pt2 - pt << est_id.to_str() << std::endl;
 	
 	//spin_lock lock(_mutex);
-	LOG_PROFILE(code.get_id());
+	PROFILE_DEBUG(code.get_id());
 	order_info order;
 	order.est_id = make_estid();
 	LOG_DEBUG("tick_simulator::place_order", order.est_id);

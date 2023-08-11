@@ -33,6 +33,9 @@ struct code_t;
 
 typedef uint8_t untid_t;
 
+//日内时间（精度到毫秒）
+typedef int32_t daytm_t;
+
 constexpr uint8_t MAX_UNITID = 0xFFU;
 
 //#define MAX_UNITID 0xFFU 

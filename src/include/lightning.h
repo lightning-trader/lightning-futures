@@ -59,7 +59,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef void (PORTER_FLAG * cancel_callback)(estid_t, const code_t&, offset_type, direction_type, double_t, uint32_t, uint32_t);
 
-	typedef bool (PORTER_FLAG * condition_callback)(estid_t, const tick_info&);
+	typedef bool (PORTER_FLAG * condition_callback)(estid_t);
 
 	typedef void (PORTER_FLAG * error_callback)(error_type , estid_t, uint32_t);
 
@@ -145,7 +145,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	* 获取时间
 	*
 	*/
-	LT_INTERFACE_DECLARE(time_t, get_last_time, (const ltobj&));
+	LT_INTERFACE_DECLARE(daytm_t, get_last_time, (const ltobj&));
 	
 	/*
 	* 设置撤销条件
@@ -171,12 +171,18 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	*
 	*/
 	LT_INTERFACE_DECLARE(void, playback_history, (const ltobj& , uint32_t));
+
+	/**
+	* 跨天解锁
+	*
+	*/
+	LT_INTERFACE_DECLARE(void, crossday_settlement, (const ltobj&, uint32_t));
 	
 	/**
 	* 获取最后一次下单时间
 	*	跨交易日返回0
 	*/
-	LT_INTERFACE_DECLARE(time_t, last_order_time, (const ltobj&));
+	LT_INTERFACE_DECLARE(daytm_t, last_order_time, (const ltobj&));
 	
 	/**
 	* 获取当前交易日的订单统计
@@ -197,7 +203,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	/**
 	* 获取收盘时间
 	*/
-	LT_INTERFACE_DECLARE(time_t, get_close_time, (const ltobj&));
+	LT_INTERFACE_DECLARE(daytm_t, get_close_time, (const ltobj&));
 
 	/**
 	* 使用自定义交易通道

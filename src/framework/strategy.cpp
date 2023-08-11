@@ -1,11 +1,14 @@
 ﻿#include "strategy.h"
 #include "lightning.h"
+#include "time_utils.hpp"
 #include "engine.h"
 
 using namespace lt;
 
 strategy::strategy(straid_t id, engine& engine, bool openable, bool closeable):_id(id), _engine(engine), _openable(openable), _closeable(closeable)
 {
+	_close_daytime = _engine.get_close_time();
+	_coming_to_close = _close_daytime - 2 * ONE_MINUTE_MILLISECONDS;
 }
 strategy::~strategy()
 {
@@ -14,6 +17,7 @@ strategy::~strategy()
 
 void strategy::init(subscriber& suber)
 {
+
 	this->on_init(suber);
 }
 
@@ -85,8 +89,17 @@ const order_info& strategy::get_order(estid_t order_id) const
 	return _engine.get_order(order_id);
 }
 
+bool strategy::is_coming_to_close(daytm_t dtm) const
+{
+	return _coming_to_close < dtm && dtm <= _close_daytime;
+}
 
-time_t strategy::get_last_time() const
+bool strategy::is_coming_to_close() const
+{
+	auto dytm = get_last_time();
+	return _coming_to_close < dytm && dytm <= _close_daytime;
+}
+daytm_t strategy::get_last_time() const
 {
 	return _engine.get_last_time();
 }
@@ -96,14 +109,14 @@ void strategy::use_custom_chain(bool flag)
 	return _engine.use_custom_chain( _id, flag);
 }
 
-void strategy::set_cancel_condition(estid_t order_id, std::function<bool(const tick_info&)> callback)
+void strategy::set_cancel_condition(estid_t order_id, std::function<bool()> callback)
 {
 	return _engine.set_cancel_condition( order_id, callback);
 }
 
 
 
-time_t strategy::last_order_time()
+daytm_t strategy::last_order_time()
 {
 	return _engine.last_order_time();
 }

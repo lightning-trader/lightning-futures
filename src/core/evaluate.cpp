@@ -83,13 +83,17 @@ bool evaluate::init_from_file(const std::string& config_path)
 	return true;
 }
 
-
-void evaluate::playback_history(uint32_t tradeing_day)
+void evaluate::crossday_settlement(uint32_t tradeing_day)
 {
 	if (_trader_simulator)
 	{
 		_trader_simulator->crossday(tradeing_day);
 	}
+}
+
+void evaluate::playback_history(uint32_t tradeing_day)
+{
+	
 	if(_market_simulator)
 	{	
 		_market_simulator->play(tradeing_day,[this](const tick_info& tick)->void{
@@ -99,7 +103,7 @@ void evaluate::playback_history(uint32_t tradeing_day)
 		//记录结算数据
 		if (_recorder)
 		{
-			_recorder->record_crossday_flow(get_last_time(), tradeing_day, get_order_statistic(), get_account());
+			_recorder->record_crossday_flow(tradeing_day, get_order_statistic(), get_account());
 		}
 	}
 }

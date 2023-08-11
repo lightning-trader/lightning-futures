@@ -10,7 +10,7 @@ using namespace nanolog;
 
 bool init_log_environment()
 {
-	auto file_name = datetime_to_string(get_now(),"%Y-%m-%d_%H%M%S");
+	auto file_name = datetime_to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()),"%Y-%m-%d_%H%M%S");
 	initialize(GuaranteedLogger(), "./log/","lt_" + file_name, 512);
 #ifndef NDEBUG
 	uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) | static_cast<uint8_t>(LogField::SOURCE_FILE);

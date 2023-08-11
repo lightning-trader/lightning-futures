@@ -3,6 +3,7 @@
 #include <data_types.hpp>
 #include <rapidcsv.h>
 #include <time_utils.hpp>
+#include <log_wapper.hpp>
 
 bool csv_tick_loader::init(const std::string& root_path)
 {
@@ -13,10 +14,11 @@ bool csv_tick_loader::init(const std::string& root_path)
 
 void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& code, uint32_t trade_day)
 {
-	char buffer[128];
+	char buffer[128]={0};
 	sprintf(buffer, _root_path.c_str(), code.get_id(), trade_day);
 	if (!std::filesystem::exists(buffer))
 	{
+		LOG_ERROR("cant find file in path:", buffer);
 		return ;
 	}
 	time_t last_time = 0;
@@ -30,19 +32,20 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		}
 		tick_info tick ;
 		tick.id = code;
-		const std::string& date_str = doc.GetCell<std::string>("业务日期",i);
+		//const std::string& date_str = doc.GetCell<std::string>("业务日期",i);
 		const std::string& time_str = doc.GetCell<std::string>("最后修改时间",i);
-		tick.time = make_datetime(date_str.c_str(), time_str.c_str());
+		uint32_t current_tick = 0;
 		if(std::strcmp(code.get_excg(),"ZEC")&& tick.time == last_time)
 		{
 			//郑商所 没有tick问题，后一个填上500和上期所一致
-			tick.tick = 500;
+			current_tick = 500;
 		}
 		else
 		{
-			tick.tick = doc.GetCell<uint32_t>("最后修改毫秒", i);
+			current_tick = doc.GetCell<uint32_t>("最后修改毫秒", i);
 			last_time = tick.time;
 		}
+		tick.time = make_daytm(time_str.c_str(), current_tick);
 		tick.price = doc.GetCell<double_t>("最新价",i);
 		tick.open = doc.GetCell<double_t>("今开盘",i);
 		tick.close = doc.GetCell<double_t>("今收盘", i);
@@ -73,14 +76,6 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 			return true;
 		}
 		if (lh.time > rh.time)
-		{
-			return false;
-		}
-		if (lh.tick < rh.tick)
-		{
-			return true;
-		}
-		if (lh.tick > rh.tick)
 		{
 			return false;
 		}

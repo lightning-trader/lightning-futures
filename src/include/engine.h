@@ -79,9 +79,9 @@ namespace lt
 				{
 					if (trc)
 					{
-						LOG_PROFILE(tick.id.get_id());
+						PROFILE_DEBUG(tick.id.get_id());
 						trc->on_tick(tick, deal);
-						LOG_PROFILE(tick.id.get_id());
+						PROFILE_DEBUG(tick.id.get_id());
 					}
 				}
 
@@ -233,15 +233,15 @@ namespace lt
 			}
 		}
 
-		static inline std::map<estid_t, std::function<bool(const tick_info&)>> _condition_function;
-		static inline bool _condition_callback(estid_t localid, const tick_info& tick)
+		static inline std::map<estid_t, std::function<bool()>> _condition_function;
+		static inline bool _condition_callback(estid_t localid)
 		{
 			auto it = _condition_function.find(localid);
 			if (it == _condition_function.end())
 			{
 				return false;
 			}
-			return it->second(tick);
+			return it->second();
 		}
 
 		static inline void _delayed_entrust_callback(const order_info& order)
@@ -370,7 +370,13 @@ namespace lt
 		* 获取时间
 		*
 		*/
-		time_t get_last_time() const;
+		daytm_t get_last_time() const;
+
+		/**
+		* 获取收盘时间
+		*
+		*/
+		daytm_t get_close_time() const;
 
 		/**
 		* 使用自定义交易通道
@@ -380,14 +386,14 @@ namespace lt
 		/*
 		* 设置撤销条件(返回true时候撤销)
 		*/
-		void set_cancel_condition(estid_t order_id, std::function<bool(const tick_info&)> callback);
+		void set_cancel_condition(estid_t order_id, std::function<bool()> callback);
 
 
 		/**
 		* 获取最后一次下单时间
 		*	跨交易日返回0
 		*/
-		time_t last_order_time();
+		daytm_t last_order_time();
 
 		/**
 		* 获取交易日

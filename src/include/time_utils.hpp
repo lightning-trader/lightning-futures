@@ -1,11 +1,12 @@
 ﻿#pragma once
 
 #include<string>
-#include<chrono>
 //#include "stringbuilder.h"
 #define ONE_DAY_SECONDS 86400
 #define ONE_MINUTE_SECONDS 60
 #define ONE_HOUR_SECONDS 3600
+#define ONE_MINUTE_MILLISECONDS 60000
+#define ONE_SECOND_MILLISECONDS 1000
 
 #if defined(WIN32)
 #pragma  warning(disable:4996)
@@ -87,6 +88,14 @@ static time_t make_datetime(const char* date, const char* time)
 	}
 	return -1;
 }
+static daytm_t make_daytm(const char* time, uint32_t tick = 0)
+{
+	if (time != nullptr)
+	{
+		return static_cast<daytm_t>(make_time(time)) * ONE_SECOND_MILLISECONDS + tick;
+	}
+	return -1;
+}
 
 
 static time_t make_datetime(time_t date_begin, const char* time)
@@ -95,9 +104,9 @@ static time_t make_datetime(time_t date_begin, const char* time)
 }
 
 
-static time_t get_now()
+static time_t make_datetime(uint32_t day,daytm_t dtm)
 {
-	return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	return make_date(day) + dtm / ONE_SECOND_MILLISECONDS;
 }
 
 static time_t get_day_begin(time_t cur)

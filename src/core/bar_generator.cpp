@@ -12,7 +12,7 @@ void bar_generator::insert_tick(const tick_info& tick)
 		_bar.close = tick.price;
 		_bar.high = tick.price;
 		_bar.low = tick.price;
-		_bar.time = _minute * ONE_MINUTE_SECONDS;
+		_bar.time = _minute * ONE_MINUTE_MILLISECONDS;
 		_bar.volume = delta_volume;
 		_poc_data[tick.price] = delta_volume;
 		_bar.poc = tick.price;
@@ -42,7 +42,7 @@ void bar_generator::insert_tick(const tick_info& tick)
 		_bar.price_buy_volume[tick.price] += delta_volume;
 		_bar.delta += delta_volume;
 	}
-	if(tick.time / ONE_MINUTE_SECONDS - _minute >= _period)
+	if(tick.time / ONE_MINUTE_MILLISECONDS - _minute >= _period)
 	{
 		//合成
 		_bar.close = tick.price;
@@ -50,7 +50,7 @@ void bar_generator::insert_tick(const tick_info& tick)
 		{
 			_bar_finish(_bar);
 		}
-		_minute = static_cast<uint32_t>(tick.time / ONE_MINUTE_SECONDS);
+		_minute = (tick.time / ONE_MINUTE_MILLISECONDS);
 		_bar.clear();
 	}
 	_prev_volume = tick.volume;

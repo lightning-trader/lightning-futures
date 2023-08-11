@@ -8,6 +8,7 @@
 #include <params.hpp>
 #include <filesystem>
 #include <mmf_wapper.hpp>
+#include <time_utils.hpp>
 
 
 context::context():
@@ -49,6 +50,7 @@ context::~context()
 
 void context::init(const params& control_config, const params& include_config,bool reset_trading_day)
 {
+	
 	auto&& localdb_name = control_config.get<std::string>("localdb_name");
 	if(!localdb_name.empty())
 	{
@@ -143,6 +145,10 @@ void context::start_service()
 				LOG_ERROR("Binding to core {%d} failed", core);
 			}
 		}
+		if (!is_trading_ready())
+		{
+			check_crossday();
+		}
 		while (_is_runing||!is_terminaled())
 		{
 
@@ -185,6 +191,7 @@ void context::update()
 		{
 			this->_update_callback();
 		}
+		check_order_condition();
 	}
 	
 }
@@ -255,13 +262,13 @@ void context::set_trading_filter(filter_callback callback)
 
 estid_t context::place_order(untid_t untid,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
-	LOG_PROFILE(code.get_id());
-	if (!_is_trading_ready)
+	PROFILE_DEBUG(code.get_id());
+	if (!is_trading_ready())
 	{
 		LOG_DEBUG("place_order _is_trading_ready");
 		return INVALID_ESTID;
 	}
-	if(!_section->is_in_trading(get_last_time()))
+	if(!is_in_trading())
 	{
 		LOG_DEBUG("place_order code not in trading %s", code.get_id());
 		return INVALID_ESTID;
@@ -280,7 +287,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		_record_data->last_order_time = _last_tick_time;
 		_record_data->statistic_info.place_order_amount++;
 	}
-	LOG_PROFILE(code.get_id());
+	PROFILE_DEBUG(code.get_id());
 	return estid ;
 }
 
@@ -290,11 +297,11 @@ void context::cancel_order(estid_t order_id)
 	{
 		return ;
 	}
-	if (!_is_trading_ready)
+	if (!is_trading_ready())
 	{
 		return ;
 	}
-	if (!_section->is_in_trading(get_last_time()))
+	if (!is_in_trading())
 	{
 		LOG_DEBUG("cancel_order code in trading ", order_id);
 		return ;
@@ -387,12 +394,12 @@ void context::unsubscribe(const std::set<code_t>& tick_data, const std::map<code
 		}
 	}
 }
-time_t context::get_last_time()
+daytm_t context::get_last_time()
 {
 	return _last_tick_time;
 }
 
-time_t context::last_order_time()
+daytm_t context::last_order_time()
 {
 	if (_record_data)
 	{
@@ -416,7 +423,7 @@ uint32_t context::get_trading_day()
 	return get_trader().get_trading_day();
 }
 
-time_t context::get_close_time()
+daytm_t context::get_close_time()
 {
 	if(_section == nullptr)
 	{
@@ -475,10 +482,11 @@ uint32_t context::get_open_pending()
 	return res;
 }
 
-void context::check_crossday(uint32_t trading_day)
+void context::check_crossday()
 {
 	if (_record_data)
 	{
+		uint32_t trading_day = get_trader().get_trading_day();
 		if (trading_day != _record_data->trading_day)
 		{
 			LOG_INFO("cross day %d", trading_day);
@@ -642,15 +650,10 @@ void context::handle_tick(const std::vector<std::any>& param)
 	
 	if (param.size() >= 1)
 	{
-		LOG_PROFILE("pDepthMarketData->InstrumentID");
+		PROFILE_DEBUG("pDepthMarketData->InstrumentID");
 		tick_info&& last_tick = std::any_cast<tick_info>(param[0]);
-		LOG_PROFILE(last_tick.id.get_id());
-		if (!is_trading_ready())
-		{
-			uint32_t trading_day = get_trader().get_trading_day();
-			_section->init(trading_day, last_tick.time);
-			check_crossday(trading_day);
-		}
+		PROFILE_DEBUG(last_tick.id.get_id());
+
 		if(!_section->is_in_trading(last_tick.time))
 		{
 			return;
@@ -677,7 +680,7 @@ void context::handle_tick(const std::vector<std::any>& param)
 			deal_info.volume_delta = last_tick.volume - prev_tick.volume;
 			deal_info.interest_delta = last_tick.open_interest - prev_tick.open_interest;
 			deal_info.direction = get_deal_direction(prev_tick, last_tick);
-			LOG_PROFILE(last_tick.id.get_id());
+			PROFILE_DEBUG(last_tick.id.get_id());
 			this->_tick_callback(last_tick, deal_info);
 		}
 		auto tk_it = _bar_generator.find(last_tick.id);
@@ -688,8 +691,6 @@ void context::handle_tick(const std::vector<std::any>& param)
 				bg_it.second->insert_tick(last_tick);
 			}
 		}
-		
-		check_order_condition(last_tick);
 		it->second = last_tick;
 	}
 	
@@ -721,12 +722,12 @@ void context::handle_error(const std::vector<std::any>& param)
 	}
 }
 
-void context::check_order_condition(const tick_info& tick)
+void context::check_order_condition()
 {
 
 	for (auto it = _need_check_condition.begin(); it != _need_check_condition.end();)
 	{
-		if (it->second(it->first,tick))
+		if (it->second(it->first))
 		{
 			get_trader().cancel_order(it->first);
 			it = _need_check_condition.erase(it);

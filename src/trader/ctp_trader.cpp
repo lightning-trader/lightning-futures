@@ -99,7 +99,7 @@ bool ctp_trader::init(const params& config)
 					_query_mutex.lock();
 					_query_queue.pop();
 					_query_mutex.unlock();
-					_last_query_time = get_now();
+					_last_query_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 				}
 				std::this_thread::sleep_for(std::chrono::seconds(1));
 				//query_account();
@@ -757,7 +757,7 @@ bool ctp_trader::is_usable()const
 
 estid_t ctp_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
 {
-	LOG_PROFILE(code.get_id());
+	PROFILE_DEBUG(code.get_id());
 	LOG_INFO("ctp_trader place_order %s %d",code.get_id(), volume);
 
 	if (_td_api == nullptr)
@@ -828,14 +828,14 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 	req.IsAutoSuspend = 0;
 	///用户强评标志: 否
 	req.UserForceClose = 0;
-	LOG_PROFILE(code.get_id());
+	PROFILE_DEBUG(code.get_id());
 	int iResult = _td_api->ReqOrderInsert(&req, genreqid());
 	if (iResult != 0)
 	{
 		LOG_ERROR("ctp_trader order_insert request failed: %d", iResult);
 		return INVALID_ESTID;
 	}
-	LOG_PROFILE(code.get_id()); 
+	PROFILE_INFO(code.get_id());
 	return est_id;
 }
 

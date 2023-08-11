@@ -97,9 +97,7 @@ struct tick_info
 {
 	code_t id; //合约ID
 
-	time_t time; //时间
-
-	uint32_t tick; //毫秒数
+	daytm_t time; //日内时间（毫秒数）
 
 	double_t price;  //pDepthMarketData->LastPrice
 
@@ -141,7 +139,6 @@ struct tick_info
 	}
 	tick_info()
 		:time(0),
-		tick(0),
 		open(0),
 		close(0),
 		high(0),
@@ -153,10 +150,9 @@ struct tick_info
 		open_interest(.0F)
 	{}
 
-	tick_info(const code_t& cod,time_t tm,uint32_t tk,double_t op, double_t cls, double_t hi, double_t lo, double_t prs, double_t std, uint32_t vlm,uint32_t td,uint32_t ist, std::array<std::pair<double_t, uint32_t>, 5>&& buy_ord, std::array<std::pair<double_t, uint32_t>, 5>&& sell_ord)
+	tick_info(const code_t& cod,daytm_t dtm,double_t op, double_t cls, double_t hi, double_t lo, double_t prs, double_t std, uint32_t vlm,uint32_t td,uint32_t ist, std::array<std::pair<double_t, uint32_t>, 5>&& buy_ord, std::array<std::pair<double_t, uint32_t>, 5>&& sell_ord)
 		:id(cod),
-		time(tm),
-		tick(tk),
+		time(dtm),
 		open(op),
 		close(cls),
 		high(hi),
@@ -261,7 +257,7 @@ struct bar_info
 {
 	code_t id; //合约ID
 
-	time_t time; //时间
+	daytm_t time; //时间(分钟毫秒数)
 
 	double_t open;
 

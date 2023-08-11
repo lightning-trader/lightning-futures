@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <rapidcsv.h>
-
+#include <define.h>
 
 class trading_section
 {
@@ -11,16 +11,14 @@ public:
 
 private:
 	rapidcsv::Document _config_csv;
-	std::map<time_t,time_t> _trading_section;
+	std::map<daytm_t, daytm_t> _trading_section;
 public:
+	
+	bool is_in_trading(daytm_t last_time);
 
-	void init(uint32_t trading_day, time_t last_time);
+	daytm_t get_open_time();
 
-	bool is_in_trading(time_t last_time);
-
-	time_t get_open_time();
-
-	time_t get_close_time();
+	daytm_t get_close_time();
 
 };
 
