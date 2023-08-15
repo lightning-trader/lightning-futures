@@ -113,7 +113,7 @@ void market_simulator::publish_tick(std::function<void(const tick_info& info)> p
 		{
 			_current_trading_day = tick->trading_day;
 		}
-		PROFILE_DEBUG(tick->id.get_id());
+		PROFILE_INFO(tick->id.get_id());
 		this->fire_event(market_event_type::MET_TickReceived, *tick);
 		if(publish_callback)
 		{
