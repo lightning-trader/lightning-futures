@@ -520,7 +520,7 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		estid_t estid = generate_estid(pOrder->FrontID, pOrder->SessionID,strtoul(pOrder->OrderRef,NULL,10));
 		auto order = _order_info[estid];
 		order.code = code_t(pOrder->InstrumentID , pOrder->ExchangeID);
-		order.create_time = make_datetime(pOrder->InsertDate, pOrder->InsertTime);
+		order.create_time = make_daytm(pOrder->InsertTime);
 		order.est_id = estid;
 		order.direction = wrap_position_direction(pOrder->Direction);
 		order.offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
@@ -603,7 +603,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		{
 			order_info entrust;
 			entrust.code = code;
-			entrust.create_time = make_datetime(pOrder->InsertDate, pOrder->InsertTime);
+			entrust.create_time = make_daytm(pOrder->InsertTime);
 			entrust.est_id = estid;
 			entrust.direction = direction;
 			entrust.last_volume = pOrder->VolumeTotal;

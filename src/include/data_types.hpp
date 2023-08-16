@@ -459,7 +459,7 @@ struct order_info
 
 	uint32_t		last_volume;
 
-	time_t			create_time;
+	daytm_t			create_time;
 
 	offset_type		offset;
 

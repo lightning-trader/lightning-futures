@@ -15,7 +15,7 @@ private:
 
 	uint32_t _current_trading_day ;
 
-	time_t _current_time;
+	daytm_t _current_time;
 	
 	uint32_t _order_ref;
 
