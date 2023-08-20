@@ -31,20 +31,12 @@ void trader_simulator::push_tick(const tick_info& tick)
 }
 void trader_simulator::crossday(uint32_t trading_day)
 {
-/*
+
 	std::vector<order_info> order;
 	_order_info.get_all_order(order);
 	for (auto it : order)
 	{
-		std::vector<order_match> match;
-		_order_info.get_order_match(match, it.code);
-		for (const order_match& mit : match)
-		{
-			if(mit.state != OS_INVALID)
-			{
-				order_cancel(it, mit.is_today);
-			}
-		}
+		cancel_order(it.est_id);
 	}
 	std::vector<order_info> residue_order;
 	_order_info.get_all_order(residue_order);
@@ -61,11 +53,10 @@ void trader_simulator::crossday(uint32_t trading_day)
 		{
 			_position_info.reduce_position(it.id, direction_type::DT_LONG, it.yestoday_long.postion, false);
 			_position_info.reduce_position(it.id, direction_type::DT_SHORT, it.yestoday_short.postion, false);
-			this->fire_event(trader_event_type::TET_PositionChange, _position_info.get_position_info(it.id));
 		}
 
 	}
-	*/
+	
 	_current_trading_day = trading_day;
 }
 
