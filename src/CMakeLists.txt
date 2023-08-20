@@ -12,7 +12,7 @@ if(APPLE)
 elseif(UNIX)
     add_definitions( "-fPIC" )
     set(CTP_LIBS thostmduserapi_se thosttraderapi_se)
-    set(SYS_LIBS pthread tr)
+    set(SYS_LIBS pthread)
 endif()
 
 

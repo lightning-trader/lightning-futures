@@ -181,9 +181,9 @@ namespace lt
 		/**
 		* 是否即将收盘
 		*/
-		bool is_coming_to_close(daytm_t dtm) const ;
+		bool is_close_coming(daytm_t dtm) const ;
 
-		bool is_coming_to_close() const ;
+		bool is_close_coming() const ;
 
 		/**
 		* 获取时间

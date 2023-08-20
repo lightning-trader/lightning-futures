@@ -89,12 +89,12 @@ const order_info& strategy::get_order(estid_t order_id) const
 	return _engine.get_order(order_id);
 }
 
-bool strategy::is_coming_to_close(daytm_t dtm) const
+bool strategy::is_close_coming(daytm_t dtm) const
 {
 	return _coming_to_close < dtm && dtm <= _close_daytime;
 }
 
-bool strategy::is_coming_to_close() const
+bool strategy::is_close_coming() const
 {
 	auto dytm = get_last_time();
 	return _coming_to_close < dytm && dytm <= _close_daytime;

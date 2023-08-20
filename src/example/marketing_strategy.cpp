@@ -29,7 +29,7 @@ void marketing_strategy::on_ready()
 		{
 			set_cancel_condition(buy_order.est_id, [this]()->bool {
 
-				if (is_coming_to_close())
+				if (is_close_coming())
 				{
 					return true;
 				}
@@ -45,7 +45,7 @@ void marketing_strategy::on_ready()
 		{
 			set_cancel_condition(sell_order.est_id, [this]()->bool {
 
-				if (is_coming_to_close())
+				if (is_close_coming())
 				{
 					return true;
 				}
@@ -67,7 +67,7 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		LOG_DEBUG("is_trading_ready not ready", tick.id.get_id());
 		return;
 	}
-	if (is_coming_to_close())
+	if (is_close_coming())
 	{
 		LOG_DEBUG("time > _coming_to_close", tick.id.get_id(), tick.time);
 		return;
@@ -126,7 +126,7 @@ void marketing_strategy::on_entrust(const order_info& order)
 	{
 		set_cancel_condition(order.est_id, [this]()->bool {
 
-			if (is_coming_to_close())
+			if (is_close_coming())
 			{
 				return true;
 			}
