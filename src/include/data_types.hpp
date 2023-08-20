@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "define.h"
 #include <ostream>
-
+#include <utility>
 
 constexpr size_t CODE_DATA_LEN = 24;
 #define EXCG_OFFSET_LEN	6
@@ -279,15 +279,54 @@ struct bar_info
 	//订单流中的明细
 	std::map<double_t, uint32_t> price_buy_volume;
 	std::map<double_t, uint32_t> price_sell_volume;
+	
 
-	std::vector<double_t> buy_unbalance(uint32_t multiple)const
+	std::vector<double_t> buy_unbalance(double_t mu)const
 	{
-		return std::vector<double_t>();
+		std::vector<std::pair<double_t, uint32_t>> buy_volume;
+		for(auto it : price_buy_volume)
+		{
+			buy_volume.emplace_back(std::make_pair(it.first,it.second));
+		}
+		std::vector<std::pair<double_t, uint32_t>> sell_volume;
+		for (auto it : price_sell_volume)
+		{
+			sell_volume.emplace_back(std::make_pair(it.first, it.second));
+		}
+		auto res = std::vector<double_t>() ;
+		for(size_t i = 0 ; i < buy_volume.size() && i < sell_volume.size() - 1 && sell_volume.size() > 0;i++)
+		{
+			auto delta = buy_volume[i].second - sell_volume[i+1].second;
+			if(delta > mu)
+			{
+				res.emplace_back(buy_volume[i].first);
+			}
+		}
+		return res;
 	}
-	std::vector<double_t> sell_unbalance()const
+	std::vector<double_t> sell_unbalance(double_t mu)const
 	{
+		std::vector<std::pair<double_t, uint32_t>> buy_volume;
+		for (auto it : price_buy_volume)
+		{
+			buy_volume.emplace_back(std::make_pair(it.first, it.second));
+		}
+		std::vector<std::pair<double_t, uint32_t>> sell_volume;
+		for (auto it : price_sell_volume)
+		{
+			sell_volume.emplace_back(std::make_pair(it.first, it.second));
+		}
+		auto res = std::vector<double_t>();
 		
-		return std::vector<double_t>();
+		for (size_t i = 0; i < sell_volume.size() && i < buy_volume.size() - 1 && buy_volume.size() > 0; i++)
+		{
+			auto delta = sell_volume[i].second - buy_volume[i + 1].second;
+			if (delta > mu)
+			{
+				res.emplace_back(sell_volume[i].first);
+			}
+		}
+		return res;
 	}
 
 	void clear() 

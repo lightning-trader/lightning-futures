@@ -31,6 +31,7 @@ void trader_simulator::push_tick(const tick_info& tick)
 }
 void trader_simulator::crossday(uint32_t trading_day)
 {
+/*
 	std::vector<order_info> order;
 	_order_info.get_all_order(order);
 	for (auto it : order)
@@ -64,6 +65,7 @@ void trader_simulator::crossday(uint32_t trading_day)
 		}
 
 	}
+	*/
 	_current_trading_day = trading_day;
 }
 

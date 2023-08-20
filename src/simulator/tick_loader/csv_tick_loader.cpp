@@ -21,7 +21,7 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		LOG_ERROR("cant find file in path:", buffer);
 		return ;
 	}
-	time_t last_time = 0;
+	daytm_t last_time = 0;
 	rapidcsv::Document doc(buffer, rapidcsv::LabelParams(0, -1));
 	for(size_t i = 0;i < doc.GetRowCount();i++)
 	{
