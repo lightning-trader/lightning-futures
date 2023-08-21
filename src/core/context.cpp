@@ -171,9 +171,9 @@ void context::start_service()
 		while (_is_runing || !_distributor->is_empty())
 		{
 			auto begin = std::chrono::system_clock::now();
+			_distributor->update();
 			auto use_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - begin);
 			auto duration = std::chrono::milliseconds(_loop_interval);
-			_distributor->update();
 			if (use_time < duration)
 			{
 				std::this_thread::sleep_for(duration - use_time);
