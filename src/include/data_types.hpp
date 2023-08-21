@@ -279,55 +279,64 @@ struct bar_info
 	//订单流中的明细
 	std::map<double_t, uint32_t> price_buy_volume;
 	std::map<double_t, uint32_t> price_sell_volume;
-	
 
-	std::vector<double_t> buy_unbalance(double_t mu)const
+	uint32_t get_buy_volume(double_t price)const
 	{
-		std::vector<std::pair<double_t, uint32_t>> buy_volume;
-		for(auto it : price_buy_volume)
+		auto it = price_buy_volume.find(price);
+		if(it == price_buy_volume.end())
 		{
-			buy_volume.emplace_back(std::make_pair(it.first,it.second));
+			return 0.0;
 		}
-		std::vector<std::pair<double_t, uint32_t>> sell_volume;
-		for (auto it : price_sell_volume)
+		return it->second;
+	}
+
+	uint32_t get_sell_volume(double_t price)const
+	{
+		auto it = price_sell_volume.find(price);
+		if (it == price_sell_volume.end())
 		{
-			sell_volume.emplace_back(std::make_pair(it.first, it.second));
+			return 0.0;
 		}
-		auto res = std::vector<double_t>() ;
-		for(size_t i = 0 ; i < buy_volume.size() && i < sell_volume.size() - 1 && sell_volume.size() > 0;i++)
+		return it->second;
+	}
+
+	std::vector<std::tuple<double_t,uint32_t,uint32_t>> get_order_book(double_t price_step=1)const
+	{
+		std::vector < std::tuple<double_t, uint32_t, uint32_t>> result ;
+		for(double_t price = low; price <= high; price += price_step)
 		{
-			auto delta = buy_volume[i].second - sell_volume[i+1].second;
-			if(delta > mu)
+			result.emplace_back(std::make_tuple(price, get_buy_volume(price), get_sell_volume(price)));
+		}
+		return result;
+	}
+	
+	//获取不平衡订单
+	std::pair<std::shared_ptr<std::vector<double_t>>, std::shared_ptr<std::vector<double_t>>> get_unbalance(uint32_t multiple,double_t price_step=1)const
+	{
+		//需求失衡
+		auto demand_unbalance = std::make_shared<std::vector<double_t>>();
+		//供给失衡
+		auto supply_unbalance = std::make_shared<std::vector<double_t>>();
+		//构建订单薄
+		auto order_book = get_order_book();
+
+		for(size_t i=0;i< order_book.size()-1;i++)
+		{
+			auto demand_cell = order_book[i];
+			auto supply_cell = order_book[i+1];
+			if(std::get<1>(demand_cell) * multiple > std::get<2>(supply_cell))
 			{
-				res.emplace_back(buy_volume[i].first);
+				demand_unbalance->emplace_back(std::get<0>(demand_cell));
+			}
+			else if (std::get<2>(supply_cell) * multiple > std::get<1>(demand_cell))
+			{
+				supply_unbalance->emplace_back(std::get<0>(supply_cell));
 			}
 		}
-		return res;
-	}
-	std::vector<double_t> sell_unbalance(double_t mu)const
-	{
-		std::vector<std::pair<double_t, uint32_t>> buy_volume;
-		for (auto it : price_buy_volume)
-		{
-			buy_volume.emplace_back(std::make_pair(it.first, it.second));
-		}
-		std::vector<std::pair<double_t, uint32_t>> sell_volume;
-		for (auto it : price_sell_volume)
-		{
-			sell_volume.emplace_back(std::make_pair(it.first, it.second));
-		}
-		auto res = std::vector<double_t>();
 		
-		for (size_t i = 0; i < sell_volume.size() && i < buy_volume.size() - 1 && buy_volume.size() > 0; i++)
-		{
-			auto delta = sell_volume[i].second - buy_volume[i + 1].second;
-			if (delta > mu)
-			{
-				res.emplace_back(sell_volume[i].first);
-			}
-		}
-		return res;
+		return std::make_pair(demand_unbalance,supply_unbalance);
 	}
+	
 
 	void clear() 
 	{

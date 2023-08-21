@@ -16,14 +16,15 @@ class orderflow_strategy : public lt::strategy,public lt::bar_receiver
 	};
 public:
 
-	orderflow_strategy(lt::straid_t id, lt::engine& engine, const code_t& code, uint32_t period, uint32_t open_once, double_t delta, uint32_t limit) :
+	orderflow_strategy(lt::straid_t id, lt::engine& engine, const code_t& code, uint32_t period, uint32_t open_once, uint32_t multiple, uint32_t threshold, uint32_t position_limit) :
 		lt::strategy(id, engine, true, true),
 		_code(code),
 		_open_once(open_once),
 		_period(period),
 		_order_data(nullptr),
-		_delta(delta),
-		_limit(limit)
+		_multiple(multiple),
+		_threshold(threshold),
+		_position_limit(position_limit)
 	{
 	};
 
@@ -102,10 +103,13 @@ private:
 	uint32_t _period;
 
 	//失衡delta
-	double_t _delta;
+	uint32_t _multiple;
 
 	//失衡触发信号的阈值
-	uint32_t _limit ;
+	uint32_t _threshold;
+
+	//订单限制
+	uint32_t _position_limit;
 
 	persist_data* _order_data;
 

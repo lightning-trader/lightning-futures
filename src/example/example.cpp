@@ -32,8 +32,8 @@ void start_evaluate(const char* account_config, const code_t& code, const std::v
 {
 	lt::evaluate_engine app(account_config);
 	std::vector<std::shared_ptr<lt::strategy>> strategys;
-	strategys.emplace_back(std::make_shared<marketing_strategy>(1, app, code, 1, 1));
-	strategys.emplace_back(std::make_shared<orderflow_strategy>(2, app, code, 1, 1,80.0,3));
+	//strategys.emplace_back(std::make_shared<marketing_strategy>(1, app, code, 1, 1));
+	strategys.emplace_back(std::make_shared<orderflow_strategy>(2, app, code, 1, 1, 3, 3, 10));
 	for (auto& trading_day : trading_days)
 	{
 		app.back_test(strategys, trading_day);

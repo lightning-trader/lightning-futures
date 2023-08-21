@@ -62,11 +62,14 @@ void orderflow_strategy::on_ready()
 
 void orderflow_strategy::on_bar(uint32_t period, const bar_info& bar)
 {
+
+	auto unbalance = bar.get_unbalance(_multiple);
 	if(_order_data->buy_order == INVALID_ESTID)
 	{
 		//可以买入的
-		auto ub = bar.buy_unbalance(_delta);
-		if(ub.size() > _limit)
+		//需求失衡，说明有买方力量大于卖方力量，顺势而为则买入
+		auto ub = unbalance.first;
+		if(ub->size() > _threshold)
 		{
 			try_buy();
 		}
@@ -74,8 +77,9 @@ void orderflow_strategy::on_bar(uint32_t period, const bar_info& bar)
 	if (_order_data->sell_order == INVALID_ESTID)
 	{
 		//可以卖出的
-		auto ub = bar.sell_unbalance(_delta) ;
-		if (ub.size() > _limit)
+		//需求失衡，说明有买方力量大于买方力量，顺势而为则卖出
+		auto ub = unbalance.second;
+		if (ub->size() > _threshold)
 		{
 			try_sell();
 		}
@@ -156,17 +160,20 @@ void orderflow_strategy::try_buy()
 	auto pos = get_position(_code);
 	if(pos.yestoday_short.usable()>0)
 	{
-		auto min = std::min(_open_once, pos.yestoday_short.usable());
-		_order_data->buy_order = buy_for_close(_code, min, tick.sell_price());
+		auto volume = std::min(_open_once, pos.yestoday_short.usable());
+		_order_data->buy_order = buy_for_close(_code, volume, tick.sell_price());
 		return ;
 	}
 	if (pos.today_short.usable() > 0)
 	{
-		auto min = std::min(_open_once, pos.today_short.usable());
-		_order_data->buy_order = buy_for_close(_code, min, tick.sell_price());
+		auto volume = std::min(_open_once, pos.today_short.usable());
+		_order_data->buy_order = buy_for_close(_code, volume, tick.sell_price());
 		return;
 	}
-	_order_data->buy_order = buy_for_open(_code, _open_once, tick.sell_price());
+	if(_open_once + pos.get_long_position() + get_open_long_pending(_code)< _position_limit)
+	{
+		_order_data->buy_order = buy_for_open(_code, _open_once, tick.sell_price());
+	}
 }
 
 void orderflow_strategy::try_sell()
@@ -185,5 +192,8 @@ void orderflow_strategy::try_sell()
 		_order_data->sell_order = sell_for_close(_code, min, tick.buy_price());
 		return;
 	}
-	_order_data->sell_order = sell_for_close(_code, _open_once, tick.buy_price());
+	if (_open_once + pos.get_short_position() + get_open_short_pending(_code) < _position_limit)
+	{
+		_order_data->sell_order = sell_for_close(_code, _open_once, tick.buy_price());
+	}
 }
