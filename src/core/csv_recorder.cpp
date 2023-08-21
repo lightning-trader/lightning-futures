@@ -7,7 +7,7 @@
 #include <time_utils.hpp>
 #include <log_wapper.hpp>
 
-csv_recorder::csv_recorder(const char* basic_path) :_crossday_flow_csv(std::string(),rapidcsv::LabelParams(0,0))
+csv_recorder::csv_recorder(const char* basic_path) :_crossday_flow_csv(std::string(),rapidcsv::LabelParams(0,-1))
 {
 	if (!std::filesystem::exists(basic_path))
 	{

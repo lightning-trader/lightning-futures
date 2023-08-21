@@ -21,7 +21,7 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		LOG_ERROR("cant find file in path:", buffer);
 		return ;
 	}
-	daytm_t last_time = 0;
+	time_t last_second = 0;
 	rapidcsv::Document doc(buffer, rapidcsv::LabelParams(0, -1));
 	for(size_t i = 0;i < doc.GetRowCount();i++)
 	{
@@ -33,9 +33,10 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		tick_info tick ;
 		tick.id = code;
 		//const std::string& date_str = doc.GetCell<std::string>("业务日期",i);
-		const std::string& time_str = doc.GetCell<std::string>("最后修改时间",i);
+		const std::string& time_str = doc.GetCell<std::string>("最后修改时间", i);
 		uint32_t current_tick = 0;
-		if(std::strcmp(code.get_excg(),"ZEC")&& tick.time == last_time)
+		time_t current_second = make_time(time_str.c_str());
+		if(std::strcmp(code.get_excg(),"ZEC") && current_second == last_second)
 		{
 			//郑商所 没有tick问题，后一个填上500和上期所一致
 			current_tick = 500;
@@ -43,7 +44,7 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		else
 		{
 			current_tick = doc.GetCell<uint32_t>("最后修改毫秒", i);
-			last_time = tick.time;
+			last_second = current_second;
 		}
 		tick.time = make_daytm(time_str.c_str(), current_tick);
 		tick.price = doc.GetCell<double_t>("最新价",i);
@@ -69,7 +70,7 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		tick.sell_order[4] = std::make_pair(doc.GetCell<double_t>("申卖价五", i), doc.GetCell<uint32_t>("申卖量五", i));
 		result.emplace_back(tick);
 	}
-
+	/*
 	std::sort(result.begin(), result.end(), [](const auto& lh, const auto& rh)->bool {
 		if (lh.time < rh.time)
 		{
@@ -81,4 +82,5 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		}
 		return lh.id < rh.id;
 		});
+	*/
 }
