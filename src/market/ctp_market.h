@@ -4,8 +4,9 @@
 #include <event_center.hpp>
 #include <mutex>
 #include <condition_variable>
-#include <ThostFtdcMdApi.h>
 #include <params.hpp>
+#include <../../api/CTP_V6.6.9_20220920/ThostFtdcMdApi.h>
+#include <dll_helper.hpp>
 
 
 
@@ -13,15 +14,16 @@ class ctp_market :	public actual_market,public CThostFtdcMdSpi
 {
 public:
 
-	ctp_market();
+	ctp_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
 
 	virtual ~ctp_market();
 	
-	bool init(const params& config);
-
 //IMarketAPI 接口
 public:
 
+	virtual void login() override;
+
+	virtual void logout()override;
 
 	virtual void subscribe(const std::set<code_t>& codes) override;
 
@@ -74,9 +76,11 @@ private:
 	std::unique_lock<std::mutex> _process_mutex;
 	std::condition_variable _process_signal;
 
-	std::unordered_map<std::string,std::string> _instrument_id_list;
-
 	bool _is_inited ;
 
+	typedef CThostFtdcMdApi* (*market_creator)(const char*, const bool, const bool);
+	market_creator					_ctp_creator;
+	dll_handle						_market_handle;
+	
 };
 

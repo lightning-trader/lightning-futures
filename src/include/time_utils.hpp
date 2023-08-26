@@ -5,6 +5,7 @@
 #define ONE_DAY_SECONDS 86400
 #define ONE_MINUTE_SECONDS 60
 #define ONE_HOUR_SECONDS 3600
+#define ONE_DAY_MILLISECONDS 86400000
 #define ONE_MINUTE_MILLISECONDS 60000
 #define ONE_SECOND_MILLISECONDS 1000
 
@@ -117,6 +118,11 @@ static time_t get_day_begin(time_t cur)
 	if (_0 <= (cur - ONE_DAY_SECONDS))
 		_0 += ONE_DAY_SECONDS;
 	return _0;
+}
+
+static daytm_t get_day_time(time_t cur)
+{
+	return static_cast<daytm_t>((cur - get_day_begin(cur)) * ONE_SECOND_MILLISECONDS);
 }
 
 static time_t get_next_time(time_t cur,const char* time)

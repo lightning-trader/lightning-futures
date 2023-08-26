@@ -5,33 +5,51 @@
 #include "./tick_loader/csv_tick_loader.h"
 #include <log_wapper.hpp>
 
-bool trader_simulator::init(const params& config)
+trader_simulator::trader_simulator(const params& config) :
+	_trading_day(0),
+	_order_ref(0),
+	_interval(1),
+	_current_time(0)
 {
+	std::string td_path ;
 	try
 	{
 		_account_info.money = config.get<double_t>("initial_capital");
 		auto contract_file = config.get<std::string>("contract_config");
 		_contract_parser.init(contract_file);
 		_interval = config.get<uint32_t>("interval");
+		td_path = config.get<std::string>("trading_day");
 	}
 	catch (...)
 	{
 		LOG_ERROR("tick_simulator init error ");
-		return false;
 	}
-	return true;
+
+}
+trader_simulator::~trader_simulator()
+{
+}
+
+void trader_simulator::login()
+{
+	
+}
+
+void trader_simulator::logout()
+{
+	_trading_day = 0;
 }
 
 void trader_simulator::push_tick(const tick_info& tick)
 {
 	_current_time = tick.time;
-	handle_submit();
 	match_entrust(&tick);
 	_last_frame_volume[tick.id] = tick.volume;
 }
+
 void trader_simulator::crossday(uint32_t trading_day)
 {
-
+	_trading_day = trading_day;
 	std::vector<order_info> order;
 	_order_info.get_all_order(order);
 	for (auto it : order)
@@ -40,7 +58,7 @@ void trader_simulator::crossday(uint32_t trading_day)
 	}
 	std::vector<order_info> residue_order;
 	_order_info.get_all_order(residue_order);
-	if(residue_order.size()>0)
+	if (residue_order.size() > 0)
 	{
 		_order_info.clear();
 	}
@@ -54,16 +72,13 @@ void trader_simulator::crossday(uint32_t trading_day)
 			_position_info.reduce_position(it.id, direction_type::DT_LONG, it.yestoday_long.postion, false);
 			_position_info.reduce_position(it.id, direction_type::DT_SHORT, it.yestoday_short.postion, false);
 		}
-
 	}
 	
-	_current_trading_day = trading_day;
 }
-
 
 uint32_t trader_simulator::get_trading_day()const
 {
-	return _current_trading_day;
+	return _trading_day;
 }
 
 bool trader_simulator::is_usable()const
@@ -125,27 +140,14 @@ void trader_simulator::cancel_order(estid_t order_id)
 	}
 }
 
-void trader_simulator::submit_settlement()
-{
-	while (!_is_submit_return.exchange(false));
-}
 
-std::shared_ptr<trader_data> trader_simulator::get_trader_data()const
+std::shared_ptr<trader_data> trader_simulator::get_trader_data()
 {
 	auto result = std::make_shared<trader_data>();
 	result->account = _account_info;
 	_order_info.get_valid_order(result->orders);
 	_position_info.get_all_position(result->positions);
 	return result;
-}
-
-void trader_simulator::handle_submit()
-{
-	if (!_is_submit_return)
-	{
-		while(!_is_submit_return.exchange(true));
-		this->fire_event(trader_event_type::TET_SettlementCompleted);
-	}
 }
 
 

@@ -276,6 +276,8 @@ struct bar_info
 	//订单流中poc (最大成交量的价格，表示bar重心)
 	double_t poc ;
 
+	double_t price_step; //价格单元
+
 	//订单流中的明细
 	std::map<double_t, uint32_t> price_buy_volume;
 	std::map<double_t, uint32_t> price_sell_volume;
@@ -285,7 +287,7 @@ struct bar_info
 		auto it = price_buy_volume.find(price);
 		if(it == price_buy_volume.end())
 		{
-			return 0.0;
+			return 0;
 		}
 		return it->second;
 	}
@@ -295,12 +297,12 @@ struct bar_info
 		auto it = price_sell_volume.find(price);
 		if (it == price_sell_volume.end())
 		{
-			return 0.0;
+			return 0;
 		}
 		return it->second;
 	}
 
-	std::vector<std::tuple<double_t,uint32_t,uint32_t>> get_order_book(double_t price_step=1)const
+	std::vector<std::tuple<double_t,uint32_t,uint32_t>> get_order_book()const
 	{
 		std::vector < std::tuple<double_t, uint32_t, uint32_t>> result ;
 		for(double_t price = low; price <= high; price += price_step)
@@ -311,7 +313,7 @@ struct bar_info
 	}
 	
 	//获取不平衡订单
-	std::pair<std::shared_ptr<std::vector<double_t>>, std::shared_ptr<std::vector<double_t>>> get_unbalance(uint32_t multiple,double_t price_step=1)const
+	std::pair<std::shared_ptr<std::vector<double_t>>, std::shared_ptr<std::vector<double_t>>> get_unbalance(uint32_t multiple)const
 	{
 		//需求失衡
 		auto demand_unbalance = std::make_shared<std::vector<double_t>>();
@@ -341,13 +343,14 @@ struct bar_info
 	void clear() 
 	{
 		time = 0;
-		open = .0F;
-		high = .0F;
-		low = .0F;
-		close = .0F;
+		open = .0;
+		high = .0;
+		low = .0;
+		close = .0;
 		volume = 0;
 		delta = 0;
 		poc = 0;
+		price_step = .0;
 		price_buy_volume.clear();
 		price_sell_volume.clear();
 	}
@@ -360,7 +363,8 @@ struct bar_info
 		low(0),
 		volume(0),
 		delta(0),
-		poc(.0F)
+		poc(.0),
+		price_step(.0)
 	{}
 
 

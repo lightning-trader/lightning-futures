@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <define.h>
 #include <chrono>
 #include <stream_buffer.hpp>

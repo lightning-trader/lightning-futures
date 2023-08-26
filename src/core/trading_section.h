@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <rapidcsv.h>
 #include <define.h>
 
 class trading_section
@@ -10,7 +9,6 @@ public:
 	virtual ~trading_section();
 
 private:
-	rapidcsv::Document _config_csv;
 	std::vector<std::pair<daytm_t, daytm_t>> _trading_section;
 public:
 	
@@ -19,6 +17,8 @@ public:
 	daytm_t get_open_time();
 
 	daytm_t get_close_time();
+
+	daytm_t next_open_time(daytm_t now);
 
 };
 

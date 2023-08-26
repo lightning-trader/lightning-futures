@@ -83,28 +83,28 @@ bool evaluate::init_from_file(const std::string& config_path)
 	return true;
 }
 
-void evaluate::crossday_settlement(uint32_t tradeing_day)
-{
-	if (_trader_simulator)
-	{
-		_trader_simulator->crossday(tradeing_day);
-	}
-}
-
-void evaluate::playback_history(uint32_t tradeing_day)
+void evaluate::playback_history()
 {
 	
 	if(_market_simulator)
 	{	
-		_market_simulator->play(tradeing_day,[this](const tick_info& tick)->void{
+		_market_simulator->play(_trader_simulator->get_trading_day(), [this](const tick_info& tick)->void {
 			_trader_simulator->push_tick(tick);
 		});
 		rapidcsv::Document _crossday_flow_csv;
 		//记录结算数据
 		if (_recorder)
 		{
-			_recorder->record_crossday_flow(tradeing_day, get_order_statistic(), get_account());
+			_recorder->record_crossday_flow(_trader_simulator->get_trading_day(), get_order_statistic(), get_account());
 		}
+	}
+}
+
+void evaluate::simulate_crossday(uint32_t trading_day)
+{
+	if(_trader_simulator)
+	{
+		_trader_simulator->crossday(trading_day);
 	}
 }
 

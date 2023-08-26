@@ -46,8 +46,9 @@ bool runtime::init_from_file(const std::string& config_path)
 		LOG_ERROR("runtime_engine init_from_file cant find [actual_market]", config_path.c_str());
 		return false;
 	}
+	auto&& id_excg_map = std::make_shared<std::unordered_map<std::string,std::string>>();
 	//market
-	_market = create_actual_market(it->second);
+	_market = create_actual_market(id_excg_map,it->second);
 	if (_market == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_market_api ", config_path.c_str());
@@ -60,7 +61,7 @@ bool runtime::init_from_file(const std::string& config_path)
 		return false;
 	}
 	//trader
-	_trader = create_actual_trader(it->second);
+	_trader = create_actual_trader(id_excg_map,it->second);
 	if (_trader == nullptr)
 	{
 		LOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", config_path.c_str());

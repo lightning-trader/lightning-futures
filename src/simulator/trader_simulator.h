@@ -13,7 +13,7 @@ class trader_simulator : public dummy_trader
 private:
 	
 
-	uint32_t _current_trading_day ;
+	uint32_t _trading_day;
 
 	daytm_t _current_time;
 	
@@ -31,37 +31,28 @@ private:
 	
 	position_container _position_info;
 
-	std::atomic<bool> _is_submit_return ;
-
 	uint32_t	_interval;			//间隔毫秒数
 	
 	contract_parser	_contract_parser;	//合约信息配置
-	
+
 public:
 
-	trader_simulator():
-		_current_trading_day(0), 
-		_order_ref(0),
-		_interval(1),
-		_current_time(0),
-		_is_submit_return(true)
-	{}
-	virtual ~trader_simulator()
-	{
-	}
-
-	bool init(const params& config);
+	trader_simulator(const params& config);
+	
+	virtual ~trader_simulator();
 
 	
-
 public:
 	
 	virtual void push_tick(const tick_info& tick) override;
 	
 	virtual void crossday(uint32_t trading_day) override;
 
-
 public:
+
+	virtual void login() override;
+
+	virtual void logout()override;
 
 	virtual uint32_t get_trading_day()const override;
 	// td
@@ -71,14 +62,10 @@ public:
 
 	virtual void cancel_order(estid_t order_id) override;
 
-	virtual void submit_settlement() override;
-
-	virtual std::shared_ptr<trader_data> get_trader_data()const override;
+	virtual std::shared_ptr<trader_data> get_trader_data() override;
 
 private:
-
-	void handle_submit();
-
+	
 	estid_t make_estid();
 
 	uint32_t get_front_count(const code_t& code, double_t price);

@@ -55,6 +55,9 @@ extern "C"
 			}
 		}
 	}
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, login_account, (const ltobj& lt), ());
+
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, logout_account, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, start_service, (const ltobj& lt),());
 	
@@ -84,9 +87,9 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, bind_delayed_event, (const ltobj& lt, const order_event& od_evt,account_callback account_cb, position_callback position_cb), (od_evt, account_cb, position_cb));
 
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, playback_history, (const ltobj& lt, uint32_t trading_day), (trading_day));
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, playback_history, (const ltobj& lt), ());
 
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, crossday_settlement, (const ltobj& lt, uint32_t trading_day), (trading_day));
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, simulate_crossday, (const ltobj& lt, uint32_t trading_day), (trading_day));
 
 	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, last_order_time, (const ltobj& lt), ());
 
@@ -97,6 +100,10 @@ extern "C"
 	LT_INTERFACE_IMPLEMENTATION(uint32_t, 0U, context, get_trading_day, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, get_close_time, (const ltobj& lt), ());
+
+	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, next_open_time, (const ltobj& lt, daytm_t time), (time));
+
+	LT_INTERFACE_IMPLEMENTATION(bool, false, context, is_in_trading, (const ltobj& lt, daytm_t time), (time));
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, use_custom_chain, (const ltobj& lt, untid_t untid, bool flag), (untid, flag));
 

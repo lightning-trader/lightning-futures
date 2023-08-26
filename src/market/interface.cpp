@@ -1,22 +1,14 @@
-﻿#include <market_api.h>
+﻿#include <interface.h>
 #include "ctp_market.h"
 
-actual_market* create_actual_market(const params& config)
+actual_market* create_actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map,const params& config)
 {
 	auto market_type = config.get<std::string>("market");
 	if (market_type == "ctp")
 	{
-		ctp_market* api = new ctp_market();
-		if (api->init(config))
-		{
-			return api;
-		}
-		else
-		{
-			delete api;
-		}
+		return new ctp_market(id_excg_map, config);
 	}
-
+	
 	return nullptr;
 }
 

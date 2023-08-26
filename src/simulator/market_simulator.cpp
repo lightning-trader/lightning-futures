@@ -5,10 +5,15 @@
 #include "./tick_loader/csv_tick_loader.h"
 #include <log_wapper.hpp>
 
-bool market_simulator::init(const params& config)
+market_simulator::market_simulator(const params& config) :_loader(nullptr),
+_current_trading_day(0),
+_current_time(0),
+_current_index(0),
+_interval(1),
+_is_runing(false)
 {
-	std::string loader_type ;
-	std::string csv_data_path ;
+	std::string loader_type;
+	std::string csv_data_path;
 	try
 	{
 		_interval = config.get<uint32_t>("interval");
@@ -18,30 +23,50 @@ bool market_simulator::init(const params& config)
 	catch (...)
 	{
 		LOG_ERROR("tick_simulator init error ");
-		return false;
 	}
 	if (loader_type == "csv")
 	{
 		csv_tick_loader* loader = new csv_tick_loader();
-		if(!loader->init(csv_data_path))
+		if (!loader->init(csv_data_path))
 		{
 			delete loader;
-			return false ;
 		}
-		_loader = loader;
+		else
+		{
+			_loader = loader;
+		}
+		
 	}
-	return true;
+	
+}
+market_simulator::~market_simulator()
+{
+	if (_loader)
+	{
+		delete _loader;
+		_loader = nullptr;
+	}
 }
 
-void market_simulator::play(uint32_t tradeing_day, std::function<void(const tick_info& info)> publish_callback)
+void market_simulator::login()
+{
+	
+}
+
+void market_simulator::logout()
 {
 	_current_time = 0;
 	_current_index = 0;
 	_pending_tick_info.clear();
+	_instrument_id_list.clear();
+	_is_runing = false ;
+}
 
+void market_simulator::play(uint32_t trading_day, std::function<void(const tick_info& info)> publish_callback)
+{
 	for (auto& it : _instrument_id_list)
 	{
-		load_data(it, tradeing_day);
+		load_data(it, trading_day);
 	}
 
 	_is_runing = true ;

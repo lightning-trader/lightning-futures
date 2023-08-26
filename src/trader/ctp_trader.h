@@ -6,34 +6,39 @@
 #include <log_wapper.hpp>
 #include <trader_api.h>
 #include <data_types.hpp>
-#include <ThostFtdcTraderApi.h>
 #include <params.hpp>
 #include <condition_variable>
+#include <../../api/CTP_V6.6.9_20220920/ThostFtdcTraderApi.h>
+#include <dll_helper.hpp>
 
-/*
- *	订单操作类型
- */
-enum class action_flag
-{
-	AF_CANCEL = '0',	//撤销
-	AF_MODIFY = '3',	//修改
-};
+
 
 
 class ctp_trader : public actual_trader, public CThostFtdcTraderSpi
 {
+	/*
+	 *	订单操作类型
+	 */
+	enum class action_flag
+	{
+		AF_CANCEL = '0',	//撤销
+		AF_MODIFY = '3',	//修改
+	};
+
 public:
-	ctp_trader();
+	
+	ctp_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
 	
 	virtual ~ctp_trader();
 
-
-	bool init(const params& config);
 
 	//////////////////////////////////////////////////////////////////////////
 	//trader_api接口
 public:
 
+	virtual void login() override;
+
+	virtual void logout()override;
 
 	virtual bool is_usable() const override;
 
@@ -41,11 +46,9 @@ public:
 
 	virtual void cancel_order(estid_t order_id) override ;
 
-	virtual void submit_settlement() override;
-
 	virtual uint32_t get_trading_day()const override;
 
-	virtual std::shared_ptr<trader_data> get_trader_data()const override;
+	virtual std::shared_ptr<trader_data> get_trader_data() override;
 
 	//////////////////////////////////////////////////////////////////////////
 	//CTP交易接口实现
@@ -96,7 +99,7 @@ private:
 	//登录
 	bool do_login();
 
-	bool logout();
+	bool do_logout();
 
 	void query_account(bool is_sync);
 
@@ -105,6 +108,8 @@ private:
 	void query_orders(bool is_sync);
 
 	void query_trades(bool is_sync);
+
+	void submit_settlement();
 
 	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price, bool is_today);
 	void frozen_deduction(const code_t& code, direction_type dir_type, uint32_t volume, bool is_today);
@@ -254,7 +259,6 @@ protected:
 	std::string				_authcode;
 	std::string				_prodict_info;
 
-	std::string				_usernick;
 
 	time_t					_last_query_time;
 	uint32_t				_front_id;		//前置编号
@@ -285,5 +289,8 @@ protected:
 	bool							_is_inited ;
 	bool							_is_connected ;
 	std::atomic<bool>				_is_sync_wait;
+	typedef CThostFtdcTraderApi* (*trader_creator)(const char*);
+	trader_creator					_ctp_creator;
+	dll_handle						_trader_handle ;
 };
 

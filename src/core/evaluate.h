@@ -19,9 +19,9 @@ public:
 
 	bool init_from_file(const std::string& config_path);
 
-	void crossday_settlement(uint32_t tradeing_day);
+	void playback_history();
 
-	void playback_history(uint32_t tradeing_day);
+	void simulate_crossday(uint32_t trading_day);
 
 	virtual trader_api& get_trader() override;
 

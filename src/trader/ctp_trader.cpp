@@ -1,16 +1,10 @@
-#include "ctp_trader.h"
+﻿#include "ctp_trader.h"
 #include <filesystem>
 #include <time_utils.hpp>
 
-#ifdef _WIN32
-#ifdef _WIN64
-#pragma comment (lib,"../api/CTP_V6.6.9_20220920/win64/thosttraderapi_se.lib")
-#else
-#pragma comment (lib,"../api/CTP_V6.6.9_20220920/win32/thosttraderapi_se.lib")
-#endif
-#endif
-ctp_trader::ctp_trader()
-	: _td_api(nullptr)
+ctp_trader::ctp_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)
+	:actual_trader(id_excg_map)
+	, _td_api(nullptr)
 	, _reqid(0)
 	, _last_query_time(0)
 	, _front_id(0)
@@ -22,31 +16,7 @@ ctp_trader::ctp_trader()
 	, _is_inited(false)
 	, _is_connected(false)
 	, _is_sync_wait(false)
-{
-}
-
-
-ctp_trader::~ctp_trader()
-{
-	_is_runing = false;
-	if (_work_thread)
-	{
-		_work_thread->join();
-		delete _work_thread;
-		_work_thread = nullptr;
-	}
-	if (_td_api)
-	{
-		_td_api->RegisterSpi(nullptr);
-		//_td_api->Join();
-		_td_api->Release();
-		_td_api = nullptr;
-	}
-	_position_info.clear();
-	_order_info.clear();
-}
-
-bool ctp_trader::init(const params& config)
+	, _trader_handle(nullptr)
 {
 	try
 	{
@@ -60,17 +30,45 @@ bool ctp_trader::init(const params& config)
 	}
 	catch (...)
 	{
-		LOG_ERROR("ctp_trader init error ");
-		return false;
+		LOG_ERROR("ctp_trader config error ");
 	}
-	
+	_trader_handle = dll_helper::load_library("thosttraderapi_se");
+	if(_trader_handle)
+	{
+#ifdef _WIN32
+#	ifdef _WIN64
+		const char* creator_name = "?CreateFtdcTraderApi@CThostFtdcTraderApi@@SAPEAV1@PEBD@Z";
+#	else
+		const char* creator_name = "?CreateFtdcTraderApi@CThostFtdcTraderApi@@SAPAV1@PBD@Z";
+#	endif
+#else
+		const char* creator_name = "_ZN19CThostFtdcTraderApi19CreateFtdcTraderApiEPKc";
+#endif
+		_ctp_creator = (trader_creator)dll_helper::get_symbol(_trader_handle, creator_name);
+	}
+	else
+	{
+		LOG_ERROR("ctp_trader thosttraderapi_se load error ");
+	}
+}
+
+
+ctp_trader::~ctp_trader()
+{
+	dll_helper::free_library(_trader_handle);
+	_trader_handle = nullptr ;
+}
+
+void ctp_trader::login()
+{
+	_is_runing = true;
 	char path_buff[64];
 	sprintf(path_buff,"td_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
 	if (!std::filesystem::exists(path_buff))
 	{
 		std::filesystem::create_directories(path_buff);
 	}
-	_td_api = CThostFtdcTraderApi::CreateFtdcTraderApi(path_buff);
+	_td_api = _ctp_creator(path_buff);
 	_td_api->RegisterSpi(this);
 	//_td_api->SubscribePrivateTopic(THOST_TERT_RESTART);
 	//_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
@@ -78,9 +76,9 @@ bool ctp_trader::init(const params& config)
 	_td_api->SubscribePublicTopic(THOST_TERT_RESUME);
 	_td_api->RegisterFront(const_cast<char*>(_front_addr.c_str()));
 	_td_api->Init();
-	LOG_INFO("ctp_trader init %s ", _td_api->GetApiVersion());
+	LOG_INFO("ctp_trader init ");
 	_process_signal.wait(_process_mutex);
-	_is_runing = true ;
+	
 	//启动查询线程去同步账户信息
 	if (_work_thread == nullptr)
 	{
@@ -107,13 +105,51 @@ bool ctp_trader::init(const params& config)
 			});
 		//_work_thread->join();
 	}
-	query_positions(true);
-	query_orders(true);
-	query_account(true);
 	_is_inited = true ;
-	return true;
+	submit_settlement();
+	LOG_INFO("ctp_trader login");
 }
 
+void ctp_trader::logout()
+{
+	_is_runing = false;
+	do_logout();
+	if (_work_thread)
+	{
+		_work_thread->join();
+		delete _work_thread;
+		_work_thread = nullptr;
+	}
+	_reqid = 0;
+	
+	_last_query_time = 0;
+	_front_id = 0;		//前置编号
+	_session_id = 0;	//会话编号
+	_order_ref.exchange(0);		//报单引用
+
+	while(!_query_queue.empty())
+	{
+		_query_queue.pop();
+	}
+	_position_info.clear();
+	_order_info.clear();
+	_account_info = default_account;
+
+
+	_is_in_query.exchange(false);
+	_is_inited = false;
+	_is_connected = false;
+	_is_sync_wait.exchange(false);
+
+	if (_td_api)
+	{
+		_td_api->RegisterSpi(nullptr);
+		//_td_api->Join();
+		_td_api->Release();
+		_td_api = nullptr;
+	}
+	LOG_INFO("ctp_trader logout");
+}
 
 bool ctp_trader::do_login()
 {
@@ -136,7 +172,7 @@ bool ctp_trader::do_login()
 	return true;
 }
 
-bool ctp_trader::logout()
+bool ctp_trader::do_logout()
 {
 	if (_td_api == nullptr)
 	{
@@ -256,8 +292,11 @@ void ctp_trader::query_trades(bool is_sync)
 void ctp_trader::OnFrontConnected()
 {
 	LOG_INFO("ctp_trader OnFrontConnected ");
-	do_auth();
 	_is_connected = true ;
+	if (_is_runing)
+	{
+		do_auth();
+	}
 }
 
 void ctp_trader::OnFrontDisconnected(int nReason)
@@ -318,7 +357,10 @@ void ctp_trader::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField
 	{
 		LOG_DEBUG("OnRspSettlementInfoConfirm\tErrorID =", pRspInfo->ErrorID, "ErrorMsg =", pRspInfo->ErrorMsg);
 	}
-	this->fire_event(trader_event_type::TET_SettlementCompleted);
+	if (bIsLast)
+	{
+		_process_signal.notify_all();
+	}
 }
 
 void ctp_trader::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
@@ -886,6 +928,34 @@ void ctp_trader::cancel_order(estid_t order_id)
 	}
 }
 
+
+uint32_t ctp_trader::get_trading_day()const
+{
+	if(_td_api)
+	{
+		return static_cast<uint32_t>(std::atoi(_td_api->GetTradingDay()));
+	}
+	return 0X0U;
+}
+
+std::shared_ptr<trader_data> ctp_trader::get_trader_data()
+{
+	query_positions(true);
+	query_orders(true);
+	query_account(true);
+	auto result = std::make_shared<trader_data>();
+	result->account = _account_info;
+	for (auto it : _order_info)
+	{
+		result->orders.emplace_back(it.second);
+	}
+	for (auto it : _position_info)
+	{
+		result->positions.emplace_back(it.second);
+	}
+	return result ;
+}
+
 void ctp_trader::submit_settlement()
 {
 	if (_td_api == nullptr)
@@ -907,29 +977,8 @@ void ctp_trader::submit_settlement()
 	{
 		LOG_ERROR("ctp_trader submit_settlement request failed: %d", iResult);
 	}
-}
-uint32_t ctp_trader::get_trading_day()const
-{
-	if(_td_api)
-	{
-		return static_cast<uint32_t>(std::atoi(_td_api->GetTradingDay()));
-	}
-	return 0X0U;
-}
-
-std::shared_ptr<trader_data> ctp_trader::get_trader_data()const
-{
-	auto result = std::make_shared<trader_data>();
-	result->account = _account_info;
-	for (auto it : _order_info)
-	{
-		result->orders.emplace_back(it.second);
-	}
-	for (auto it : _position_info)
-	{
-		result->positions.emplace_back(it.second);
-	}
-	return result ;
+	while (!_is_sync_wait.exchange(true));
+	_process_signal.wait(_process_mutex);
 }
 
 void ctp_trader::calculate_position(const code_t& code,direction_type dir_type, offset_type offset_type,uint32_t volume,double_t price,bool is_today)

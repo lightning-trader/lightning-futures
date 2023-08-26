@@ -12,6 +12,7 @@
 #include "pod_chain.h"
 #include "bar_generator.h"
 #include "delayed_distributor.h"
+#include "price_step.h"
 
 
 
@@ -71,11 +72,13 @@ private:
 
 	record_data* _record_data;
 
-	bool _is_trading_ready ;
+	std::atomic<bool> _is_trading_ready ;
 
-	std::shared_ptr<trading_section> _section ;
+	std::shared_ptr<trading_section> _section_config;
 
-	bool _fast_mode ;
+	std::shared_ptr<price_step> _price_step_config;
+
+	int16_t _bind_cpu_core ;
 
 	uint32_t _loop_interval ;
 
@@ -93,6 +96,14 @@ private:
 	
 public:
 
+	/*登录*/
+	void login_account();
+
+	/*注销*/
+	void logout_account();
+
+	/*加载数据*/
+	void load_trader_data();
 
 	/*启动*/
 	void start_service() ;
@@ -154,8 +165,14 @@ public:
 
 	uint32_t get_trading_day();
 
-	daytm_t get_close_time();
+	daytm_t get_close_time()const;
 
+	daytm_t next_open_time(daytm_t time)const;
+
+	bool is_in_trading()const;
+	
+	bool is_in_trading(daytm_t time)const;
+	
 	void use_custom_chain(untid_t untid, bool flag);
 
 	inline uint32_t get_max_position()const
@@ -166,11 +183,6 @@ public:
 	inline filter_callback get_trading_filter()const
 	{
 		return _trading_filter;
-	}
-
-	inline bool is_in_trading()
-	{
-		return _section->is_in_trading(_last_tick_time);
 	}
 
 	//
@@ -186,8 +198,6 @@ private:
 	
 	void check_crossday();
 
-	void handle_settlement(const std::vector<std::any>& param);
-	
 	void handle_account(const std::vector<std::any>& param);
 
 	void handle_position(const std::vector<std::any>& param);
@@ -204,9 +214,11 @@ private:
 
 	void handle_error(const std::vector<std::any>& param);
 
-	void check_order_condition();
+	void check_condition();
 
-	void remove_invalid_condition(estid_t order_id);
+	void remove_condition(estid_t order_id);
+
+	void clear_condition();
 
 	pod_chain * create_chain(bool flag);
 

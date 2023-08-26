@@ -14,6 +14,7 @@ void bar_generator::insert_tick(const tick_info& tick)
 		_bar.low = tick.price;
 		_bar.time = _minute * ONE_MINUTE_MILLISECONDS;
 		_bar.volume = delta_volume;
+		_bar.price_step = _price_step ;
 		_poc_data[tick.price] = delta_volume;
 		_bar.poc = tick.price;
 	}

@@ -1,17 +1,19 @@
 ﻿#include "trading_section.h"
+#include <define.h>
+#include <rapidcsv.h>
 #include "log_wapper.hpp"
 #include <time_utils.hpp>
-#include <define.h>
 
-trading_section::trading_section(const std::string& config_path):_config_csv(config_path, rapidcsv::LabelParams(0, 0))
+trading_section::trading_section(const std::string& config_path)
 {
 	LOG_INFO("trading_section init ");
 	_trading_section.clear();
-	for (size_t i = 0; i < _config_csv.GetRowCount(); i++)
+	rapidcsv::Document config_csv(config_path, rapidcsv::LabelParams(0, 0));
+	for (size_t i = 0; i < config_csv.GetRowCount(); i++)
 	{
-		uint32_t is_day = _config_csv.GetCell<uint32_t>("day_or_night", i);
-		const std::string& begin_time_str = _config_csv.GetCell<std::string>("begin", i);
-		const std::string& end_time_str = _config_csv.GetCell<std::string>("end", i);
+		uint32_t is_day = config_csv.GetCell<uint32_t>("day_or_night", i);
+		const std::string& begin_time_str = config_csv.GetCell<std::string>("begin", i);
+		const std::string& end_time_str = config_csv.GetCell<std::string>("end", i);
 		daytm_t begin_time = make_daytm(begin_time_str.c_str());
 		daytm_t end_time = make_daytm(end_time_str.c_str());
 		_trading_section.emplace_back(std::make_pair(begin_time, end_time));
@@ -57,4 +59,25 @@ daytm_t trading_section::get_close_time()
 		return 0;
 	}
 	return last_one->second;
+}
+
+daytm_t trading_section::next_open_time(daytm_t now)
+{
+	size_t i = 0;
+	for(;i<_trading_section.size();i++)
+	{
+		if(_trading_section[i].first <= now)
+		{
+			break;
+		}
+	}
+	for (size_t j=i; j<i + _trading_section.size(); j++)
+	{
+		auto iter = _trading_section[j % _trading_section.size()];
+		if(now < iter.first)
+		{
+			return iter.first;
+		}
+	}
+	return 0U;
 }

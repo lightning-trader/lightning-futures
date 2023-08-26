@@ -19,8 +19,6 @@ namespace lt
 
 		void back_test(const std::vector<std::shared_ptr<lt::strategy>>& strategys, uint32_t trading_day);
 
-
-
 	};
 
 

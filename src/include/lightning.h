@@ -100,6 +100,12 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	
 	EXPORT_FLAG void lt_destory_context(ltobj& obj);
 	
+	/*登录*/
+	LT_INTERFACE_DECLARE(void, login_account, (const ltobj&));
+
+	/*注销*/
+	LT_INTERFACE_DECLARE(void, logout_account, (const ltobj&));
+
 	/*启动*/
 	LT_INTERFACE_DECLARE(void, start_service, (const ltobj&));
 	
@@ -170,14 +176,13 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	* 播放历史数据
 	*
 	*/
-	LT_INTERFACE_DECLARE(void, playback_history, (const ltobj& , uint32_t));
+	LT_INTERFACE_DECLARE(void, playback_history, (const ltobj&));
 
 	/**
-	* 跨天解锁
+	* 模拟跨天结算
 	*
 	*/
-	LT_INTERFACE_DECLARE(void, crossday_settlement, (const ltobj&, uint32_t));
-	
+	LT_INTERFACE_DECLARE(void, simulate_crossday, (const ltobj&,uint32_t));
 	/**
 	* 获取最后一次下单时间
 	*	跨交易日返回0
@@ -204,6 +209,14 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	* 获取收盘时间
 	*/
 	LT_INTERFACE_DECLARE(daytm_t, get_close_time, (const ltobj&));
+	/**
+	* 获取下一阶段开始时间
+	*/
+	LT_INTERFACE_DECLARE(daytm_t, next_open_time, (const ltobj&, daytm_t));
+	/**
+	* 是否在交易中
+	*/
+	LT_INTERFACE_DECLARE(bool, is_in_trading, (const ltobj&, daytm_t));
 
 	/**
 	* 使用自定义交易通道

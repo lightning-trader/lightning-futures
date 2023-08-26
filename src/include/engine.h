@@ -379,6 +379,18 @@ namespace lt
 		daytm_t get_close_time() const;
 
 		/**
+		* 获取下一阶段开始时间
+		*
+		*/
+		daytm_t next_open_time(daytm_t time) const;
+
+		/**
+		* 是否在交易中
+		*
+		*/
+		bool is_in_trading(daytm_t time) const;
+
+		/**
 		* 使用自定义交易通道
 		*/
 		void use_custom_chain(untid_t id, bool flag);

@@ -30,32 +30,23 @@ private:
 	
 public:
 
-	market_simulator():_loader(nullptr),
-		_current_trading_day(0), 
-		_current_time(0),
-		_current_index(0),
-		_interval(1),
-		_is_runing(false)
-	{}
-	virtual ~market_simulator()
-	{
-		if(_loader)
-		{
-			delete _loader ;
-			_loader = nullptr ;
-		}
-	}
-
-	bool init(const params& config);
+	market_simulator(const params& config);
+	
+	virtual ~market_simulator();
+	
 
 public:
 
 	//simulator
-	virtual void play(uint32_t tradeing_day, std::function<void(const tick_info& info)> publish_callback) override;
+	virtual void play(uint32_t trading_day,std::function<void(const tick_info& info)> publish_callback) override;
 
 public:
 	
 	// md
+	virtual void login() override;
+
+	virtual void logout() override;
+	
 	virtual void subscribe(const std::set<code_t>& codes)override;
 
 	virtual void unsubscribe(const std::set<code_t>& codes)override;

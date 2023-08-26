@@ -14,6 +14,7 @@ runtime_engine::~runtime_engine()
 
 void runtime_engine::run_to_close(const std::vector<std::shared_ptr<lt::strategy>>& strategys)
 {
+	lt_login_account(_lt);
 	regist_strategy(strategys);
 	lt_start_service(_lt);
 	while (!is_trading_ready())
@@ -26,9 +27,12 @@ void runtime_engine::run_to_close(const std::vector<std::shared_ptr<lt::strategy
 	time_t delta_seconds = close_time - now_time;
 	if(delta_seconds>0)
 	{
+		LOG_INFO("runtime_engine waiting for close :", delta_seconds);
 		std::this_thread::sleep_for(std::chrono::seconds(delta_seconds));
 	}
-	std::this_thread::sleep_for(std::chrono::seconds(1));
+	//std::this_thread::sleep_for(std::chrono::seconds(1));
 	lt_stop_service(_lt);
 	clear_strategy();
+	lt_logout_account(_lt);
+	LOG_INFO("runtime_engine run end");
 }

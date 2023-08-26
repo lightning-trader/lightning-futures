@@ -133,6 +133,8 @@ void engine::regist_strategy(const std::vector<std::shared_ptr<lt::strategy>>& s
 }
 void engine::clear_strategy()
 {
+	//策略不存在了那么订单和策略的映射关系也要清掉
+	_estid_to_strategy.clear();
 	unsubscriber unsuber(_tick_receiver, _bar_receiver);
 	for (auto it : _strategy_map)
 	{
@@ -216,6 +218,16 @@ daytm_t engine::get_last_time() const
 daytm_t engine::get_close_time() const
 {
 	return lt_get_close_time(_lt);
+}
+
+daytm_t engine::next_open_time(daytm_t time) const
+{
+	return lt_next_open_time(_lt, time);
+}
+
+bool engine::is_in_trading(daytm_t time) const
+{
+	return lt_is_in_trading(_lt, time);
 }
 
 void engine::use_custom_chain(untid_t id,bool flag)

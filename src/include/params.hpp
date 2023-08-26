@@ -106,6 +106,26 @@ private:
 		return static_cast<uint8_t>(std::atoi(it->second.c_str()));
 	}
 	template <typename T>
+	typename std::enable_if<std::is_same<T, int16_t>::value, T>::type get(const std::string& key)const
+	{
+		auto it = _params.find(key);
+		if (it == _params.end())
+		{
+			throw std::invalid_argument("key not find : " + key);
+		}
+		return static_cast<int16_t>(std::atoi(it->second.c_str()));
+	}
+	template <typename T>
+	typename std::enable_if<std::is_same<T, uint16_t>::value, T>::type get(const std::string& key)const
+	{
+		auto it = _params.find(key);
+		if (it == _params.end())
+		{
+			throw std::invalid_argument("key not find : " + key);
+		}
+		return static_cast<uint16_t>(std::atoi(it->second.c_str()));
+	}
+	template <typename T>
 	typename std::enable_if<std::is_same<T, int32_t>::value, T>::type get(const std::string& key)const
 	{
 		auto it = _params.find(key);

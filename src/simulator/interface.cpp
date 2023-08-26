@@ -4,16 +4,7 @@
 
 dummy_market* create_dummy_market(const params& config)
 {
-	market_simulator* api = new market_simulator();
-	if (api->init(config))
-	{
-		return api;
-	}
-	else
-	{
-		delete api;
-	}
-	return nullptr;
+	return new market_simulator(config);
 }
 
 void destory_dummy_market(dummy_market*& api)
@@ -26,16 +17,7 @@ void destory_dummy_market(dummy_market*& api)
 }
 dummy_trader* create_dummy_trader(const params& config)
 {
-	trader_simulator* api = new trader_simulator();
-	if (api->init(config))
-	{
-		return api;
-	}
-	else
-	{
-		delete api;
-	}
-	return nullptr;
+	return new trader_simulator(config);
 }
 
 void destory_dummy_trader(dummy_trader*& api)

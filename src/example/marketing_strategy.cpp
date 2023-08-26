@@ -62,11 +62,7 @@ void marketing_strategy::on_ready()
 
 void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 {
-	if (!is_trading_ready())
-	{
-		LOG_DEBUG("is_trading_ready not ready", tick.id.get_id());
-		return;
-	}
+
 	if (is_close_coming())
 	{
 		LOG_DEBUG("time > _coming_to_close", tick.id.get_id(), tick.time);

@@ -14,9 +14,20 @@ enum class market_event_type
 class market_api 
 {
 public:
+	
 	virtual ~market_api(){}
 
 public:
+
+	/*
+	*	初始化
+	*/
+	virtual void login() = 0;
+
+	/*
+	*	注销
+	*/
+	virtual void logout() = 0;
 
 	/*
 	 *	订阅合约列表
@@ -34,6 +45,15 @@ public:
 class actual_market : public market_api, public event_source<market_event_type, 1024>
 {
 
+public:
+	
+	virtual ~actual_market() {}
+
+protected:
+
+	std::shared_ptr<std::unordered_map<std::string,std::string>> _id_excg_map ;
+
+	actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map):_id_excg_map(id_excg_map){}
 };
 
 class dummy_market : public market_api , public event_source<market_event_type, 4>
@@ -41,6 +61,10 @@ class dummy_market : public market_api , public event_source<market_event_type, 
 
 public:
 
-	virtual void play(uint32_t tradeing_day,std::function<void (const tick_info& info)> publish_callback) = 0;
+	virtual ~dummy_market() {}
+
+public:
+
+	virtual void play(uint32_t trading_day,std::function<void (const tick_info& info)> publish_callback) = 0;
 
 };
