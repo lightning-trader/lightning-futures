@@ -3,8 +3,6 @@
 #### 介绍
 lightning-trader轻量级期货量化开发库，适合高频交易，3.5GHz处理器系统内部延时小于5微秒
 
-- [lightning-strategy，提供基于lightning-trader的开源策略](https://gitee.com/pursue-wealth/lightning-strategy)
-
 - 本框架支持高频柜台接入，需要联系QQ：137336521
     - CTP2MINI 机房内从下单到收到委托回报时间300微秒，相比CTP13毫秒，2000元终身使用，5000元提供源码
     - 易盛V9.0、易盛V10启明星郑商所最优解决方案，10000元终身使用，20000元提供源码
