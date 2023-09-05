@@ -582,7 +582,7 @@ struct order_info
 		{
 			return true;
 		}
-		if (direction == direction_type::DT_SHORT && offset == offset_type::OT_CLOSE)
+		if (direction == direction_type::DT_SHORT && (offset == offset_type::OT_CLSTD || offset == offset_type::OT_CLOSE))
 		{
 			return true;
 		}
@@ -595,7 +595,7 @@ struct order_info
 		{
 			return true;
 		}
-		if (direction == direction_type::DT_LONG && offset == offset_type::OT_CLOSE)
+		if (direction == direction_type::DT_LONG && (offset == offset_type::OT_CLOSE|| offset == offset_type::OT_CLSTD))
 		{
 			return true;
 		}

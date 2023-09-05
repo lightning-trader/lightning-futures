@@ -23,7 +23,7 @@ struct contract_info
 
 	contract_info():crge_type(charge_type::CT_FIXED_AMOUNT), open_charge(.0F), close_today_charge(.0F), close_yestoday_charge(.0F), multiple(.0F), margin_rate(.0F) {}
 
-	inline double_t get_service_charge(double_t price, offset_type offset,bool is_today)const
+	inline double_t get_service_charge(double_t price, offset_type offset)const
 	{
 		if(crge_type == charge_type::CT_FIXED_AMOUNT)
 		{
@@ -31,16 +31,13 @@ struct contract_info
 			{
 				return open_charge;
 			}
+			else if (offset == offset_type::OT_CLSTD)
+			{
+				return close_today_charge;
+			}
 			else
 			{
-				if(is_today)
-				{
-					return close_today_charge;
-				}
-				else
-				{
-					return close_yestoday_charge;
-				}
+				return close_yestoday_charge;
 			}
 		}
 		if (crge_type == charge_type::CT_PRICE_RATIO)
@@ -49,16 +46,13 @@ struct contract_info
 			{
 				return open_charge * price * multiple;
 			}
+			else if (offset == offset_type::OT_CLSTD)
+			{
+				return close_today_charge * price * multiple;
+			}
 			else
 			{
-				if (is_today)
-				{
-					return close_today_charge * price * multiple;
-				}
-				else
-				{
-					return close_yestoday_charge * price * multiple;
-				}
+				return close_yestoday_charge * price * multiple;
 			}
 		}
 		return .0F;

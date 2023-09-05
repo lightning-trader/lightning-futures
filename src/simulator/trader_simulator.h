@@ -78,15 +78,15 @@ private:
 	
 	void handle_buy(const tick_info* tick, const order_match& match, uint32_t deal_volume);
 
-	void order_deal(order_info& order, uint32_t deal_volume, bool is_today);
+	void order_deal(order_info& order, uint32_t deal_volume);
 
 	void order_error(error_type type, estid_t estid, uint32_t err);
 
-	void order_cancel(const order_info& order, bool is_today);
+	void order_cancel(const order_info& order);
 
 	//冻结
-	uint32_t frozen_deduction(estid_t est_id, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, bool is_today);
+	uint32_t frozen_deduction(estid_t est_id, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price);
 	//解冻
-	bool thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price, bool is_today);
+	bool thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price);
 
 };

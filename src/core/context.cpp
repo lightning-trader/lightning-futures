@@ -134,18 +134,7 @@ void context::load_trader_data()
 					pos.short_pending += it.total_volume;
 				}
 			}
-			else if (it.offset == offset_type::OT_CLOSE)
-			{
-				if (it.direction == direction_type::DT_LONG)
-				{
-					pos.history_long.frozen += it.total_volume;
-				}
-				else if (it.direction == direction_type::DT_SHORT)
-				{
-					pos.history_short.frozen += it.total_volume;
-				}
-			}
-			else
+			else if (it.offset == offset_type::OT_CLSTD)
 			{
 				if (it.direction == direction_type::DT_LONG)
 				{
@@ -155,6 +144,18 @@ void context::load_trader_data()
 				{
 					pos.today_short.frozen += it.total_volume;
 				}
+			}
+			else
+			{
+				if (it.direction == direction_type::DT_LONG)
+				{
+					pos.history_long.frozen += it.total_volume;
+				}
+				else if (it.direction == direction_type::DT_SHORT)
+				{
+					pos.history_short.frozen += it.total_volume;
+				}
+				
 			}
 			_order_info[it.est_id] = it;
 		}
@@ -650,13 +651,13 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		if(it != _order_info.end())
 		{
 			//撤销解冻仓位
-			if (offset == offset_type::OT_CLOSE)
+			if (offset == offset_type::OT_OPEN)
 			{
-				unfreeze_deduction(code, direction, offset,total_volume);
+				recover_pending(code, direction, offset, total_volume);
 			}
 			else
 			{
-				recover_pending(code, direction, offset, total_volume);
+				unfreeze_deduction(code, direction, offset, total_volume);
 			}
 			_order_info.erase(it);
 		}
