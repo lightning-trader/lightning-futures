@@ -971,7 +971,7 @@ void context::unfreeze_deduction(const code_t& code, direction_type dir_type, of
 			}
 		}
 	}
-	else if (offset_type == offset_type::OT_CLSTD)
+	else if (offset_type == offset_type::OT_CLOSE)
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{

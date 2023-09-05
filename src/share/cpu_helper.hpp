@@ -15,8 +15,7 @@ class cpu_helper
 public:
 	static uint32_t get_cpu_cores()
 	{
-		static uint32_t cores = std::thread::hardware_concurrency();
-		return cores;
+		return std::thread::hardware_concurrency();
 	}
 
 #ifdef _WIN32

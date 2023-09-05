@@ -472,12 +472,9 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			if (order.last_volume > static_cast<uint32_t>(pOrder->VolumeTotal))
 			{
 				uint32_t deal_valume = order.last_volume - pOrder->VolumeTotal;
-				if(deal_valume>0)
-				{
-					order.last_volume = pOrder->VolumeTotal;
-					//触发 deal 事件
-					this->fire_event(trader_event_type::TET_OrderDeal, estid, deal_valume, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
-				}
+				order.last_volume = pOrder->VolumeTotal;
+				//触发 deal 事件
+				this->fire_event(trader_event_type::TET_OrderDeal, estid, deal_valume, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 			}
 			if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
 			{
@@ -520,12 +517,10 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			if(entrust.last_volume > static_cast<uint32_t>(pOrder->VolumeTotal))
 			{
 				uint32_t deal_volume = entrust.last_volume - pOrder->VolumeTotal;
-				if(deal_volume > 0)
-				{
-					entrust.last_volume = pOrder->VolumeTotal;
-					//触发 deal 事件
-					this->fire_event(trader_event_type::TET_OrderDeal, estid, deal_volume, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
-				}
+				entrust.last_volume = pOrder->VolumeTotal;
+				//触发 deal 事件
+				this->fire_event(trader_event_type::TET_OrderDeal, estid, deal_volume, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+
 			}
 			else
 			{
