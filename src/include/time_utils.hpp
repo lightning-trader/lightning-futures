@@ -42,6 +42,14 @@ static time_t make_date(uint32_t date)
 	day = date % 100;
 	return make_date(year, month, day);
 }
+static time_t make_time(uint32_t time)
+{
+	int hour, minute, second;
+	hour = time / 10000;
+	minute = time % 10000 / 100;
+	second = time % 100;
+	return hour*ONE_HOUR_SECONDS + minute*ONE_MINUTE_SECONDS + second;
+}
 static time_t make_time(const char* time)
 {
 	int time_value[3] = { 0 };
@@ -97,8 +105,12 @@ static daytm_t make_daytm(const char* time, uint32_t tick)
 	}
 	return -1;
 }
-
-// 21:00:00.500 
+//121212
+static daytm_t make_daytm(uint32_t time, uint32_t tick)
+{
+	return static_cast<daytm_t>(make_time(time)) * ONE_SECOND_MILLISECONDS + tick;;
+}
+// 211230.500 
 static daytm_t make_daytm(const char* time)
 {
 	if (time != nullptr)
@@ -117,7 +129,7 @@ static daytm_t make_daytm(const char* time)
 				tmp[i] = time[i];
 			}
 		}
-		return make_daytm(tmp,std::atoi(time+p));
+		return make_daytm(std::atoi(tmp),std::atoi(time+p));
 	}
 	return -1;
 }

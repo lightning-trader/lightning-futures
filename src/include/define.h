@@ -46,7 +46,10 @@ constexpr estid_t INVALID_ESTID = 0x0LLU;
 
 #define EXCHANGE_ID_SHFE	"SHFE"	//上期所
 #define EXCHANGE_ID_DCE		"DCE"	//大商所
-#define EXCHANGE_ID_CZCE	"CZCE"	//郑商所
+#define EXCHANGE_ID_INE		"INE"	//能源中心
+#define EXCHANGE_ID_ZCE		"ZCE"	//郑商所
+#define EXCHANGE_ID_SGE		"SGE"	//广期所
+#define EXCHANGE_ID_CFFEX	"CFFEX"	//中金所
 
 
 struct tick_info;
