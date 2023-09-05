@@ -1,9 +1,15 @@
 # lightning-trader
 
 #### 介绍
-lightning-trader轻量级期货量化开发库，适合高频交易，提供了通用的C语言接口供其他语言调用，以下是基于lightning-trader的多语言封装
+lightning-trader轻量级期货量化开发库，适合高频交易，3.5GHz处理器系统内部延时小于5微秒
 
-- [lightning-strategy，提供基于lightning-trader的开源策略](https://gitee.com/pursue-wealth/lightning-strategy)
+- 本框架支持高频柜台接入，需要联系QQ：137336521
+    - CTP2MINI 机房内从下单到收到委托回报时间300微秒，相比CTP13毫秒，2000元终身使用，5000元提供源码
+    - 易盛V9.0、易盛V10启明星郑商所最优解决方案，10000元终身使用，20000元提供源码
+    - 其他盛立，易达等高频柜台提供定制服务，具体联系QQ
+
+- 其他版本收费服务
+    - lightning-trader有偿提供支持A股股票及可转债高频交易的分支版本，支持宽睿柜台，可接收柜台定制，具体联系作者
 
 - QQ技术交流群:980550304
 - QQ吹水交流群:367822869
