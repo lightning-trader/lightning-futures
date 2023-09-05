@@ -2,32 +2,17 @@
 #include <define.h>
 #include <data_types.hpp>
 #include "event_center.hpp"
+#include <shared_types.h>
 
 enum class trader_event_type : uint8_t
 {
 	TET_Invalid,
-	TET_AccountChange,
-	TET_PositionChange,
 	TET_OrderCancel,
 	TET_OrderPlace,
 	TET_OrderDeal,
 	TET_OrderTrade,
 	TET_OrderError
 };
-
-struct trader_data
-{
-	account_info account;
-
-	std::vector<order_info> orders;
-
-	std::vector<position_info> positions;
-
-};
-
-typedef std::map<code_t, position_info> position_map;
-//
-typedef std::map<estid_t, order_info> entrust_map;
 
 //下单接口管理接口
 class trader_api
@@ -37,16 +22,6 @@ public:
 	virtual ~trader_api(){}
 
 public:
-
-	/*
-	*	初始化
-	*/
-	virtual void login() = 0;
-
-	/*
-	*	注销
-	*/
-	virtual void logout() = 0;
 
 	/*
 	 *	是否可用
@@ -82,13 +57,28 @@ class actual_trader : public trader_api , public event_source<trader_event_type,
 public:
 	
 	virtual ~actual_trader() {}
+	/*
+*	初始化
+*/
+	virtual void login() = 0;
+
+	/*
+	*	注销
+	*/
+	virtual void logout() = 0;
 
 protected:
 
 	std::shared_ptr<std::unordered_map<std::string, std::string>> _id_excg_map;
 
 	actual_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map) :_id_excg_map(id_excg_map) {}
+
+	bool is_subscribed(const std::string& code_id)const 
+	{
+		return  _id_excg_map&&_id_excg_map->end()!=_id_excg_map->find(code_id);
+	}
 };
+
 
 class dummy_trader : public trader_api , public event_source<trader_event_type, 4>
 {
@@ -102,4 +92,6 @@ public:
 	virtual void push_tick(const tick_info& tick) = 0;
 
 	virtual void crossday(uint32_t trading_day) = 0;
+
+	virtual const account_info& get_account() = 0;
 };

@@ -48,20 +48,6 @@ market_simulator::~market_simulator()
 	}
 }
 
-void market_simulator::login()
-{
-	
-}
-
-void market_simulator::logout()
-{
-	_current_time = 0;
-	_current_index = 0;
-	_pending_tick_info.clear();
-	_instrument_id_list.clear();
-	_is_runing = false ;
-}
-
 void market_simulator::play(uint32_t trading_day, std::function<void(const tick_info& info)> publish_callback)
 {
 	for (auto& it : _instrument_id_list)
@@ -86,6 +72,12 @@ void market_simulator::play(uint32_t trading_day, std::function<void(const tick_
 			std::this_thread::sleep_for(std::chrono::microseconds(0));
 		}
 	}
+	_current_time = 0;
+	_current_index = 0;
+	_pending_tick_info.clear();
+	_instrument_id_list.clear();
+	_is_runing = false;
+
 }
 
 

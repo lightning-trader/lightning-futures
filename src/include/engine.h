@@ -356,11 +356,6 @@ namespace lt
 		const position_info& get_position(const code_t& code) const;
 
 		/**
-		* 获取账户资金
-		*/
-		const account_info& get_account() const;
-
-		/**
 		* 获取委托订单
 		**/
 		const order_info& get_order(estid_t order_id) const;
@@ -422,11 +417,7 @@ namespace lt
 		*/
 		const today_market_info& get_today_market_info(const code_t& code)const;
 
-		/*
-		* 获取还未成交的开仓
-		*/
-		uint32_t get_pending_position(const code_t& code,offset_type offset, direction_type direction)const;
-
+		
 		/*
 		* 绑定延时通知
 		*/

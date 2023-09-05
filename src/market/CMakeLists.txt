@@ -16,6 +16,6 @@ if(APPLE)
 
 endif()
 
-add_library(lt_market SHARED "ctp_market.cpp"  "interface.cpp")
+add_library(lt_market SHARED "ctp_market.cpp" "interface.cpp")
 
 target_link_libraries(lt_market "lt_loger" ${MARKET_LIBS})

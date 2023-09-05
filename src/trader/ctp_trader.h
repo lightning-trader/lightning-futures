@@ -66,8 +66,6 @@ public:
 
 	virtual void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
-	virtual void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
-
 	virtual void OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
 	virtual void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
@@ -82,8 +80,6 @@ public:
 	virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
 
 	virtual void OnRtnOrder(CThostFtdcOrderField *pOrder) override;
-
-	virtual void OnRtnTrade(CThostFtdcTradeField *pTrade) override;
 
 	virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo) override;
 
@@ -101,24 +97,17 @@ private:
 
 	bool do_logout();
 
-	void query_account(bool is_sync);
+	bool query_positions(bool is_sync);
 
-	void query_positions(bool is_sync);
-
-	void query_orders(bool is_sync);
-
-	void query_trades(bool is_sync);
+	bool query_orders(bool is_sync);
 
 	void submit_settlement();
 
-	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price, bool is_today);
-	void frozen_deduction(const code_t& code, direction_type dir_type, uint32_t volume, bool is_today);
-	void thawing_deduction(const code_t& code, direction_type dir_type, uint32_t volume, bool is_today);
-
+	
 private:
 	
 
-	inline int wrap_direction_offset(direction_type dir_type, offset_type offset_type)
+	inline int convert_direction_offset(direction_type dir_type, offset_type offset_type)
 	{
 		if (direction_type::DT_LONG == dir_type)
 			if (offset_type == offset_type::OT_OPEN)
@@ -154,7 +143,7 @@ private:
 			return direction_type::DT_SHORT;
 	}
 
-	inline int wrap_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)
+	inline int convert_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)
 	{
 		if (offset_type::OT_OPEN == offset)
 		{
@@ -162,25 +151,7 @@ private:
 		}
 		else if (offset_type::OT_CLOSE == offset)
 		{
-			const auto& it = _position_info.find(code);
-			if (it != _position_info.end())
-			{
-				//TODO 先不处理分仓
-				if (direction == direction_type::DT_LONG)
-				{
-					if (it->second.yestoday_long.usable() >= volume)
-					{
-						return THOST_FTDC_OF_CloseYesterday;
-					}
-				}
-				else
-				{
-					if (it->second.yestoday_short.usable() >= volume)
-					{
-						return THOST_FTDC_OF_CloseYesterday;
-					}
-				}
-			}
+			return THOST_FTDC_OF_CloseYesterday;
 		}
 		
 		return THOST_FTDC_OF_CloseToday;
@@ -190,11 +161,13 @@ private:
 	{
 		if (THOST_FTDC_OF_Open == offset_type)
 			return offset_type::OT_OPEN;
+		else if (THOST_FTDC_OF_CloseToday == offset_type)
+			return offset_type::OT_CLSTD;
 		else
 			return offset_type::OT_CLOSE;
 	}
 
-	inline int wrap_action_flag(action_flag action_flag)
+	inline int convert_action_flag(action_flag action_flag)
 	{
 		if (action_flag::AF_CANCEL == action_flag)
 			return THOST_FTDC_AF_Delete;
@@ -233,19 +206,6 @@ private:
 		return _reqid.fetch_add(1);
 	}
 
-	inline void print_position(const char* title)
-	{
-		if(!_position_info.empty())
-		{
-			LOG_INFO("print_position : ", title);
-		}
-		for (const auto& it : _position_info)
-		{
-			const auto& pos = it.second;
-			LOG_INFO("position :", pos.id.get_id(), "today_long(", pos.today_long.postion, pos.today_long.frozen, ") today_short(",pos.today_short.postion, pos.today_short.frozen, ") yestoday_long(", pos.yestoday_long.postion, pos.yestoday_long.frozen, ") yestoday_short(", pos.yestoday_short.postion, pos.yestoday_short.frozen,")");
-		}
-	}
-
 protected:
 
 	CThostFtdcTraderApi*	_td_api;
@@ -257,31 +217,22 @@ protected:
 	std::string				_password;
 	std::string				_appid;
 	std::string				_authcode;
-	std::string				_prodict_info;
+	std::string				_product_info;
 
 
-	time_t					_last_query_time;
 	uint32_t				_front_id;		//前置编号
 	uint32_t				_session_id;	//会话编号
 	std::atomic<uint32_t>	_order_ref;		//报单引用
-	typedef std::function<void()>	common_executer;
-	typedef std::queue<common_executer>	query_queue; //查询队列
-	query_queue				_query_queue;
 
 	//boost::pool_allocator<code_t, position_info> a ;
 	//std::vector<int, boost::pool_allocator<int>> v;
 	//
-	position_map			_position_info;
-	
+	std::map<code_t, position_seed>		_position_info;
 	//
-	entrust_map				_order_info;
+	entrust_map							_order_info;
 
-	account_info			_account_info ;
-
-	bool					_is_runing ;
-	std::thread*			_work_thread ;
-
-	std::mutex				_query_mutex ;
+	bool								_is_runing ;
+	
 	std::mutex _mutex;
 	std::unique_lock<std::mutex>	_process_mutex;
 	std::condition_variable			_process_signal;

@@ -17,7 +17,7 @@ private:
 
 	uint32_t _minute;
 
-	uint32_t _prev_volume;
+	uint64_t _prev_volume;
 
 	double_t _price_step ;
 

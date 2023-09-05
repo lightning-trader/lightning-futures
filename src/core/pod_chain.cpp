@@ -51,7 +51,7 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 	if(offset == offset_type::OT_OPEN)
 	{
 		auto position = _ctx.get_total_position();
-		auto pending = _ctx.get_open_pending();
+		auto pending = _ctx.get_total_pending();
 		auto max_position = _ctx.get_max_position();
 		if (position + pending + count > max_position)
 		{
@@ -61,11 +61,23 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 	else if (offset == offset_type::OT_CLOSE)
 	{
 		const auto pos = _ctx.get_position(code);
-		if (direction == direction_type::DT_LONG &&( pos.today_long.usable() < count && pos.yestoday_long.usable() < count))
+		if (direction == direction_type::DT_LONG &&pos.history_long.usable() < count)
 		{
 			return INVALID_ESTID;
 		}
-		else if (direction == direction_type::DT_SHORT && (pos.today_short.usable() < count && pos.yestoday_short.usable() < count))
+		else if (direction == direction_type::DT_SHORT && pos.history_short.usable() < count)
+		{
+			return INVALID_ESTID;
+		}
+	}
+	else if (offset == offset_type::OT_CLSTD)
+	{
+		const auto pos = _ctx.get_position(code);
+		if (direction == direction_type::DT_LONG && pos.today_long.usable() < count )
+		{
+			return INVALID_ESTID;
+		}
+		else if (direction == direction_type::DT_SHORT && pos.today_short.usable() < count )
 		{
 			return INVALID_ESTID;
 		}

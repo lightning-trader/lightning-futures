@@ -57,8 +57,6 @@ struct deal_info;
 
 struct position_info;
 
-struct account_info;
-
 struct today_market_info;
 
 enum class order_flag;

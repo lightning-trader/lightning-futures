@@ -19,15 +19,6 @@ public:
 
 public:
 
-	/*
-	*	初始化
-	*/
-	virtual void login() = 0;
-
-	/*
-	*	注销
-	*/
-	virtual void logout() = 0;
 
 	/*
 	 *	订阅合约列表
@@ -48,6 +39,16 @@ class actual_market : public market_api, public event_source<market_event_type, 
 public:
 	
 	virtual ~actual_market() {}
+
+	/*
+	*	初始化
+	*/
+	virtual void login() = 0;
+
+	/*
+	*	注销
+	*/
+	virtual void logout() = 0;
 
 protected:
 

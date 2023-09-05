@@ -143,7 +143,7 @@ void position_container::thawing_position(const code_t& code, direction_type dir
 	LOG_INFO("position_container::thawing_position ", code.get_id(), it->second.today_long.postion, it->second.today_long.frozen, it->second.today_short.postion, it->second.today_short.frozen);
 }
 
-position_info position_container::get_position_info(const code_t& code)const
+position_detail position_container::get_position_info(const code_t& code)const
 {
 	spin_lock lock(_mutex);
 	auto it = _position_info.find(code);
@@ -151,10 +151,10 @@ position_info position_container::get_position_info(const code_t& code)const
 	{
 		return it->second;
 	}
-	return position_info(code);
+	return position_detail(code);
 }
 
-void position_container::get_all_position(std::vector<position_info>& position)const
+void position_container::get_all_position(std::vector<position_detail>& position)const
 {
 	spin_lock lock(_mutex);
 	for(auto&it : _position_info)

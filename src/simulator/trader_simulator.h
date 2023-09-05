@@ -25,7 +25,7 @@ private:
 	std::vector<const tick_info*> _current_tick_info;
 
 	//上一帧的成交量，用于计算上一帧到这一帧成交了多少
-	std::map<code_t,uint32_t> _last_frame_volume ;
+	std::map<code_t,uint64_t> _last_frame_volume ;
 
 	account_info _account_info;
 	
@@ -48,11 +48,11 @@ public:
 	
 	virtual void crossday(uint32_t trading_day) override;
 
+	virtual const account_info& get_account() override
+	{
+		return _account_info;
+	}
 public:
-
-	virtual void login() override;
-
-	virtual void logout()override;
 
 	virtual uint32_t get_trading_day()const override;
 	// td

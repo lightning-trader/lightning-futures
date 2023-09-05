@@ -1,7 +1,6 @@
 ﻿#include "context.h"
 #include <market_api.h>
 #include <trader_api.h>
-#include <recorder.h>
 #include <cpu_helper.hpp>
 #include "pod_chain.h"
 #include <interface.h>
@@ -74,12 +73,7 @@ void context::init(const params& control_config, const params& include_config,bo
 		//LOG_INFO("event_type : ", type);
 		switch (type)
 		{
-		case trader_event_type::TET_AccountChange:
-			handle_account(param);
-			break;
-		case trader_event_type::TET_PositionChange:
-			handle_position(param);
-			break;
+
 		case trader_event_type::TET_OrderCancel:
 			handle_cancel(param);
 			break;
@@ -117,33 +111,62 @@ void context::init(const params& control_config, const params& include_config,bo
 	});
 }
 
-void context::login_account()
-{
-	get_trader().login();
-	get_market().login();
-}
-
-void context::logout_account()
-{
-	get_trader().logout();
-	get_market().logout();
-}
 void context::load_trader_data()
 {
 	LOG_INFO("context load trader data");
 	auto trader_data = get_trader().get_trader_data();
 	if (trader_data)
 	{
-		_account_info = trader_data->account;
+		_position_info.clear();
 		_order_info.clear();
 		for (const auto& it : trader_data->orders)
 		{
+			auto& pos = _position_info[it.code];
+			pos.id = it.code;
+			if (it.offset == offset_type::OT_OPEN)
+			{
+				if (it.direction == direction_type::DT_LONG)
+				{
+					pos.long_pending += it.total_volume;
+				}
+				else if (it.direction == direction_type::DT_SHORT)
+				{
+					pos.short_pending += it.total_volume;
+				}
+			}
+			else if (it.offset == offset_type::OT_CLOSE)
+			{
+				if (it.direction == direction_type::DT_LONG)
+				{
+					pos.history_long.frozen += it.total_volume;
+				}
+				else if (it.direction == direction_type::DT_SHORT)
+				{
+					pos.history_short.frozen += it.total_volume;
+				}
+			}
+			else
+			{
+				if (it.direction == direction_type::DT_LONG)
+				{
+					pos.today_long.frozen += it.total_volume;
+				}
+				else if (it.direction == direction_type::DT_SHORT)
+				{
+					pos.today_short.frozen += it.total_volume;
+				}
+			}
 			_order_info[it.est_id] = it;
 		}
-		_position_info.clear();
+		
 		for (const auto& it : trader_data->positions)
 		{
-			_position_info[it.id] = it;
+			auto& pos = _position_info[it.id];
+			pos.id = it.id;
+			pos.today_long.postion = it.today_long ;
+			pos.today_short.postion = it.today_short;
+			pos.history_long.postion = it.history_long;
+			pos.history_short.postion = it.history_short;
 		}
 	}
 }
@@ -337,11 +360,6 @@ const position_info& context::get_position(const code_t& code)const
 	return default_position;
 }
 
-const account_info& context::get_account()const
-{
-	return (_account_info);
-}
-
 const order_info& context::get_order(estid_t order_id)const
 {
 	auto it = _order_info.find(order_id);
@@ -502,30 +520,12 @@ const today_market_info& context::get_today_market_info(const code_t& id)const
 }
 
 
-uint32_t context::get_pending_position(const code_t& code, offset_type offset, direction_type direction)
+uint32_t context::get_total_pending()
 {
-	std::vector<order_info> order_list;
-	find_orders(order_list, [&code,offset, direction](const order_info& order)->bool {
-		return order.code==code && order.offset == offset && order.direction == direction;
-		});
 	uint32_t res = 0;
-	for (auto& it : order_list)
+	for (auto& it : _position_info)
 	{
-		res += it.last_volume;
-	}
-	return res;
-}
-
-uint32_t context::get_open_pending()
-{
-	std::vector<order_info> order_list;
-	find_orders(order_list, [](const order_info& order)->bool {
-		return order.offset == offset_type::OT_OPEN;
-		});
-	uint32_t res = 0;
-	for (auto& it : order_list)
-	{
-		res += it.last_volume;
+		res += it.second.long_pending + it.second.short_pending;
 	}
 	return res;
 }
@@ -561,31 +561,21 @@ void context::check_crossday()
 
 }
 
-void context::handle_account(const std::vector<std::any>& param)
-{
-	if (param.size() >= 1)
-	{
-		const auto& account = std::any_cast<account_info>(param[0]);
-		_account_info = account;
-	}
-
-}
-
-void context::handle_position(const std::vector<std::any>& param)
-{
-	if (param.size() >= 1)
-	{
-		auto position = std::any_cast<position_info>(param[0]);
-		_position_info[position.id] = position;
-	}
-}
-
 void context::handle_entrust(const std::vector<std::any>& param)
 {
 	if (param.size() >= 1)
 	{
 		order_info order = std::any_cast<order_info>(param[0]);
 		_order_info[order.est_id] = (order);
+		if (order.offset != offset_type::OT_OPEN)
+		{
+			//平仓冻结仓位
+			frozen_deduction(order.code, order.direction, order.offset,order.total_volume);
+		}
+		else
+		{
+			record_pending(order.code, order.direction, order.offset, order.total_volume);
+		}
 		if(realtime_event.on_entrust)
 		{
 			realtime_event.on_entrust(order);
@@ -607,6 +597,7 @@ void context::handle_deal(const std::vector<std::any>& param)
 		auto it = _order_info.find(localid);
 		if (it != _order_info.end())
 		{
+			calculate_position(it->second.code, it->second.direction, it->second.offset, deal_volume, it->second.price);
 			it->second.last_volume = total_volume - deal_volume;
 		}
 		if(realtime_event.on_deal)
@@ -658,6 +649,15 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		auto it = _order_info.find(localid);
 		if(it != _order_info.end())
 		{
+			//撤销解冻仓位
+			if (offset == offset_type::OT_CLOSE)
+			{
+				unfreeze_deduction(code, direction, offset,total_volume);
+			}
+			else
+			{
+				recover_pending(code, direction, offset, total_volume);
+			}
 			_order_info.erase(it);
 		}
 		if(realtime_event.on_cancel)
@@ -701,11 +701,11 @@ void context::handle_tick(const std::vector<std::any>& param)
 		}
 		auto& current_market_info = _today_market_info[last_tick.id];
 		current_market_info.today_tick_info.emplace_back(last_tick);
-		current_market_info.volume_distribution[last_tick.price] += (last_tick.volume - prev_tick.volume);
+		current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
 		if (this->_tick_callback)
 		{
 			deal_info deal_info;
-			deal_info.volume_delta = last_tick.volume - prev_tick.volume;
+			deal_info.volume_delta = static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
 			deal_info.interest_delta = last_tick.open_interest - prev_tick.open_interest;
 			deal_info.direction = get_deal_direction(prev_tick, last_tick);
 			PROFILE_DEBUG(last_tick.id.get_id());
@@ -782,3 +782,252 @@ void context::clear_condition()
 	_need_check_condition.clear();
 }
 
+
+void context::calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price)
+{
+	LOG_INFO("calculate_position ", code.get_id(), dir_type, offset_type, volume, price);
+	position_info p;
+	auto it = _position_info.find(code);
+	if (it != _position_info.end())
+	{
+		p = it->second;
+	}
+	else
+	{
+		p.id = code;
+	}
+	if (offset_type == offset_type::OT_OPEN)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			p.today_long.postion += volume;
+
+		}
+		else
+		{
+			p.today_short.postion += volume;
+		}
+	}
+	else if (offset_type == offset_type::OT_CLSTD)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			if (p.today_long.postion > volume)
+			{
+				p.today_long.postion -= volume;
+			}
+			else
+			{
+				p.today_long.postion = 0;
+			}
+			if (p.today_long.frozen > volume)
+			{
+				p.today_long.frozen -= volume;
+			}
+			else
+			{
+				p.today_long.frozen = 0;
+			}
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			if (p.today_short.postion > volume)
+			{
+				p.today_short.postion -= volume;
+			}
+			else
+			{
+				p.today_short.postion = 0;
+			}
+			if (p.today_short.frozen > volume)
+			{
+				p.today_short.frozen -= volume;
+			}
+			else
+			{
+				p.today_short.frozen = 0;
+			}
+		}
+	}
+	else
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			if (p.history_long.postion > volume)
+			{
+				p.history_long.postion -= volume;
+			}
+			else
+			{
+				p.history_long.postion = 0;
+			}
+			if (p.history_long.frozen > volume)
+			{
+				p.history_long.frozen -= volume;
+			}
+			else
+			{
+				p.history_long.frozen = 0;
+			}
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			if (p.history_short.postion > volume)
+			{
+				p.history_short.postion -= volume;
+			}
+			else
+			{
+				p.history_short.postion = 0;
+			}
+			if (p.history_short.frozen > volume)
+			{
+				p.history_short.frozen -= volume;
+			}
+			else
+			{
+				p.history_short.frozen = 0;
+			}
+		}
+	}
+	if (!p.empty())
+	{
+		_position_info[code] = p;
+	}
+	else
+	{
+		if (it != _position_info.end())
+		{
+			_position_info.erase(it);
+		}
+	}
+	print_position("calculate_position");
+}
+
+void context::frozen_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)
+{
+	auto it = _position_info.find(code);
+	if (it == _position_info.end())
+	{
+		return;
+	}
+	position_info pos = it->second;
+	if (offset_type == offset_type::OT_CLSTD)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			pos.today_long.frozen += volume;
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			pos.today_short.frozen += volume;
+		}
+	}
+	else if (offset_type == offset_type::OT_CLOSE)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			pos.history_long.frozen += volume;
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			pos.history_short.frozen += volume;
+		}
+	}
+
+	_position_info[code] = pos;
+	print_position("frozen_deduction");
+}
+void context::unfreeze_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)
+{
+	auto it = _position_info.find(code);
+	if (it == _position_info.end())
+	{
+		return;
+	}
+	position_info pos = it->second;
+	if (offset_type == offset_type::OT_CLSTD)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			if (pos.today_long.frozen > volume)
+			{
+				pos.today_long.frozen -= volume;
+			}
+			else
+			{
+				pos.today_long.frozen = 0;
+			}
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			if (pos.today_short.frozen > volume)
+			{
+				pos.today_short.frozen -= volume;
+			}
+			else
+			{
+				pos.today_short.frozen = 0;
+			}
+		}
+	}
+	else if (offset_type == offset_type::OT_CLSTD)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			if (pos.history_long.frozen > volume)
+			{
+				pos.history_long.frozen -= volume;
+			}
+			else
+			{
+				pos.history_long.frozen = 0;
+			}
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			if (pos.history_short.frozen > volume)
+			{
+				pos.history_short.frozen -= volume;
+			}
+			else
+			{
+				pos.history_short.frozen = 0;
+			}
+		}
+	}
+	_position_info[code] = pos;
+	print_position("thawing_deduction");
+}
+
+void context::record_pending(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)
+{
+	if(offset_type== offset_type::OT_OPEN)
+	{
+		auto pos = _position_info[code];
+		if(dir_type == direction_type::DT_LONG)
+		{
+			pos.long_pending += volume;
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			pos.short_pending += volume;
+		}
+	}
+}
+
+void context::recover_pending(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)
+{
+	if (offset_type == offset_type::OT_OPEN)
+	{
+		auto pos = _position_info[code];
+		if (dir_type == direction_type::DT_LONG)
+		{
+			pos.long_pending -= volume;
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			pos.short_pending -= volume;
+		}
+	}
+}

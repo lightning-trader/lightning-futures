@@ -78,6 +78,31 @@ bool runtime::init_from_file(const std::string& config_path)
 	return true;
 }
 
+
+void runtime::login_account()
+{
+	if (_trader)
+	{
+		_trader->login();
+	}
+	if (_market)
+	{
+		_market->login();
+	}
+}
+
+void runtime::logout_account()
+{
+	if (_trader)
+	{
+		_trader->logout();
+	}
+	if (_market)
+	{
+		_market->logout();
+	}
+}
+
 trader_api& runtime::get_trader()
 {
 	return *_trader;

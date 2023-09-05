@@ -89,7 +89,7 @@ static time_t make_datetime(const char* date, const char* time)
 	}
 	return -1;
 }
-static daytm_t make_daytm(const char* time, uint32_t tick = 0)
+static daytm_t make_daytm(const char* time, uint32_t tick)
 {
 	if (time != nullptr)
 	{
@@ -98,6 +98,29 @@ static daytm_t make_daytm(const char* time, uint32_t tick = 0)
 	return -1;
 }
 
+// 21:00:00.500 
+static daytm_t make_daytm(const char* time)
+{
+	if (time != nullptr)
+	{
+		char tmp[13] = {0};
+		size_t p = 0 ;
+		for(size_t i=0; time[i]!='\0'&& i < 13; i++)
+		{
+			if(time[i] == '.')
+			{
+				tmp[i] = '\0';
+				p = i+1;
+			}
+			else
+			{
+				tmp[i] = time[i];
+			}
+		}
+		return make_daytm(tmp,std::atoi(time+p));
+	}
+	return -1;
+}
 
 static time_t make_datetime(time_t date_begin, const char* time)
 {
@@ -146,10 +169,23 @@ static std::string datetime_to_string(const char* date, const char* time)
 	return "";
 }
 
-static uint32_t time_to_uint(time_t t)
+static uint32_t date_to_uint(time_t t)
 {
 	char buffer[16] = { 0 };
 	struct tm* info = localtime(&t);
 	strftime(buffer, sizeof buffer, "%Y%m%d", info);
+	return std::atoi(buffer);
+}
+static uint32_t date_to_uint(const char* t)
+{
+	char buffer[16] = { 0 };
+	size_t j = 0 ;
+	for(size_t i=0;i<16&&t[i]!='\0';i++)
+	{
+		if(t[i]!='-')
+		{
+			buffer[j++] = t[i];
+		}
+	}
 	return std::atoi(buffer);
 }

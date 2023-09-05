@@ -1,17 +1,5 @@
 ﻿#include "delayed_distributor.h"
 
-void delayed_distributor::handle_account(const std::vector<std::any>& param)
-{
-	if (param.size() >= 1)
-	{
-		const auto& account = std::any_cast<account_info>(param[0]);
-		if (on_account)
-		{
-			on_account(account);
-		}
-	}
-
-}
 
 void delayed_distributor::handle_position(const std::vector<std::any>& param)
 {

@@ -41,11 +41,7 @@ public:
 	virtual void play(uint32_t trading_day,std::function<void(const tick_info& info)> publish_callback) override;
 
 public:
-	
-	// md
-	virtual void login() override;
 
-	virtual void logout() override;
 	
 	virtual void subscribe(const std::set<code_t>& codes)override;
 

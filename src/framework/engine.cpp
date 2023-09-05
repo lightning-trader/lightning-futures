@@ -199,10 +199,6 @@ const position_info& engine::get_position(const code_t& code) const
 	return lt_get_position(_lt, code);
 }
 
-const account_info& engine::get_account() const
-{
-	return lt_get_account(_lt);
-}
 
 const order_info& engine::get_order(estid_t order_id) const
 {
@@ -264,10 +260,7 @@ const today_market_info& engine::get_today_market_info(const code_t& code)const
 {
 	return lt_get_today_market_info(_lt, code);
 }
-uint32_t engine::get_pending_position(const code_t& code,offset_type offset, direction_type direction)const
-{
-	return lt_get_pending_position(_lt, code, offset, direction);
-}
+
 
 void engine::bind_delayed_notify(std::shared_ptr<notify> notify)
 {

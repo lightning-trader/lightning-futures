@@ -135,7 +135,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		estid_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		estid_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, bool is_close_today = false, order_flag flag = order_flag::OF_NOR);
 
 		/*
 		 *	开空单
@@ -153,7 +153,7 @@ namespace lt
 		 *  flag 默认为正常单
 		 *	@localid	本地订单id
 		 */
-		estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, bool is_close_today = false, order_flag flag = order_flag::OF_NOR);
 
 
 		/*
@@ -168,10 +168,6 @@ namespace lt
 		*/
 		const position_info& get_position(const code_t& code) const;
 
-		/**
-		* 获取账户资金
-		*/
-		const account_info& get_account() const;
 
 		/**
 		* 获取委托订单
@@ -225,25 +221,7 @@ namespace lt
 		*/
 		const tick_info& get_last_tick(const code_t& code)const;
 
-		/*
-		* 获取还未成交的开多仓位
-		**/
-		uint32_t get_open_long_pending(const code_t& code)const;
-
-		/*
-		* 获取还未成交的开空仓位
-		**/
-		uint32_t get_open_short_pending(const code_t& code)const;
-
-		/*
-		* 获取还未成交的平多仓位
-		**/
-		uint32_t get_close_long_pending(const code_t& code)const;
-
-		/*
-		* 获取还未成交的平空仓位
-		**/
-		uint32_t get_close_short_pending(const code_t& code)const;
+		
 	};
 
 

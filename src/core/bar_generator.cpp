@@ -3,7 +3,7 @@
 
 void bar_generator::insert_tick(const tick_info& tick)
 {
-	uint32_t delta_volume = (tick.volume - _prev_volume);
+	uint32_t delta_volume = static_cast<uint32_t>(tick.volume - _prev_volume);
 	if(_bar.open == .0F)
 	{
 		_poc_data.clear();

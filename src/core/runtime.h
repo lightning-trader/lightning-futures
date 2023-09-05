@@ -17,6 +17,10 @@ public:
 
 	bool init_from_file(const std::string& config_path);
 
+	void login_account();
+
+	void logout_account();
+
 	virtual trader_api& get_trader() override;
 
 	virtual market_api& get_market() override;

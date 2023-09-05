@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <define.h>
 #include <any>
-#include <recorder.h>
 #include <lightning.h>
 #include <thread>
 #include "event_center.hpp"
@@ -91,16 +90,8 @@ private:
 	position_map			_position_info;
 
 	entrust_map				_order_info;
-
-	account_info			_account_info;
 	
 public:
-
-	/*登录*/
-	void login_account();
-
-	/*注销*/
-	void logout_account();
 
 	/*加载数据*/
 	void load_trader_data();
@@ -120,9 +111,9 @@ public:
 		this->_update_callback = update_cb;
 	}
 	//绑定延时事件
-	void bind_delayed_event(const order_event& callback,account_callback account_cb,position_callback position_cb)
+	void bind_delayed_event(const order_event& callback,position_callback position_cb)
 	{
-		_distributor = std::make_shared<delayed_distributor>(callback, account_cb, position_cb);
+		_distributor = std::make_shared<delayed_distributor>(callback, position_cb);
 	}
 	/*
 	* 设置撤销条件
@@ -139,8 +130,6 @@ public:
 	void cancel_order(estid_t order_id);
 	
 	const position_info& get_position(const code_t& code)const;
-	
-	const account_info& get_account()const;
 	
 	const order_info& get_order(estid_t order_id)const;
 
@@ -188,19 +177,13 @@ public:
 	//
 	const today_market_info& get_today_market_info(const code_t& id)const;
 
-	uint32_t get_pending_position(const code_t& code, offset_type offset, direction_type direction);
-
-	uint32_t get_open_pending();
+	uint32_t get_total_pending();
 
 
 private:
 
 	
 	void check_crossday();
-
-	void handle_account(const std::vector<std::any>& param);
-
-	void handle_position(const std::vector<std::any>& param);
 
 	void handle_entrust(const std::vector<std::any>& param);
 
@@ -225,6 +208,29 @@ private:
 	pod_chain * get_chain(untid_t untid);
 
 	deal_direction get_deal_direction(const tick_info& prev, const tick_info& tick);
+
+	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price);
+	
+	void frozen_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+	
+	void unfreeze_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+
+	void record_pending(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+
+	void recover_pending(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+
+	inline void print_position(const char* title)
+	{
+		if (!_position_info.empty())
+		{
+			LOG_INFO("print_position : ", title);
+		}
+		for (const auto& it : _position_info)
+		{
+			const auto& pos = it.second;
+			LOG_INFO("position :", pos.id.get_id(), "today_long(", pos.today_long.postion, pos.today_long.frozen, ") today_short(", pos.today_short.postion, pos.today_short.frozen, ") yestoday_long(", pos.history_long.postion, pos.history_long.frozen, ") yestoday_short(", pos.history_short.postion, pos.history_short.frozen, ")");
+		}
+	}
 
 protected:
 

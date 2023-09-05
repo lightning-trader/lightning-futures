@@ -14,17 +14,13 @@ class delayed_distributor : public event_source<trader_event_type, 1024>
 
 private:
 	
-	//资金变化（延时）
-	account_callback on_account;
 	//仓位变化（延时）
 	position_callback on_position;
 	//延时事件可以做一些记录或者通知等IO相关的操作使用
 	order_event delayed_event;
 
 private:
-
-	void handle_account(const std::vector<std::any>& param);
-
+	
 	void handle_position(const std::vector<std::any>& param);
 
 	void handle_entrust(const std::vector<std::any>& param);
@@ -39,9 +35,8 @@ private:
 	
 public:
 
-	delayed_distributor(const order_event delayed, account_callback account_cb, position_callback position_cb):
+	delayed_distributor(const order_event delayed, position_callback position_cb):
 		delayed_event(delayed),
-		on_account(account_cb),
 		on_position(position_cb)
 	{
 		add_handle([this](trader_event_type type, const std::vector<std::any>& param)->void {
@@ -49,12 +44,7 @@ public:
 			LOG_INFO("event_type", static_cast<uint8_t>(type));
 			switch (type)
 			{
-			case trader_event_type::TET_AccountChange:
-				handle_account(param);
-				break;
-			case trader_event_type::TET_PositionChange:
-				handle_position(param);
-				break;
+			
 			case trader_event_type::TET_OrderCancel:
 				handle_cancel(param);
 				break;

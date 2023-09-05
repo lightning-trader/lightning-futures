@@ -69,8 +69,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef bool (PORTER_FLAG * filter_callback)(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag);
 
-	typedef void (PORTER_FLAG * account_callback)(const account_info& account);
-
 	typedef void (PORTER_FLAG * position_callback)(const position_info& position);
 
 	struct order_event
@@ -128,11 +126,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	LT_INTERFACE_DECLARE(const position_info&, get_position, (const ltobj&, const code_t&));
 
 	/**
-	* 获取账户资金
-	*/
-	LT_INTERFACE_DECLARE(const account_info&, get_account, (const ltobj&));
-
-	/**
 	* 获取委托订单
 	**/
 	LT_INTERFACE_DECLARE(const order_info&, get_order, (const ltobj&, estid_t));
@@ -170,7 +163,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	/*
 	* 绑定延时回调
 	*/
-	LT_INTERFACE_DECLARE(void, bind_delayed_event, (const ltobj&, const order_event&, account_callback, position_callback));
+	LT_INTERFACE_DECLARE(void, bind_delayed_event, (const ltobj&, const order_event&, position_callback));
 	
 	/**
 	* 播放历史数据
@@ -228,9 +221,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	*/
 	LT_INTERFACE_DECLARE(const today_market_info&, get_today_market_info, (const ltobj&,const code_t&));
 
-	/**
-	* 获取
-	*/
-	LT_INTERFACE_DECLARE(uint32_t, get_pending_position, (const ltobj&, const code_t& code, offset_type offset, direction_type direction));
+	
 
 }

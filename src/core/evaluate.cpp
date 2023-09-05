@@ -95,7 +95,7 @@ void evaluate::playback_history()
 		//记录结算数据
 		if (_recorder)
 		{
-			_recorder->record_crossday_flow(_trader_simulator->get_trading_day(), get_order_statistic(), get_account());
+			_recorder->record_crossday_flow(_trader_simulator->get_trading_day(), get_order_statistic(), _trader_simulator->get_account());
 		}
 	}
 }

@@ -40,13 +40,21 @@ estid_t strategy::buy_for_open(const code_t& code,uint32_t count ,double_t price
 	return _engine.place_order(_id, offset_type::OT_OPEN, direction_type::DT_LONG, code, count, price, flag);
 }
 
-estid_t strategy::sell_for_close(const code_t& code, uint32_t count, double_t price , order_flag flag )
+estid_t strategy::sell_for_close(const code_t& code, uint32_t count, double_t price , bool is_close_today, order_flag flag )
 {
 	if (!_closeable)
 	{
 		return INVALID_ESTID;
 	}
-	return _engine.place_order(_id, offset_type::OT_CLOSE, direction_type::DT_LONG, code, count, price, flag);
+	if(is_close_today)
+	{
+		return _engine.place_order(_id, offset_type::OT_CLSTD, direction_type::DT_LONG, code, count, price, flag);
+	}
+	else
+	{
+		return _engine.place_order(_id, offset_type::OT_CLOSE, direction_type::DT_LONG, code, count, price, flag);
+	}
+	
 }
 
 estid_t strategy::sell_for_open(const code_t& code, uint32_t count, double_t price , order_flag flag )
@@ -58,13 +66,21 @@ estid_t strategy::sell_for_open(const code_t& code, uint32_t count, double_t pri
 	return _engine.place_order(_id, offset_type::OT_OPEN, direction_type::DT_SHORT, code, count, price, flag);
 }
 
-estid_t strategy::buy_for_close(const code_t& code, uint32_t count, double_t price , order_flag flag )
+estid_t strategy::buy_for_close(const code_t& code, uint32_t count, double_t price, bool is_close_today, order_flag flag )
 {
 	if (!_closeable)
 	{
 		return INVALID_ESTID;
 	}
-	return _engine.place_order(_id, offset_type::OT_CLOSE, direction_type::DT_SHORT,code, count, price, flag);
+	if(is_close_today)
+	{
+		return _engine.place_order(_id, offset_type::OT_CLSTD, direction_type::DT_SHORT, code, count, price, flag);
+	}
+	else
+	{
+		return _engine.place_order(_id, offset_type::OT_CLOSE, direction_type::DT_SHORT, code, count, price, flag);
+	}
+	
 }
 
 void strategy::cancel_order(estid_t order_id)
@@ -77,11 +93,6 @@ void strategy::cancel_order(estid_t order_id)
 const position_info& strategy::get_position(const code_t& code) const
 {
 	return _engine.get_position(code);
-}
-
-const account_info& strategy::get_account() const
-{
-	return _engine.get_account();
 }
 
 const order_info& strategy::get_order(estid_t order_id) const
@@ -140,28 +151,4 @@ const tick_info& strategy::get_last_tick(const code_t& code)const
 		return default_tick_info;
 	}
 	return *market.today_tick_info.rbegin();
-}
-
-
-uint32_t strategy::get_open_long_pending(const code_t& code)const
-{
-	return _engine.get_pending_position(code, offset_type::OT_OPEN, direction_type::DT_LONG);
-}
-
-
-uint32_t strategy::get_open_short_pending(const code_t& code)const
-{
-	return _engine.get_pending_position(code, offset_type::OT_OPEN, direction_type::DT_SHORT);
-}
-
-
-uint32_t strategy::get_close_long_pending(const code_t& code)const
-{
-	return _engine.get_pending_position(code, offset_type::OT_CLOSE, direction_type::DT_LONG);
-}
-
-
-uint32_t strategy::get_close_short_pending(const code_t& code)const
-{
-	return _engine.get_pending_position(code, offset_type::OT_CLOSE, direction_type::DT_SHORT);
 }
