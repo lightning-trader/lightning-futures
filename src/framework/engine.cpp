@@ -231,7 +231,7 @@ void engine::use_custom_chain(untid_t id,bool flag)
 	lt_use_custom_chain(_lt, id, flag);
 }
 
-void engine::set_cancel_condition(estid_t order_id, std::function<bool()> callback)
+void engine::set_cancel_condition(estid_t order_id, std::function<bool(estid_t)> callback)
 {
 	LOG_DEBUG("set_cancel_condition : ", order_id);
 	engine::_condition_function[order_id] = callback;

@@ -150,6 +150,26 @@ public:
 	{
 		return os << get_id();
 	}
+	bool is_distinct()const
+	{
+		if (strcmp(EXCHANGE_ID_SHFE, get_excg())==0)
+		{
+			return true ;
+		}
+		if (strcmp(EXCHANGE_ID_INE, get_excg())==0)
+		{
+			return true;
+		}
+		if (strcmp(EXCHANGE_ID_SGE, get_excg())==0)
+		{
+			return true;
+		}
+		if (strcmp(EXCHANGE_ID_CFFEX, get_excg())==0)
+		{
+			return true;
+		}
+		return false;
+	}
 };
 
 const code_t default_code;

@@ -347,7 +347,7 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			{
 
 				pos.today_long += pInvestorPosition->TodayPosition;
-				if (std::strcmp(pInvestorPosition->ExchangeID, EXCHANGE_ID_SHFE) != 0)
+				if (!code.is_distinct())
 				{
 					uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
 					pos.today_long += yestoday_position;
@@ -365,7 +365,7 @@ void ctp_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
 				pos.today_short += pInvestorPosition->TodayPosition;
-				if(std::strcmp(pInvestorPosition->ExchangeID, EXCHANGE_ID_SHFE) != 0)
+				if(!code.is_distinct())
 				{
 					uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
 					pos.today_short += yestoday_position;

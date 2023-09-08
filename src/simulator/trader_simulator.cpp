@@ -57,8 +57,7 @@ void trader_simulator::crossday(uint32_t trading_day)
 	_position_info.get_all_position(all_position);
 	for (const auto& it : all_position)
 	{
-		//只有上期所区分昨仓今仓
-		if (std::strcmp(it.id.get_excg(), EXCHANGE_ID_SHFE) == 0)
+		if (it.id.is_distinct())
 		{
 			_position_info.reduce_position(it.id, direction_type::DT_LONG, it.yestoday_long.postion, false);
 			_position_info.reduce_position(it.id, direction_type::DT_SHORT, it.yestoday_short.postion, false);

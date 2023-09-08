@@ -195,7 +195,7 @@ namespace lt
 		/*
 		* 设置撤销条件(返回true时候撤销)
 		*/
-		void set_cancel_condition(estid_t order_id, std::function<bool()> callback);
+		void set_cancel_condition(estid_t order_id, std::function<bool(estid_t)> callback);
 
 
 		/**

@@ -233,7 +233,7 @@ namespace lt
 			}
 		}
 
-		static inline std::map<estid_t, std::function<bool()>> _condition_function;
+		static inline std::map<estid_t, std::function<bool(estid_t)>> _condition_function;
 		static inline bool _condition_callback(estid_t localid)
 		{
 			auto it = _condition_function.find(localid);
@@ -241,7 +241,7 @@ namespace lt
 			{
 				return false;
 			}
-			return it->second();
+			return it->second(localid);
 		}
 
 		static inline void _delayed_entrust_callback(const order_info& order)
@@ -393,7 +393,7 @@ namespace lt
 		/*
 		* 设置撤销条件(返回true时候撤销)
 		*/
-		void set_cancel_condition(estid_t order_id, std::function<bool()> callback);
+		void set_cancel_condition(estid_t order_id, std::function<bool(estid_t)> callback);
 
 
 		/**

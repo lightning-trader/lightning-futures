@@ -27,7 +27,7 @@ void orderflow_strategy::on_ready()
 		auto& buy_order = get_order(_order_data->buy_order);
 		if (buy_order.est_id != INVALID_ESTID)
 		{
-			set_cancel_condition(buy_order.est_id, [this]()->bool {
+			set_cancel_condition(buy_order.est_id, [this](estid_t estid)->bool {
 
 				if (is_close_coming())
 				{
@@ -43,7 +43,7 @@ void orderflow_strategy::on_ready()
 		auto& sell_order = get_order(_order_data->sell_order);
 		if (sell_order.est_id != INVALID_ESTID)
 		{
-			set_cancel_condition(sell_order.est_id, [this]()->bool {
+			set_cancel_condition(sell_order.est_id, [this](estid_t estid)->bool {
 
 				if (is_close_coming())
 				{
@@ -93,7 +93,7 @@ void orderflow_strategy::on_entrust(const order_info& order)
 
 	if (order.est_id == _order_data->buy_order || order.est_id == _order_data->sell_order)
 	{
-		set_cancel_condition(order.est_id, [this]()->bool {
+		set_cancel_condition(order.est_id, [this](estid_t estid)->bool {
 
 			if (is_close_coming())
 			{

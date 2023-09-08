@@ -17,7 +17,7 @@ bool init_log_environment()
 	uint8_t print = static_cast<uint8_t>(LogPrint::LOG_FILE) | static_cast<uint8_t>(LogPrint::CONSOLE);
 	set_log_option(LogLevel::LOG_TRACE, field, print);
 #else
-	uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) | static_cast<uint8_t>(LogField::FUNCTION);
+	uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) ;
 	uint8_t print = static_cast<uint8_t>(LogPrint::LOG_FILE) ;
 	set_log_option(LogLevel::LOG_INFO, field, print);
 #endif

@@ -120,7 +120,7 @@ void strategy::use_custom_chain(bool flag)
 	return _engine.use_custom_chain( _id, flag);
 }
 
-void strategy::set_cancel_condition(estid_t order_id, std::function<bool()> callback)
+void strategy::set_cancel_condition(estid_t order_id, std::function<bool(estid_t)> callback)
 {
 	return _engine.set_cancel_condition( order_id, callback);
 }

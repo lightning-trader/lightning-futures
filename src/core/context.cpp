@@ -545,6 +545,7 @@ void context::check_crossday()
 			_record_data->statistic_info.cancel_amount = 0;
 			_record_data->statistic_info.error_amount = 0;
 			_record_data->trading_day = trading_day;
+			_today_market_info.clear();
 		}
 
 		while (_is_trading_ready.exchange(true));
@@ -695,11 +696,6 @@ void context::handle_tick(const std::vector<std::any>& param)
 			return;
 		}
 		tick_info& prev_tick = it->second;
-		
-		if (last_tick.trading_day != _record_data->trading_day)
-		{
-			_today_market_info.clear();
-		}
 		auto& current_market_info = _today_market_info[last_tick.id];
 		current_market_info.today_tick_info.emplace_back(last_tick);
 		current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
