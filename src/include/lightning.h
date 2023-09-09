@@ -99,7 +99,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	EXPORT_FLAG void lt_destory_context(ltobj& obj);
 	
 	/*登录*/
-	LT_INTERFACE_DECLARE(void, login_account, (const ltobj&));
+	LT_INTERFACE_DECLARE(bool, login_account, (const ltobj&));
 
 	/*注销*/
 	LT_INTERFACE_DECLARE(void, logout_account, (const ltobj&));

@@ -79,16 +79,16 @@ bool runtime::init_from_file(const std::string& config_path)
 }
 
 
-void runtime::login_account()
+bool runtime::login_account()
 {
-	if (_trader)
+	if (_trader && _trader->login())
 	{
-		_trader->login();
+		if (_market && _market->login())
+		{
+			return true;
+		}
 	}
-	if (_market)
-	{
-		_market->login();
-	}
+	return false ;
 }
 
 void runtime::logout_account()

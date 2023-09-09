@@ -55,7 +55,7 @@ extern "C"
 			}
 		}
 	}
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, runtime, login_account, (const ltobj& lt), ());
+	LT_INTERFACE_IMPLEMENTATION(bool, false, runtime, login_account, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, runtime, logout_account, (const ltobj& lt), ());
 

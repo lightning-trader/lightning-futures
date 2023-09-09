@@ -654,11 +654,11 @@ void context::handle_cancel(const std::vector<std::any>& param)
 			//撤销解冻仓位
 			if (offset == offset_type::OT_OPEN)
 			{
-				recover_pending(code, direction, offset, total_volume);
+				recover_pending(code, direction, offset, cancel_volume);
 			}
 			else
 			{
-				unfreeze_deduction(code, direction, offset, total_volume);
+				unfreeze_deduction(code, direction, offset, cancel_volume);
 			}
 			_order_info.erase(it);
 		}
@@ -804,6 +804,7 @@ void context::calculate_position(const code_t& code, direction_type dir_type, of
 		{
 			p.today_short.postion += volume;
 		}
+		recover_pending(code, dir_type, offset_type, volume);
 	}
 	else if (offset_type == offset_type::OT_CLSTD)
 	{

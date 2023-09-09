@@ -17,7 +17,7 @@ public:
 
 	bool init_from_file(const std::string& config_path);
 
-	void login_account();
+	bool login_account();
 
 	void logout_account();
 

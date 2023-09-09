@@ -43,7 +43,7 @@ public:
 	/*
 	*	初始化
 	*/
-	virtual void login() = 0;
+	virtual bool login() = 0;
 
 	/*
 	*	注销

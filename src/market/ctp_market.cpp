@@ -51,7 +51,7 @@ ctp_market::~ctp_market()
 	_market_handle = nullptr;
 }
 
-void ctp_market::login()
+bool ctp_market::login()
 {
 	char path_buff[64] = {0};
 	sprintf(path_buff, "md_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
@@ -65,7 +65,7 @@ void ctp_market::login()
 	_md_api->Init();
 	_process_signal.wait(_process_mutex);
 	_is_inited = true ;
-	//_md_api->Join();
+	return true ;
 }
 
 void ctp_market::logout()

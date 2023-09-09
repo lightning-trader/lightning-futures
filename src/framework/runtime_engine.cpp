@@ -14,7 +14,10 @@ runtime_engine::~runtime_engine()
 
 void runtime_engine::run_to_close(const std::vector<std::shared_ptr<lt::strategy>>& strategys)
 {
-	lt_login_account(_lt);
+	if(!lt_login_account(_lt))
+	{
+		return ;
+	}
 	regist_strategy(strategys);
 	lt_start_service(_lt);
 	while (!is_trading_ready())

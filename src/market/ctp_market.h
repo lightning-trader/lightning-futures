@@ -21,7 +21,7 @@ public:
 //IMarketAPI 接口
 public:
 
-	virtual void login() override;
+	virtual bool login() override;
 
 	virtual void logout()override;
 

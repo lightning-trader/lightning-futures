@@ -58,7 +58,7 @@ ctp_trader::~ctp_trader()
 	_trader_handle = nullptr ;
 }
 
-void ctp_trader::login()
+bool ctp_trader::login()
 {
 	_is_runing = true;
 	char path_buff[64];
@@ -82,6 +82,7 @@ void ctp_trader::login()
 	_is_inited = true ;
 	submit_settlement();
 	LOG_INFO("ctp_trader login");
+	return true ;
 }
 
 void ctp_trader::logout()
