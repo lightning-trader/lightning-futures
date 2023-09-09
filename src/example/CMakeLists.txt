@@ -12,7 +12,7 @@ ENDIF()
 include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
 
-add_executable(example "example.cpp" "marketing_strategy.cpp" "orderflow_strategy.cpp")
+add_executable(example "example.cpp" "marketing_strategy.cpp" "orderflow_strategy.cpp" "arbitrage_strategy.cpp")
 
 target_link_libraries(example "framework")
 
