@@ -135,14 +135,6 @@ private:
 				return direction_type::DT_LONG;
 	}
 
-	inline direction_type wrap_position_direction(TThostFtdcPosiDirectionType dirType)
-	{
-		if (THOST_FTDC_PD_Long == dirType)
-			return direction_type::DT_LONG;
-		else
-			return direction_type::DT_SHORT;
-	}
-
 	inline int convert_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)
 	{
 		if (offset_type::OT_OPEN == offset)

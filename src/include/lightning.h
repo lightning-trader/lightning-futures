@@ -222,5 +222,9 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	LT_INTERFACE_DECLARE(const today_market_info&, get_today_market_info, (const ltobj&,const code_t&));
 
 	
+	/**
+	* 获取下单价格
+	*/
+	LT_INTERFACE_DECLARE(double_t, get_proximate_price, (const ltobj& ,const code_t&, double_t price));
 
 }

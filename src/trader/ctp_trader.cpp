@@ -77,8 +77,6 @@ bool ctp_trader::login()
 	_td_api->Init();
 	LOG_INFO("ctp_trader init ");
 	_process_signal.wait(_process_mutex);
-	
-	
 	_is_inited = true ;
 	submit_settlement();
 	LOG_INFO("ctp_trader login");
@@ -420,7 +418,7 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		order.code = code_t(pOrder->InstrumentID , pOrder->ExchangeID);
 		order.create_time = make_daytm(pOrder->InsertTime,0);
 		order.est_id = estid;
-		order.direction = wrap_position_direction(pOrder->Direction);
+		order.direction = wrap_direction_offset(pOrder->CombOffsetFlag[0],pOrder->Direction);
 		order.offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
 		order.last_volume = pOrder->VolumeTotal;
 		order.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;

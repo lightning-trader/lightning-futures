@@ -125,13 +125,10 @@ void strategy::set_cancel_condition(estid_t order_id, std::function<bool(estid_t
 	return _engine.set_cancel_condition( order_id, callback);
 }
 
-
-
 daytm_t strategy::last_order_time()
 {
 	return _engine.last_order_time();
 }
-
 
 uint32_t strategy::get_trading_day()const
 {
@@ -151,4 +148,9 @@ const tick_info& strategy::get_last_tick(const code_t& code)const
 		return default_tick_info;
 	}
 	return *market.today_tick_info.rbegin();
+}
+
+double_t strategy::get_proximate_price(const code_t& code, double_t price)const
+{
+	return _engine.get_proximate_price(code,price);
 }

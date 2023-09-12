@@ -177,7 +177,7 @@ estid_t engine::place_order(untid_t id,offset_type offset, direction_type direct
 {
 	PROFILE_DEBUG(code.get_id());
 	LOG_INFO("place_order : ", code.get_id(), offset, direction, price);
-	estid_t estid = lt_place_order(_lt, id, offset, direction, code, count, price, flag);
+	estid_t estid = lt_place_order(_lt, id, offset, direction, code, count,price, flag);
 	if (estid != INVALID_ESTID)
 	{
 		regist_estid_strategy(estid, id);
@@ -265,6 +265,11 @@ const today_market_info& engine::get_today_market_info(const code_t& code)const
 void engine::bind_delayed_notify(std::shared_ptr<notify> notify)
 {
 	_all_notify.emplace_back(notify);
+}
+
+double_t engine::get_proximate_price(const code_t& code, double_t price)const
+{
+	return lt_get_proximate_price(_lt,code, price);
 }
 
 void engine::subscribe(const std::set<code_t>& tick_data, const std::map<code_t, std::set<uint32_t>>& bar_data)

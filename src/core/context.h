@@ -179,6 +179,15 @@ public:
 
 	uint32_t get_total_pending();
 
+	double_t get_proximate_price(const code_t& code ,double_t price)const
+	{
+		if(_price_step_config)
+		{
+			return _price_step_config->get_proximate_price(code, price);
+		}
+		LOG_WARNING("_price_step_config null");
+		return price;
+	}
 
 private:
 

@@ -321,7 +321,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		return INVALID_ESTID;
 	}
 
-	estid_t estid = chain->place_order(offset, direction, code, count, _price_step_config->get_proximate_price(code, price), flag);
+	estid_t estid = chain->place_order(offset, direction, code, count, price, flag);
 	if (_record_data&& estid != INVALID_ESTID)
 	{
 		_record_data->last_order_time = _last_tick_time;
@@ -798,13 +798,14 @@ void context::calculate_position(const code_t& code, direction_type dir_type, of
 		if (dir_type == direction_type::DT_LONG)
 		{
 			p.today_long.postion += volume;
+			p.long_pending -= volume;
 
 		}
 		else
 		{
 			p.today_short.postion += volume;
+			p.short_pending -= volume;
 		}
-		recover_pending(code, dir_type, offset_type, volume);
 	}
 	else if (offset_type == offset_type::OT_CLSTD)
 	{

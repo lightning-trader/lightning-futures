@@ -72,7 +72,7 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	//LOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
 	if (_order_data->buy_order == INVALID_ESTID)
 	{
-		double_t buy_price = tick.buy_price() - _open_delta - _random(_random_engine);
+		double_t buy_price = get_proximate_price(_code,tick.buy_price() - _open_delta - _random(_random_engine));
 
 		//¶àÍ·
 		if (pos.history_short.usable() > 0)
@@ -92,7 +92,7 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	}
 	if (_order_data->sell_order == INVALID_ESTID)
 	{
-		double_t sell_price = tick.sell_price() + _open_delta + _random(_random_engine);
+		double_t sell_price = get_proximate_price(_code,tick.sell_price() + _open_delta + _random(_random_engine));
 
 		//¿ÕÍ·
 		if (pos.history_long.usable() > 0)

@@ -107,4 +107,7 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(const today_market_info&, default_today_market_info, context, get_today_market_info, (const ltobj& lt, const code_t& code), (code));
 
+	LT_INTERFACE_IMPLEMENTATION(double_t, .0, context, get_proximate_price, (const ltobj& lt, const code_t& code,double_t price), (code, price));
+
+	
 }

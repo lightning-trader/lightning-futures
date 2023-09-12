@@ -423,6 +423,11 @@ namespace lt
 		*/
 		void bind_delayed_notify(std::shared_ptr<notify> notify);
 
+		/*
+		* 获取下单价格
+		*/
+		double_t get_proximate_price(const code_t& code,double_t price)const;
+
 	private:
 		/**
 		*	订阅行情

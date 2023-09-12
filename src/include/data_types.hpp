@@ -271,6 +271,7 @@ struct tick_info
 	{
 		return id==default_code;
 	}
+
 };
 
 const tick_info default_tick_info;

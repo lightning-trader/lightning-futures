@@ -11,7 +11,6 @@ if(APPLE)
     set(SYS_LIBS pthread)
 elseif(UNIX)
     add_definitions( "-fPIC" )
-    set(CTP_LIBS thostmduserapi_se thosttraderapi_se)
     set(SYS_LIBS pthread)
 endif()
 
@@ -23,6 +22,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin)
 set(CMAKE_DEBUG_POSTFIX "_d")
 #set(CMAKE_CXX_FLAGS_RELEASE"-O2")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH}
     "${PROJECT_SOURCE_DIR}/share" 
