@@ -72,7 +72,7 @@ bool ctp_trader::login()
 	//_td_api->SubscribePrivateTopic(THOST_TERT_RESTART);
 	//_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
 	_td_api->SubscribePrivateTopic(THOST_TERT_RESUME);
-	_td_api->SubscribePublicTopic(THOST_TERT_RESUME);
+	_td_api->SubscribePublicTopic(THOST_TERT_QUICK);
 	_td_api->RegisterFront(const_cast<char*>(_front_addr.c_str()));
 	_td_api->Init();
 	LOG_INFO("ctp_trader init ");

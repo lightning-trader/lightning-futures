@@ -910,7 +910,7 @@ void context::frozen_deduction(const code_t& code, direction_type dir_type, offs
 	{
 		return;
 	}
-	position_info pos = it->second;
+	position_info& pos = it->second;
 	if (offset_type == offset_type::OT_CLSTD)
 	{
 		if (dir_type == direction_type::DT_LONG)
@@ -933,8 +933,6 @@ void context::frozen_deduction(const code_t& code, direction_type dir_type, offs
 			pos.history_short.frozen += volume;
 		}
 	}
-
-	_position_info[code] = pos;
 	print_position("frozen_deduction");
 }
 void context::unfreeze_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)
@@ -944,7 +942,7 @@ void context::unfreeze_deduction(const code_t& code, direction_type dir_type, of
 	{
 		return;
 	}
-	position_info pos = it->second;
+	position_info& pos = it->second;
 	if (offset_type == offset_type::OT_CLSTD)
 	{
 		if (dir_type == direction_type::DT_LONG)
@@ -995,7 +993,6 @@ void context::unfreeze_deduction(const code_t& code, direction_type dir_type, of
 			}
 		}
 	}
-	_position_info[code] = pos;
 	print_position("thawing_deduction");
 }
 
@@ -1003,7 +1000,7 @@ void context::record_pending(const code_t& code, direction_type dir_type, offset
 {
 	if(offset_type== offset_type::OT_OPEN)
 	{
-		auto pos = _position_info[code];
+		auto& pos = _position_info[code];
 		if(dir_type == direction_type::DT_LONG)
 		{
 			pos.long_pending += volume;
@@ -1019,7 +1016,7 @@ void context::recover_pending(const code_t& code, direction_type dir_type, offse
 {
 	if (offset_type == offset_type::OT_OPEN)
 	{
-		auto pos = _position_info[code];
+		auto& pos = _position_info[code];
 		if (dir_type == direction_type::DT_LONG)
 		{
 			pos.long_pending -= volume;
