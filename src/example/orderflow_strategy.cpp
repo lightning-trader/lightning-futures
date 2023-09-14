@@ -35,6 +35,7 @@ void orderflow_strategy::on_ready()
 				}
 				return false;
 				});
+			regist_order_estid(buy_order.est_id);
 		}
 		else
 		{
@@ -51,6 +52,7 @@ void orderflow_strategy::on_ready()
 				}
 				return false;
 				});
+			regist_order_estid(buy_order.est_id);
 		}
 		else
 		{

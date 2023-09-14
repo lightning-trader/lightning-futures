@@ -11,14 +11,12 @@ trader_simulator::trader_simulator(const params& config) :
 	_interval(1),
 	_current_time(0)
 {
-	std::string td_path ;
 	try
 	{
 		_account_info.money = config.get<double_t>("initial_capital");
 		auto contract_file = config.get<std::string>("contract_config");
 		_contract_parser.init(contract_file);
 		_interval = config.get<uint32_t>("interval");
-		td_path = config.get<std::string>("trading_day");
 	}
 	catch (...)
 	{

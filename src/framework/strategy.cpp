@@ -154,3 +154,8 @@ double_t strategy::get_proximate_price(const code_t& code, double_t price)const
 {
 	return _engine.get_proximate_price(code,price);
 }
+
+void strategy::regist_order_estid(estid_t estid)
+{
+	_engine.regist_estid_strategy(estid,get_id());
+}

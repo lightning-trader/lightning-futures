@@ -106,6 +106,7 @@ void arbitrage_strategy::on_entrust(const order_info& order)
 				}
 				return false;
 				});
+			regist_order_estid(order.est_id);
 			break;
 		}
 	}
