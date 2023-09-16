@@ -37,6 +37,7 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 	if (!order_list.empty())
 	{
 		_trader.cancel_order(order_list.begin()->est_id);
+		LOG_INFO("place order to cancel ", order_list.begin()->est_id, code.get_id());
 		return INVALID_ESTID;
 	}
 	PROFILE_DEBUG(code.get_id());
@@ -55,18 +56,21 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 		auto max_position = _ctx.get_max_position();
 		if (position + pending + count > max_position)
 		{
+			LOG_WARNING("can not open order : ", code.get_id(), position, pending, max_position);
 			return INVALID_ESTID;
 		}
 	}
 	else if (offset == offset_type::OT_CLOSE)
 	{
 		const auto pos = _ctx.get_position(code);
-		if (direction == direction_type::DT_LONG &&pos.history_long.usable() < count)
+		if (direction == direction_type::DT_LONG && pos.history_long.usable() < count)
 		{
+			LOG_WARNING("can not close history long order : ", code.get_id(), direction, pos.history_long.usable(), count);
 			return INVALID_ESTID;
 		}
 		else if (direction == direction_type::DT_SHORT && pos.history_short.usable() < count)
 		{
+			LOG_WARNING("can not close history short order : ", code.get_id(), direction, pos.history_long.usable(), count);
 			return INVALID_ESTID;
 		}
 	}
@@ -75,10 +79,12 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 		const auto pos = _ctx.get_position(code);
 		if (direction == direction_type::DT_LONG && pos.today_long.usable() < count )
 		{
+			LOG_WARNING("can not close today long order : ", code.get_id(), direction, pos.today_long.usable(), count);
 			return INVALID_ESTID;
 		}
 		else if (direction == direction_type::DT_SHORT && pos.today_short.usable() < count )
 		{
+			LOG_WARNING("can not close today short order : ", code.get_id(),direction, pos.today_long.usable(), count);
 			return INVALID_ESTID;
 		}
 	}

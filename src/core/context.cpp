@@ -322,7 +322,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 	}
 
 	estid_t estid = chain->place_order(offset, direction, code, count, price, flag);
-	if (_record_data&& estid != INVALID_ESTID)
+	if (_record_data && estid != INVALID_ESTID)
 	{
 		_record_data->last_order_time = _last_tick_time;
 		_record_data->statistic_info.place_order_amount++;
@@ -349,6 +349,7 @@ void context::cancel_order(estid_t order_id)
 	}
 	LOG_INFO("context cancel_order : ", order_id);
 	get_trader().cancel_order(order_id);
+	remove_condition(order_id);
 }
 
 const position_info& context::get_position(const code_t& code)const
@@ -526,7 +527,7 @@ uint32_t context::get_total_pending()
 	uint32_t res = 0;
 	for (auto& it : _position_info)
 	{
-		res += it.second.long_pending + it.second.short_pending;
+		res += (it.second.long_pending + it.second.short_pending);
 	}
 	return res;
 }
@@ -666,7 +667,6 @@ void context::handle_cancel(const std::vector<std::any>& param)
 		{
 			realtime_event.on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
 		}
-		remove_condition(localid);
 		if (_record_data)
 		{
 			_record_data->statistic_info.cancel_amount++;
@@ -811,82 +811,26 @@ void context::calculate_position(const code_t& code, direction_type dir_type, of
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
-			if (p.today_long.postion > volume)
-			{
-				p.today_long.postion -= volume;
-			}
-			else
-			{
-				p.today_long.postion = 0;
-			}
-			if (p.today_long.frozen > volume)
-			{
-				p.today_long.frozen -= volume;
-			}
-			else
-			{
-				p.today_long.frozen = 0;
-			}
+			p.today_long.postion -= volume;
+			p.today_long.frozen -= volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			if (p.today_short.postion > volume)
-			{
-				p.today_short.postion -= volume;
-			}
-			else
-			{
-				p.today_short.postion = 0;
-			}
-			if (p.today_short.frozen > volume)
-			{
-				p.today_short.frozen -= volume;
-			}
-			else
-			{
-				p.today_short.frozen = 0;
-			}
+			p.today_short.postion -= volume;
+			p.today_short.frozen -= volume;
 		}
 	}
 	else
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
-			if (p.history_long.postion > volume)
-			{
-				p.history_long.postion -= volume;
-			}
-			else
-			{
-				p.history_long.postion = 0;
-			}
-			if (p.history_long.frozen > volume)
-			{
-				p.history_long.frozen -= volume;
-			}
-			else
-			{
-				p.history_long.frozen = 0;
-			}
+			p.history_long.postion -= volume;
+			p.history_long.frozen -= volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			if (p.history_short.postion > volume)
-			{
-				p.history_short.postion -= volume;
-			}
-			else
-			{
-				p.history_short.postion = 0;
-			}
-			if (p.history_short.frozen > volume)
-			{
-				p.history_short.frozen -= volume;
-			}
-			else
-			{
-				p.history_short.frozen = 0;
-			}
+			p.history_short.postion -= volume;
+			p.history_short.frozen -= volume;
 		}
 	}
 	if (!p.empty())
@@ -1001,6 +945,7 @@ void context::record_pending(const code_t& code, direction_type dir_type, offset
 	if(offset_type== offset_type::OT_OPEN)
 	{
 		auto& pos = _position_info[code];
+		pos.id = code ;
 		if(dir_type == direction_type::DT_LONG)
 		{
 			pos.long_pending += volume;
@@ -1016,14 +961,17 @@ void context::recover_pending(const code_t& code, direction_type dir_type, offse
 {
 	if (offset_type == offset_type::OT_OPEN)
 	{
-		auto& pos = _position_info[code];
-		if (dir_type == direction_type::DT_LONG)
+		auto it = _position_info.find(code);
+		if(it != _position_info.end())
 		{
-			pos.long_pending -= volume;
-		}
-		else if (dir_type == direction_type::DT_SHORT)
-		{
-			pos.short_pending -= volume;
+			if (dir_type == direction_type::DT_LONG)
+			{
+				it->second.long_pending -= volume;
+			}
+			else if (dir_type == direction_type::DT_SHORT)
+			{
+				it->second.short_pending -= volume;
+			}
 		}
 	}
 }

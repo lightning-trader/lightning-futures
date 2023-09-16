@@ -201,3 +201,17 @@ static uint32_t date_to_uint(const char* t)
 	}
 	return std::atoi(buffer);
 }
+
+static daytm_t offset_front(daytm_t tm ,uint32_t seconds)
+{
+	if(tm < seconds)
+	{
+		tm + ONE_DAY_SECONDS;
+	}
+	return tm - seconds;
+}
+
+static daytm_t offset_back(daytm_t tm, uint32_t seconds)
+{
+	return tm + seconds % ONE_DAY_SECONDS;
+}
