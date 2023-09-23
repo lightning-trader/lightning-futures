@@ -201,8 +201,8 @@ void trader_simulator::handle_entrust(const tick_info* tick, const order_match& 
 	order_info& order = match.order;
 	if(match.state == OS_INVALID)
 	{
-		uint32_t err = frozen_deduction(order.est_id, order.code, order.offset, order.direction, order.last_volume, order.price);
-		if (err == 0U)
+		error_code err = frozen_deduction(order.est_id, order.code, order.offset, order.direction, order.last_volume, order.price);
+		if (err == error_code::EC_Success)
 		{
 			this->fire_event(trader_event_type::TET_OrderPlace, order);
 			auto queue_seat = get_front_count(order.code, order.price);
@@ -490,9 +490,9 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 	}
 	
 }
-void trader_simulator::order_error(error_type type,estid_t estid,uint32_t err)
+void trader_simulator::order_error(error_type type,estid_t estid, error_code err)
 {
-	this->fire_event(trader_event_type::TET_OrderError, type, estid, err);
+	this->fire_event(trader_event_type::TET_OrderError, type, estid, (uint8_t)err);
 	if (_order_info.exist(estid))
 	{
 		LOG_TRACE(" order_error _order_info.del_order", estid);
@@ -519,24 +519,24 @@ void trader_simulator::order_cancel(const order_info& order)
 		}
 	}
 }
-uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
+error_code trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
 {
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)
 	{
 		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", code.get_id());
-		return 10000U;
+		return error_code::EC_Failure;
 	}
 	if (offset == offset_type::OT_OPEN)
 	{
 		double_t frozen_monery = (count * price * contract_info->multiple * contract_info->margin_rate);
 		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
 		{
-			return 31U;
+			return error_code::EC_MarginNotEnough;
 		}
 		//开仓 冻结保证金
 		_account_info.frozen_monery += frozen_monery;
-		return 0U ;
+		return error_code::EC_Success;
 	}
 	if (offset == offset_type::OT_CLSTD)
 	{
@@ -547,7 +547,7 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			LOG_TRACE("frozen_deduction long today", code.get_id(), est_id, pos.today_long.usable());
 			if (pos.today_long.usable() < count)
 			{
-				return 30U;
+				return error_code::EC_PositionNotEnough;
 			}
 			_position_info.frozen_position(code, direction, count, true);
 		}
@@ -557,11 +557,11 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			LOG_TRACE("frozen_deduction short today", code.get_id(), est_id, pos.today_short.usable());
 			if (pos.today_short.usable() < count)
 			{
-				return 30U;
+				return error_code::EC_PositionNotEnough;
 			}
 			_position_info.frozen_position(code, direction, count, true);
 		}
-		return 0U;
+		return error_code::EC_Success;
 	}
 	else
 	{
@@ -571,7 +571,7 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			LOG_TRACE("frozen_deduction long yestoday", code.get_id(), est_id, pos.yestoday_long.usable());
 			if (pos.yestoday_long.usable() < count)
 			{
-				return 30U;
+				return error_code::EC_PositionNotEnough;
 			}
 			_position_info.frozen_position(code, direction, count, false);
 
@@ -582,13 +582,13 @@ uint32_t trader_simulator::frozen_deduction(estid_t est_id,const code_t& code,of
 			LOG_TRACE("frozen_deduction short yestoday", code.get_id(), est_id, pos.yestoday_short.usable());
 			if (pos.yestoday_short.usable() < count)
 			{
-				return 30U;
+				return error_code::EC_PositionNotEnough;
 			}
 			_position_info.frozen_position(code, direction, count, false);
 		}
-		return 0U;
+		return error_code::EC_Success;
 	}
-	return 23U;
+	return error_code::EC_OrderFieldError;
 }
 bool trader_simulator::thawing_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
 {

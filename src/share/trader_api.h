@@ -4,6 +4,7 @@
 #include "event_center.hpp"
 #include <shared_types.h>
 
+
 enum class trader_event_type : uint8_t
 {
 	TET_Invalid,

@@ -162,7 +162,7 @@ void marketing_strategy::on_cancel(estid_t localid, const code_t& code, offset_t
 	}
 }
 
-void marketing_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
+void marketing_strategy::on_error(error_type type, estid_t localid, const error_code error)
 {
 	LOG_ERROR("on_error :", localid, error);
 	if (type == error_type::ET_PLACE_ORDER)

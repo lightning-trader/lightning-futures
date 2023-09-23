@@ -108,7 +108,7 @@ public:
 	 *	@localid	本地订单id
 	 *	@error 错误代码
 	 */
-	virtual void on_error(error_type type, estid_t localid, const uint32_t error) override;
+	virtual void on_error(error_type type, estid_t localid, const error_code error) override;
 
 	/*
 	 *	销毁

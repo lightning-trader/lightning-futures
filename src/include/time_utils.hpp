@@ -206,7 +206,7 @@ static daytm_t offset_front(daytm_t tm ,uint32_t seconds)
 {
 	if(tm < seconds)
 	{
-		tm + ONE_DAY_SECONDS;
+		tm += ONE_DAY_SECONDS;
 	}
 	return tm - seconds;
 }
