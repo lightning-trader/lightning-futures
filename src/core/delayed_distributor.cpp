@@ -83,11 +83,11 @@ void delayed_distributor::handle_error(const std::vector<std::any>& param)
 	{
 		const error_type type = std::any_cast<error_type>(param[0]);
 		const estid_t localid = std::any_cast<estid_t>(param[1]);
-		const uint32_t error_code = std::any_cast<uint32_t>(param[2]);
+		const uint8_t error = std::any_cast<uint8_t>(param[2]);
 
 		if (delayed_event.on_error)
 		{
-			delayed_event.on_error(type, localid, error_code);
+			delayed_event.on_error(type, localid, static_cast<error_code>(error));
 		}
 	}
 }

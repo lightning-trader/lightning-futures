@@ -238,6 +238,7 @@ private:
 		{
 			const auto& pos = it.second;
 			LOG_INFO("position :", pos.id.get_id(), "today_long(", pos.today_long.postion, pos.today_long.frozen, ") today_short(", pos.today_short.postion, pos.today_short.frozen, ") yestoday_long(", pos.history_long.postion, pos.history_long.frozen, ") yestoday_short(", pos.history_short.postion, pos.history_short.frozen, ")");
+			LOG_INFO("pending :", pos.id.get_id(), pos.long_pending, pos.short_pending);
 		}
 	}
 

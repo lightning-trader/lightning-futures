@@ -196,7 +196,7 @@ void arbitrage_strategy::on_cancel(estid_t localid, const code_t& code, offset_t
 	}
 }
 
-void arbitrage_strategy::on_error(error_type type, estid_t localid, const uint32_t error)
+void arbitrage_strategy::on_error(error_type type, estid_t localid, const error_code error)
 {
 	LOG_ERROR("on_error :", localid, error);
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)

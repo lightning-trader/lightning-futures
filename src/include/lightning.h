@@ -61,7 +61,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef bool (PORTER_FLAG * condition_callback)(estid_t);
 
-	typedef void (PORTER_FLAG * error_callback)(error_type , estid_t, uint32_t);
+	typedef void (PORTER_FLAG * error_callback)(error_type , estid_t, error_code);
 
 	typedef void (PORTER_FLAG * ready_callback)();
 

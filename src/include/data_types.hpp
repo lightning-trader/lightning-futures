@@ -294,6 +294,16 @@ enum class deal_status
 
 };
 
+enum class error_code : uint8_t
+{
+	EC_Success,
+	EC_Failure,
+	EC_OrderFieldError = 23U, //字段错误
+	EC_PositionNotEnough = 30U, //仓位不足
+	EC_MarginNotEnough = 31U,		//保证金不足
+	EC_StateNotReady = 32, //状态不对
+};
+
 struct deal_info
 {
 	//现手

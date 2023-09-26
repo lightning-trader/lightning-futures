@@ -70,17 +70,20 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		tick.sell_order[4] = std::make_pair(doc.GetCell<double_t>("申卖价五", i), doc.GetCell<uint32_t>("申卖量五", i));
 		result.emplace_back(tick);
 	}
-	/*
 	std::sort(result.begin(), result.end(), [](const auto& lh, const auto& rh)->bool {
-		if (lh.time < rh.time)
+		//21点开盘，向前偏移21小时
+		auto lh_tm = offset_front(lh.time, 21 * ONE_HOUR_SECONDS);
+		auto rh_tm = offset_front(rh.time, 21 * ONE_HOUR_SECONDS);
+
+		if (lh_tm < rh_tm)
 		{
 			return true;
 		}
-		if (lh.time > rh.time)
+		if (lh_tm > rh_tm)
 		{
 			return false;
 		}
 		return lh.id < rh.id;
 		});
-	*/
+	
 }

@@ -195,7 +195,7 @@ namespace lt
 			}
 		}
 
-		static inline void _realtime_error_callback(error_type type, estid_t localid, uint32_t error)
+		static inline void _realtime_error_callback(error_type type, estid_t localid, error_code error)
 		{
 			if (_self)
 			{
@@ -289,7 +289,7 @@ namespace lt
 			}
 		}
 
-		static inline void _delayed_error_callback(error_type type, estid_t localid, uint32_t error)
+		static inline void _delayed_error_callback(error_type type, estid_t localid, error_code error)
 		{
 			if (_self)
 			{

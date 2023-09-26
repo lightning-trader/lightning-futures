@@ -176,7 +176,7 @@ const order_statistic& lt::engine::get_order_statistic()const
 estid_t engine::place_order(untid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	PROFILE_DEBUG(code.get_id());
-	LOG_INFO("place_order : ", code.get_id(), offset, direction, price);
+	LOG_INFO("engine place order : ", code.get_id(), offset, direction, price, count);
 	estid_t estid = lt_place_order(_lt, id, offset, direction, code, count,price, flag);
 	if (estid != INVALID_ESTID)
 	{
