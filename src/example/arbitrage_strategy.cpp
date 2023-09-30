@@ -87,6 +87,10 @@ void arbitrage_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 	{
 		_order_data->a_state = arbitrage_state::AS_INVALID;
 	}
+
+
+
+	
 }
 
 
@@ -219,9 +223,9 @@ void arbitrage_strategy::on_destroy(lt::unsubscriber& unsuber)
 
 void arbitrage_strategy::on_update()
 {
-	if(_order_data->a_state == arbitrage_state::AS_BUY_INTEREST)
+	if (_order_data->a_state == arbitrage_state::AS_BUY_INTEREST)
 	{
-		if(_order_data->order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
+		if (_order_data->order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
 		{
 			_order_data->order_estids[PSRDT_BUY_ORDER_1] = try_buy(_code1);
 		}
@@ -241,12 +245,12 @@ void arbitrage_strategy::on_update()
 			_order_data->order_estids[PSRDT_BUY_ORDER_2] = try_buy(_code2);
 		}
 	}
-	else if(_order_data->a_state == arbitrage_state::AS_INVALID)
+	else if (_order_data->a_state == arbitrage_state::AS_INVALID)
 	{
-		if(_order_data->t_state == trade_state::TS_BUY_SINGLE_TRADE)
+		if (_order_data->t_state == trade_state::TS_BUY_SINGLE_TRADE)
 		{
 			//套利的止损，平单腿
-			if(_order_data->order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
+			if (_order_data->order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
 			{
 				//说明买一已经成交了，平调买一单子
 				_order_data->order_estids[PSRDT_BUY_ORDER_1] = try_sell(_code1);
@@ -302,7 +306,7 @@ void arbitrage_strategy::on_update()
 			//双腿未成交，这时候撤单
 			for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 			{
-				if(_order_data->order_estids[i]!=INVALID_ESTID)
+				if (_order_data->order_estids[i] != INVALID_ESTID)
 				{
 					cancel_order(_order_data->order_estids[i]);
 				}
@@ -310,6 +314,7 @@ void arbitrage_strategy::on_update()
 		}
 
 	}
+
 }
 
 estid_t arbitrage_strategy::try_buy(const code_t& code)
@@ -322,7 +327,7 @@ estid_t arbitrage_strategy::try_buy(const code_t& code)
 	}
 	if (pos.today_short.usable() > 0 && _open_once >= pos.today_short.usable())
 	{
-		return buy_for_close(code, _open_once, tick.sell_price());
+		return buy_for_close(code, _open_once, tick.sell_price(), true);
 	}
 	return buy_for_open(code, _open_once, tick.sell_price());
 }
@@ -337,7 +342,7 @@ estid_t arbitrage_strategy::try_sell(const code_t& code)
 	}
 	if (pos.today_long.usable() > 0 && _open_once >= pos.today_long.usable())
 	{
-		return sell_for_close(code, _open_once, tick.buy_price());
+		return sell_for_close(code, _open_once, tick.buy_price(), true);
 	}
-	return sell_for_close(code, _open_once, tick.buy_price());
+	return sell_for_open(code, _open_once, tick.buy_price());
 }
