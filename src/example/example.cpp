@@ -11,11 +11,14 @@
 #include "arbitrage_strategy.h"
 
 
-void start_runtime(const char* account_config, const code_t& code)
+void start_runtime(const char* account_config)
 {
 	lt::runtime_engine app(account_config);
 	std::vector<std::shared_ptr<lt::strategy>> strategys;
-	strategys.emplace_back(std::make_shared<marketing_strategy>(1, app, code, 1, 1));
+	strategys.emplace_back(std::make_shared<marketing_strategy>(1, app, "SHFE.rb2210", 1, 1));
+	strategys.emplace_back(std::make_shared<marketing_strategy>(2, app, "SHFE.hc2210", 1, 1));
+	strategys.emplace_back(std::make_shared<orderflow_strategy>(3, app, "SHFE.rb2210", 1, 1, 3, 3, 10));
+	strategys.emplace_back(std::make_shared<orderflow_strategy>(4, app, "SHFE.hc2210", 1, 1, 3, 3, 10));
 	app.set_trading_filter([&app](const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)->bool {
 		auto now = app.get_last_time();
 		auto last_order = app.last_order_time();
@@ -48,7 +51,7 @@ int main(int argc, char* argv[])
 
 	if (argc > 1)
 	{
-		start_runtime("runtime.ini", "SHFE.rb2310");
+		start_runtime("runtime.ini");
 	}
 	else 
 	{
