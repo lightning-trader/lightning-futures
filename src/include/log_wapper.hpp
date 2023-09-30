@@ -16,21 +16,18 @@ typedef enum log_level : uint8_t
 
 extern "C"
 {
-	EXPORT_FLAG unsigned char* alloc_log_buffer();
-	
-	EXPORT_FLAG void free_log_buffer(unsigned char*& dataptr);
 
-	EXPORT_FLAG void log_print(log_level lv, const char* file, char const* func, uint32_t line, unsigned char* msg_data);
+	EXPORT_FLAG void log_print(log_level lv, const char* file, char const* func, uint32_t line, const unsigned char* msg_data);
 
 	EXPORT_FLAG void log_profile(log_level lv, const char* file, char const* func, uint32_t line, const char* msg);
 }
 
-
+#define LOG_BUFFER_SIZE 1024
 
 class logline 
 {
-	unsigned char* _buffer ;
-	stream_buffer _sd;
+	unsigned char _buffer[LOG_BUFFER_SIZE] ;
+	stream_carbureter _sd;
 	
 	log_level _lv;
 	const char* _file;
@@ -45,8 +42,7 @@ public:
 		_file(file),
 		_func(func),
 		_line(line),
-		_buffer(alloc_log_buffer()),
-		_sd(_buffer, 1024)
+		_sd(_buffer, LOG_BUFFER_SIZE)
 	{
 		_sd.clear();
 	}

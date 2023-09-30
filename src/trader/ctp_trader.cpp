@@ -298,7 +298,7 @@ void ctp_trader::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThost
 	if (pInputOrder && pRspInfo)
 	{
 		estid_t estid = generate_estid(_front_id, _session_id, strtol(pInputOrder->OrderRef, NULL, 10));
-		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER, estid, (uint32_t)pRspInfo->ErrorID);
+		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER, estid, (uint8_t)pRspInfo->ErrorID);
 	}
 }
 
@@ -311,7 +311,7 @@ void ctp_trader::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAc
 	if (pInputOrderAction && pRspInfo)
 	{
 		estid_t estid = generate_estid(pInputOrderAction->FrontID, pInputOrderAction->SessionID, strtol(pInputOrderAction->OrderRef, NULL, 10));
-		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_CANCEL_ORDER, estid, (uint32_t)pRspInfo->ErrorID);
+		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_CANCEL_ORDER, estid, (uint8_t)pRspInfo->ErrorID);
 	}
 }
 
@@ -416,7 +416,7 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		estid_t estid = generate_estid(pOrder->FrontID, pOrder->SessionID,strtoul(pOrder->OrderRef,NULL,10));
 		auto order = _order_info[estid];
 		order.code = code_t(pOrder->InstrumentID , pOrder->ExchangeID);
-		order.create_time = make_daytm(pOrder->InsertTime,0);
+		order.create_time = make_daytm(pOrder->InsertTime,0U);
 		order.est_id = estid;
 		order.direction = wrap_direction_offset(pOrder->CombOffsetFlag[0],pOrder->Direction);
 		order.offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
@@ -443,7 +443,7 @@ void ctp_trader::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bo
 	if (pRspInfo)
 	{
 		LOG_ERROR("OnRspError \tErrorID = ", pRspInfo->ErrorID, " ErrorMsg =",  pRspInfo->ErrorMsg);
-		this->fire_event(trader_event_type::TET_OrderError,error_type::ET_OTHER_ERROR, INVALID_ESTID, (uint32_t)pRspInfo->ErrorID);
+		this->fire_event(trader_event_type::TET_OrderError,error_type::ET_OTHER_ERROR, INVALID_ESTID, (uint8_t)pRspInfo->ErrorID);
 	}
 
 }
@@ -495,7 +495,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 		{
 			order_info entrust;
 			entrust.code = code;
-			entrust.create_time = make_daytm(pOrder->InsertTime,0);
+			entrust.create_time = make_daytm(pOrder->InsertTime,0U);
 			entrust.est_id = estid;
 			entrust.direction = direction;
 			entrust.last_volume = pOrder->VolumeTotal;
@@ -553,7 +553,7 @@ void ctp_trader::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTh
 		{
 			_order_info.erase(it);
 		}
-		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER,estid, (uint32_t)pRspInfo->ErrorID);
+		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER,estid, (uint8_t)pRspInfo->ErrorID);
 	}
 }
 void ctp_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo)
@@ -575,7 +575,7 @@ void ctp_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, C
 	{
 		estid_t estid = generate_estid(pOrderAction->FrontID, pOrderAction->SessionID, strtol(pOrderAction->OrderRef, NULL, 10));
 		
-		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_CANCEL_ORDER, estid, (uint32_t)pRspInfo->ErrorID);
+		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_CANCEL_ORDER, estid, (uint8_t)pRspInfo->ErrorID);
 	}
 }
 

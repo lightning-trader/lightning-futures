@@ -460,6 +460,9 @@ struct bar_info
 	{}
 };
 
+const bar_info default_bar_info;
+const std::vector<bar_info> default_bar_vector;
+
 struct position_cell
 {
 	//仓位
@@ -688,15 +691,30 @@ struct today_market_info
 
 	std::map<uint32_t, std::vector<bar_info>> today_bar_info;
 
-	std::vector<bar_info>* get_history_bar(uint32_t period)
+	const std::vector<bar_info>& get_history_bar(uint32_t period)const
 	{
 
 		auto it = today_bar_info.find(period);
 		if (it == today_bar_info.end())
 		{
-			return nullptr;
+			return default_bar_vector;
 		}
-		return &it->second;
+		return it->second;
+	}
+
+	double_t get_control_price()const
+	{
+		double_t control_price = .0;
+		uint32_t max_volume = 0;
+		for(const auto& it : volume_distribution)
+		{
+			if(it.second > max_volume)
+			{
+				max_volume = it.second;
+				control_price = it.first;
+			}
+		}
+		return control_price;
 	}
 
 	void clear()

@@ -88,8 +88,8 @@ void evaluate::playback_history()
 	
 	if(_market_simulator)
 	{	
-		_market_simulator->play(_trader_simulator->get_trading_day(), [this](const tick_info& tick)->void {
-			_trader_simulator->push_tick(tick);
+		_market_simulator->play(_trader_simulator->get_trading_day(), [this](const std::vector<tick_info>& tick_vector)->void {
+			_trader_simulator->push_tick(tick_vector);
 		});
 		rapidcsv::Document _crossday_flow_csv;
 		//记录结算数据

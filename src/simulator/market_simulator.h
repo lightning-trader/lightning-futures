@@ -38,7 +38,7 @@ public:
 public:
 
 	//simulator
-	virtual void play(uint32_t trading_day,std::function<void(const tick_info& info)> publish_callback) override;
+	virtual void play(uint32_t trading_day,std::function<void(const std::vector<tick_info>& tick_vector)> publish_callback) override;
 
 public:
 
@@ -52,6 +52,6 @@ private:
 
 	void load_data(const code_t& code,uint32_t trading_day);
 
-	void publish_tick(std::function<void(const tick_info& info)> publish_callback);
+	void publish_tick(std::function<void(const std::vector<tick_info>& tick_vector)> publish_callback);
 
 };

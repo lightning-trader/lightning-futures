@@ -225,6 +225,16 @@ namespace lt
 		const tick_info& get_last_tick(const code_t& code)const;
 
 		/*
+		* 获取历史k线
+		*/
+		const std::vector<bar_info>& get_history_bar(const code_t& code,uint32_t period)const;
+
+		/*
+		* 获取当前重心价格
+		*/
+		double_t get_control_price(const code_t& code)const;
+
+		/*
 		* 获取下单价格
 		*/
 		double_t get_proximate_price(const code_t& code,double_t price)const;

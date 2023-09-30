@@ -66,6 +66,6 @@ public:
 
 public:
 
-	virtual void play(uint32_t trading_day,std::function<void (const tick_info& info)> publish_callback) = 0;
+	virtual void play(uint32_t trading_day,std::function<void (const std::vector<tick_info>& tick_vector)> publish_callback) = 0;
 
 };

@@ -30,42 +30,37 @@ struct type_index < T, std::tuple < U, Types... > >
 	static constexpr const std::size_t value = 1 + type_index < T, std::tuple < Types... > >::value;
 };
 
-class stream_buffer
+class stream_carbureter
 {
 
 private:
+	
 	size_t _used;
-	size_t _freed;
 	size_t _max_size;
 	unsigned char* _buffer ;
 
 
 public:
 
-	stream_buffer(unsigned char* buffer,size_t max_size):_buffer(buffer), _used(1), _freed(1), _max_size(max_size)
+	stream_carbureter(unsigned char* buffer,size_t max_size):_buffer(buffer), _used(1), _max_size(max_size)
 	{
 		//memset(_buffer, 0, max_size);
 		//int8_t len = _buffer[0]; 开头的8位存元素个数
 	}
 
-	~stream_buffer()=default;
-
-	void reset()
-	{
-		_freed = 1;
-	}
+	~stream_carbureter()=default;
 
 	void clear()
 	{
-		_buffer[0]=0;
 		_used = 1;
-		memset(_buffer+1, 0, _max_size);
+		memset(_buffer, 0, _max_size);
+		_buffer[0] = 0;
 	}
 
 public:
 	// encode
 	template < typename Arg >
-	stream_buffer& operator<<(Arg arg)
+	stream_carbureter& operator<<(Arg arg)
 	{
 		if(_used+sizeof(arg)+1> _max_size)
 		{
@@ -80,7 +75,7 @@ public:
 		return *this;
 	}
 	
-	stream_buffer& operator<<(const char* arg)
+	stream_carbureter& operator<<(const char* arg)
 	{
 		if (_used + strlen(arg) + 1 + 1 > _max_size)
 		{
@@ -97,79 +92,106 @@ public:
 		return *this;
 	}
 	
-	private:
+};
+class stream_extractor
+{
 
-		template<typename T>
-		void extract(std::ostream& os,T* dataptr)
+private:
+	size_t _freed;
+	size_t _max_size;
+	unsigned char* _buffer;
+
+
+public:
+
+	stream_extractor(unsigned char* buffer, size_t max_size) :_buffer(buffer), _freed(1), _max_size(max_size)
+	{
+		//memset(_buffer, 0, max_size);
+		//int8_t len = _buffer[0]; 开头的8位存元素个数
+	}
+
+	~stream_extractor() = default;
+
+	void reset()
+	{
+		_freed = 1;
+	}
+
+public:
+	
+private:
+
+	template<typename T>
+	void extract(std::ostream& os, T* dataptr)
+	{
+		os << *dataptr;
+		_freed += sizeof(T);
+	}
+
+
+	//template <>
+	void extract(std::ostream& os, const char* strptr)
+	{
+		/*
+		const char* b = strptr;
+		while (*b != '\0')
 		{
-			os << *dataptr ;
-			_freed += sizeof(T);
-		}
+			os << *b;
+			++b;
+		}*/
+		os << strptr;
+		//os << " ";
+		_freed += strlen(strptr) + 1;
+	}
 
+public:
+	// decode
+	void out(std::ostream& os)
+	{
+		uint8_t size = _buffer[0];
 
-		//template <>
-		void extract(std::ostream& os, const char* strptr)
+		for (uint8_t i = 0; i < size; ++i)
 		{
-			/*
-			const char* b = strptr;
-			while (*b != '\0')
+			const int32_t type_id = *reinterpret_cast<uint8_t*>(_buffer + _freed++);
+			switch (type_id)
 			{
-				os << *b;
-				++b;
-			}*/
-			os << strptr ;
-			//os << " ";
-			_freed += strlen(strptr)+1;
-		}
-
-	public:
-		// decode
-		void out(std::ostream& os)
-		{
-			uint8_t size = _buffer[0];
-			
-			for(uint8_t i = 0;i< size;++i)
-			{
-				const int32_t type_id = *reinterpret_cast<uint8_t*>(_buffer + _freed++);
-				switch (type_id)
-				{
-				case 0:
-					extract(os, reinterpret_cast<std::tuple_element<0, type_table>::type*>(_buffer + _freed));
-					break;
-				case 1:
-					extract(os, reinterpret_cast<std::tuple_element<1, type_table>::type*>(_buffer + _freed));
-					break;
-				case 2:
-					extract(os, reinterpret_cast<std::tuple_element<2, type_table>::type*>(_buffer + _freed));
-					break;
-				case 3:
-					extract(os, reinterpret_cast<std::tuple_element<3, type_table>::type*>(_buffer + _freed));
-					break;
-				case 4:
-					extract(os, reinterpret_cast<std::tuple_element<4, type_table>::type*>(_buffer + _freed));
-					break;
-				case 5:
-					extract(os, reinterpret_cast<std::tuple_element<5, type_table>::type*>(_buffer + _freed));
-					break;
-				case 6:
-					extract(os, reinterpret_cast<std::tuple_element<6, type_table>::type*>(_buffer + _freed));
-					break;
-				case 7:
-					extract(os, reinterpret_cast<std::tuple_element<7, type_table>::type*>(_buffer + _freed));
-					break;
-				case 8:
-					extract(os, reinterpret_cast<std::tuple_element<8, type_table>::type*>(_buffer + _freed));
-					break;
-				case 9:
-					extract(os, reinterpret_cast<std::tuple_element<9, type_table>::type*>(_buffer + _freed));
-					break;
-				case 10:
-					extract(os, reinterpret_cast<std::tuple_element<10, type_table>::type*>(_buffer + _freed));
-					break;
-				case 11:
-					extract(os, reinterpret_cast<std::tuple_element<11, type_table>::type>(_buffer + _freed));
-					break;
-				}
+			case 0:
+				extract(os, reinterpret_cast<std::tuple_element<0, type_table>::type*>(_buffer + _freed));
+				break;
+			case 1:
+				extract(os, reinterpret_cast<std::tuple_element<1, type_table>::type*>(_buffer + _freed));
+				break;
+			case 2:
+				extract(os, reinterpret_cast<std::tuple_element<2, type_table>::type*>(_buffer + _freed));
+				break;
+			case 3:
+				extract(os, reinterpret_cast<std::tuple_element<3, type_table>::type*>(_buffer + _freed));
+				break;
+			case 4:
+				extract(os, reinterpret_cast<std::tuple_element<4, type_table>::type*>(_buffer + _freed));
+				break;
+			case 5:
+				extract(os, reinterpret_cast<std::tuple_element<5, type_table>::type*>(_buffer + _freed));
+				break;
+			case 6:
+				extract(os, reinterpret_cast<std::tuple_element<6, type_table>::type*>(_buffer + _freed));
+				break;
+			case 7:
+				extract(os, reinterpret_cast<std::tuple_element<7, type_table>::type*>(_buffer + _freed));
+				break;
+			case 8:
+				extract(os, reinterpret_cast<std::tuple_element<8, type_table>::type*>(_buffer + _freed));
+				break;
+			case 9:
+				extract(os, reinterpret_cast<std::tuple_element<9, type_table>::type*>(_buffer + _freed));
+				break;
+			case 10:
+				extract(os, reinterpret_cast<std::tuple_element<10, type_table>::type*>(_buffer + _freed));
+				break;
+			case 11:
+				extract(os, reinterpret_cast<std::tuple_element<11, type_table>::type>(_buffer + _freed));
+				break;
 			}
 		}
+	}
 };

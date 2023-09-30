@@ -90,7 +90,7 @@ public:
 
 public:
 	
-	virtual void push_tick(const tick_info& tick) = 0;
+	virtual void push_tick(const std::vector<tick_info>& tick_vector) = 0;
 
 	virtual void crossday(uint32_t trading_day) = 0;
 

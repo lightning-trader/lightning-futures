@@ -32,6 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <iosfwd>
 #include <thread>
 #include <type_traits>
+#include <log_wapper.hpp>
 
 namespace nanolog
 {
@@ -59,14 +60,13 @@ namespace nanolog
 		LOG_FILE = 0B00000001,
 		CONSOLE = 0B00000010,
 	};
-
 	class NanoLogLine
 	{
 	public:
 
 		NanoLogLine();
 
-		NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line, unsigned char* msg_data);
+		NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line, const unsigned char* msg_data);
 
 		~NanoLogLine();
 
@@ -76,7 +76,7 @@ namespace nanolog
 
 		void stringify(std::ostream& os, uint8_t field);
 
-		unsigned char* m_buffer;
+		unsigned char m_buffer[LOG_BUFFER_SIZE];
 
 	private:
 		uint64_t m_timestamp;
@@ -94,9 +94,6 @@ namespace nanolog
 
 	bool is_logged(LogLevel level);
 
-	unsigned char* alloc_buffer();
-
-	void free_buffer(unsigned char*& dataptr);
 
 	/*
 	 * Non guaranteed logging. Uses a ring buffer to hold log lines.

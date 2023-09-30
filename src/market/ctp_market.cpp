@@ -147,7 +147,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	
 	tick_info tick(
 		code_t(pDepthMarketData->InstrumentID, excg_id),
-		make_daytm(pDepthMarketData->UpdateTime,pDepthMarketData->UpdateMillisec),
+		make_daytm(pDepthMarketData->UpdateTime,static_cast<uint32_t>(pDepthMarketData->UpdateMillisec)),
 		pDepthMarketData->OpenPrice,
 		pDepthMarketData->ClosePrice,
 		pDepthMarketData->HighestPrice,

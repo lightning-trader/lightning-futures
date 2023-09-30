@@ -11,7 +11,7 @@ using namespace nanolog;
 bool init_log_environment()
 {
 	auto file_name = datetime_to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()),"%Y-%m-%d_%H%M%S");
-	initialize(GuaranteedLogger(), "./log/","lt_" + file_name, 512);
+	initialize(GuaranteedLogger(), "./log/","lt_" + file_name, 128);
 #ifndef NDEBUG
 	uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) | static_cast<uint8_t>(LogField::SOURCE_FILE);
 	uint8_t print = static_cast<uint8_t>(LogPrint::LOG_FILE) | static_cast<uint8_t>(LogPrint::CONSOLE);
@@ -24,17 +24,8 @@ bool init_log_environment()
 	return true;
 }
 
-unsigned char* alloc_log_buffer() 
-{
-	return alloc_buffer();
-}
 
-void free_log_buffer(unsigned char*& dataptr)
-{
-	free_buffer(dataptr);
-}
-
-void log_print(log_level lv, const char* file, char const* func, uint32_t line, unsigned char * msg_data)
+void log_print(log_level lv, const char* file, char const* func, uint32_t line, const unsigned char * msg_data)
 {
 	if(!_is_log_ready)
 	{
@@ -49,8 +40,8 @@ void log_print(log_level lv, const char* file, char const* func, uint32_t line, 
 
 void log_profile(log_level lv, const char* file, char const* func, uint32_t line, const char* msg)
 {
-	unsigned char* buffer = alloc_buffer();
-	stream_buffer sd(buffer,1024);
+	unsigned char buffer[LOG_BUFFER_SIZE] = {0};
+	stream_carbureter sd(buffer, LOG_BUFFER_SIZE);
 	auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch());
 	static thread_local std::chrono::nanoseconds last_time;
 	sd << msg << " now " << now.count() << " use: " << (now - last_time).count();

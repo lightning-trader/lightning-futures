@@ -150,6 +150,26 @@ const tick_info& strategy::get_last_tick(const code_t& code)const
 	return *market.today_tick_info.rbegin();
 }
 
+const std::vector<bar_info>& strategy::get_history_bar(const code_t& code, uint32_t period)const
+{
+	const auto& market = _engine.get_today_market_info(code);
+	if (market.today_tick_info.empty())
+	{
+		return default_bar_vector;
+	}
+	return market.get_history_bar(period);
+}
+
+double_t strategy::get_control_price(const code_t& code)const
+{
+	const auto& market = _engine.get_today_market_info(code);
+	if (market.today_tick_info.empty())
+	{
+		return .0;
+	}
+	return market.get_control_price();
+}
+
 double_t strategy::get_proximate_price(const code_t& code, double_t price)const
 {
 	return _engine.get_proximate_price(code,price);

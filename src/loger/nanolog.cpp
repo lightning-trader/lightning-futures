@@ -103,19 +103,20 @@ namespace nanolog
 		, m_source_file("")
 		, m_function("")
 		, m_source_line(0)
-		, m_buffer(nullptr)
 	{
+		memset(m_buffer, 0, LOG_BUFFER_SIZE);
 		m_timestamp = timestamp_now();
 		m_thread_id = this_thread_id();
 	}
 	
-	NanoLogLine::NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line,unsigned char * msg_data)
+	NanoLogLine::NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line,const unsigned char * msg_data)
 		: m_log_level(level)
 		, m_source_file(file)
 		,m_function(function)
 		,m_source_line(line)
-		, m_buffer(msg_data)
 	{
+		memset(m_buffer, 0, LOG_BUFFER_SIZE);
+		memcpy(m_buffer, msg_data, LOG_BUFFER_SIZE);
 		m_timestamp = timestamp_now();
 		m_thread_id = this_thread_id();
 	}
@@ -147,7 +148,7 @@ namespace nanolog
 		{
 			os << '[' << m_function << ':' << m_source_line << "] ";
 		}
-		stream_buffer sd(m_buffer,1024);
+		stream_extractor sd(m_buffer, LOG_BUFFER_SIZE);
 		sd.out(os);
 		os << std::endl;
 		os.flush();
@@ -193,7 +194,7 @@ namespace nanolog
 
 			std::atomic_flag flag;
 			char written;
-			char padding[256 - sizeof(std::atomic_flag) - sizeof(char) - sizeof(NanoLogLine)];
+			char padding[LOG_BUFFER_SIZE];
 			NanoLogLine logline;
 		};
 
@@ -208,7 +209,6 @@ namespace nanolog
 			{
 				new (&m_ring[i]) Item();
 			}
-			static_assert(sizeof(Item) == 256, "Unexpected size != 256");
 		}
 
 		~RingBuffer()
@@ -517,7 +517,6 @@ namespace nanolog
 					logline.stringify(std::cout,m_log_field);
 				}
 			}
-			free_buffer(logline.m_buffer);
 		}
 
 
@@ -572,20 +571,4 @@ namespace nanolog
 	{
 		return static_cast<unsigned int>(level) >= loglevel.load(std::memory_order_relaxed);
 	}
-
-	unsigned char* alloc_buffer()
-	{
-		auto dataptr = new unsigned char[1024];
-		std::memset(dataptr,0,1024);
-		return dataptr;
-		//return _buffer_pool.alloc_buffer();
-	}
-
-	void free_buffer(unsigned char*& dataptr)
-	{
-		delete[] dataptr;
-		dataptr = nullptr;
-		//_buffer_pool.return_buffer(dataptr);
-	}
-
 } // namespace nanologger

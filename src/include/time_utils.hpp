@@ -110,29 +110,38 @@ static daytm_t make_daytm(uint32_t time, uint32_t tick)
 {
 	return static_cast<daytm_t>(make_time(time)) * ONE_SECOND_MILLISECONDS + tick;;
 }
-// 211230.500 
-static daytm_t make_daytm(const char* time)
+//is_str==true: 21:12:30.500
+//is_str==false:  211230.500 
+static daytm_t make_daytm(const char* time,bool is_str = false)
 {
 	if (time != nullptr)
 	{
-		char tmp[13] = {0};
-		size_t p = 0 ;
-		for(size_t i=0; time[i]!='\0'&& i < 13; i++)
+		char tmp[13] = { 0 };
+		size_t p = 0;
+		for (size_t i = 0; time[i] != '\0' && i < 13; i++)
 		{
-			if(time[i] == '.')
+			if (time[i] == '.')
 			{
 				tmp[i] = '\0';
-				p = i+1;
+				p = i + 1;
 			}
 			else
 			{
 				tmp[i] = time[i];
 			}
 		}
-		return make_daytm(std::atoi(tmp),std::atoi(time+p));
+		if(is_str)
+		{
+			return make_daytm(tmp, static_cast<uint32_t>(std::atoi(time + p)));
+		}
+		else
+		{
+			return make_daytm(std::atoi(tmp), std::atoi(time + p));
+		}
 	}
 	return -1;
 }
+
 
 static time_t make_datetime(time_t date_begin, const char* time)
 {

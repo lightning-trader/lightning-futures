@@ -48,7 +48,7 @@ market_simulator::~market_simulator()
 	}
 }
 
-void market_simulator::play(uint32_t trading_day, std::function<void(const tick_info& info)> publish_callback)
+void market_simulator::play(uint32_t trading_day, std::function<void(const std::vector<tick_info>& tick_vector)> publish_callback)
 {
 	for (auto& it : _instrument_id_list)
 	{
@@ -110,7 +110,7 @@ void market_simulator::load_data(const code_t& code, uint32_t trading_day)
 	}
 }
 
-void market_simulator::publish_tick(std::function<void(const tick_info& info)> publish_callback)
+void market_simulator::publish_tick(std::function<void(const std::vector<tick_info>& tick_vector)> publish_callback)
 {	
 	const tick_info* tick = nullptr;
 	if (_current_index < _pending_tick_info.size())
@@ -124,6 +124,7 @@ void market_simulator::publish_tick(std::function<void(const tick_info& info)> p
 		_is_runing = false;
 		return;
 	}
+	std::vector<tick_info> tick_vector ;
 	while(_current_time == tick->time)
 	{
 		if(tick->trading_day != _current_trading_day)
@@ -132,10 +133,7 @@ void market_simulator::publish_tick(std::function<void(const tick_info& info)> p
 		}
 		PROFILE_INFO(tick->id.get_id());
 		this->fire_event(market_event_type::MET_TickReceived, *tick);
-		if(publish_callback)
-		{
-			publish_callback(*tick);
-		}
+		tick_vector.emplace_back(*tick);
 		_current_index++;
 		if(_current_index < _pending_tick_info.size())
 		{
@@ -148,5 +146,9 @@ void market_simulator::publish_tick(std::function<void(const tick_info& info)> p
 			_is_runing = false ;
 			break;
 		}
+	}
+	if (publish_callback)
+	{
+		publish_callback(tick_vector);
 	}
 }

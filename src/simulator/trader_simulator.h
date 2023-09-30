@@ -22,7 +22,7 @@ private:
 	order_container _order_info;
 
 	//撮合时候用
-	std::vector<const tick_info*> _current_tick_info;
+	std::vector<tick_info> _current_tick_info;
 
 	//上一帧的成交量，用于计算上一帧到这一帧成交了多少
 	std::map<code_t,uint64_t> _last_frame_volume ;
@@ -44,7 +44,7 @@ public:
 	
 public:
 	
-	virtual void push_tick(const tick_info& tick) override;
+	virtual void push_tick(const std::vector<tick_info>& tick_vector) override;
 	
 	virtual void crossday(uint32_t trading_day) override;
 
@@ -52,7 +52,6 @@ public:
 	{
 		return _account_info;
 	}
-
 public:
 
 	virtual uint32_t get_trading_day()const override;

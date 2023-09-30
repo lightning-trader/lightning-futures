@@ -29,11 +29,16 @@ trader_simulator::~trader_simulator()
 }
 
 
-void trader_simulator::push_tick(const tick_info& tick)
+void trader_simulator::push_tick(const std::vector<tick_info>& tick_vector)
 {
-	_current_time = tick.time;
-	match_entrust(&tick);
-	_last_frame_volume[tick.id] = tick.volume;
+	_current_tick_info = tick_vector;
+	for(const auto& tick : _current_tick_info)
+	{
+		_current_time = tick.time;
+		match_entrust(&tick);
+		_last_frame_volume[tick.id] = tick.volume;
+	}
+	
 }
 
 void trader_simulator::crossday(uint32_t trading_day)
@@ -150,7 +155,7 @@ estid_t trader_simulator::make_estid()
 uint32_t trader_simulator::get_front_count(const code_t& code,double_t price)
 {
 	auto tick_it = std::find_if(_current_tick_info.begin(), _current_tick_info.end(),[code](auto cur) ->bool {
-		if(cur->id == code)
+		if(cur.id == code)
 		{
 			return true ;
 		}
@@ -159,19 +164,19 @@ uint32_t trader_simulator::get_front_count(const code_t& code,double_t price)
 	if(tick_it != _current_tick_info.end())
 	{
 		const auto& tick = *tick_it;
-		auto buy_it = std::find_if(tick->buy_order.begin(), tick->buy_order.end(), [price](const std::pair<double_t,uint32_t>& cur) ->bool {
+		auto buy_it = std::find_if(tick.buy_order.begin(), tick.buy_order.end(), [price](const std::pair<double_t,uint32_t>& cur) ->bool {
 			
 			return cur.first == price;
 			});
-		if(buy_it != tick->buy_order.end())
+		if(buy_it != tick.buy_order.end())
 		{
 			return buy_it->second ;
 		}
-		auto sell_it = std::find_if(tick->sell_order.begin(), tick->sell_order.end(), [price](const std::pair<double_t, uint32_t>& cur) ->bool {
+		auto sell_it = std::find_if(tick.sell_order.begin(), tick.sell_order.end(), [price](const std::pair<double_t, uint32_t>& cur) ->bool {
 			
 			return cur.first == price;
 			});
-		if (sell_it != tick->sell_order.end())
+		if (sell_it != tick.sell_order.end())
 		{
 			return sell_it->second;
 		}
