@@ -274,7 +274,7 @@ struct tick_info
 
 };
 
-const tick_info default_tick_info;
+const tick_info default_tick;
 
 enum class deal_direction
 {
@@ -303,8 +303,8 @@ enum class error_code : uint8_t
 	EC_MarginNotEnough = 31U,		//保证金不足
 	EC_StateNotReady = 32, //状态不对
 };
-
-struct deal_info
+//盘口信息
+struct tape_info
 {
 	//现手
 	uint32_t	volume_delta;
@@ -313,7 +313,7 @@ struct deal_info
 	//方向
 	deal_direction	direction;
 
-	deal_info() :
+	tape_info() :
 		volume_delta(0),
 		interest_delta(.0F),
 		direction(deal_direction::DD_FLAT)
@@ -350,6 +350,8 @@ struct bar_info
 	code_t id; //合约ID
 
 	daytm_t time; //时间(分钟毫秒数)
+
+	uint32_t period;
 
 	double_t open;
 
@@ -435,6 +437,7 @@ struct bar_info
 	void clear() 
 	{
 		time = 0;
+		period = 0U;
 		open = .0;
 		high = .0;
 		low = .0;
@@ -449,6 +452,7 @@ struct bar_info
 
 	bar_info()
 		:time(0),
+		period(0U),
 		open(0),
 		close(0),
 		high(0),
@@ -577,7 +581,7 @@ enum class direction_type
 struct order_info
 {
 	
-	estid_t		est_id;
+	estid_t		estid;
 
 	code_t			code;
 
@@ -596,7 +600,7 @@ struct order_info
 	double_t		price;
 
 	order_info() :
-		est_id(INVALID_ESTID),
+		estid(INVALID_ESTID),
 		offset(offset_type::OT_OPEN),
 		direction(direction_type::DT_LONG),
 		total_volume(0),
@@ -607,7 +611,7 @@ struct order_info
 
 	bool is_valid()const
 	{
-		return est_id != INVALID_ESTID;
+		return estid != INVALID_ESTID;
 	}
 
 	bool is_buy()const
@@ -689,19 +693,6 @@ struct today_market_info
 
 	std::vector<tick_info> today_tick_info;
 
-	std::map<uint32_t, std::vector<bar_info>> today_bar_info;
-
-	const std::vector<bar_info>& get_history_bar(uint32_t period)const
-	{
-
-		auto it = today_bar_info.find(period);
-		if (it == today_bar_info.end())
-		{
-			return default_bar_vector;
-		}
-		return it->second;
-	}
-
 	double_t get_control_price()const
 	{
 		double_t control_price = .0;
@@ -721,8 +712,7 @@ struct today_market_info
 	{
 		volume_distribution.clear();
 		today_tick_info.clear();
-		today_bar_info.clear();
 	}
 };
-const today_market_info default_today_market_info;
+const today_market_info default_today_market;
 

@@ -3,8 +3,7 @@ include_directories(${CMAKE_INCLUDE_PATH})
 
 
 link_directories(${CMAKE_LIBRARY_PATH})
-#AUX_SOURCE_DIRECTORY("driver"   DRIVER_DIR_VAR)
-#target_sources(${target} PRIVATE ${A1_DIR_VAR})
-add_library(lt_core SHARED "runtime.cpp" "evaluate.cpp" "pod_chain.cpp" "context.cpp"  "lightning.cpp" "trading_section.cpp" "price_step.cpp" "bar_generator.cpp" "delayed_distributor.cpp" "csv_recorder.cpp")
 
-target_link_libraries(lt_core "lt_loger" "lt_persist" "lt_trader" "lt_market" "lt_simulator" ${SYS_LIBS})
+add_library(lightning_core SHARED "runtime.cpp" "evaluate.cpp" "pod_chain.cpp" "context.cpp"  "lightning.cpp" "csv_recorder.cpp")
+
+target_link_libraries(lightning_core "lightning_loger" "lightning_persist" "lightning_adapter" "lightning_simulator" ${SYS_LIBS})

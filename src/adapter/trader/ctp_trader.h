@@ -14,7 +14,7 @@
 
 
 
-class ctp_trader : public actual_trader, public CThostFtdcTraderSpi
+class ctp_trader : public asyn_actual_trader, public CThostFtdcTraderSpi
 {
 	/*
 	 *	订单操作类型
@@ -44,7 +44,7 @@ public:
 
 	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
 
-	virtual void cancel_order(estid_t order_id) override ;
+	virtual bool cancel_order(estid_t estid) override ;
 
 	virtual uint32_t get_trading_day()const override;
 

@@ -36,8 +36,8 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 	}
 	if (!order_list.empty())
 	{
-		_trader.cancel_order(order_list.begin()->est_id);
-		LOG_INFO("place order to cancel ", order_list.begin()->est_id, code.get_id());
+		_trader.cancel_order(order_list.begin()->estid);
+		LOG_INFO("place order to cancel ", order_list.begin()->estid, code.get_id());
 		return INVALID_ESTID;
 	}
 	PROFILE_DEBUG(code.get_id());

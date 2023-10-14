@@ -56,7 +56,7 @@ struct tick_info;
 
 struct bar_info;
 
-struct deal_info;
+struct tape_info;
 
 struct position_info;
 

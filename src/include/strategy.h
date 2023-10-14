@@ -95,30 +95,30 @@ namespace lt
 		/*
 		 *	成交回报
 		 *
-		 *	@localid	本地订单id
+		 *	@estid	本地订单id
 		*/
-		virtual void on_deal(estid_t localid, uint32_t deal_volume, uint32_t total_volume) {}
+		virtual void on_deal(estid_t estid, uint32_t deal_volume, uint32_t total_volume) {}
 
 		/*
 		 *	成交完成回报
 		 *
-		 *	@localid	本地订单id
+		 *	@estid	本地订单id
 		 */
-		virtual void on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume) {}
+		virtual void on_trade(estid_t estid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume) {}
 
 
 		/*
 		 *	撤单
-		 *	@localid	本地订单id
+		 *	@estid	本地订单id
 		 */
-		virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume) {}
+		virtual void on_cancel(estid_t estid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume) {}
 
 		/*
 		 *	错误
-		 *	@localid	本地订单id
+		 *	@estid	本地订单id
 		 *	@error 错误代码
 		 */
-		virtual void on_error(error_type type, estid_t localid, const error_code error) {}
+		virtual void on_error(error_type type, estid_t estid, const error_code error) {}
 
 	protected:
 		//功能函数
@@ -127,7 +127,7 @@ namespace lt
 		 *	code 期货代码 SHFF.rb2301
 		 *  price 如果是0表示市价单，其他表示现价单
 		 *  flag 默认为正常单
-		 *	@localid	本地订单id
+		 *	@estid	本地订单id
 		 */
 		estid_t buy_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
@@ -136,7 +136,7 @@ namespace lt
 		 *	code 期货代码 SHFF.rb2301
 		 *  price 如果是0表示市价单，其他表示现价单
 		 *  flag 默认为正常单
-		 *	@localid	本地订单id
+		 *	@estid	本地订单id
 		 */
 		estid_t sell_for_close(const code_t& code, uint32_t count, double_t price = 0, bool is_close_today = false, order_flag flag = order_flag::OF_NOR);
 
@@ -145,7 +145,7 @@ namespace lt
 		 *	code 期货代码 SHFF.rb2301
 		 *  price 如果是0表示市价单，其他表示现价单
 		 *  flag 默认为正常单
-		 *	@localid	本地订单id
+		 *	@estid	本地订单id
 		 */
 		estid_t sell_for_open(const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 
@@ -154,16 +154,16 @@ namespace lt
 		 *	code 期货代码 SHFF.rb2301
 		 *  price 如果是0表示市价单，其他表示现价单
 		 *  flag 默认为正常单
-		 *	@localid	本地订单id
+		 *	@estid	本地订单id
 		 */
 		estid_t buy_for_close(const code_t& code, uint32_t count, double_t price = 0, bool is_close_today = false, order_flag flag = order_flag::OF_NOR);
 
 
 		/*
 		 *	撤单
-		 *	order_id 下单返回的id
+		 *	estid 下单返回的id
 		 */
-		void cancel_order(estid_t order_id);
+		void cancel_order(estid_t estid);
 
 
 		/**
@@ -175,7 +175,7 @@ namespace lt
 		/**
 		* 获取委托订单
 		**/
-		const order_info& get_order(estid_t order_id) const;
+		const order_info& get_order(estid_t estid) const;
 
 		/**
 		* 是否即将收盘
@@ -198,7 +198,7 @@ namespace lt
 		/*
 		* 设置撤销条件(返回true时候撤销)
 		*/
-		void set_cancel_condition(estid_t order_id, std::function<bool(estid_t)> callback);
+		void set_cancel_condition(estid_t estid, std::function<bool(estid_t)> callback);
 
 
 		/**
@@ -224,10 +224,6 @@ namespace lt
 		*/
 		const tick_info& get_last_tick(const code_t& code)const;
 
-		/*
-		* 获取历史k线
-		*/
-		const std::vector<bar_info>& get_history_bar(const code_t& code,uint32_t period)const;
 
 		/*
 		* 获取当前重心价格

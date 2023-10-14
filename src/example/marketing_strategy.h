@@ -51,7 +51,7 @@ public:
 	/*
 	 *	tickÍÆËÍ
 	 */
-	virtual void on_tick(const tick_info& tick, const deal_info& deal)  override;
+	virtual void on_tick(const tick_info& tick)  override;
 
 
 	/*

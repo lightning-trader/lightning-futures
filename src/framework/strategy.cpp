@@ -83,9 +83,9 @@ estid_t strategy::buy_for_close(const code_t& code, uint32_t count, double_t pri
 	
 }
 
-void strategy::cancel_order(estid_t order_id)
+void strategy::cancel_order(estid_t estid)
 {
-	_engine.cancel_order(order_id);
+	return _engine.cancel_order(estid);
 }
 
 
@@ -95,9 +95,9 @@ const position_info& strategy::get_position(const code_t& code) const
 	return _engine.get_position(code);
 }
 
-const order_info& strategy::get_order(estid_t order_id) const
+const order_info& strategy::get_order(estid_t estid) const
 {
-	return _engine.get_order(order_id);
+	return _engine.get_order(estid);
 }
 
 bool strategy::is_close_coming(daytm_t dtm) const
@@ -120,9 +120,9 @@ void strategy::use_custom_chain(bool flag)
 	return _engine.use_custom_chain( _id, flag);
 }
 
-void strategy::set_cancel_condition(estid_t order_id, std::function<bool(estid_t)> callback)
+void strategy::set_cancel_condition(estid_t estid, std::function<bool(estid_t)> callback)
 {
-	return _engine.set_cancel_condition( order_id, callback);
+	return _engine.set_cancel_condition( estid, callback);
 }
 
 daytm_t strategy::last_order_time()
@@ -145,20 +145,11 @@ const tick_info& strategy::get_last_tick(const code_t& code)const
 	const auto& market = _engine.get_today_market_info(code);
 	if(market.today_tick_info.empty())
 	{
-		return default_tick_info;
+		return default_tick;
 	}
 	return *market.today_tick_info.rbegin();
 }
 
-const std::vector<bar_info>& strategy::get_history_bar(const code_t& code, uint32_t period)const
-{
-	const auto& market = _engine.get_today_market_info(code);
-	if (market.today_tick_info.empty())
-	{
-		return default_bar_vector;
-	}
-	return market.get_history_bar(period);
-}
 
 double_t strategy::get_control_price(const code_t& code)const
 {

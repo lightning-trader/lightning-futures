@@ -3,6 +3,9 @@ include_directories(${CMAKE_INCLUDE_PATH})
 
 link_directories(${CMAKE_LIBRARY_PATH})
 
+aux_source_directory(market MARKET_DIR)
+aux_source_directory(trader TRADER_DIR)
+
 if(APPLE)
     set(LIBS_PATH "${PROJECT_SOURCE_DIR}/../api/CTP_V6.6.9_20220920/macos")
     SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} 
@@ -16,6 +19,6 @@ if(APPLE)
 
 endif()
 
-add_library(lt_market SHARED "ctp_market.cpp" "interface.cpp")
+add_library(lightning_adapter SHARED "interface.cpp" ${MARKET_DIR} ${TRADER_DIR})
 
-target_link_libraries(lt_market "lt_loger" ${MARKET_LIBS})
+target_link_libraries(lightning_adapter "lightning_loger" ${MARKET_LIBS})

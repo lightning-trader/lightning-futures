@@ -25,9 +25,9 @@ void marketing_strategy::on_ready()
 	else
 	{
 		auto& buy_order = get_order(_order_data->buy_order);
-		if (buy_order.est_id != INVALID_ESTID)
+		if (buy_order.estid != INVALID_ESTID)
 		{
-			set_cancel_condition(buy_order.est_id, [this](estid_t estid)->bool {
+			set_cancel_condition(buy_order.estid, [this](estid_t estid)->bool {
 
 				if (is_close_coming())
 				{
@@ -35,16 +35,16 @@ void marketing_strategy::on_ready()
 				}
 				return false;
 				});
-			regist_order_estid(buy_order.est_id);
+			regist_order_estid(buy_order.estid);
 		}
 		else
 		{
 			_order_data->buy_order = INVALID_ESTID;
 		}
 		auto& sell_order = get_order(_order_data->sell_order);
-		if (sell_order.est_id != INVALID_ESTID)
+		if (sell_order.estid != INVALID_ESTID)
 		{
-			set_cancel_condition(sell_order.est_id, [this](estid_t estid)->bool {
+			set_cancel_condition(sell_order.estid, [this](estid_t estid)->bool {
 
 				if (is_close_coming())
 				{
@@ -52,7 +52,7 @@ void marketing_strategy::on_ready()
 				}
 				return false;
 				});
-			regist_order_estid(buy_order.est_id);
+			regist_order_estid(buy_order.estid);
 		}
 		else
 		{
@@ -62,7 +62,7 @@ void marketing_strategy::on_ready()
 
 }
 
-void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
+void marketing_strategy::on_tick(const tick_info& tick)
 {
 
 	if (is_close_coming())
@@ -118,11 +118,11 @@ void marketing_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 
 void marketing_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("on_entrust :", order.est_id, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LOG_INFO("on_entrust :", order.estid, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 
-	if (order.est_id == _order_data->buy_order || order.est_id == _order_data->sell_order)
+	if (order.estid == _order_data->buy_order || order.estid == _order_data->sell_order)
 	{
-		set_cancel_condition(order.est_id, [this](estid_t estid)->bool {
+		set_cancel_condition(order.estid, [this](estid_t estid)->bool {
 
 			if (is_close_coming())
 			{

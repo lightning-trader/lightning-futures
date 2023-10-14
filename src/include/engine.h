@@ -5,6 +5,9 @@
 #include <strategy.h>
 #include "notify.h"
 #include <log_wapper.hpp>
+#include "../framework/price_step.h"
+#include "../framework/bar_generator.h"
+#include "../framework/trading_section.h"
 
 namespace lt
 {
@@ -13,36 +16,34 @@ namespace lt
 
 	class subscriber
 	{
-	public:
-		std::set<code_t> tick_subscrib;
-		std::map<code_t, std::set<uint32_t>> bar_subscrib;
+	
 	private:
-		std::map<code_t, std::set<tick_receiver*>>& _tick_receiver;
-		std::map<code_t, std::map<uint32_t, bar_receiver*>>& _bar_receiver;
+	
+		engine& _engine;
+		
 	public:
-		subscriber(std::map<code_t, std::set<tick_receiver*>>& tick_recv, std::map<code_t, std::map<uint32_t, bar_receiver*>>& bar_recv) :
-			_tick_receiver(tick_recv),
-			_bar_receiver(bar_recv)
+	
+		subscriber(engine& engine) :
+			_engine(engine)
 		{}
 
 		void regist_tick_receiver(const code_t& code, tick_receiver* receiver);
+		void regist_tape_receiver(const code_t& code, tape_receiver* receiver);
 		void regist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver);
+
 	};
 	class unsubscriber
 	{
-	public:
-		std::set<code_t> tick_unsubscrib;
-		std::map<code_t, std::set<uint32_t>> bar_unsubscrib;
+	
 	private:
-		std::map<code_t, std::set<tick_receiver*>>& _tick_receiver;
-		std::map<code_t, std::map<uint32_t, bar_receiver*>>& _bar_receiver;
+		engine& _engine; 
 	public:
-		unsubscriber(std::map<code_t, std::set<tick_receiver*>>& tick_recv, std::map<code_t, std::map<uint32_t, bar_receiver*>>& bar_recv) :
-			_tick_receiver(tick_recv),
-			_bar_receiver(bar_recv)
+		unsubscriber(engine& engine) :
+			_engine(engine)
 		{}
 		void unregist_tick_receiver(const code_t& code, tick_receiver* receiver);
-		void unregist_bar_receiver(const code_t& code, uint32_t period);
+		void unregist_tape_receiver(const code_t& code, tape_receiver* receiver);
+		void unregist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver);
 
 	};
 
@@ -66,43 +67,57 @@ namespace lt
 
 		static inline engine* _self;
 
-		static inline void _tick_callback(const tick_info& tick, const deal_info& deal)
+		static inline void _tick_callback(const tick_info& tick)
 		{
 			if (_self)
 			{
-				auto it = _self->_tick_receiver.find(tick.id);
-				if (it == _self->_tick_receiver.end())
+				if (!_self->is_in_trading(tick.time))
 				{
+					LOG_WARNING("not in trading", tick.time);
 					return;
 				}
-				for (auto trc : it->second)
+				auto tk_it = _self->_tick_receiver.find(tick.id);
+				if (tk_it != _self->_tick_receiver.end())
 				{
-					if (trc)
+					for (auto tkrc : tk_it->second)
 					{
-						PROFILE_DEBUG(tick.id.get_id());
-						trc->on_tick(tick, deal);
-						PROFILE_DEBUG(tick.id.get_id());
+						if (tkrc)
+						{
+							PROFILE_DEBUG(tick.id.get_id());
+							tkrc->on_tick(tick);
+							PROFILE_DEBUG(tick.id.get_id());
+						}
 					}
 				}
-
+				
+				auto tp_it = _self->_tape_receiver.find(tick.id);
+				if (tp_it != _self->_tape_receiver.end())
+				{
+					for (auto tprc : tp_it->second)
+					{
+						if (tprc)
+						{
+							tape_info deal_info;
+							const auto& prev_tick = lt_get_previous_tick(_self->_lt,tick.id);
+							deal_info.volume_delta = static_cast<uint32_t>(tick.volume - prev_tick.volume);
+							deal_info.interest_delta = tick.open_interest - prev_tick.open_interest;
+							deal_info.direction = _self->get_deal_direction(prev_tick, tick);
+							tprc->on_tape(deal_info);
+						}
+					}
+				}
+				
+				auto br_it = _self->_bar_generator.find(tick.id);
+				if (br_it != _self->_bar_generator.end())
+				{
+					for (auto bg_it : br_it->second)
+					{
+						bg_it.second->insert_tick(tick);
+					}
+				}
 			}
 		}
-		static inline void _bar_callback(uint32_t perid, const bar_info& bar)
-		{
-			if (_self)
-			{
-				auto it = _self->_bar_receiver.find(bar.id);
-				if (it == _self->_bar_receiver.end())
-				{
-					return;
-				}
-				auto b_it = it->second.find(perid);
-				if (b_it != it->second.end())
-				{
-					b_it->second->on_bar(perid,bar);
-				}
-			}
-		}
+		
 
 		static inline void _update_callback()
 		{
@@ -112,14 +127,15 @@ namespace lt
 				{
 					it.second->update();
 				}
+				_self->check_condition();
 			}
 		};
 
-		static inline void _realtime_entrust_callback(const order_info& order)
+		static inline void _entrust_callback(const order_info& order)
 		{
 			if (_self)
 			{
-				auto it = _self->_estid_to_strategy.find(order.est_id);
+				auto it = _self->_estid_to_strategy.find(order.estid);
 				if (it == _self->_estid_to_strategy.end())
 				{
 					return;
@@ -132,11 +148,11 @@ namespace lt
 			}
 		};
 
-		static inline void _realtime_deal_callback(estid_t localid, uint32_t deal_volume, uint32_t total_volume)
+		static inline void _deal_callback(estid_t estid, uint32_t deal_volume, uint32_t total_volume)
 		{
 			if (_self)
 			{
-				auto it = _self->_estid_to_strategy.find(localid);
+				auto it = _self->_estid_to_strategy.find(estid);
 				if (it == _self->_estid_to_strategy.end())
 				{
 					return;
@@ -144,16 +160,16 @@ namespace lt
 				auto stra = _self->get_strategy(it->second);
 				if (stra)
 				{
-					stra->on_deal(localid, deal_volume, total_volume);
+					stra->on_deal(estid, deal_volume, total_volume);
 				}
 			}
 		}
 
-		static inline void _realtime_trade_callback(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
+		static inline void _trade_callback(estid_t estid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 		{
 			if (_self)
 			{
-				auto it = _self->_estid_to_strategy.find(localid);
+				auto it = _self->_estid_to_strategy.find(estid);
 				if (it == _self->_estid_to_strategy.end())
 				{
 					return;
@@ -161,22 +177,18 @@ namespace lt
 				auto stra = _self->get_strategy(it->second);
 				if (stra)
 				{
-					stra->on_trade(localid, code, offset, direction, price, volume);
+					stra->on_trade(estid, code, offset, direction, price, volume);
 				}
-				auto cdn_it = _condition_function.find(localid);
-				if (cdn_it != _condition_function.end())
-				{
-					_condition_function.erase(cdn_it);
-				}
-				_self->unregist_estid_strategy(localid);
+				_self->remove_condition(estid);
+				_self->unregist_estid_strategy(estid);
 			}
 		}
 
-		static inline void _realtime_cancel_callback(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
+		static inline void _cancel_callback(estid_t estid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 		{
 			if (_self)
 			{
-				auto it = _self->_estid_to_strategy.find(localid);
+				auto it = _self->_estid_to_strategy.find(estid);
 				if (it == _self->_estid_to_strategy.end())
 				{
 					return;
@@ -184,22 +196,18 @@ namespace lt
 				auto stra = _self->get_strategy(it->second);
 				if (stra)
 				{
-					stra->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
+					stra->on_cancel(estid, code, offset, direction, price, cancel_volume, total_volume);
 				}
-				auto cdn_it = _condition_function.find(localid);
-				if (cdn_it != _condition_function.end())
-				{
-					_condition_function.erase(cdn_it);
-				}
-				_self->unregist_estid_strategy(localid);
+				_self->remove_condition(estid);
+				_self->unregist_estid_strategy(estid);
 			}
 		}
 
-		static inline void _realtime_error_callback(error_type type, estid_t localid, error_code error)
+		static inline void _error_callback(error_type type, estid_t estid, error_code error)
 		{
 			if (_self)
 			{
-				auto it = _self->_estid_to_strategy.find(localid);
+				auto it = _self->_estid_to_strategy.find(estid);
 				if (it == _self->_estid_to_strategy.end())
 				{
 					return;
@@ -207,16 +215,18 @@ namespace lt
 				auto stra = _self->get_strategy(it->second);
 				if (stra)
 				{
-					stra->on_error(type, localid, error);
+					stra->on_error(type, estid, error);
 				}
 				if(type == error_type::ET_PLACE_ORDER)
 				{
-					auto it = _condition_function.find(localid);
-					if (it != _condition_function.end())
-					{
-						_condition_function.erase(it);
-					}
-					_self->unregist_estid_strategy(localid);
+					_self->remove_condition(estid);
+					_self->unregist_estid_strategy(estid);
+				}
+				else if (type == error_type::ET_CANCEL_ORDER)
+				{
+					_self->set_cancel_condition(estid, [](estid_t estid)->bool {
+						return true;
+						});
 				}
 				
 			}
@@ -233,73 +243,6 @@ namespace lt
 			}
 		}
 
-		static inline std::map<estid_t, std::function<bool(estid_t)>> _condition_function;
-		static inline bool _condition_callback(estid_t localid)
-		{
-			auto it = _condition_function.find(localid);
-			if (it == _condition_function.end())
-			{
-				return false;
-			}
-			return it->second(localid);
-		}
-
-		static inline void _delayed_entrust_callback(const order_info& order)
-		{
-			if (_self)
-			{
-				for(auto& it : _self->_all_notify)
-				{
-					it->on_entrust(order);
-				}
-			}
-		};
-
-		static inline void _delayed_deal_callback(estid_t localid, uint32_t deal_volume, uint32_t total_volume)
-		{
-			if (_self)
-			{
-				for (auto& it : _self->_all_notify)
-				{
-					it->on_deal(localid, deal_volume, total_volume);
-				}
-			}
-		}
-
-		static inline void _delayed_trade_callback(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
-		{
-			if (_self)
-			{
-				for (auto& it : _self->_all_notify)
-				{
-					it->on_trade(localid, code, offset, direction, price, volume);
-				}
-				
-			}
-		}
-
-		static inline void _delayed_cancel_callback(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
-		{
-			if (_self)
-			{
-				for (auto& it : _self->_all_notify)
-				{
-					it->on_cancel(localid, code, offset, direction, price, cancel_volume, total_volume);
-				}
-			}
-		}
-
-		static inline void _delayed_error_callback(error_type type, estid_t localid, error_code error)
-		{
-			if (_self)
-			{
-				for (auto& it : _self->_all_notify)
-				{
-					it->on_error(type, localid, error);
-				}
-			}
-		}
-
 	protected:
 
 		/***
@@ -307,12 +250,11 @@ namespace lt
 		*/
 		void regist_strategy(const std::vector<std::shared_ptr<lt::strategy>>& strategys);
 
-		/***
-		* 取消注册策略
-		*/
 		void clear_strategy();
 
+		void check_condition();
 
+		void remove_condition(estid_t estid);
 
 	private:
 
@@ -341,14 +283,14 @@ namespace lt
 
 		/*
 		*	下单单
-		*	order_id 下单返回的id
+		*	estid 下单返回的id
 		*/
 		estid_t place_order(untid_t id, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 		/*
 		 *	撤单
-		 *	order_id 下单返回的id
+		 *	estid 下单返回的id
 		 */
-		void cancel_order(estid_t order_id);
+		void cancel_order(estid_t estid);
 
 		/**
 		* 获取仓位信息
@@ -358,7 +300,7 @@ namespace lt
 		/**
 		* 获取委托订单
 		**/
-		const order_info& get_order(estid_t order_id) const;
+		const order_info& get_order(estid_t estid) const;
 
 
 		/**
@@ -393,7 +335,7 @@ namespace lt
 		/*
 		* 设置撤销条件(返回true时候撤销)
 		*/
-		void set_cancel_condition(estid_t order_id, std::function<bool(estid_t)> callback);
+		void set_cancel_condition(estid_t estid, std::function<bool(estid_t)> callback);
 
 
 		/**
@@ -428,6 +370,7 @@ namespace lt
 		*/
 		double_t get_proximate_price(const code_t& code,double_t price)const;
 
+
 	private:
 		/**
 		*	订阅行情
@@ -452,6 +395,10 @@ namespace lt
 			return it->second;
 		}
 
+		/**
+		* 获取交易方向
+		*/
+		deal_direction get_deal_direction(const tick_info& prev, const tick_info& tick)const;
 
 	protected:
 
@@ -461,10 +408,20 @@ namespace lt
 
 		std::map<code_t, std::set<tick_receiver*>> _tick_receiver;
 
-		std::map<code_t, std::map<uint32_t, bar_receiver*>> _bar_receiver;
+		std::map<code_t, std::set<tape_receiver*>> _tape_receiver;
+
+		std::map<code_t, std::map<uint32_t, std::shared_ptr<bar_generator>>> _bar_generator;
+
+		std::map<code_t,uint32_t> _tick_reference_count ;
 
 		std::map<estid_t, straid_t> _estid_to_strategy;
 
 		std::vector<std::shared_ptr<notify>> _all_notify;
+
+		std::shared_ptr<price_step> _ps_config;
+
+		std::shared_ptr<trading_section> _section_config;
+
+		std::map<estid_t, std::function<bool(estid_t)>> _need_check_condition;
 	};
 }

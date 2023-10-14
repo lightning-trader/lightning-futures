@@ -7,7 +7,7 @@
 
 
 ctp_market::ctp_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)
-	:actual_market(id_excg_map)
+	:asyn_actual_market(id_excg_map)
 	,_md_api(nullptr)
 	,_reqid(0)
 	,_process_mutex(_mutex)

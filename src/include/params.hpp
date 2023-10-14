@@ -18,7 +18,10 @@ public:
 	{
 		_params = params;
 	}
-
+	std::map<std::string, std::string> data() const
+	{
+		return std::move(_params);
+	}
 	void from_file(const char* filename)
 	{
 		FILE* fp = fopen(filename, "r");

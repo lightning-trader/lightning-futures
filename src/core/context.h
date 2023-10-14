@@ -1,17 +1,14 @@
 ﻿#pragma once
-#include <define.h>
 #include <any>
-#include <lightning.h>
 #include <thread>
+#include <log_wapper.hpp>
+#include <define.h>
+#include <lightning.h>
 #include "event_center.hpp"
-#include "market_api.h"
+#include <market_api.h>
 #include <trader_api.h>
 #include <params.hpp>
-#include "trading_section.h"
 #include "pod_chain.h"
-#include "bar_generator.h"
-#include "delayed_distributor.h"
-#include "price_step.h"
 
 
 
@@ -45,7 +42,6 @@ private:
 
 	// (实时)
 	tick_callback _tick_callback;
-	bar_callback	_bar_callback;
 	ready_callback _ready_callback;
 	update_callback _update_callback;
 	//实时事件，高频策略使用
@@ -53,10 +49,7 @@ private:
 	
 	//实时的线程
 	std::thread * _realtime_thread;
-	//延时的线程
-	std::thread * _delayed_thread;
-	std::shared_ptr<delayed_distributor> _distributor;
-
+	
 	daytm_t _last_tick_time;
 
 	uint32_t _max_position;
@@ -64,8 +57,6 @@ private:
 	pod_chain* _default_chain;
 
 	std::unordered_map<untid_t, pod_chain*> _custom_chain;
-	
-	std::map<estid_t, condition_callback> _need_check_condition;
 
 	filter_callback _trading_filter;
 
@@ -73,23 +64,19 @@ private:
 
 	std::atomic<bool> _is_trading_ready ;
 
-	std::shared_ptr<trading_section> _section_config;
-
-	std::shared_ptr<price_step> _price_step_config;
-
 	int16_t _bind_cpu_core ;
 
 	uint32_t _loop_interval ;
 
 	std::map<code_t,tick_info> _previous_tick;
-	
-	std::map<code_t, std::map<uint32_t, std::shared_ptr<bar_generator>>> _bar_generator;
 
 	std::map<code_t, today_market_info> _today_market_info;
 
 	position_map			_position_info;
 
 	entrust_map				_order_info;
+
+	std::map<std::string,std::string>	_include_config;
 	
 public:
 
@@ -110,15 +97,6 @@ public:
 		this->_ready_callback = ready_cb;
 		this->_update_callback = update_cb;
 	}
-	//绑定延时事件
-	void bind_delayed_event(const order_event& callback,position_callback position_cb)
-	{
-		_distributor = std::make_shared<delayed_distributor>(callback, position_cb);
-	}
-	/*
-	* 设置撤销条件
-	*/
-	void set_cancel_condition(estid_t order_id, condition_callback callback);
 
 	/*
 	* 设置交易过滤器
@@ -127,19 +105,19 @@ public:
 
 	estid_t place_order(untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
 	
-	void cancel_order(estid_t order_id);
+	bool cancel_order(estid_t estid);
 	
 	const position_info& get_position(const code_t& code)const;
 	
-	const order_info& get_order(estid_t order_id)const;
+	const order_info& get_order(estid_t estid)const;
 
 	void find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const;
 
 	uint32_t get_total_position() const;
 
-	void subscribe(const std::set<code_t>& tick_data,tick_callback tick_cb,const std::map<code_t,std::set<uint32_t>>& bar_data,bar_callback bar_cb);
+	void subscribe(const std::set<code_t>& tick_data,tick_callback tick_cb);
 
-	void unsubscribe(const std::set<code_t>& tick_data, const std::map<code_t, std::set<uint32_t>>& bar_data);
+	void unsubscribe(const std::set<code_t>& tick_data);
 	
 	daytm_t get_last_time();
 
@@ -154,14 +132,6 @@ public:
 
 	uint32_t get_trading_day();
 
-	daytm_t get_close_time()const;
-
-	daytm_t next_open_time(daytm_t time)const;
-
-	bool is_in_trading()const;
-	
-	bool is_in_trading(daytm_t time)const;
-	
 	void use_custom_chain(untid_t untid, bool flag);
 
 	inline uint32_t get_max_position()const
@@ -179,15 +149,9 @@ public:
 
 	uint32_t get_total_pending();
 
-	double_t get_proximate_price(const code_t& code ,double_t price)const
-	{
-		if(_price_step_config)
-		{
-			return _price_step_config->get_proximate_price(code, price);
-		}
-		LOG_WARNING("_price_step_config null");
-		return price;
-	}
+	const tick_info& get_previous_tick(const code_t& code);
+
+	const char* get_include_config(const char* key);
 
 private:
 
@@ -206,17 +170,9 @@ private:
 
 	void handle_error(const std::vector<std::any>& param);
 
-	void check_condition();
-
-	void remove_condition(estid_t order_id);
-
-	void clear_condition();
-
 	pod_chain * create_chain(bool flag);
 
 	pod_chain * get_chain(untid_t untid);
-
-	deal_direction get_deal_direction(const tick_info& prev, const tick_info& tick);
 
 	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price);
 	
@@ -256,9 +212,6 @@ public:
 
 	virtual bool is_terminaled() = 0;
 
-	virtual void add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle) = 0;
-
-	virtual void add_trader_handle(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) = 0;
 
 };
 

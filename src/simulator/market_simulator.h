@@ -10,6 +10,13 @@
 class market_simulator : public dummy_market
 {
 
+	enum class execute_state
+	{
+		ES_Idle,
+		ES_LoadingData,
+		ES_PublishTick
+	};
+
 private:
 	
 	tick_loader* _loader ;
@@ -20,13 +27,17 @@ private:
 
 	std::vector<tick_info> _pending_tick_info ;
 
+	std::function<void(const tick_info&)> _publish_callback;
+
 	daytm_t _current_time ;
 
 	size_t _current_index ;
 
 	uint32_t	_interval;			//间隔毫秒数
 	
-	bool _is_runing;
+	bool _is_finished;
+
+	execute_state _state ;
 	
 public:
 
@@ -38,7 +49,8 @@ public:
 public:
 
 	//simulator
-	virtual void play(uint32_t trading_day,std::function<void(const std::vector<tick_info>& tick_vector)> publish_callback) override;
+	virtual void play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback) override;
+	virtual bool is_finished() const override;
 
 public:
 
@@ -47,11 +59,14 @@ public:
 
 	virtual void unsubscribe(const std::set<code_t>& codes)override;
 
-	
+	virtual void update() override;
+
 private:
 
-	void load_data(const code_t& code,uint32_t trading_day);
+	void load_data();
 
-	void publish_tick(std::function<void(const std::vector<tick_info>& tick_vector)> publish_callback);
+	void publish_tick();
+
+	void finish_publish();
 
 };

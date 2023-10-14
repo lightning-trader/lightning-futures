@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "define.h"
 #include "data_types.hpp"
+#include <receiver.h>
 
 /***  
 * 
@@ -23,11 +24,17 @@ private:
 
 	std::map<double_t,uint32_t> _poc_data;
 
-	std::function<void(const bar_info& )> _bar_finish;
+	std::set<lt::bar_receiver*> _bar_callback;
 	
 public:
 
-	bar_generator(uint32_t period,double_t price_step,std::function<void(const bar_info& )> bar_finish) :_period(period), _price_step(price_step), _minute(0), _prev_volume(0), _bar_finish(bar_finish) {}
+	bar_generator(uint32_t period,double_t price_step) :_period(period), _price_step(price_step), _minute(0), _prev_volume(0) {}
 
 	void insert_tick(const tick_info& tick);
+
+	void add_receiver(lt::bar_receiver* receiver);
+
+	void remove_receiver(lt::bar_receiver* receiver);
+
+	bool invalid()const ;
 };

@@ -1,8 +1,8 @@
-﻿#include "evaluate.h"
+﻿#include <fstream>
 #include <filesystem>
+#include "evaluate.h"
 #include "context.h"
 #include "csv_recorder.h"
-#include <market_api.h>
 #include <interface.h>
 #include "inipp.h"
 #include <params.hpp>
@@ -10,6 +10,7 @@
 evaluate::evaluate():_market_simulator(nullptr), _trader_simulator(nullptr)
 {
 }
+
 evaluate::~evaluate()
 {
 	if (_market_simulator)
@@ -88,9 +89,13 @@ void evaluate::playback_history()
 	
 	if(_market_simulator)
 	{	
-		_market_simulator->play(_trader_simulator->get_trading_day(), [this](const std::vector<tick_info>& tick_vector)->void {
-			_trader_simulator->push_tick(tick_vector);
+		_market_simulator->play(_trader_simulator->get_trading_day(), [this](const tick_info& tick)->void {
+			_trader_simulator->push_tick(tick);
 		});
+		while(!_market_simulator->is_finished())
+		{
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
 		rapidcsv::Document _crossday_flow_csv;
 		//记录结算数据
 		if (_recorder)
@@ -120,40 +125,10 @@ market_api& evaluate::get_market()
 
 void evaluate::on_update()
 {
-	if(_market_simulator)
-	{
-		_market_simulator->update();
-	}
-	if (is_in_trading()&& _trader_simulator)
-	{
-		while (!_trader_simulator->is_empty())
-		{
-			_trader_simulator->update();
-		}
-	}
+	
 }
 
 bool evaluate::is_terminaled()
 {
-	if(_trader_simulator)
-	{
-		return _trader_simulator->is_empty();
-	}
-	return false;
-}
-
-void evaluate::add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle)
-{
-	if (_market_simulator)
-	{
-		_market_simulator->add_handle(handle);
-	}
-}
-
-void evaluate::add_trader_handle(std::function<void(trader_event_type, const std::vector<std::any>&)> handle)
-{
-	if (_trader_simulator)
-	{
-		_trader_simulator->add_handle(handle);
-	}
+	return true;
 }

@@ -51,7 +51,7 @@ public:
 	/*
 	 *	barÍÆËÍ
 	 */
-	virtual void on_bar(uint32_t period, const bar_info& bar) override;
+	virtual void on_bar(const bar_info& bar) override;
 
 
 	/*

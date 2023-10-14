@@ -1,8 +1,7 @@
-﻿#include "runtime.h"
-#include <define.h>
+﻿#include <fstream>
 #include <filesystem>
-#include <market_api.h>
-#include <trader_api.h>
+#include "runtime.h"
+#include <define.h>
 #include <interface.h>
 #include "inipp.h"
 
@@ -115,40 +114,14 @@ market_api& runtime::get_market()
 
 void runtime::on_update()
 {
-	if (_market)
-	{
-		_market->update();
-	}
-	if (is_in_trading() && _trader)
-	{
-		while (!_trader->is_empty())
-		{
-			_trader->update();
-		}
-	}
+	
 }
 
 bool runtime::is_terminaled()
 {
 	if (_trader)
 	{
-		return _trader->is_empty();
+		return _trader->is_idle();
 	}
 	return false;
-}
-
-void runtime::add_market_handle(std::function<void(market_event_type, const std::vector<std::any>&)> handle)
-{
-	if(_market)
-	{
-		_market->add_handle(handle);
-	}
-}
-
-void runtime::add_trader_handle(std::function<void(trader_event_type, const std::vector<std::any>&)> handle)
-{
-	if (_trader)
-	{
-		_trader->add_handle(handle);
-	}
 }

@@ -30,9 +30,9 @@ void arbitrage_strategy::on_ready()
 		for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 		{
 			auto& buy_order = get_order(_order_data->order_estids[i]);
-			if (buy_order.est_id != INVALID_ESTID)
+			if (buy_order.estid != INVALID_ESTID)
 			{
-				set_cancel_condition(buy_order.est_id, [this](estid_t estid)->bool {
+				set_cancel_condition(buy_order.estid, [this](estid_t estid)->bool {
 
 					if (is_close_coming())
 					{
@@ -51,7 +51,7 @@ void arbitrage_strategy::on_ready()
 
 }
 
-void arbitrage_strategy::on_tick(const tick_info& tick, const deal_info& deal)
+void arbitrage_strategy::on_tick(const tick_info& tick)
 {
 
 	if (is_close_coming())
@@ -88,21 +88,18 @@ void arbitrage_strategy::on_tick(const tick_info& tick, const deal_info& deal)
 		_order_data->a_state = arbitrage_state::AS_INVALID;
 	}
 
-
-
-	
 }
 
 
 
 void arbitrage_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("on_entrust :", order.est_id, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LOG_INFO("on_entrust :", order.estid, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
-		if (_order_data->order_estids[i] == order.est_id)
+		if (_order_data->order_estids[i] == order.estid)
 		{
-			set_cancel_condition(order.est_id, [this](estid_t estid)->bool {
+			set_cancel_condition(order.estid, [this](estid_t estid)->bool {
 
 				if (is_close_coming())
 				{
@@ -110,7 +107,7 @@ void arbitrage_strategy::on_entrust(const order_info& order)
 				}
 				return false;
 				});
-			regist_order_estid(order.est_id);
+			regist_order_estid(order.estid);
 			break;
 		}
 	}

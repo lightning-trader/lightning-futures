@@ -2,6 +2,6 @@
 
 link_directories(${CMAKE_LIBRARY_PATH})
 
-add_library(framework STATIC "engine.cpp" "evaluate_engine.cpp" "runtime_engine.cpp" "strategy.cpp")
+add_library(framework STATIC "bar_generator.cpp" "price_step.cpp" "trading_section.cpp" "engine.cpp" "evaluate_engine.cpp" "runtime_engine.cpp" "strategy.cpp")
 
-target_link_libraries(framework "lt_core" "lt_loger" "lt_persist")
+target_link_libraries(framework "lightning_core" "lightning_loger" "lightning_persist")

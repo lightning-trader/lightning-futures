@@ -2,7 +2,7 @@
 #include <data_types.hpp>
 #include <event_center.hpp>
 #include <thread>
-#include "./tick_loader/csv_tick_loader.h"
+#include "tick_loader/csv_tick_loader.h"
 #include <log_wapper.hpp>
 
 market_simulator::market_simulator(const params& config) :_loader(nullptr),
@@ -10,7 +10,8 @@ _current_trading_day(0),
 _current_time(0),
 _current_index(0),
 _interval(1),
-_is_runing(false)
+_is_finished(false),
+_state(execute_state::ES_Idle)
 {
 	std::string loader_type;
 	std::string csv_data_path;
@@ -48,38 +49,18 @@ market_simulator::~market_simulator()
 	}
 }
 
-void market_simulator::play(uint32_t trading_day, std::function<void(const std::vector<tick_info>& tick_vector)> publish_callback)
+void market_simulator::play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback)
 {
-	for (auto& it : _instrument_id_list)
-	{
-		load_data(it, trading_day);
-	}
-
-	_is_runing = true ;
-	while (_is_runing)
-	{
-		auto begin = std::chrono::system_clock::now();
-		//先触发tick，再进行撮合
-		publish_tick(publish_callback);
-		auto use_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
-		auto duration = std::chrono::microseconds(_interval);
-		if (use_time < duration)
-		{
-			std::this_thread::sleep_for(duration - use_time);
-		}
-		else
-		{
-			std::this_thread::sleep_for(std::chrono::microseconds(0));
-		}
-	}
-	_current_time = 0;
-	_current_index = 0;
-	_pending_tick_info.clear();
-	_instrument_id_list.clear();
-	_is_runing = false;
-
+	_current_trading_day = trading_day;
+	_is_finished = false ;
+	_publish_callback = publish_callback;
+	_state = execute_state::ES_LoadingData;
 }
 
+bool market_simulator::is_finished() const
+{
+	return 	_is_finished;
+}
 
 void market_simulator::subscribe(const std::set<code_t>& codes)
 {
@@ -101,16 +82,33 @@ void market_simulator::unsubscribe(const std::set<code_t>& codes)
 	}
 }
 
-
-void market_simulator::load_data(const code_t& code, uint32_t trading_day)
+void market_simulator::update()
 {
-	if(_loader)
+	switch(_state)
 	{
-		_loader->load_tick(_pending_tick_info,code, trading_day);
+		case execute_state::ES_LoadingData:
+			load_data();
+		break;
+		case execute_state::ES_PublishTick:
+			publish_tick();
+		break;
 	}
 }
 
-void market_simulator::publish_tick(std::function<void(const std::vector<tick_info>& tick_vector)> publish_callback)
+
+void market_simulator::load_data()
+{
+	if(_loader)
+	{
+		for(auto& it : _instrument_id_list)
+		{
+			_loader->load_tick(_pending_tick_info, it, _current_trading_day);
+		}
+		_state = execute_state::ES_PublishTick;
+	}
+}
+
+void market_simulator::publish_tick()
 {	
 	const tick_info* tick = nullptr;
 	if (_current_index < _pending_tick_info.size())
@@ -121,19 +119,17 @@ void market_simulator::publish_tick(std::function<void(const std::vector<tick_in
 	else
 	{
 		//结束了触发收盘事件
-		_is_runing = false;
+		finish_publish();
 		return;
 	}
-	std::vector<tick_info> tick_vector ;
 	while(_current_time == tick->time)
 	{
-		if(tick->trading_day != _current_trading_day)
-		{
-			_current_trading_day = tick->trading_day;
-		}
 		PROFILE_INFO(tick->id.get_id());
-		this->fire_event(market_event_type::MET_TickReceived, *tick);
-		tick_vector.emplace_back(*tick);
+		if (_publish_callback)
+		{
+			_publish_callback(*tick);
+		}
+		fire_event(market_event_type::MET_TickReceived, *tick);
 		_current_index++;
 		if(_current_index < _pending_tick_info.size())
 		{
@@ -143,12 +139,19 @@ void market_simulator::publish_tick(std::function<void(const std::vector<tick_in
 		else
 		{
 			//结束了触发收盘事件
-			_is_runing = false ;
+			finish_publish();
 			break;
 		}
 	}
-	if (publish_callback)
-	{
-		publish_callback(tick_vector);
-	}
+	
+}
+
+void market_simulator::finish_publish()
+{
+	_current_time = 0;
+	_current_index = 0;
+	_pending_tick_info.clear();
+	_instrument_id_list.clear();
+	_is_finished = true;
+	_state = execute_state::ES_Idle;
 }

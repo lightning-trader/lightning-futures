@@ -5,12 +5,18 @@ namespace lt
 {
 	struct tick_receiver
 	{
-		virtual void on_tick(const tick_info& tick, const deal_info& deal) = 0;
+		virtual void on_tick(const tick_info& tick) = 0;
+	};
+
+	struct tape_receiver
+	{
+		virtual void on_tape(const tape_info& tape) = 0;
 	};
 
 	struct bar_receiver
 	{
-		virtual void on_bar(uint32_t period,const bar_info& bar) = 0;
+		virtual void on_bar(const bar_info& bar) = 0;
 	};
+
 }
 

@@ -30,6 +30,11 @@ public:
 	virtual bool is_usable()const = 0;
 
 	/*
+	*	逻辑更新
+	*/
+	virtual void update() = 0;
+
+	/*
 	 *	下单接口
 	 *	entrust 下单的具体数据结构
 	 */
@@ -39,7 +44,7 @@ public:
 	 *	撤单
 	 *	action	操作的具体数据结构
 	 */
-	virtual void cancel_order(estid_t order_id) = 0;
+	virtual bool cancel_order(estid_t estid) = 0;
 
 	/**
 	* 获取当前交易日
@@ -50,9 +55,15 @@ public:
 	* 获取交易数据
 	*/
 	virtual std::shared_ptr<trader_data> get_trader_data() = 0;
+
+	/*
+	*	绑定事件
+	*/
+	virtual void bind_event(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) = 0;
+
 };
 
-class actual_trader : public trader_api , public event_source<trader_event_type, 128>
+class actual_trader : public trader_api
 {
 
 public:
@@ -68,6 +79,13 @@ public:
 	*/
 	virtual void logout() = 0;
 
+
+	/*
+	*	是否处理完成
+	*/
+	virtual bool is_idle()const = 0;
+
+
 protected:
 
 	std::shared_ptr<std::unordered_map<std::string, std::string>> _id_excg_map;
@@ -80,8 +98,48 @@ protected:
 	}
 };
 
+class sync_actual_trader : public actual_trader,public direct_event_source<trader_event_type>
+{
 
-class dummy_trader : public trader_api , public event_source<trader_event_type, 4>
+protected:
+
+	sync_actual_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map) :actual_trader(id_excg_map) {}
+
+	virtual bool is_idle()const override
+	{
+		return true;
+	}
+
+	virtual void bind_event(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) override
+	{
+		this->add_handle(handle);
+	}
+};
+
+class asyn_actual_trader : public actual_trader,public queue_event_source<trader_event_type, 128>
+{
+
+protected:
+
+	asyn_actual_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map) :actual_trader(id_excg_map) {}
+
+	virtual void update()override
+	{
+		this->process();
+	}
+
+	virtual bool is_idle()const override
+	{
+		return this->is_empty();
+	}
+
+	virtual void bind_event(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) override
+	{
+		this->add_handle(handle);
+	}
+};
+
+class dummy_trader : public trader_api , public direct_event_source<trader_event_type>
 {
 
 public:
@@ -90,9 +148,14 @@ public:
 
 public:
 	
-	virtual void push_tick(const std::vector<tick_info>& tick_vector) = 0;
+	virtual void push_tick(const tick_info& tick) = 0;
 
 	virtual void crossday(uint32_t trading_day) = 0;
 
 	virtual const account_info& get_account() = 0;
+
+	virtual void bind_event(std::function<void(trader_event_type, const std::vector<std::any>&)> handle)override
+	{
+		add_handle(handle);
+	}
 };

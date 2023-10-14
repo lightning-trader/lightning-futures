@@ -65,25 +65,21 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(estid_t, INVALID_ESTID, context, place_order, (const ltobj& lt, untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag), (untid, offset, direction, code, count, price, flag));
 	
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, cancel_order, (const ltobj& lt, estid_t est_id), (est_id));
+	LT_INTERFACE_IMPLEMENTATION(bool, false, context, cancel_order, (const ltobj& lt, estid_t estid), (estid));
 	
 	LT_INTERFACE_IMPLEMENTATION(const position_info&, default_position, context, get_position, (const ltobj& lt, const code_t& code), (code));
 	
-	LT_INTERFACE_IMPLEMENTATION(const order_info&, default_order, context, get_order, (const ltobj& lt, estid_t est_id), (est_id));
+	LT_INTERFACE_IMPLEMENTATION(const order_info&, default_order, context, get_order, (const ltobj& lt, estid_t estid), (estid));
 
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, subscribe, (const ltobj& lt, const std::set<code_t>& tick_data, tick_callback tick_cb, const std::map<code_t, std::set<uint32_t>>& bar_data,bar_callback bar_cb), (tick_data, tick_cb, bar_data, bar_cb));
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, subscribe, (const ltobj& lt, const std::set<code_t>& tick_data, tick_callback tick_cb), (tick_data, tick_cb));
 
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, unsubscribe, (const ltobj& lt, const std::set<code_t>& tick_data, const std::map<code_t, std::set<uint32_t>>& bar_data), (tick_data, bar_data));
+	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, unsubscribe, (const ltobj& lt, const std::set<code_t>& tick_data), (tick_data));
 
 	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, get_last_time, (const ltobj& lt), ());
-
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, set_cancel_condition, (const ltobj& lt, estid_t est_id, condition_callback callback), (est_id, callback));
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, set_trading_filter, (const ltobj& lt, filter_callback callback), (callback));
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, bind_realtime_event, (const ltobj& lt, const order_event& od_evt,ready_callback ready_cb,update_callback update_cb), (od_evt, ready_cb, update_cb));
-
-	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, bind_delayed_event, (const ltobj& lt, const order_event& od_evt,position_callback position_cb), (od_evt, position_cb));
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, evaluate, playback_history, (const ltobj& lt), ());
 
@@ -97,17 +93,13 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(uint32_t, 0U, context, get_trading_day, (const ltobj& lt), ());
 
-	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, get_close_time, (const ltobj& lt), ());
+	LT_INTERFACE_IMPLEMENTATION(const char *, nullptr, context, get_include_config, (const ltobj& lt,const char* key), (key));
 
-	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, next_open_time, (const ltobj& lt, daytm_t time), (time));
-
-	LT_INTERFACE_IMPLEMENTATION(bool, false, context, is_in_trading, (const ltobj& lt, daytm_t time), (time));
+	LT_INTERFACE_IMPLEMENTATION(const tick_info&, default_tick, context, get_previous_tick, (const ltobj& lt, const code_t& code), (code));
 
 	LT_INTERFACE_IMPLEMENTATION(void, VOID_DEFAULT, context, use_custom_chain, (const ltobj& lt, untid_t untid, bool flag), (untid, flag));
 
-	LT_INTERFACE_IMPLEMENTATION(const today_market_info&, default_today_market_info, context, get_today_market_info, (const ltobj& lt, const code_t& code), (code));
-
-	LT_INTERFACE_IMPLEMENTATION(double_t, .0, context, get_proximate_price, (const ltobj& lt, const code_t& code,double_t price), (code, price));
+	LT_INTERFACE_IMPLEMENTATION(const today_market_info&, default_today_market, context, get_today_market_info, (const ltobj& lt, const code_t& code), (code));
 
 	
 }

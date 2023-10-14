@@ -11,7 +11,7 @@ enum class market_event_type
 /*
  *	行情解析模块接口
  */
-class market_api 
+class market_api
 {
 public:
 	
@@ -30,10 +30,19 @@ public:
 	 */
 	virtual void unsubscribe(const std::set<code_t>& codes) = 0;
 
+	/*
+	*	逻辑更新
+	*/
+	virtual void update() = 0;
+
+	/*
+	*	绑定事件
+	*/
+	virtual void bind_event(std::function<void(market_event_type, const std::vector<std::any>&)> handle) = 0;
 
 };
 
-class actual_market : public market_api, public event_source<market_event_type, 1024>
+class actual_market : public market_api
 {
 
 public:
@@ -50,6 +59,7 @@ public:
 	*/
 	virtual void logout() = 0;
 
+
 protected:
 
 	std::shared_ptr<std::unordered_map<std::string,std::string>> _id_excg_map ;
@@ -57,15 +67,56 @@ protected:
 	actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map):_id_excg_map(id_excg_map){}
 };
 
-class dummy_market : public market_api , public event_source<market_event_type, 4>
+class sync_actual_market : public actual_market,public direct_event_source<market_event_type>
+{
+
+protected:
+	
+	sync_actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map) :actual_market(id_excg_map){}
+
+	virtual void bind_event(std::function<void(market_event_type, const std::vector<std::any>&)> handle) override
+	{
+		this->add_handle(handle);
+	}
+};
+
+class asyn_actual_market : public actual_market,public queue_event_source<market_event_type, 1024>
+{
+
+protected:
+	
+	asyn_actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map) :actual_market(id_excg_map) {}
+
+	virtual void update()override
+	{
+		this->process();
+	}
+
+	virtual void bind_event(std::function<void(market_event_type, const std::vector<std::any>&)> handle) override
+	{
+		this->add_handle(handle);
+	}
+};
+
+class dummy_market : public market_api , public direct_event_source<market_event_type>
 {
 
 public:
 
 	virtual ~dummy_market() {}
 
+	/*
+	*	绑定事件
+	*/
+	virtual void bind_event(std::function<void(market_event_type, const std::vector<std::any>&)> handle) override
+	{
+		add_handle(handle);
+	}
+
+
 public:
 
-	virtual void play(uint32_t trading_day,std::function<void (const std::vector<tick_info>& tick_vector)> publish_callback) = 0;
+	virtual void play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback) = 0;
 
+	virtual bool is_finished() const = 0;
 };

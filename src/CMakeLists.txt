@@ -35,17 +35,15 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
 # 包含子项目。
 add_subdirectory ("example")
 
-add_subdirectory("trader")
+add_subdirectory("framework")
 
 add_subdirectory("core")
 
-add_subdirectory("market")
+add_subdirectory("adapter")
 
 add_subdirectory("simulator")
 
-add_subdirectory("framework")
+add_subdirectory("persist")
 
 add_subdirectory("loger")
-
-add_subdirectory("persist")
 

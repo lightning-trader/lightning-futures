@@ -13,11 +13,11 @@ EXPORT_FLAG actual_trader* create_actual_trader(const std::shared_ptr<std::unord
 EXPORT_FLAG void destory_actual_trader(actual_trader*& api);
 
 
-dummy_trader* create_dummy_trader(const params& config);
+EXPORT_FLAG dummy_trader* create_dummy_trader(const params& config);
 
-void destory_dummy_trader(dummy_trader*& api);
+EXPORT_FLAG void destory_dummy_trader(dummy_trader*& api);
 
-dummy_market* create_dummy_market(const params& config);
+EXPORT_FLAG dummy_market* create_dummy_market(const params& config);
 
-void destory_dummy_market(dummy_market*& api);
+EXPORT_FLAG void destory_dummy_market(dummy_market*& api);
 

@@ -25,9 +25,9 @@ void orderflow_strategy::on_ready()
 	else
 	{
 		auto& buy_order = get_order(_order_data->buy_order);
-		if (buy_order.est_id != INVALID_ESTID)
+		if (buy_order.estid != INVALID_ESTID)
 		{
-			set_cancel_condition(buy_order.est_id, [this](estid_t estid)->bool {
+			set_cancel_condition(buy_order.estid, [this](estid_t estid)->bool {
 
 				if (is_close_coming())
 				{
@@ -35,16 +35,16 @@ void orderflow_strategy::on_ready()
 				}
 				return false;
 				});
-			regist_order_estid(buy_order.est_id);
+			regist_order_estid(buy_order.estid);
 		}
 		else
 		{
 			_order_data->buy_order = INVALID_ESTID;
 		}
 		auto& sell_order = get_order(_order_data->sell_order);
-		if (sell_order.est_id != INVALID_ESTID)
+		if (sell_order.estid != INVALID_ESTID)
 		{
-			set_cancel_condition(sell_order.est_id, [this](estid_t estid)->bool {
+			set_cancel_condition(sell_order.estid, [this](estid_t estid)->bool {
 
 				if (is_close_coming())
 				{
@@ -52,7 +52,7 @@ void orderflow_strategy::on_ready()
 				}
 				return false;
 				});
-			regist_order_estid(buy_order.est_id);
+			regist_order_estid(buy_order.estid);
 		}
 		else
 		{
@@ -62,7 +62,7 @@ void orderflow_strategy::on_ready()
 
 }
 
-void orderflow_strategy::on_bar(uint32_t period, const bar_info& bar)
+void orderflow_strategy::on_bar(const bar_info& bar)
 {
 
 	auto unbalance = bar.get_unbalance(_multiple);
@@ -91,11 +91,11 @@ void orderflow_strategy::on_bar(uint32_t period, const bar_info& bar)
 
 void orderflow_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("on_entrust :", order.est_id, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LOG_INFO("on_entrust :", order.estid, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 
-	if (order.est_id == _order_data->buy_order || order.est_id == _order_data->sell_order)
+	if (order.estid == _order_data->buy_order || order.estid == _order_data->sell_order)
 	{
-		set_cancel_condition(order.est_id, [this](estid_t estid)->bool {
+		set_cancel_condition(order.estid, [this](estid_t estid)->bool {
 
 			if (is_close_coming())
 			{
@@ -152,7 +152,7 @@ void orderflow_strategy::on_error(error_type type, estid_t localid, const error_
 
 void orderflow_strategy::on_destroy(lt::unsubscriber& unsuber)
 {
-	unsuber.unregist_bar_receiver(_code, _period);
+	unsuber.unregist_bar_receiver(_code, _period, this);
 	unmaping_file(_order_data);
 }
 

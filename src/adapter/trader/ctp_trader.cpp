@@ -3,7 +3,7 @@
 #include <time_utils.hpp>
 
 ctp_trader::ctp_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)
-	:actual_trader(id_excg_map)
+	:asyn_actual_trader(id_excg_map)
 	, _td_api(nullptr)
 	, _reqid(0)
 	, _front_id(0)
@@ -71,7 +71,7 @@ bool ctp_trader::login()
 	_td_api->RegisterSpi(this);
 	//_td_api->SubscribePrivateTopic(THOST_TERT_RESTART);
 	//_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
-	_td_api->SubscribePrivateTopic(THOST_TERT_RESUME);
+	_td_api->SubscribePrivateTopic(THOST_TERT_QUICK);
 	_td_api->SubscribePublicTopic(THOST_TERT_QUICK);
 	_td_api->RegisterFront(const_cast<char*>(_front_addr.c_str()));
 	_td_api->Init();
@@ -417,8 +417,8 @@ void ctp_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoFi
 		auto order = _order_info[estid];
 		order.code = code_t(pOrder->InstrumentID , pOrder->ExchangeID);
 		order.create_time = make_daytm(pOrder->InsertTime,0U);
-		order.est_id = estid;
-		order.direction = wrap_direction_offset(pOrder->CombOffsetFlag[0],pOrder->Direction);
+		order.estid = estid;
+		order.direction = wrap_direction_offset(pOrder->Direction,pOrder->CombOffsetFlag[0]);
 		order.offset = wrap_offset_type(pOrder->CombOffsetFlag[0]);
 		order.last_volume = pOrder->VolumeTotal;
 		order.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;
@@ -496,7 +496,7 @@ void ctp_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			order_info entrust;
 			entrust.code = code;
 			entrust.create_time = make_daytm(pOrder->InsertTime,0U);
-			entrust.est_id = estid;
+			entrust.estid = estid;
 			entrust.direction = direction;
 			entrust.last_volume = pOrder->VolumeTotal;
 			entrust.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;
@@ -629,7 +629,7 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 	{
 		return INVALID_ESTID;
 	}
-	estid_t est_id = generate_estid();
+	estid_t estid = generate_estid();
 	
 	CThostFtdcInputOrderField req;
 	memset(&req, 0, sizeof(req));
@@ -640,7 +640,7 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 	strcpy(req.ExchangeID, code.get_excg());
 
 	uint32_t order_ref = 0, season_id = 0, front_id = 0;
-	extract_estid(est_id, front_id, season_id, order_ref);
+	extract_estid(estid, front_id, season_id, order_ref);
 	///报单引用
 	sprintf(req.OrderRef, "%u", order_ref);
 
@@ -701,25 +701,25 @@ estid_t ctp_trader::place_order(offset_type offset, direction_type direction, co
 		return INVALID_ESTID;
 	}
 	PROFILE_INFO(code.get_id());
-	return est_id;
+	return estid;
 }
 
-void ctp_trader::cancel_order(estid_t order_id)
+bool ctp_trader::cancel_order(estid_t estid)
 {
 	if (_td_api == nullptr)
 	{
-		LOG_ERROR("ctp_trader cancel_order _td_api nullptr : %llu", order_id);
-		return ;
+		LOG_ERROR("ctp_trader cancel_order _td_api nullptr : %llu", estid);
+		return false;
 	}
-	auto it = _order_info.find(order_id);
+	auto it = _order_info.find(estid);
 	if (it == _order_info.end())
 	{
-		LOG_ERROR("ctp_trader cancel_order order invalid : %llu", order_id);
-		return;
+		LOG_ERROR("ctp_trader cancel_order order invalid : %llu", estid);
+		return false;
 	}
 	auto& order = it->second;
 	uint32_t frontid = 0, sessionid = 0, orderref = 0;
-	extract_estid(order_id, frontid, sessionid, orderref);
+	extract_estid(estid, frontid, sessionid, orderref);
 	CThostFtdcInputOrderActionField req;
 	memset(&req, 0, sizeof(req));
 	strcpy(req.BrokerID, _broker_id.c_str());
@@ -741,14 +741,16 @@ void ctp_trader::cancel_order(estid_t order_id)
 
 	//req.VolumeChange = (int)change.volume;
 
-	//strcpy_s(req.OrderSysID, change.order_id.c_str());
+	//strcpy_s(req.OrderSysID, change.estid.c_str());
 	strcpy(req.ExchangeID, order.code.get_excg());
-	LOG_INFO("ctp_trader ReqOrderAction :", req.ExchangeID, req.InstrumentID, req.FrontID, req.SessionID, req.OrderRef, req.BrokerID, req.InvestorID, req.UserID, order_id);
+	LOG_INFO("ctp_trader ReqOrderAction :", req.ExchangeID, req.InstrumentID, req.FrontID, req.SessionID, req.OrderRef, req.BrokerID, req.InvestorID, req.UserID, estid);
 	int iResult = _td_api->ReqOrderAction(&req, genreqid());
 	if (iResult != 0)
 	{
 		LOG_ERROR("ctp_trader order_action request failed:", iResult);
+		return false;
 	}
+	return true;
 }
 
 

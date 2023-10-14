@@ -39,18 +39,12 @@ void position_container::reduce_position(const code_t& code, direction_type dire
 		if (direction == direction_type::DT_LONG)
 		{
 			it->second.today_long.postion -= std::min<uint32_t>(volume, it->second.today_long.postion);
-			if(is_reduce_frozen)
-			{
-				it->second.today_long.frozen -= std::min<uint32_t>(volume, it->second.today_long.frozen);
-			}
+			it->second.today_long.frozen -= std::min<uint32_t>(volume, it->second.today_long.frozen);
 		}
 		else if (direction == direction_type::DT_SHORT)
 		{
 			it->second.today_short.postion -= std::min<uint32_t>(volume, it->second.today_short.postion);
-			if (is_reduce_frozen)
-			{
-				it->second.today_short.frozen -= std::min<uint32_t>(volume, it->second.today_short.frozen);
-			}
+			it->second.today_short.frozen -= std::min<uint32_t>(volume, it->second.today_short.frozen);
 		}
 	}
 	else
@@ -58,18 +52,12 @@ void position_container::reduce_position(const code_t& code, direction_type dire
 		if (direction == direction_type::DT_LONG)
 		{
 			it->second.yestoday_long.postion -= std::min<uint32_t>(volume, it->second.yestoday_long.postion);
-			if (is_reduce_frozen)
-			{
-				it->second.yestoday_long.frozen -= std::min<uint32_t>(volume, it->second.yestoday_long.frozen);
-			}
+			it->second.yestoday_long.frozen -= std::min<uint32_t>(volume, it->second.yestoday_long.frozen);
 		}
 		else if (direction == direction_type::DT_SHORT)
 		{
 			it->second.yestoday_short.postion -= std::min<uint32_t>(volume, it->second.yestoday_short.postion);
-			if (is_reduce_frozen)
-			{
-				it->second.yestoday_short.frozen -= std::min<uint32_t>(volume, it->second.yestoday_short.frozen);
-			}
+			it->second.yestoday_short.frozen -= std::min<uint32_t>(volume, it->second.yestoday_short.frozen);
 		}
 	}
 	if(it->second.empty())

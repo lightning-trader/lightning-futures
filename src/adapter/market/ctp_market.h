@@ -10,7 +10,7 @@
 
 
 
-class ctp_market :	public actual_market,public CThostFtdcMdSpi
+class ctp_market :	public asyn_actual_market,public CThostFtdcMdSpi
 {
 public:
 
