@@ -61,7 +61,7 @@ public:
 		event_data<T> data;
 		while (_event_queue.remove(data))
 		{
-			trigger(data.type, data.params);
+			this->trigger(data.type, data.params);
 		}
 	}
 
@@ -100,7 +100,7 @@ private:
 
 	void fire_event(event_data<T>& data)
 	{
-		trigger(data.type,data.params);
+		this->trigger(data.type,data.params);
 	}
 
 
