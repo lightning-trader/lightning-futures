@@ -278,7 +278,7 @@ namespace lt
 		* 获取当前交易日的订单统计
 		*	跨交易日会被清空
 		*/
-		const order_statistic& get_order_statistic()const;
+		const order_statistic& get_order_statistic(const code_t& code)const;
 
 
 		/*

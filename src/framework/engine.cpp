@@ -214,9 +214,9 @@ void engine::set_trading_filter(filter_function callback)
 	lt_set_trading_filter(_lt, engine::_filter_callback);
 }
 
-const order_statistic& lt::engine::get_order_statistic()const
+const order_statistic& lt::engine::get_order_statistic(const code_t& code)const
 {
-	return lt_get_order_statistic(_lt);
+	return lt_get_order_statistic(_lt,code);
 }
 
 estid_t engine::place_order(untid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
