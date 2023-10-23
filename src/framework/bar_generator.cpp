@@ -63,7 +63,7 @@ void bar_generator::insert_tick(const tick_info& tick)
 void bar_generator::add_receiver(bar_receiver * receiver)
 {
 	auto it = _bar_callback.find(receiver);
-	if (it != _bar_callback.end())
+	if (it == _bar_callback.end())
 	{
 		_bar_callback.insert(receiver);
 	}
