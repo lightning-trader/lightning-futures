@@ -274,7 +274,6 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 	estid_t estid = chain->place_order(offset, direction, code, count, price, flag);
 	if (estid != INVALID_ESTID)
 	{
-		_last_order_time = _last_tick_time;
 		_statistic_info[code].place_order_amount++;
 	}
 	PROFILE_DEBUG(code.get_id());
@@ -447,6 +446,7 @@ void context::handle_entrust(const std::vector<std::any>& param)
 		{
 			realtime_event.on_entrust(order);
 		}
+		_last_order_time = order.create_time;
 		_statistic_info[order.code].entrust_amount++;
 
 	}
