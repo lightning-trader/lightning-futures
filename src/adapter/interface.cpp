@@ -1,14 +1,13 @@
 ﻿#include <interface.h>
-#include "market/ctp_market.h"
-
-#include "trader/ctp_trader.h"
+#include "market/ctp_api_market.h"
+#include "trader/ctp_api_trader.h"
 
 actual_market* create_actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map,const params& config)
 {
 	auto market_type = config.get<std::string>("market");
-	if (market_type == "ctp")
+	if (market_type == "ctp_api")
 	{
-		return new ctp_market(id_excg_map, config);
+		return new ctp_api_market(id_excg_map, config);
 	}
 	return nullptr;
 }
@@ -24,9 +23,9 @@ void destory_actual_market(actual_market*& api)
 actual_trader* create_actual_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)
 {
 	auto trader_type = config.get<std::string>("trader");
-	if (trader_type == "ctp")
+	if (trader_type == "ctp_api")
 	{
-		return new ctp_trader(id_excg_map, config);
+		return new ctp_api_trader(id_excg_map, config);
 	}
 	return nullptr;
 }

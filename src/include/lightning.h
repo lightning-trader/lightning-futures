@@ -173,7 +173,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	* 获取当前交易日的订单统计
 	*	跨交易日会被清空
 	*/
-	LT_INTERFACE_DECLARE(const order_statistic&, get_order_statistic, (const ltobj&));
+	LT_INTERFACE_DECLARE(const order_statistic&, get_order_statistic, (const ltobj&,const code_t&));
 
 	/**
 	* 是否交易准备完成

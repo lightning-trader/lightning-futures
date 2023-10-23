@@ -14,7 +14,7 @@
 
 
 
-class ctp_trader : public asyn_actual_trader, public CThostFtdcTraderSpi
+class ctp_api_trader : public asyn_actual_trader, public CThostFtdcTraderSpi
 {
 	/*
 	 *	订单操作类型
@@ -27,9 +27,9 @@ class ctp_trader : public asyn_actual_trader, public CThostFtdcTraderSpi
 
 public:
 	
-	ctp_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
+	ctp_api_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
 	
-	virtual ~ctp_trader();
+	virtual ~ctp_api_trader();
 
 
 	//////////////////////////////////////////////////////////////////////////

@@ -87,7 +87,7 @@ extern "C"
 
 	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, last_order_time, (const ltobj& lt), ());
 
-	LT_INTERFACE_IMPLEMENTATION(const order_statistic&, default_statistic, context, get_order_statistic, (const ltobj& lt), ());
+	LT_INTERFACE_IMPLEMENTATION(const order_statistic&, default_statistic, context, get_order_statistic, (const ltobj& lt,const code_t& code), (code));
 
 	LT_INTERFACE_IMPLEMENTATION(bool, false, context, is_trading_ready, (const ltobj& lt), ());
 

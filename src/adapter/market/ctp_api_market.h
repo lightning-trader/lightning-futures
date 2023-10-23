@@ -10,13 +10,13 @@
 
 
 
-class ctp_market :	public asyn_actual_market,public CThostFtdcMdSpi
+class ctp_api_market :	public asyn_actual_market,public CThostFtdcMdSpi
 {
 public:
 
-	ctp_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
+	ctp_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
 
-	virtual ~ctp_market();
+	virtual ~ctp_api_market();
 	
 //IMarketAPI 接口
 public:

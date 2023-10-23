@@ -667,6 +667,8 @@ struct order_statistic
 	{}
 
 public:
+
+
 	std::ostream& operator>>(std::ostream& os)
 	{
 		os << place_order_amount << entrust_amount;

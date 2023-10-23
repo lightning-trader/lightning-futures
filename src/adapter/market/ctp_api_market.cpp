@@ -1,12 +1,12 @@
 ﻿
-#include "ctp_market.h"
+#include "ctp_api_market.h"
 #include <filesystem>
 #include <time_utils.hpp>
 #include <params.hpp>
 #include <log_wapper.hpp>
 
 
-ctp_market::ctp_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)
+ctp_api_market::ctp_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)
 	:asyn_actual_market(id_excg_map)
 	,_md_api(nullptr)
 	,_reqid(0)
@@ -22,7 +22,7 @@ ctp_market::ctp_market(const std::shared_ptr<std::unordered_map<std::string, std
 	}
 	catch (...)
 	{
-		LOG_ERROR("ctp_market config error ");
+		LOG_ERROR("ctp_api_market config error ");
 	}
 	_market_handle = dll_helper::load_library("thostmduserapi_se");
 	if (_market_handle)
@@ -40,18 +40,18 @@ ctp_market::ctp_market(const std::shared_ptr<std::unordered_map<std::string, std
 	}
 	else
 	{
-		LOG_ERROR("ctp_trader thosttraderapi_se load error ");
+		LOG_ERROR("ctp_api_trader thosttraderapi_se load error ");
 	}
 }
 
 
-ctp_market::~ctp_market()
+ctp_api_market::~ctp_api_market()
 {
 	dll_helper::free_library(_market_handle);
 	_market_handle = nullptr;
 }
 
-bool ctp_market::login()
+bool ctp_api_market::login()
 {
 	char path_buff[64] = {0};
 	sprintf(path_buff, "md_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
@@ -68,7 +68,7 @@ bool ctp_market::login()
 	return true ;
 }
 
-void ctp_market::logout()
+void ctp_api_market::logout()
 {
 	_reqid = 0;
 	_id_excg_map->clear();
@@ -82,7 +82,7 @@ void ctp_market::logout()
 	_is_inited = false;
 }
 
-void ctp_market::OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
+void ctp_api_market::OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
 {
 	if(pRspInfo)
 	{
@@ -90,13 +90,13 @@ void ctp_market::OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, b
 	}
 }
 
-void ctp_market::OnFrontConnected()
+void ctp_api_market::OnFrontConnected()
 {
 	LOG_INFO("Connected : %s", _front_addr.c_str());
 	do_userlogin();
 }
 
-void ctp_market::OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
+void ctp_api_market::OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
 {
 	if(pRspInfo)
 	{
@@ -114,7 +114,7 @@ void ctp_market::OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CTh
 	}
 }
 
-void ctp_market::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void ctp_api_market::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	if (pRspInfo)
 	{
@@ -122,13 +122,13 @@ void ctp_market::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostF
 	}
 }
 
-void ctp_market::OnFrontDisconnected( int nReason )
+void ctp_api_market::OnFrontDisconnected( int nReason )
 {
 	LOG_INFO("FrontDisconnected : Reason -> %d", nReason);
 }
 
 
-void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMarketData )
+void ctp_api_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMarketData )
 {	
 	if (pDepthMarketData == nullptr)
 	{
@@ -181,7 +181,7 @@ void ctp_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMar
 	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
 }
 
-void ctp_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
+void ctp_api_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
 {
 	if(pRspInfo)
 	{
@@ -189,7 +189,7 @@ void ctp_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecifi
 	}
 }
 
-void ctp_market::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
+void ctp_api_market::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
 	if (pRspInfo)
 	{
@@ -197,7 +197,7 @@ void ctp_market::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSpecif
 	}
 }
 
-void ctp_market::do_userlogin()
+void ctp_api_market::do_userlogin()
 {
 	if(_md_api == nullptr)
 	{
@@ -216,7 +216,7 @@ void ctp_market::do_userlogin()
 	}
 }
 
-void ctp_market::do_subscribe()
+void ctp_api_market::do_subscribe()
 {
 	char* id_list[500];
 	int num = 0;
@@ -237,7 +237,7 @@ void ctp_market::do_subscribe()
 	}
 }
 
-void ctp_market::do_unsubscribe(const std::vector<code_t>& code_list)
+void ctp_api_market::do_unsubscribe(const std::vector<code_t>& code_list)
 {
 	char* id_list[500];
 	int num = 0;
@@ -258,7 +258,7 @@ void ctp_market::do_unsubscribe(const std::vector<code_t>& code_list)
 	}
 }
 
-void ctp_market::subscribe(const std::set<code_t>& code_list)
+void ctp_api_market::subscribe(const std::set<code_t>& code_list)
 {
 	for(auto& it : code_list)
 	{
@@ -267,7 +267,7 @@ void ctp_market::subscribe(const std::set<code_t>& code_list)
 	do_subscribe();
 }
 
-void ctp_market::unsubscribe(const std::set<code_t>& code_list)
+void ctp_api_market::unsubscribe(const std::set<code_t>& code_list)
 {
 	std::vector<code_t> delete_code_list ;
 	for (auto& it : code_list)

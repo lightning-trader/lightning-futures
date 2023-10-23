@@ -2,6 +2,7 @@
 #include <any>
 #include <thread>
 #include <log_wapper.hpp>
+#include <mmf_wapper.hpp>
 #include <define.h>
 #include <lightning.h>
 #include "event_center.hpp"
@@ -10,24 +11,6 @@
 #include <params.hpp>
 #include "pod_chain.h"
 
-
-
-struct record_data
-{
-	uint32_t trading_day;
-	daytm_t last_order_time;
-	order_statistic statistic_info;
-
-	record_data():trading_day(0U),last_order_time(0) {}
-
-	std::ostream& operator>>(std::ostream& os)
-	{
-		os << trading_day << last_order_time;
-		statistic_info>>os;
-		return os ;
-	}
-
-};
 
 class context
 {
@@ -60,8 +43,6 @@ private:
 
 	filter_callback _trading_filter;
 
-	record_data* _record_data;
-
 	std::atomic<bool> _is_trading_ready ;
 
 	int16_t _bind_cpu_core ;
@@ -70,7 +51,11 @@ private:
 
 	std::map<code_t,tick_info> _previous_tick;
 
+	daytm_t _last_order_time;
+
 	std::map<code_t, today_market_info> _today_market_info;
+
+	std::map<code_t, order_statistic> _statistic_info;
 
 	position_map			_position_info;
 
@@ -123,7 +108,7 @@ public:
 
 	daytm_t last_order_time();
 
-	const order_statistic& get_order_statistic();
+	const order_statistic& get_order_statistic(const code_t& code)const;
 
 	bool is_trading_ready()
 	{
@@ -152,6 +137,10 @@ public:
 	const tick_info& get_previous_tick(const code_t& code);
 
 	const char* get_include_config(const char* key);
+
+protected :
+
+	order_statistic get_all_statistic()const;
 
 private:
 
