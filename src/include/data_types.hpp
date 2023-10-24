@@ -409,9 +409,9 @@ struct bar_info
 	//获取不平衡订单
 	std::pair<std::shared_ptr<std::vector<double_t>>, std::shared_ptr<std::vector<double_t>>> get_unbalance(uint32_t multiple)const
 	{
-		//需求失衡
+		//需求失衡(供大于求)
 		auto demand_unbalance = std::make_shared<std::vector<double_t>>();
-		//供给失衡
+		//供给失衡(供不应求)
 		auto supply_unbalance = std::make_shared<std::vector<double_t>>();
 		//构建订单薄
 		auto order_book = get_order_book();

@@ -419,7 +419,9 @@ void context::check_crossday()
 {
 
 	_is_trading_ready = true;
-
+	_today_market_info.clear();
+	_statistic_info.clear();
+	_last_order_time = get_last_time();
 	if (this->_ready_callback)
 	{
 		this->_ready_callback();
