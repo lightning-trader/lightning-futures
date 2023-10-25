@@ -5,6 +5,7 @@
 #define ONE_DAY_SECONDS 86400
 #define ONE_MINUTE_SECONDS 60
 #define ONE_HOUR_SECONDS 3600
+#define ONE_HOUR_MILLISECONDS 3600000
 #define ONE_DAY_MILLISECONDS 86400000
 #define ONE_MINUTE_MILLISECONDS 60000
 #define ONE_SECOND_MILLISECONDS 1000
@@ -211,16 +212,19 @@ static uint32_t date_to_uint(const char* t)
 	return std::atoi(buffer);
 }
 
-static daytm_t offset_front(daytm_t tm ,uint32_t seconds)
+
+static daytm_t daytm_offset(daytm_t tm, int32_t milliseconds)
 {
-	if(tm < seconds)
+	int32_t result = static_cast<int32_t>(tm) + milliseconds % ONE_DAY_MILLISECONDS;
+	if(result < 0)
 	{
-		tm += ONE_DAY_SECONDS;
+		result += ONE_DAY_MILLISECONDS;
 	}
-	return tm - seconds;
+	return static_cast<daytm_t>(result);
 }
 
-static daytm_t offset_back(daytm_t tm, uint32_t seconds)
+static uint32_t daytm_sequence(daytm_t tm)
 {
-	return tm + seconds % ONE_DAY_SECONDS;
+	//21点开盘，向前偏移21小时
+	return daytm_offset(tm ,-21 * ONE_HOUR_MILLISECONDS);
 }

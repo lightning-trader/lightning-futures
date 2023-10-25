@@ -71,9 +71,9 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		result.emplace_back(tick);
 	}
 	std::sort(result.begin(), result.end(), [](const auto& lh, const auto& rh)->bool {
-		//21点开盘，向前偏移21小时
-		auto lh_tm = offset_front(lh.time, 21 * ONE_HOUR_SECONDS);
-		auto rh_tm = offset_front(rh.time, 21 * ONE_HOUR_SECONDS);
+		
+		auto lh_tm = daytm_sequence(lh.time);
+		auto rh_tm = daytm_sequence(rh.time);
 
 		if (lh_tm < rh_tm)
 		{
