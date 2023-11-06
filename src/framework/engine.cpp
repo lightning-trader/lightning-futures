@@ -298,8 +298,11 @@ void engine::use_custom_chain(untid_t id,bool flag)
 
 void engine::set_cancel_condition(estid_t estid, std::function<bool(estid_t)> callback)
 {
-	LOG_DEBUG("set_cancel_condition : ", estid);
-	_need_check_condition[estid] = callback;
+	if(estid != INVALID_ESTID)
+	{
+		LOG_DEBUG("set_cancel_condition : ", estid);
+		_need_check_condition[estid] = callback;
+	}
 }
 
 
