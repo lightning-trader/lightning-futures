@@ -177,7 +177,7 @@ uint32_t trader_simulator::get_buy_front(const code_t& code,double_t price)
 	auto tick_it = _current_tick_info.find(code);
 	if(tick_it == _current_tick_info.end())
 	{
-		return 0;
+		return 0U;
 	}
 	const auto& tick = tick_it->second;
 	auto buy_it = std::find_if(tick.buy_order.begin(), tick.buy_order.end(), [price](const std::pair<double_t, uint32_t>& cur) ->bool {
@@ -188,19 +188,15 @@ uint32_t trader_simulator::get_buy_front(const code_t& code,double_t price)
 	{
 		return buy_it->second;
 	}
-	uint32_t total = 0U;
-	for(const auto& it : tick.buy_order)
-	{
-		total+=it.second;
-	}
-	return total;
+
+	return 0U;
 }
 uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)
 {
 	auto tick_it = _current_tick_info.find(code);
 	if (tick_it == _current_tick_info.end())
 	{
-		return 0;
+		return 0U;
 	}
 	const auto& tick = tick_it->second;
 	auto sell_it = std::find_if(tick.sell_order.begin(), tick.sell_order.end(), [price](const std::pair<double_t, uint32_t>& cur) ->bool {
@@ -211,12 +207,7 @@ uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)
 	{
 		return sell_it->second;
 	}
-	uint32_t total = 0U;
-	for (const auto& it : tick.sell_order)
-	{
-		total += it.second;
-	}
-	return total;
+	return 0U;
 }
 
 void trader_simulator::match_entrust(const tick_info* tick)
