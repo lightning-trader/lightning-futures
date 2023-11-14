@@ -111,14 +111,14 @@ static daytm_t daytm_offset(daytm_t tm, int32_t milliseconds)
 
 static daytm_t daytm_sequence(daytm_t tm)
 {
-	//21点开盘，向前偏移21小时
-	if(tm < 21 * ONE_HOUR_MILLISECONDS)
+	//21点开盘，向前偏移20小时
+	if(tm < 20 * ONE_HOUR_MILLISECONDS)
 	{
-		return tm + ONE_DAY_MILLISECONDS - 21 * ONE_HOUR_MILLISECONDS;
+		return tm + ONE_DAY_MILLISECONDS - 20 * ONE_HOUR_MILLISECONDS;
 	}
 	else
 	{
-		return tm - 21 * ONE_HOUR_MILLISECONDS;
+		return tm - 20 * ONE_HOUR_MILLISECONDS;
 	}
 }
 
