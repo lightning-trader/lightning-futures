@@ -72,14 +72,11 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 	}
 	std::sort(result.begin(), result.end(), [](const auto& lh, const auto& rh)->bool {
 		
-		auto lh_tm = daytm_sequence(lh.time);
-		auto rh_tm = daytm_sequence(rh.time);
-
-		if (lh_tm < rh_tm)
+		if (lh.time < rh.time)
 		{
 			return true;
 		}
-		if (lh_tm > rh_tm)
+		if (lh.time > rh.time)
 		{
 			return false;
 		}

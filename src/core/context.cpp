@@ -450,7 +450,7 @@ uint32_t context::get_total_pending()
 
 void context::check_crossday()
 {
-
+	_last_tick_time = 0U;
 	_is_trading_ready = true;
 	_today_market_info.clear();
 	_statistic_info.clear();
@@ -577,26 +577,29 @@ void context::handle_tick(const std::vector<std::any>& param)
 			LOG_WARNING("not in trading", last_tick.time);
 			return;
 		}
-		_last_tick_time = last_tick.time;
+		if(last_tick.time> _last_tick_time)
+		{
+			_last_tick_time = last_tick.time;
+		}
 		auto it = _previous_tick.find(last_tick.id);
-		if(it == _previous_tick.end())
+		if(it != _previous_tick.end())
+		{
+			tick_info& prev_tick = it->second;
+			auto& current_market_info = _today_market_info[last_tick.id];
+			current_market_info.today_tick_info.emplace_back(last_tick);
+			current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
+			if (this->_tick_callback)
+			{
+				PROFILE_DEBUG(last_tick.id.get_id());
+				this->_tick_callback(last_tick);
+			}
+			it->second = last_tick;
+		}
+		else
 		{
 			_previous_tick.insert(std::make_pair(last_tick.id, last_tick));
-			return;
 		}
-		tick_info& prev_tick = it->second;
-		auto& current_market_info = _today_market_info[last_tick.id];
-		current_market_info.today_tick_info.emplace_back(last_tick);
-		current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
-		if (this->_tick_callback)
-		{
-			PROFILE_DEBUG(last_tick.id.get_id());
-			this->_tick_callback(last_tick);
-		}
-		
-		it->second = last_tick;
 	}
-	
 }
 
 void context::handle_error(const std::vector<std::any>& param)

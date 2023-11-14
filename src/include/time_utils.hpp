@@ -98,18 +98,42 @@ static time_t make_datetime(const char* date, const char* time)
 	}
 	return -1;
 }
+
+static daytm_t daytm_offset(daytm_t tm, int32_t milliseconds)
+{
+	int32_t result = (static_cast<int32_t>(tm) + milliseconds) % ONE_DAY_MILLISECONDS;
+	if (result < 0)
+	{
+		result += ONE_DAY_MILLISECONDS;
+	}
+	return static_cast<daytm_t>(result);
+}
+
+static daytm_t daytm_sequence(daytm_t tm)
+{
+	//21点开盘，向前偏移21小时
+	if(tm < 21 * ONE_HOUR_MILLISECONDS)
+	{
+		return tm + ONE_DAY_MILLISECONDS - 21 * ONE_HOUR_MILLISECONDS;
+	}
+	else
+	{
+		return tm - 21 * ONE_HOUR_MILLISECONDS;
+	}
+}
+
 static daytm_t make_daytm(const char* time, uint32_t tick)
 {
 	if (time != nullptr)
 	{
-		return static_cast<daytm_t>(make_time(time)) * ONE_SECOND_MILLISECONDS + tick;
+		return daytm_sequence(static_cast<daytm_t>(make_time(time)) * ONE_SECOND_MILLISECONDS + tick);
 	}
 	return -1;
 }
 //121212
 static daytm_t make_daytm(uint32_t time, uint32_t tick)
 {
-	return static_cast<daytm_t>(make_time(time)) * ONE_SECOND_MILLISECONDS + tick;;
+	return daytm_sequence(static_cast<daytm_t>(make_time(time)) * ONE_SECOND_MILLISECONDS + tick);
 }
 //is_str==true: 21:12:30.500
 //is_str==false:  211230.500 
@@ -167,7 +191,7 @@ static time_t get_day_begin(time_t cur)
 
 static daytm_t get_day_time(time_t cur)
 {
-	return static_cast<daytm_t>((cur - get_day_begin(cur)) * ONE_SECOND_MILLISECONDS);
+	return daytm_sequence(static_cast<daytm_t>(cur - get_day_begin(cur)) * ONE_SECOND_MILLISECONDS);
 }
 
 static time_t get_next_time(time_t cur,const char* time)
@@ -212,19 +236,3 @@ static uint32_t date_to_uint(const char* t)
 	return std::atoi(buffer);
 }
 
-
-static daytm_t daytm_offset(daytm_t tm, int32_t milliseconds)
-{
-	int32_t result = static_cast<int32_t>(tm) + milliseconds % ONE_DAY_MILLISECONDS;
-	if(result < 0)
-	{
-		result += ONE_DAY_MILLISECONDS;
-	}
-	return static_cast<daytm_t>(result);
-}
-
-static uint32_t daytm_sequence(daytm_t tm)
-{
-	//21点开盘，向前偏移21小时
-	return daytm_offset(tm ,-21 * ONE_HOUR_MILLISECONDS);
-}

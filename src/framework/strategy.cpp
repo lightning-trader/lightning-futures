@@ -7,8 +7,7 @@ using namespace lt;
 
 strategy::strategy(straid_t id, engine& engine, bool openable, bool closeable):_id(id), _engine(engine), _openable(openable), _closeable(closeable)
 {
-	_close_daytime = _engine.get_close_time();
-	_coming_to_close = _close_daytime - 2 * ONE_MINUTE_MILLISECONDS;
+	_coming_to_close = _engine.get_close_time() - 2 * ONE_MINUTE_MILLISECONDS;
 }
 strategy::~strategy()
 {
@@ -102,13 +101,12 @@ const order_info& strategy::get_order(estid_t estid) const
 
 bool strategy::is_close_coming(daytm_t dtm) const
 {
-	return _coming_to_close < dtm && dtm <= _close_daytime;
+	return _coming_to_close < dtm ;
 }
 
 bool strategy::is_close_coming() const
 {
-	auto dytm = get_last_time();
-	return _coming_to_close < dytm && dytm <= _close_daytime;
+	return _coming_to_close < get_last_time();
 }
 daytm_t strategy::get_last_time() const
 {
