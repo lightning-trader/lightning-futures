@@ -131,8 +131,6 @@ engine::engine(context_type ctx_type,const char* config_path)
 	_lt = lt_create_context(ctx_type, config_path);
 	engine::_self = this;
 	lt_bind_realtime_event(_lt, order_event{ _entrust_callback ,_deal_callback ,_trade_callback ,_cancel_callback ,_error_callback }, _ready_callback,_update_callback);
-	auto section_config = lt_get_include_config(_lt,"section_config");
-	_section_config = std::make_shared<trading_section>(section_config);
 	const auto& ps_config = lt_get_include_config(_lt, "price_step_config");
 	_ps_config = std::make_shared<price_step>(ps_config);
 }
@@ -261,34 +259,9 @@ daytm_t engine::get_last_time() const
 	return lt_get_last_time(_lt);
 }
 
-daytm_t engine::get_close_time()const
+daytm_t engine::get_close_time() const
 {
-	if (_section_config == nullptr)
-	{
-		LOG_FATAL("section config not init");
-		return 0;
-	}
-	return _section_config->get_close_time();
-}
-
-daytm_t engine::next_open_time(daytm_t time)const
-{
-	if (_section_config == nullptr)
-	{
-		LOG_FATAL("section config not init");
-		return 0;
-	}
-	return _section_config->next_open_time(time);
-}
-
-bool engine::is_in_trading(daytm_t time)const
-{
-	if (_section_config == nullptr)
-	{
-		LOG_FATAL("section config not init");
-		return false;
-	}
-	return _section_config->is_in_trading(time);
+	return lt_get_close_time(_lt);
 }
 
 void engine::use_custom_chain(untid_t id,bool flag)

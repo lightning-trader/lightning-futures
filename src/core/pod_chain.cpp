@@ -84,7 +84,7 @@ estid_t verify_chain::place_order(offset_type offset, direction_type direction, 
 		}
 		else if (direction == direction_type::DT_SHORT && pos.today_short.usable() < count )
 		{
-			LOG_WARNING("can not close today short order : ", code.get_id(),direction, pos.today_long.usable(), count);
+			LOG_WARNING("can not close today short order : ", code.get_id(),direction, pos.today_short.usable(), count);
 			return INVALID_ESTID;
 		}
 	}

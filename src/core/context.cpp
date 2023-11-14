@@ -48,7 +48,8 @@ void context::init(const params& control_config, const params& include_config,bo
 	_loop_interval = control_config.get<uint32_t>("loop_interval");
 	_include_config = include_config.data() ;
 	_default_chain = create_chain(false);
-	
+	auto section_config = include_config.get<std::string>("section_config");
+	_section_config = std::make_shared<trading_section>(section_config);
 	get_trader().bind_event([this](trader_event_type type, const std::vector<std::any>& param)->void {
 
 		//LOG_INFO("event_type : ", type);
@@ -181,16 +182,18 @@ void context::start_service()
 void context::update()
 {
 	get_market().update();
-	get_trader().update();
-	this->on_update();
-	if (is_trading_ready())
+	if(is_in_trading(_last_tick_time))
 	{
-		if (this->_update_callback)
+		get_trader().update();
+		this->on_update();
+		if (is_trading_ready())
 		{
-			this->_update_callback();
+			if (this->_update_callback)
+			{
+				this->_update_callback();
+			}
 		}
 	}
-	
 }
 
 void context::stop_service()
@@ -264,6 +267,11 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		LOG_WARNING("place order not trading ready", code.get_id());
 		return INVALID_ESTID;
 	}
+	if (!is_in_trading(_last_tick_time))
+	{
+		LOG_WARNING("place order code not in trading", code.get_id());
+		return INVALID_ESTID;
+	}
 	auto chain = get_chain(untid);
 	if (chain == nullptr)
 	{
@@ -289,6 +297,11 @@ bool context::cancel_order(estid_t estid)
 	if (!is_trading_ready())
 	{
 		LOG_WARNING("cancel order not trading ready ", estid);
+		return false;
+	}
+	if (!is_in_trading(_last_tick_time))
+	{
+		LOG_WARNING("cancel order not in trading ", estid);
 		return false;
 	}
 	LOG_INFO("context cancel_order : ", estid);
@@ -371,6 +384,26 @@ const order_statistic& context::get_order_statistic(const code_t& code)const
 uint32_t context::get_trading_day()
 {
 	return get_trader().get_trading_day();
+}
+
+daytm_t context::get_close_time()const
+{
+	if(_section_config == nullptr)
+	{
+		LOG_FATAL("section config not init");
+		return 0;
+	}
+	return _section_config->get_close_time();
+}
+
+bool context::is_in_trading(daytm_t time)const
+{
+	if (_section_config == nullptr)
+	{
+		LOG_FATAL("section config not init");
+		return false;
+	}
+	return _section_config->is_in_trading(time);
 }
 
 const char* context::get_include_config(const char* key)
@@ -539,7 +572,11 @@ void context::handle_tick(const std::vector<std::any>& param)
 		PROFILE_DEBUG("pDepthMarketData->InstrumentID");
 		tick_info&& last_tick = std::any_cast<tick_info>(param[0]);
 		PROFILE_DEBUG(last_tick.id.get_id());
-
+		if (!is_in_trading(last_tick.time))
+		{
+			LOG_WARNING("not in trading", last_tick.time);
+			return;
+		}
 		_last_tick_time = last_tick.time;
 		auto it = _previous_tick.find(last_tick.id);
 		if(it == _previous_tick.end())

@@ -7,7 +7,6 @@
 #include <log_wapper.hpp>
 #include "../framework/price_step.h"
 #include "../framework/bar_generator.h"
-#include "../framework/trading_section.h"
 
 namespace lt
 {
@@ -71,11 +70,6 @@ namespace lt
 		{
 			if (_self)
 			{
-				if (!_self->is_in_trading(tick.time))
-				{
-					LOG_WARNING("not in trading", tick.time);
-					return;
-				}
 				auto tk_it = _self->_tick_receiver.find(tick.id);
 				if (tk_it != _self->_tick_receiver.end())
 				{
@@ -316,18 +310,6 @@ namespace lt
 		daytm_t get_close_time() const;
 
 		/**
-		* 获取下一阶段开始时间
-		*
-		*/
-		daytm_t next_open_time(daytm_t time) const;
-
-		/**
-		* 是否在交易中
-		*
-		*/
-		bool is_in_trading(daytm_t time) const;
-
-		/**
 		* 使用自定义交易通道
 		*/
 		void use_custom_chain(untid_t id, bool flag);
@@ -419,8 +401,6 @@ namespace lt
 		std::vector<std::shared_ptr<notify>> _all_notify;
 
 		std::shared_ptr<price_step> _ps_config;
-
-		std::shared_ptr<trading_section> _section_config;
 
 		std::map<estid_t, std::function<bool(estid_t)>> _need_check_condition;
 	};

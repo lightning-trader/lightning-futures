@@ -184,6 +184,12 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	* 获取交易日
 	*/
 	LT_INTERFACE_DECLARE(uint32_t, get_trading_day, (const ltobj&));
+	
+	
+	/**
+	* 获取收盘时间
+	*/
+	LT_INTERFACE_DECLARE(daytm_t, get_close_time, (const ltobj&));
 
 	/**
 	* 返回include标签中的配置信息

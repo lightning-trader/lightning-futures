@@ -10,7 +10,7 @@
 #include <trader_api.h>
 #include <params.hpp>
 #include "pod_chain.h"
-
+#include "trading_section.h"
 
 class context
 {
@@ -62,6 +62,9 @@ private:
 	entrust_map				_order_info;
 
 	std::map<std::string,std::string>	_include_config;
+
+	std::shared_ptr<trading_section> _section_config;
+
 	
 public:
 
@@ -116,6 +119,10 @@ public:
 	}
 
 	uint32_t get_trading_day();
+
+	daytm_t get_close_time()const;
+	
+	bool is_in_trading(daytm_t time)const;
 
 	void use_custom_chain(untid_t untid, bool flag);
 

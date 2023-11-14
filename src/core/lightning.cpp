@@ -92,6 +92,8 @@ extern "C"
 	LT_INTERFACE_IMPLEMENTATION(bool, false, context, is_trading_ready, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(uint32_t, 0U, context, get_trading_day, (const ltobj& lt), ());
+	
+	LT_INTERFACE_IMPLEMENTATION(daytm_t, 0, context, get_close_time, (const ltobj& lt), ());
 
 	LT_INTERFACE_IMPLEMENTATION(const char *, nullptr, context, get_include_config, (const ltobj& lt,const char* key), (key));
 
