@@ -182,7 +182,7 @@ void context::start_service()
 void context::update()
 {
 	get_market().update();
-	if(is_in_trading(_last_tick_time))
+	if(is_in_trading())
 	{
 		get_trader().update();
 		this->on_update();
@@ -267,7 +267,7 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		LOG_WARNING("place order not trading ready", code.get_id());
 		return INVALID_ESTID;
 	}
-	if (!is_in_trading(_last_tick_time))
+	if (!is_in_trading())
 	{
 		LOG_WARNING("place order code not in trading", code.get_id());
 		return INVALID_ESTID;
@@ -299,7 +299,7 @@ bool context::cancel_order(estid_t estid)
 		LOG_WARNING("cancel order not trading ready ", estid);
 		return false;
 	}
-	if (!is_in_trading(_last_tick_time))
+	if (!is_in_trading())
 	{
 		LOG_WARNING("cancel order not in trading ", estid);
 		return false;
@@ -396,14 +396,14 @@ daytm_t context::get_close_time()const
 	return _section_config->get_close_time();
 }
 
-bool context::is_in_trading(daytm_t time)const
+bool context::is_in_trading()const
 {
 	if (_section_config == nullptr)
 	{
 		LOG_FATAL("section config not init");
 		return false;
 	}
-	return _section_config->is_in_trading(time);
+	return _section_config->is_in_trading(_last_tick_time);
 }
 
 const char* context::get_include_config(const char* key)
@@ -572,26 +572,25 @@ void context::handle_tick(const std::vector<std::any>& param)
 		PROFILE_DEBUG("pDepthMarketData->InstrumentID");
 		tick_info&& last_tick = std::any_cast<tick_info>(param[0]);
 		PROFILE_DEBUG(last_tick.id.get_id());
-		if (!is_in_trading(last_tick.time))
-		{
-			LOG_WARNING("not in trading", last_tick.time);
-			return;
-		}
-		if(last_tick.time> _last_tick_time)
+		if (last_tick.time > _last_tick_time)
 		{
 			_last_tick_time = last_tick.time;
 		}
+		
 		auto it = _previous_tick.find(last_tick.id);
 		if(it != _previous_tick.end())
 		{
 			tick_info& prev_tick = it->second;
-			auto& current_market_info = _today_market_info[last_tick.id];
-			current_market_info.today_tick_info.emplace_back(last_tick);
-			current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
-			if (this->_tick_callback)
+			if (is_in_trading())
 			{
-				PROFILE_DEBUG(last_tick.id.get_id());
-				this->_tick_callback(last_tick);
+				auto& current_market_info = _today_market_info[last_tick.id];
+				current_market_info.today_tick_info.emplace_back(last_tick);
+				current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
+				if (this->_tick_callback)
+				{
+					PROFILE_DEBUG(last_tick.id.get_id());
+					this->_tick_callback(last_tick);
+				}
 			}
 			it->second = last_tick;
 		}
