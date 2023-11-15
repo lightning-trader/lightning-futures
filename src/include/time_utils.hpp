@@ -121,6 +121,11 @@ static daytm_t daytm_sequence(daytm_t tm)
 		return tm - 20 * ONE_HOUR_MILLISECONDS;
 	}
 }
+static daytm_t daytm_really(daytm_t tm)
+{
+	//21点开盘，向后偏移20小时
+	return (tm + 20 * ONE_HOUR_MILLISECONDS) % ONE_DAY_MILLISECONDS;
+}
 
 static daytm_t make_daytm(const char* time, uint32_t tick)
 {
@@ -176,7 +181,7 @@ static time_t make_datetime(time_t date_begin, const char* time)
 
 static time_t make_datetime(uint32_t day,daytm_t dtm)
 {
-	return make_date(day) + dtm / ONE_SECOND_MILLISECONDS;
+	return make_date(day) + daytm_really(dtm) / ONE_SECOND_MILLISECONDS;
 }
 
 static time_t get_day_begin(time_t cur)
