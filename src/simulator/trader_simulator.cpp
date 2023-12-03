@@ -699,12 +699,7 @@ bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset
 		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for ", code.get_id());
 		return false;
 	}
-	auto it = _position_info.find(code);
-	if(it == _position_info.end())
-	{
-		LOG_ERROR("tick_simulator frozen_deduction cant find the position_info for ", code.get_id());
-		return false ;
-	}
+
 	//double_t service_charge = contract_info->get_service_charge(price, offset, is_today);
 	//_account_info.money+= last_volume * service_charge;
 	if (offset == offset_type::OT_OPEN)
@@ -714,9 +709,17 @@ bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset
 		LOG_TRACE("thawing_deduction 1", _account_info.frozen_monery, delta, last_volume , price);
 		_account_info.frozen_monery -= delta;
 		LOG_TRACE("thawing_deduction 2", _account_info.frozen_monery, delta);
+		return true ;
 	}
-	else if (offset == offset_type::OT_CLSTD)
+	auto it = _position_info.find(code);
+	if (it == _position_info.end())
 	{
+		LOG_ERROR("tick_simulator frozen_deduction cant find the position_info for ", code.get_id());
+		return false;
+	}
+	if (offset == offset_type::OT_CLSTD)
+	{
+
 		if (direction == direction_type::DT_LONG)
 		{
 			it->second.today_long.frozen -= std::min<uint32_t>(last_volume, it->second.today_long.frozen);
