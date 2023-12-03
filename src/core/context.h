@@ -20,6 +20,16 @@ public:
 	virtual ~context();
 
 private:
+
+	context(const context&) = delete;
+
+	context& operator=(const context&) = delete;
+
+	context(context&&) = delete;
+
+	context& operator=(context&&) = delete;
+
+private:
 	
 	bool _is_runing ;
 
