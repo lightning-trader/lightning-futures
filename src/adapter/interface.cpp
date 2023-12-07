@@ -1,6 +1,9 @@
 ﻿#include <interface.h>
 #include "market/ctp_api_market.h"
+#include "market/tap_api_market.h"
+
 #include "trader/ctp_api_trader.h"
+#include "trader/tap_api_trader.h"
 
 actual_market* create_actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map,const params& config)
 {
@@ -8,6 +11,10 @@ actual_market* create_actual_market(const std::shared_ptr<std::unordered_map<std
 	if (market_type == "ctp_api")
 	{
 		return new ctp_api_market(id_excg_map, config);
+	}
+	if (market_type == "tap_api")
+	{
+		return new tap_api_market(id_excg_map, config);
 	}
 	return nullptr;
 }
@@ -26,6 +33,10 @@ actual_trader* create_actual_trader(const std::shared_ptr<std::unordered_map<std
 	if (trader_type == "ctp_api")
 	{
 		return new ctp_api_trader(id_excg_map, config);
+	}
+	if (trader_type == "tap_api")
+	{
+		return new tap_api_trader(id_excg_map, config);
 	}
 	return nullptr;
 }
