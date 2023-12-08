@@ -15,7 +15,9 @@ namespace lt
 
 	public:
 
-		void run_to_close(const std::vector<std::shared_ptr<lt::strategy>>& strategys);
+		void start_trading(const std::vector<std::shared_ptr<lt::strategy>>& strategys);
+
+		void stop_trading();
 
 	};
 }

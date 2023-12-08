@@ -59,9 +59,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef void (PORTER_FLAG * error_callback)(error_type , estid_t, error_code);
 
-	typedef void (PORTER_FLAG * ready_callback)();
-
-	typedef void (PORTER_FLAG * update_callback)();
+	typedef void (PORTER_FLAG * cycle_callback)();
 
 	typedef bool (PORTER_FLAG * filter_callback)(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag);
 
@@ -100,10 +98,10 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	LT_INTERFACE_DECLARE(void, logout_account, (const ltobj&));
 
 	/*启动*/
-	LT_INTERFACE_DECLARE(void, start_service, (const ltobj&));
+	LT_INTERFACE_DECLARE(bool, start_service, (const ltobj&));
 	
 	/*停止*/
-	LT_INTERFACE_DECLARE(void, stop_service, (const ltobj&));
+	LT_INTERFACE_DECLARE(bool, stop_service, (const ltobj&));
 	
 	/*
 	下单
@@ -149,7 +147,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	/*
 	* 绑定实时回调 
 	*/
-	LT_INTERFACE_DECLARE(void, bind_realtime_event, (const ltobj&, const order_event&, ready_callback, update_callback));
+	LT_INTERFACE_DECLARE(void, bind_realtime_event, (const ltobj&, const order_event&, cycle_callback, cycle_callback, cycle_callback));
 
 	
 	/**
@@ -175,10 +173,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	*/
 	LT_INTERFACE_DECLARE(const order_statistic&, get_order_statistic, (const ltobj&,const code_t&));
 
-	/**
-	* 是否交易准备完成
-	*/
-	LT_INTERFACE_DECLARE(bool, is_trading_ready, (const ltobj&));
 	
 	/**
 	* 获取交易日

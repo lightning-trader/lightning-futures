@@ -130,7 +130,7 @@ engine::engine(context_type ctx_type,const char* config_path)
 {
 	_lt = lt_create_context(ctx_type, config_path);
 	engine::_self = this;
-	lt_bind_realtime_event(_lt, order_event{ _entrust_callback ,_deal_callback ,_trade_callback ,_cancel_callback ,_error_callback }, _ready_callback,_update_callback);
+	lt_bind_realtime_event(_lt, order_event{ _entrust_callback ,_deal_callback ,_trade_callback ,_cancel_callback ,_error_callback }, _init_callback,_update_callback,_destroy_callback);
 	const auto& ps_config = lt_get_include_config(_lt, "price_step_config");
 	_ps_config = std::make_shared<price_step>(ps_config);
 }
@@ -146,48 +146,14 @@ void engine::regist_strategy(const std::vector<std::shared_ptr<lt::strategy>>& s
 	subscriber suber(*this);
 	for (auto it : strategys)
 	{
-		it->init(suber);
 		_strategy_map[it->get_id()] = (it);
 	}
-	std::set<code_t> tick_subscrib;
-	for (auto it = _tick_reference_count.begin(); it != _tick_reference_count.end();)
-	{
-		if(it->second == 0)
-		{
-			it = _tick_reference_count.erase(it);
-		}
-		else
-		{
-			tick_subscrib.insert(it->first);
-			it++;
-		}
-	}
-	lt_subscribe(_lt, tick_subscrib, _tick_callback);
 }
 void engine::clear_strategy()
 {
 	//策略不存在了那么订单和策略的映射关系也要清掉
 	_estid_to_strategy.clear();
 	_need_check_condition.clear();
-	unsubscriber unsuber(*this);
-	for (auto it : _strategy_map)
-	{
-		it.second->destroy(unsuber);
-	}
-	std::set<code_t> tick_unsubscrib;
-	for (auto it = _tick_reference_count.begin();it != _tick_reference_count.end();)
-	{
-		if (it->second == 0)
-		{
-			tick_unsubscrib.insert(it->first);
-			it = _tick_reference_count.erase(it);
-		}
-		else
-		{
-			it++ ;
-		}
-	}
-	lt_unsubscribe(_lt, tick_unsubscrib);
 	_strategy_map.clear();
 }
 
@@ -319,11 +285,6 @@ daytm_t engine::last_order_time()
 uint32_t engine::get_trading_day()const
 {
 	return lt_get_trading_day(_lt);
-}
-
-bool engine::is_trading_ready()const
-{
-	return lt_is_trading_ready(_lt);
 }
 
 const today_market_info& engine::get_today_market_info(const code_t& code)const

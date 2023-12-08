@@ -15,13 +15,13 @@ context::context():
 	_max_position(10000),
 	_default_chain(nullptr),
 	_trading_filter(nullptr),
-	_is_trading_ready(false),
 	_tick_callback(nullptr),
 	_last_order_time(0),
 	_bind_cpu_core(-1),
 	_loop_interval(1),
-	_ready_callback(nullptr),
+	_init_callback(nullptr),
 	_update_callback(nullptr),
+	_destroy_callback(nullptr),
 	_last_tick_time(0),
 	realtime_event()
 {
@@ -146,8 +146,12 @@ void context::load_trader_data()
 	}
 }
 
-void context::start_service()
+bool context::start_service()
 {
+	if(_is_runing)
+	{
+		return false ;
+	}
 	_is_runing = true;
 	load_trader_data();
 	_realtime_thread = new std::thread([this]()->void{
@@ -158,13 +162,13 @@ void context::start_service()
 				LOG_WARNING("bind to core failed :", _bind_cpu_core);
 			}
 		}
-		if(!_is_trading_ready)
+		check_crossday();
+		if (this->_init_callback)
 		{
-			check_crossday();
+			this->_init_callback();
 		}
 		while (_is_runing||!is_terminaled())
 		{
-			
 			auto begin = std::chrono::system_clock::now();
 			this->update();
 			auto use_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
@@ -174,9 +178,12 @@ void context::start_service()
 				std::this_thread::sleep_for(duration - use_time);
 			}
 		}
-		_is_trading_ready = false;
+		if(this->_destroy_callback)
+		{
+			this->_destroy_callback();
+		}
 	});
-	
+	return true ;
 }
 
 void context::update()
@@ -186,19 +193,19 @@ void context::update()
 	{
 		get_trader().update();
 		this->on_update();
-		if (is_trading_ready())
+		if (this->_update_callback)
 		{
-			if (this->_update_callback)
-			{
-				this->_update_callback();
-			}
+			this->_update_callback();
 		}
 	}
 }
 
-void context::stop_service()
+bool context::stop_service()
 {
-	while (_is_trading_ready.exchange(false));
+	if(!_is_runing)
+	{
+		return false;
+	}
 	_is_runing = false ;
 	if(_realtime_thread)
 	{
@@ -206,6 +213,7 @@ void context::stop_service()
 		delete _realtime_thread;
 		_realtime_thread = nullptr;
 	}
+	return true ;
 }
 
 pod_chain* context::create_chain(bool flag)
@@ -262,11 +270,6 @@ void context::set_trading_filter(filter_callback callback)
 estid_t context::place_order(untid_t untid,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	PROFILE_DEBUG(code.get_id());
-	if (!is_trading_ready())
-	{
-		LOG_WARNING("place order not trading ready", code.get_id());
-		return INVALID_ESTID;
-	}
 	if (!is_in_trading())
 	{
 		LOG_WARNING("place order code not in trading", code.get_id());
@@ -292,11 +295,6 @@ bool context::cancel_order(estid_t estid)
 {
 	if(estid == INVALID_ESTID)
 	{
-		return false;
-	}
-	if (!is_trading_ready())
-	{
-		LOG_WARNING("cancel order not trading ready ", estid);
 		return false;
 	}
 	if (!is_in_trading())
@@ -451,14 +449,9 @@ uint32_t context::get_total_pending()
 void context::check_crossday()
 {
 	_last_tick_time = 0U;
-	_is_trading_ready = true;
 	_today_market_info.clear();
 	_statistic_info.clear();
 	_last_order_time = get_last_time();
-	if (this->_ready_callback)
-	{
-		this->_ready_callback();
-	}
 	LOG_INFO("trading ready");
 }
 

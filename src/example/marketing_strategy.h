@@ -44,11 +44,6 @@ public:
 	virtual void on_init(lt::subscriber& suber) override;
 
 	/*
-	*	交易日初始化完成
-	*/
-	virtual void on_ready() override;
-
-	/*
 	 *	tick推送
 	 */
 	virtual void on_tick(const tick_info& tick)  override;

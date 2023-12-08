@@ -226,14 +226,55 @@ namespace lt
 			}
 		}
 
-		static inline void _ready_callback()
+		static inline void _init_callback()
 		{
 			if (_self)
 			{
-				for (auto& it : _self->_strategy_map)
+				subscriber suber(*_self);
+				for (auto it : _self->_strategy_map)
 				{
-					it.second->on_ready();
+					it.second->init(suber);
 				}
+				std::set<code_t> tick_subscrib;
+				for (auto it = _self->_tick_reference_count.begin(); it != _self->_tick_reference_count.end();)
+				{
+					if (it->second == 0)
+					{
+						it = _self->_tick_reference_count.erase(it);
+					}
+					else
+					{
+						tick_subscrib.insert(it->first);
+						it++;
+					}
+				}
+				lt_subscribe(_self->_lt, tick_subscrib, _tick_callback);
+			}
+		}
+
+		static inline void _destroy_callback()
+		{
+			if (_self)
+			{
+				unsubscriber unsuber(*_self);
+				for (auto it : _self->_strategy_map)
+				{
+					it.second->destroy(unsuber);
+				}
+				std::set<code_t> tick_unsubscrib;
+				for (auto it = _self->_tick_reference_count.begin(); it != _self->_tick_reference_count.end();)
+				{
+					if (it->second == 0)
+					{
+						tick_unsubscrib.insert(it->first);
+						it = _self->_tick_reference_count.erase(it);
+					}
+					else
+					{
+						it++;
+					}
+				}
+				lt_unsubscribe(_self->_lt, tick_unsubscrib);
 			}
 		}
 
@@ -330,11 +371,6 @@ namespace lt
 		* 获取交易日
 		*/
 		uint32_t get_trading_day()const;
-
-		/**
-		*	是否准备就绪
-		*/
-		bool is_trading_ready()const;
 
 		/*
 		* 获取今日行情数据

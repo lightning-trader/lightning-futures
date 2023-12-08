@@ -12,10 +12,6 @@ void arbitrage_strategy::on_init(subscriber& suber)
 	suber.regist_tick_receiver(_code2, this);
 	use_custom_chain(false);
 	_order_data = maping_file<persist_data>(string_helper::format("./arbitrage_strategy_{0}.mmf", get_id()).c_str());
-}
-
-void arbitrage_strategy::on_ready()
-{
 	uint32_t trading_day = get_trading_day();
 	if (_order_data->trading_day != trading_day)
 	{

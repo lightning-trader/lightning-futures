@@ -11,10 +11,7 @@ void orderflow_strategy::on_init(subscriber& suber)
 	suber.regist_bar_receiver(_code, _period,this);
 	use_custom_chain(true);
 	_order_data = maping_file<persist_data>(string_helper::format("./orderflow_strategy_{0}.mmf", get_id()).c_str());
-}
 
-void orderflow_strategy::on_ready()
-{
 	uint32_t trading_day = get_trading_day();
 	if (_order_data->trading_day != trading_day)
 	{

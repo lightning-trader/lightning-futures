@@ -77,11 +77,6 @@ namespace lt
 
 	public:
 
-		/*
-		*	交易日初始化完成
-		*/
-		virtual void on_ready() {};
-
 
 		/*
 		 *	订单接收回报
@@ -210,11 +205,6 @@ namespace lt
 		* 获取交易日
 		*/
 		uint32_t get_trading_day()const;
-
-		/**
-		*	是否准备就绪
-		*/
-		bool is_trading_ready()const;
 
 		
 		/*

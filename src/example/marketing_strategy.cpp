@@ -11,10 +11,7 @@ void marketing_strategy::on_init(subscriber& suber)
 	suber.regist_tick_receiver(_code,this);
 	use_custom_chain(false);
 	_order_data = maping_file<persist_data>(string_helper::format("./marketing_strategy_{0}.mmf", get_id()).c_str());
-}
 
-void marketing_strategy::on_ready()
-{
 	uint32_t trading_day = get_trading_day();
 	if (_order_data->trading_day != trading_day)
 	{

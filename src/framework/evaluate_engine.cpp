@@ -16,9 +16,13 @@ void evaluate_engine::back_test(const std::vector<std::shared_ptr<lt::strategy>>
 {
 	lt_simulate_crossday(_lt,trading_day);
 	regist_strategy(strategys);
-	lt_start_service(_lt);
-	lt_playback_history(_lt);
-	//std::this_thread::sleep_for(std::chrono::seconds(1));
-	lt_stop_service(_lt);
-	clear_strategy();
+	if(lt_start_service(_lt))
+	{
+		lt_playback_history(_lt);
+		//std::this_thread::sleep_for(std::chrono::seconds(1));
+		if(lt_stop_service(_lt))
+		{
+			clear_strategy();
+		}
+	}
 }

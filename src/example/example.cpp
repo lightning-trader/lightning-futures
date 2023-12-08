@@ -28,7 +28,15 @@ void start_runtime(const char* account_config)
 		}
 		return true;
 		});
-	app.run_to_close(strategys);
+	app.start_trading(strategys);
+	time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	time_t delta_seconds = make_datetime(app.get_trading_day(), "15:00:00") - now;
+	if (delta_seconds > 0)
+	{
+		LOG_INFO("runtime_engine waiting for close :", delta_seconds);
+		std::this_thread::sleep_for(std::chrono::seconds(delta_seconds));
+	}
+	app.stop_trading();
 }
 
 

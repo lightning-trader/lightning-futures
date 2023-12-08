@@ -16,9 +16,11 @@ class context
 {
 
 public:
-	context();
-	virtual ~context();
 
+	context();
+
+	virtual ~context();
+	
 private:
 
 	context(const context&) = delete;
@@ -32,11 +34,11 @@ private:
 private:
 	
 	bool _is_runing ;
-
 	// (实时)
 	tick_callback _tick_callback;
-	ready_callback _ready_callback;
-	update_callback _update_callback;
+	cycle_callback _init_callback;
+	cycle_callback _update_callback;
+	cycle_callback _destroy_callback;
 	//实时事件，高频策略使用
 	order_event realtime_event;
 	
@@ -52,8 +54,6 @@ private:
 	std::unordered_map<untid_t, pod_chain*> _custom_chain;
 
 	filter_callback _trading_filter;
-
-	std::atomic<bool> _is_trading_ready ;
 
 	int16_t _bind_cpu_core ;
 
@@ -82,18 +82,19 @@ public:
 	void load_trader_data();
 
 	/*启动*/
-	void start_service() ;
+	bool start_service() ;
 	
 	void update();
 	/*停止*/
-	void stop_service();
+	bool stop_service();
 
 	//绑定实时事件
-	void bind_realtime_event(const order_event& event_cb, ready_callback ready_cb, update_callback update_cb)
+	void bind_realtime_event(const order_event& event_cb, cycle_callback init_cb, cycle_callback update_cb,cycle_callback destroy_cb)
 	{
 		realtime_event = event_cb;
-		this->_ready_callback = ready_cb;
+		this->_init_callback = init_cb;
 		this->_update_callback = update_cb;
+		this->_destroy_callback = destroy_cb;
 	}
 
 	/*
@@ -122,11 +123,6 @@ public:
 	daytm_t last_order_time();
 
 	const order_statistic& get_order_statistic(const code_t& code)const;
-
-	bool is_trading_ready()
-	{
-		return _is_trading_ready;
-	}
 
 	uint32_t get_trading_day();
 

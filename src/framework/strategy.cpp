@@ -133,11 +133,6 @@ uint32_t strategy::get_trading_day()const
 	return _engine.get_trading_day();
 }
 
-bool strategy::is_trading_ready()const
-{
-	return _engine.is_trading_ready();
-}
-
 const tick_info& strategy::get_last_tick(const code_t& code)const
 {
 	const auto& market = _engine.get_today_market_info(code);
