@@ -151,9 +151,9 @@ void context::start_service()
 	_is_runing = true;
 	load_trader_data();
 	_realtime_thread = new std::thread([this]()->void{
-		if(0 <= _bind_cpu_core && _bind_cpu_core < cpu_helper::get_cpu_cores())
+		if(0 <= _bind_cpu_core && _bind_cpu_core < static_cast<int16_t>(cpu_helper::get_cpu_cores()))
 		{
-			if (!cpu_helper::bind_core(_bind_cpu_core))
+			if (!cpu_helper::bind_core(static_cast<uint32_t>(_bind_cpu_core)))
 			{
 				LOG_WARNING("bind to core failed :", _bind_cpu_core);
 			}

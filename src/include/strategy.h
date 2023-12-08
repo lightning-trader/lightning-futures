@@ -29,8 +29,6 @@ namespace lt
 
 		daytm_t _coming_to_close;
 
-		daytm_t _close_daytime;
-
 	public:
 
 		strategy(straid_t id, engine& engine, bool openable, bool closeable);

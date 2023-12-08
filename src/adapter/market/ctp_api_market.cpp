@@ -136,7 +136,7 @@ void ctp_api_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDept
 	}
 	
 	PROFILE_INFO(pDepthMarketData->InstrumentID);
-	LOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice);
+	LOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice, pDepthMarketData->UpdateTime, pDepthMarketData->UpdateMillisec);
 	const char * excg_id = pDepthMarketData->ExchangeID;
 	auto excg_it = _id_excg_map->find(pDepthMarketData->InstrumentID);
 	if (excg_it != _id_excg_map->end())

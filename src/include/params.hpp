@@ -20,7 +20,7 @@ public:
 	}
 	std::map<std::string, std::string> data() const
 	{
-		return std::move(_params);
+		return (_params);
 	}
 	void from_file(const char* filename)
 	{

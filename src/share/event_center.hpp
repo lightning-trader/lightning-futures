@@ -6,8 +6,10 @@
 template<typename T>
 struct event_data
 {
-	T type;
+	T type ;
 	std::vector<std::any> params;
+
+	event_data() = default ;
 };
 template<typename T>
 class event_dispatch
