@@ -194,7 +194,7 @@ void tap_api_market::subscribe(const std::set<code_t>& code_list)
 		strcpy(stContract.Commodity.ExchangeNo, it.get_excg());
 		stContract.Commodity.CommodityType = TAPI_COMMODITY_TYPE_FUTURES;
 		strcpy(stContract.Commodity.CommodityNo, it.get_cmdtid());
-		itoa(it.get_cmdtno(),stContract.ContractNo1, 10);
+		snprintf(stContract.ContractNo1, 11, "%d", it.get_cmdtno());
 		
 		stContract.CallOrPutFlag1 = TAPI_CALLPUT_FLAG_NONE;
 		stContract.CallOrPutFlag2 = TAPI_CALLPUT_FLAG_NONE;

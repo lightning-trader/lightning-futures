@@ -474,7 +474,7 @@ estid_t tap_api_trader::place_order(offset_type offset, direction_type direction
 	strcpy(stNewOrder.ExchangeNo, code.get_excg());
 	stNewOrder.CommodityType = TAPI_COMMODITY_TYPE_FUTURES;
 	strcpy(stNewOrder.CommodityNo, code.get_cmdtid());
-	itoa(code.get_cmdtno(), stNewOrder.ContractNo, 10);
+	snprintf(stNewOrder.ContractNo, 11, "%d", code.get_cmdtno());
 	strcpy(stNewOrder.StrikePrice, "");
 	stNewOrder.CallOrPutFlag = TAPI_CALLPUT_FLAG_NONE;
 	strcpy(stNewOrder.ContractNo2, "");
