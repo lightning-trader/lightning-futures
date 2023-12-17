@@ -11,7 +11,7 @@ trading_section::trading_section(const std::string& config_path)
 	rapidcsv::Document config_csv(config_path, rapidcsv::LabelParams(0, 0));
 	for (size_t i = 0; i < config_csv.GetRowCount(); i++)
 	{
-		uint32_t is_day = config_csv.GetCell<uint32_t>("day_or_night", i);
+		//uint32_t is_day = config_csv.GetCell<uint32_t>("day_or_night", i);
 		const std::string& begin_time_str = config_csv.GetCell<std::string>("begin", i);
 		const std::string& end_time_str = config_csv.GetCell<std::string>("end", i);
 		daytm_t begin_time = make_daytm(begin_time_str.c_str(),0U);
