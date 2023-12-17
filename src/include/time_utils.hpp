@@ -79,7 +79,7 @@ static time_t make_time(const char* time)
 
 static time_t make_datetime(uint32_t date, const char* time)
 {
-	if (time != nullptr && time != "")
+	if (time != nullptr && strcmp(time,"")!=0)
 	{
 		int year = date / 10000;
 		int month = date % 10000 / 100;
