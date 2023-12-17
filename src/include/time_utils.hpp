@@ -148,7 +148,7 @@ static daytm_t make_daytm(const char* time,bool is_str = false)
 	{
 		char tmp[13] = { 0 };
 		size_t p = 0;
-		for (size_t i = 0; time[i] != '\0' && i < 13; i++)
+		for (size_t i = 0;  i < 13 && time[i] != '\0'; i++)
 		{
 			if (time[i] == '.')
 			{

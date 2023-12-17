@@ -17,7 +17,7 @@ class dll_helper
 public:
 	static dll_handle load_library(const char *filename)
 	{
-		std::string dllname = get_dllname(filename);
+		//std::string dllname = get_dllname(filename);
 		try
 		{
 #ifdef _MSC_VER

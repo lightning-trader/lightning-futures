@@ -42,6 +42,7 @@ public:
 		_file(file),
 		_func(func),
 		_line(line),
+		_buffer{0},
 		_sd(_buffer, LOG_BUFFER_SIZE)
 	{
 		_sd.clear();

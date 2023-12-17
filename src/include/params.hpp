@@ -22,25 +22,8 @@ public:
 	{
 		return (_params);
 	}
-	void from_file(const char* filename)
-	{
-		FILE* fp = fopen(filename, "r");
-		if (!fp) { return; }
-		_params.clear();
-		char buf[128];
-		while (fgets(buf, sizeof(buf), fp) != NULL)
-		{
-			if (char* r = strchr(buf, '\r')) { r[0] = '\0'; }
-			if (char* r = strchr(buf, '\n')) { r[0] = '\0'; }
-
-			std::string line{ buf };
-			std::smatch sm;
-			std::regex r{ "([[:alpha:]_]+)[ = ]+(.+)" };
-			if (std::regex_match(line, sm, r)) { _params[sm[1].str()] = sm[2].str(); }
-		}
-		fclose(fp);
-	}
-	void from_string(const std::string& param)
+	
+	params(const std::string& param)
 	{
 		_params.clear();
 		auto param_pair = string_helper::split(param, '&');

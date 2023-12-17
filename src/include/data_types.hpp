@@ -28,8 +28,8 @@ public:
 	{
 		size_t ed = 0;
 		std::memset(&_data, 0, sizeof(_data));
-		size_t cmdtno_index = 0;
-		for (size_t i = 0; cd[i] != '\0' && i < CODE_DATA_LEN; i++)
+		size_t cmdtno_index = 0U;
+		for (size_t i = 0; i < CODE_DATA_LEN && cd[i] != '\0'; i++)
 		{
 			char c = cd[i];
 			if (c == '.')
@@ -47,7 +47,7 @@ public:
 				_data[i - ed - 1] = c;
 				if (c >= '0' && c <= '9')
 				{
-					if(cmdtno_index==0)
+					if(cmdtno_index==0U)
 					{
 						cmdtno_index = i - ed - 1;
 					}
@@ -75,8 +75,8 @@ public:
 	code_t(const char* id, const char* excg_id)
 	{
 		std::memset(&_data, 0, sizeof(_data));
-		size_t cmdtno_index = 0;
-		for (size_t i = 0; id[i] != '\0' && i < EXCGID_BEGIN; i++)
+		size_t cmdtno_index = 0U;
+		for (size_t i = 0; i < EXCGID_BEGIN && id[i] != '\0'; i++)
 		{
 			auto c = id[i];
 			_data[i] = c;
@@ -102,11 +102,10 @@ public:
 	code_t(const char* cmdt_id, const char* cmdt_no, const char* excg_id)
 	{
 		std::memset(&_data, 0, sizeof(_data));
-		size_t cmdtno_index = 0;
 		if (std::strlen(cmdt_id) + std::strlen(cmdt_no) < EXCGID_BEGIN)
 		{
 			std::strcpy(_data, cmdt_id);
-			cmdtno_index = strlen(_data);
+			size_t cmdtno_index = strlen(_data);
 			std::strcpy(_data + cmdtno_index, cmdt_no);
 			std::strcpy(_data + CMDTID_BEGIN, cmdt_id);
 			*reinterpret_cast<uint16_t*>(_data + CMDTNO_BEGIN) = static_cast<uint16_t>(std::atoi(_data + cmdtno_index));
