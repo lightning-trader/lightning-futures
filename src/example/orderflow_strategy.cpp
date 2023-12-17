@@ -65,8 +65,8 @@ void orderflow_strategy::on_bar(const bar_info& bar)
 	auto unbalance = bar.get_unbalance(_multiple);
 	if(_order_data->buy_order == INVALID_ESTID)
 	{
-		//¿ÉÒÔÂòÈëµÄ
-		//ÐèÇóÊ§ºâ£¬ËµÃ÷ÓÐÂò·½Á¦Á¿´óÓÚÂô·½Á¦Á¿£¬Ë³ÊÆ¶øÎªÔòÂòÈë
+		//å¯ä»¥ä¹°å…¥çš„
+		//éœ€æ±‚å¤±è¡¡ï¼Œè¯´æ˜Žæœ‰ä¹°æ–¹åŠ›é‡å¤§äºŽå–æ–¹åŠ›é‡ï¼Œé¡ºåŠ¿è€Œä¸ºåˆ™ä¹°å…¥
 		auto ub = unbalance.first;
 		if(ub->size() > _threshold)
 		{
@@ -75,8 +75,8 @@ void orderflow_strategy::on_bar(const bar_info& bar)
 	}
 	if (_order_data->sell_order == INVALID_ESTID)
 	{
-		//¿ÉÒÔÂô³öµÄ
-		//ÐèÇóÊ§ºâ£¬ËµÃ÷ÓÐÂò·½Á¦Á¿´óÓÚÂò·½Á¦Á¿£¬Ë³ÊÆ¶øÎªÔòÂô³ö
+		//å¯ä»¥å–å‡ºçš„
+		//éœ€æ±‚å¤±è¡¡ï¼Œè¯´æ˜Žæœ‰ä¹°æ–¹åŠ›é‡å¤§äºŽä¹°æ–¹åŠ›é‡ï¼Œé¡ºåŠ¿è€Œä¸ºåˆ™å–å‡º
 		auto ub = unbalance.second;
 		if (ub->size() > _threshold)
 		{
@@ -193,6 +193,6 @@ void orderflow_strategy::try_sell()
 	}
 	if (_open_once + pos.get_short_position() + pos.short_pending < _position_limit)
 	{
-		_order_data->sell_order = sell_for_close(_code, _open_once, tick.buy_price());
+		_order_data->sell_order = sell_for_open(_code, _open_once, tick.buy_price());
 	}
 }
