@@ -52,9 +52,9 @@ namespace
 		std::time_t time_t = std::chrono::system_clock::to_time_t(time_point);
 		//std::time_t time_t = timestamp / 1000000;
 		auto time = std::localtime(&time_t);
-		char buffer[32];
+		char buffer[32]={0};
 		std::strftime(buffer, 32, "%Y-%m-%d %T.", time);
-		char microseconds[7];
+		char microseconds[7]={0};
 
 #if defined(_MSC_VER)		
 		snprintf(microseconds, 7 , "%06I64u", timestamp % 1000000);
