@@ -50,39 +50,6 @@ void context::init(const params& control_config, const params& include_config,bo
 	_default_chain = create_chain(false);
 	auto section_config = include_config.get<std::string>("section_config");
 	_section_config = std::make_shared<trading_section>(section_config);
-	get_trader().bind_event([this](trader_event_type type, const std::vector<std::any>& param)->void {
-
-		//LOG_INFO("event_type : ", type);
-		switch (type)
-		{
-
-		case trader_event_type::TET_OrderCancel:
-			handle_cancel(param);
-			break;
-		case trader_event_type::TET_OrderPlace:
-			handle_entrust(param);
-			break;
-		case trader_event_type::TET_OrderDeal:
-			handle_deal(param);
-			break;
-		case trader_event_type::TET_OrderTrade:
-			handle_trade(param);
-			break;
-		case trader_event_type::TET_OrderError:
-			handle_error(param);
-			break;
-		}
-		});
-
-	get_market().bind_event([this](market_event_type type, const std::vector<std::any>& param)->void {
-	
-		switch (type)
-		{
-		case market_event_type::MET_TickReceived:
-			handle_tick(param);
-			break;
-		}
-		});
 }
 
 void context::load_trader_data()
@@ -154,6 +121,13 @@ bool context::start_service()
 	}
 	_is_runing = true;
 	load_trader_data();
+	get_trader().bind_event(trader_event_type::TET_OrderCancel, std::bind(&context::handle_cancel, this, std::placeholders::_1));
+	get_trader().bind_event(trader_event_type::TET_OrderPlace, std::bind(&context::handle_entrust, this, std::placeholders::_1));
+	get_trader().bind_event(trader_event_type::TET_OrderDeal, std::bind(&context::handle_deal, this, std::placeholders::_1));
+	get_trader().bind_event(trader_event_type::TET_OrderTrade, std::bind(&context::handle_trade, this, std::placeholders::_1));
+	get_trader().bind_event(trader_event_type::TET_OrderError, std::bind(&context::handle_error, this, std::placeholders::_1));
+	get_market().bind_event(market_event_type::MET_TickReceived, std::bind(&context::handle_tick, this, std::placeholders::_1));
+
 	_realtime_thread = new std::thread([this]()->void{
 		if(0 <= _bind_cpu_core && _bind_cpu_core < static_cast<int16_t>(cpu_helper::get_cpu_cores()))
 		{
@@ -213,6 +187,8 @@ bool context::stop_service()
 		delete _realtime_thread;
 		_realtime_thread = nullptr;
 	}
+	get_trader().clear_event();
+	get_market().clear_event();
 	return true ;
 }
 

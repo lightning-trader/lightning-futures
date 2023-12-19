@@ -42,8 +42,8 @@ class arbitrage_strategy : public lt::strategy,public lt::tick_receiver
 	};
 public:
 
-	arbitrage_strategy(lt::straid_t id, lt::engine& engine, const code_t& code1, const code_t& code2, double_t offset, uint32_t open_once) :
-		lt::strategy(id, engine, true, true),
+	arbitrage_strategy(lt::straid_t id, lt::engine* engine, const code_t& code1, const code_t& code2, double_t offset, uint32_t open_once) :
+		lt::strategy(id, engine),
 		_code1(code1),
 		_code2(code2),
 		_price1(.0),

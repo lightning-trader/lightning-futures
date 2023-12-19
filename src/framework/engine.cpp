@@ -146,15 +146,18 @@ void engine::regist_strategy(const std::vector<std::shared_ptr<lt::strategy>>& s
 	subscriber suber(*this);
 	for (auto it : strategys)
 	{
+		this->add_handle(it->get_id(),std::bind(&lt::strategy::handle_change, &(*it), std::placeholders::_1));
 		_strategy_map[it->get_id()] = (it);
 	}
 }
 void engine::clear_strategy()
 {
+	this->clear_handle();
 	//策略不存在了那么订单和策略的映射关系也要清掉
 	_estid_to_strategy.clear();
 	_need_check_condition.clear();
 	_strategy_map.clear();
+	
 }
 
 
@@ -306,6 +309,7 @@ double_t engine::get_proximate_price(const code_t& code, double_t price)const
 	LOG_WARNING("_price_step_config null");
 	return price;
 }
+
 
 deal_direction engine::get_deal_direction(const tick_info& prev, const tick_info& tick)const
 {

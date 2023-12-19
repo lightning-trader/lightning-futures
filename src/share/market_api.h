@@ -38,7 +38,12 @@ public:
 	/*
 	*	绑定事件
 	*/
-	virtual void bind_event(std::function<void(market_event_type, const std::vector<std::any>&)> handle) = 0;
+	virtual void bind_event(market_event_type type,std::function<void(const std::vector<std::any>&)> handle) = 0;
+
+	/*
+	*	清理事件
+	*/
+	virtual void clear_event() = 0;
 
 };
 
@@ -74,9 +79,14 @@ protected:
 	
 	sync_actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map) :actual_market(id_excg_map){}
 
-	virtual void bind_event(std::function<void(market_event_type, const std::vector<std::any>&)> handle) override
+	virtual void bind_event(market_event_type type,std::function<void(const std::vector<std::any>&)> handle) override
 	{
-		this->add_handle(handle);
+		this->add_handle(type, handle);
+	}
+
+	virtual void clear_event()
+	{
+		this->clear_handle();
 	}
 };
 
@@ -92,9 +102,14 @@ protected:
 		this->process();
 	}
 
-	virtual void bind_event(std::function<void(market_event_type, const std::vector<std::any>&)> handle) override
+	virtual void bind_event(market_event_type type,std::function<void(const std::vector<std::any>&)> handle) override
 	{
-		this->add_handle(handle);
+		this->add_handle(type, handle);
+	}
+
+	virtual void clear_event()
+	{
+		this->clear_handle();
 	}
 };
 
@@ -108,11 +123,15 @@ public:
 	/*
 	*	绑定事件
 	*/
-	virtual void bind_event(std::function<void(market_event_type, const std::vector<std::any>&)> handle) override
+	virtual void bind_event(market_event_type type, std::function<void(const std::vector<std::any>&)> handle) override
 	{
-		add_handle(handle);
+		add_handle(type,handle);
 	}
 
+	virtual void clear_event()
+	{
+		this->clear_handle();
+	}
 
 public:
 

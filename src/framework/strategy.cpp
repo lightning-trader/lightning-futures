@@ -5,7 +5,7 @@
 
 using namespace lt;
 
-strategy::strategy(straid_t id, engine& engine, bool openable, bool closeable):_id(id), _engine(engine), _openable(openable), _closeable(closeable)
+strategy::strategy(straid_t id, engine* engine):_id(id), _engine(*engine),_openable(true),_closeable(true)
 {
 	_coming_to_close = _engine.get_close_time() - 2 * ONE_MINUTE_MILLISECONDS;
 }
@@ -28,6 +28,17 @@ void strategy::update()
 void strategy::destroy(unsubscriber& unsuber)
 {
 	this->on_destroy(unsuber);
+}
+
+void strategy::handle_change(const std::vector<std::any>& msg)
+{
+	if (msg.size() >= 3)
+	{
+		_openable = std::any_cast<bool>(msg[0]);
+		_closeable = std::any_cast<bool>(msg[1]);
+		params p(std::any_cast<std::string>(msg[2]));
+		this->on_change(p);
+	}
 }
 
 estid_t strategy::buy_for_open(const code_t& code,uint32_t count ,double_t price , order_flag flag )

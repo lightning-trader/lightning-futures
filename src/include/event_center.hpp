@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <any>
 #include <vector>
+#include <map>
 #include "ringbuffer.hpp"
 
 template<typename T>
@@ -15,22 +16,29 @@ template<typename T>
 class event_dispatch
 {
 
-	std::vector<std::function<void(T, const std::vector<std::any>& param)>> _handle_list;
+	std::multimap<T,std::function<void(const std::vector<std::any>&)>> _handle_map;
 
 public:
 	
-	void add_handle(std::function<void(T, const std::vector<std::any>&)> handle)
+	void add_handle(T type,std::function<void(const std::vector<std::any>&)> handle)
 	{
-		_handle_list.emplace_back(handle);
+		_handle_map.insert(std::make_pair(type, handle));
+	}
+
+	void clear_handle()
+	{
+		_handle_map.clear();
 	}
 
 protected:
 
 	void trigger(T type,const std::vector<std::any>& params)
 	{
-		for (auto& handle : _handle_list)
+		auto it = _handle_map.equal_range(type);
+		while(it.first != it.second)
 		{
-			handle(type, params);
+			it.first->second(params);
+			it.first++;
 		}
 	}
 };
@@ -94,9 +102,6 @@ public:
 template<typename T>
 class direct_event_source : public event_dispatch<T>
 {
-private:
-	
-	std::vector<std::function<void(T, const std::vector<std::any>& param)>> _handle_list;
 
 private:
 

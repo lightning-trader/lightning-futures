@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <any>
 #include <thread>
 #include <log_wapper.hpp>
 #include <mmf_wapper.hpp>

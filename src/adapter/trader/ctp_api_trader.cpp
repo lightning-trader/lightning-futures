@@ -128,7 +128,7 @@ bool ctp_api_trader::do_login()
 	int iResult = _td_api->ReqUserLogin(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_trader do_login request failed: %d", iResult);
+		LOG_ERROR("ctp_api_trader do_login request failed:", iResult);
 		return false ;
 	}
 	return true;
@@ -148,7 +148,7 @@ bool ctp_api_trader::do_logout()
 	int iResult = _td_api->ReqUserLogout(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_trader logout request failed: %d", iResult);
+		LOG_ERROR("ctp_api_trader logout request failed:", iResult);
 		return false ;
 	}
 
@@ -173,7 +173,7 @@ bool ctp_api_trader::query_positions(bool is_sync)
 	auto iResult = _td_api->ReqQryInvestorPosition(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ReqQryInvestorPosition failed: %d", iResult);
+		LOG_ERROR("ReqQryInvestorPosition failed:", iResult);
 		return false;
 	}
 	while (!_is_in_query.exchange(true));
@@ -203,7 +203,7 @@ bool ctp_api_trader::query_orders(bool is_sync)
 	auto iResult = _td_api->ReqQryOrder(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ReqQryOrder failed: %d", iResult);
+		LOG_ERROR("ReqQryOrder failed:", iResult);
 		return false;
 	}
 	while (!_is_in_query.exchange(true));
@@ -235,7 +235,7 @@ void ctp_api_trader::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthe
 {
 	if (pRspInfo && pRspInfo->ErrorID)
 	{
-		LOG_ERROR("ctp_api_trader OnRspAuthenticate Error :", pRspInfo->ErrorID);
+		LOG_ERROR("ctp_api_trader OnRspAuthenticate Error :", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 		return ;
 	}
 	do_login();
@@ -245,7 +245,7 @@ void ctp_api_trader::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, 
 {
 	if (pRspInfo && pRspInfo->ErrorID)
 	{
-		LOG_ERROR("ctp_api_trader OnRspUserLogin Error : ", pRspInfo->ErrorID);
+		LOG_ERROR("ctp_api_trader OnRspUserLogin Error : ", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 		return;
 	}
 
@@ -596,7 +596,7 @@ bool ctp_api_trader::do_auth()
 	int iResult = _td_api->ReqAuthenticate(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_trader do_auth request failed: %d", iResult);
+		LOG_ERROR("ctp_api_trader do_auth request failed:", iResult);
 		return false;
 	}
 	return true ;

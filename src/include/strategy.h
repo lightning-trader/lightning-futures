@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <define.h>
+#include <params.hpp>
 #include <data_types.hpp>
 
 namespace lt
@@ -31,7 +32,7 @@ namespace lt
 
 	public:
 
-		strategy(straid_t id, engine& engine, bool openable, bool closeable);
+		strategy(straid_t id, engine* engine);
 
 		virtual ~strategy();
 		
@@ -56,6 +57,11 @@ namespace lt
 		*/
 		void destroy(unsubscriber& unsuber);
 
+		/*
+		*	收到消息
+		*/
+		virtual void handle_change(const std::vector<std::any>& msg) ;
+
 		//回调函数
 	private:
 
@@ -74,6 +80,12 @@ namespace lt
 		*	更新
 		*/
 		virtual void on_update() {};
+
+		/*
+		*	收到消息
+		*/
+		virtual void on_change(const params& p) {};
+
 
 	public:
 
@@ -228,8 +240,16 @@ namespace lt
 		*/
 		void regist_order_estid(estid_t estid);
 
+
+		inline void set_openable(bool openable)
+		{
+			_openable = openable ;
+		}
+
+		inline void set_closeable(bool closeable)
+		{
+			_closeable = closeable ;
+		}
+
 	};
-
-
-
 }

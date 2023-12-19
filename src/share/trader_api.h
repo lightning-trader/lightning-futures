@@ -59,8 +59,12 @@ public:
 	/*
 	*	绑定事件
 	*/
-	virtual void bind_event(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) = 0;
+	virtual void bind_event(trader_event_type type,std::function<void(const std::vector<std::any>&)> handle) = 0;
 
+	/*
+	*	清理事件
+	*/
+	virtual void clear_event() = 0;
 };
 
 class actual_trader : public trader_api
@@ -110,9 +114,14 @@ protected:
 		return true;
 	}
 
-	virtual void bind_event(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) override
+	virtual void bind_event(trader_event_type type,std::function<void(const std::vector<std::any>&)> handle) override
 	{
-		this->add_handle(handle);
+		this->add_handle(type, handle);
+	}
+
+	virtual void clear_event() override
+	{
+		this->clear_handle();
 	}
 };
 
@@ -133,9 +142,14 @@ protected:
 		return this->is_empty();
 	}
 
-	virtual void bind_event(std::function<void(trader_event_type, const std::vector<std::any>&)> handle) override
+	virtual void bind_event(trader_event_type type,std::function<void(const std::vector<std::any>&)> handle) override
 	{
-		this->add_handle(handle);
+		this->add_handle(type, handle);
+	}
+
+	virtual void clear_event() override
+	{
+		this->clear_handle();
 	}
 };
 
@@ -154,8 +168,13 @@ public:
 
 	virtual const account_info& get_account() = 0;
 
-	virtual void bind_event(std::function<void(trader_event_type, const std::vector<std::any>&)> handle)override
+	virtual void bind_event(trader_event_type type,std::function<void(const std::vector<std::any>&)> handle)override
 	{
-		add_handle(handle);
+		add_handle(type, handle);
+	}
+
+	virtual void clear_event() override
+	{
+		this->clear_handle();
 	}
 };
