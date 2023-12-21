@@ -127,7 +127,7 @@ public:
 
 	daytm_t get_close_time()const;
 	
-	bool is_in_trading()const;
+	bool is_in_trading(daytm_t time)const;
 
 	void use_custom_chain(untid_t untid, bool flag);
 
