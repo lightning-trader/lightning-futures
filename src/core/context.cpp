@@ -437,14 +437,14 @@ void context::handle_entrust(const std::vector<std::any>& param)
 	{
 		order_info order = std::any_cast<order_info>(param[0]);
 		_order_info[order.estid] = (order);
-		if (order.offset != offset_type::OT_OPEN)
+		if (order.offset == offset_type::OT_OPEN)
 		{
-			//平仓冻结仓位
-			frozen_deduction(order.code, order.direction, order.offset,order.total_volume);
+			record_pending(order.code, order.direction, order.offset, order.total_volume);
 		}
 		else
 		{
-			record_pending(order.code, order.direction, order.offset, order.total_volume);
+			//平仓冻结仓位
+			frozen_deduction(order.code, order.direction, order.offset, order.total_volume);
 		}
 		if(realtime_event.on_entrust)
 		{
@@ -538,9 +538,10 @@ void context::handle_tick(const std::vector<std::any>& param)
 	
 	if (param.size() >= 1)
 	{
-		PROFILE_DEBUG("pDepthMarketData->InstrumentID");
+		PROFILE_DEBUG("pDepthMarketData->InstrumentID", pDepthMarketData->InstrumentID);
 		tick_info&& last_tick = std::any_cast<tick_info>(param[0]);
 		PROFILE_DEBUG(last_tick.id.get_id());
+		LOG_INFO("handle_tick", last_tick.id.get_id(), last_tick.time, " ", _last_tick_time);
 		if (last_tick.time > _last_tick_time)
 		{
 			_last_tick_time = last_tick.time;

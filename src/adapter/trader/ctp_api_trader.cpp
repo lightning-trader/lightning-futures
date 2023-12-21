@@ -487,6 +487,34 @@ void ctp_api_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)
 			}
 			_order_info.erase(it);
 		}
+		else
+		{
+			order_info entrust;
+			entrust.code = code;
+			entrust.create_time = make_daytm(pOrder->InsertTime, 0U);
+			entrust.estid = estid;
+			entrust.direction = direction;
+			entrust.last_volume = pOrder->VolumeTotal;
+			entrust.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;
+			entrust.offset = offset;
+			entrust.price = pOrder->LimitPrice;
+			this->fire_event(trader_event_type::TET_OrderPlace, entrust);
+			if (pOrder->VolumeTraded > 0)
+			{
+				//触发 deal 事件
+				this->fire_event(trader_event_type::TET_OrderDeal, estid, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+			}
+			if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
+			{
+				LOG_INFO("OnRtnOrder fire_event ET_OrderCancel", estid, code.get_id(), direction, offset);
+				this->fire_event(trader_event_type::TET_OrderCancel, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+			}
+			if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
+			{
+				LOG_INFO("OnRtnOrder fire_event ET_OrderTrade", estid, code.get_id(), direction, offset);
+				this->fire_event(trader_event_type::TET_OrderTrade, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
+			}
+		}
 	}
 	else
 	{

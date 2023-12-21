@@ -18,7 +18,7 @@ class marketing_strategy : public lt::strategy,public lt::tick_receiver
 public:
 
 	marketing_strategy(lt::straid_t id, lt::engine* engine, const code_t& code, double_t open_detla, uint32_t open_once) :
-		lt::strategy(id, engine),
+		lt::strategy(id, engine, true, true),
 		_code(code),
 		_open_once(open_once),
 		_open_delta(open_detla),

@@ -17,7 +17,7 @@ class orderflow_strategy : public lt::strategy,public lt::bar_receiver
 public:
 
 	orderflow_strategy(lt::straid_t id, lt::engine* engine, const code_t& code, uint32_t period, uint32_t open_once, uint32_t multiple, uint32_t threshold, uint32_t position_limit) :
-		lt::strategy(id, engine),
+		lt::strategy(id, engine, true, true),
 		_code(code),
 		_open_once(open_once),
 		_period(period),

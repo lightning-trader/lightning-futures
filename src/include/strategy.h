@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <define.h>
-#include <params.hpp>
 #include <data_types.hpp>
+#include <params.hpp>
 
 namespace lt
 {
@@ -32,7 +32,7 @@ namespace lt
 
 	public:
 
-		strategy(straid_t id, engine* engine);
+		strategy(straid_t id, engine* engine, bool openable, bool closeable);
 
 		virtual ~strategy();
 		
@@ -240,16 +240,12 @@ namespace lt
 		*/
 		void regist_order_estid(estid_t estid);
 
-
-		inline void set_openable(bool openable)
-		{
-			_openable = openable ;
-		}
-
-		inline void set_closeable(bool closeable)
-		{
-			_closeable = closeable ;
-		}
-
 	};
 }
+
+
+extern "C"
+{
+	EXPORT_FLAG lt::strategy* create_strategy(lt::straid_t id, lt::engine* engine, bool openable, bool closeable, const params& p);
+}
+

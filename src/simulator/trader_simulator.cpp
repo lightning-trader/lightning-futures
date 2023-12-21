@@ -653,7 +653,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 			{
 				return error_code::EC_PositionNotEnough;
 			}
-			it->second.today_long.frozen -= std::min<uint32_t>(count, it->second.today_long.frozen);
+			it->second.today_long.frozen += std::min<uint32_t>(count, it->second.today_long.frozen);
 		}
 		else if (direction == direction_type::DT_SHORT)
 		{
@@ -662,7 +662,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 			{
 				return error_code::EC_PositionNotEnough;
 			}
-			it->second.today_short.frozen -= std::min<uint32_t>(count, it->second.today_short.frozen);
+			it->second.today_short.frozen += std::min<uint32_t>(count, it->second.today_short.frozen);
 		}
 		return error_code::EC_Success;
 	}
@@ -675,7 +675,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 			{
 				return error_code::EC_PositionNotEnough;
 			}
-			it->second.yestoday_long.frozen -= std::min<uint32_t>(count, it->second.yestoday_long.frozen);
+			it->second.yestoday_long.frozen += std::min<uint32_t>(count, it->second.yestoday_long.frozen);
 
 		}
 		else if (direction == direction_type::DT_SHORT)
@@ -685,7 +685,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 			{
 				return error_code::EC_PositionNotEnough;
 			}
-			it->second.yestoday_short.frozen -= std::min<uint32_t>(count, it->second.yestoday_short.frozen);
+			it->second.yestoday_short.frozen += std::min<uint32_t>(count, it->second.yestoday_short.frozen);
 		}
 		return error_code::EC_Success;
 	}
@@ -707,7 +707,7 @@ bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset
 		double_t delta = (last_volume * price * contract_info->multiple * contract_info->margin_rate);
 		//撤单 取消冻结保证金
 		LOG_TRACE("thawing_deduction 1", _account_info.frozen_monery, delta, last_volume , price);
-		_account_info.frozen_monery -= delta;
+		_account_info.frozen_monery -= std::min<uint32_t>(delta, _account_info.frozen_monery);
 		LOG_TRACE("thawing_deduction 2", _account_info.frozen_monery, delta);
 		return true ;
 	}

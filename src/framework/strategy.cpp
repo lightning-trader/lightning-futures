@@ -5,7 +5,7 @@
 
 using namespace lt;
 
-strategy::strategy(straid_t id, engine* engine):_id(id), _engine(*engine),_openable(true),_closeable(true)
+strategy::strategy(straid_t id, engine* engine, bool openable, bool closeable):_id(id), _engine(*engine),_openable(openable),_closeable(closeable)
 {
 	_coming_to_close = _engine.get_close_time() - 2 * ONE_MINUTE_MILLISECONDS;
 }
@@ -38,6 +38,7 @@ void strategy::handle_change(const std::vector<std::any>& msg)
 		_closeable = std::any_cast<bool>(msg[1]);
 		params p(std::any_cast<std::string>(msg[2]));
 		this->on_change(p);
+		LOG_INFO("strategy change :",get_id(), _openable, _closeable, std::any_cast<std::string>(msg[2]));
 	}
 }
 
