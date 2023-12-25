@@ -692,7 +692,7 @@ struct today_market_info
 	
 	std::map<double_t, uint32_t> volume_distribution;
 
-	std::vector<tick_info> today_tick_info;
+	tick_info last_tick_info;
 
 	double_t get_control_price()const
 	{
@@ -712,7 +712,6 @@ struct today_market_info
 	void clear()
 	{
 		volume_distribution.clear();
-		today_tick_info.clear();
 	}
 };
 const today_market_info default_today_market;

@@ -147,23 +147,13 @@ uint32_t strategy::get_trading_day()const
 
 const tick_info& strategy::get_last_tick(const code_t& code)const
 {
-	const auto& market = _engine.get_today_market_info(code);
-	if(market.today_tick_info.empty())
-	{
-		return default_tick;
-	}
-	return *market.today_tick_info.rbegin();
+	return _engine.get_today_market_info(code).last_tick_info ;
 }
 
 
 double_t strategy::get_control_price(const code_t& code)const
 {
-	const auto& market = _engine.get_today_market_info(code);
-	if (market.today_tick_info.empty())
-	{
-		return .0;
-	}
-	return market.get_control_price();
+	return _engine.get_today_market_info(code).get_control_price();
 }
 
 double_t strategy::get_proximate_price(const code_t& code, double_t price)const

@@ -707,7 +707,7 @@ bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset
 		double_t delta = (last_volume * price * contract_info->multiple * contract_info->margin_rate);
 		//撤单 取消冻结保证金
 		LOG_TRACE("thawing_deduction 1", _account_info.frozen_monery, delta, last_volume , price);
-		_account_info.frozen_monery -= std::min<uint32_t>(delta, _account_info.frozen_monery);
+		_account_info.frozen_monery -= std::min<double_t>(delta, _account_info.frozen_monery);
 		LOG_TRACE("thawing_deduction 2", _account_info.frozen_monery, delta);
 		return true ;
 	}
