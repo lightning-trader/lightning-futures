@@ -21,24 +21,37 @@ public:
 		}
 		return elems;
 	}
-
+    static std::string to_string(const char* value)
+    {
+        return std::string(value);
+    }
     template<typename T>
-    static typename std::enable_if<false == std::is_convertible<T, std::string>::value, std::string>::type
-        to_string(const T& value) {
+    static std::string to_string(const T& value)
+    {
         return std::to_string(value);
     }
 
     template<typename T>
-    static typename std::enable_if<false == std::is_convertible<T, std::vector<std::string>>::value, std::string> ::type
-        to_string(const std::vector<T>& values) {
+    static std::string to_string(const std::vector<T>& values) 
+    {
         std::string result;
-
         for (auto value : values) {
             result.append(value);
         }
-
         return result;
     }
+    template<typename T>
+    static std::string extract_to_string(const T& value)
+    {
+        return to_string(value);
+    }
+
+    template<typename A, typename... Types>
+    static void extract_to_string(std::vector<std::string>& data, const A& firstArg, const Types&... args) {
+        data.emplace_back(to_string(firstArg));
+        extract_to_string(data, args...);
+    }
+
 
     template<typename T>
     static bool contains(const std::vector<T>& values, const T value) {
@@ -48,6 +61,7 @@ public:
     template<typename... T>
     static std::string join(const std::string& separator, const std::vector<T> &... values) {
         std::vector<std::string> args;
+        extract_to_string(args, values...);
         std::string result;
 
         using unused = int[];
@@ -67,13 +81,8 @@ public:
     template<typename... T>
     static std::string format(const std::string& s, const T &... values) {
         std::vector<std::string> args;
+        extract_to_string(args, values...);
         std::string result = s;
-
-        using unused = int[];
-        (void)unused {
-            0, (args.push_back(to_string(values)), 0)...
-        };
-
         char open = '{';
         char close = '}';
         bool is_open = false;

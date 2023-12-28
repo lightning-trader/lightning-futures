@@ -161,7 +161,8 @@ bool ctp_api_trader::query_positions(bool is_sync)
 	{
 		return false;
 	}
-	if (_is_in_query)
+	bool expected = false;
+	if (!_is_in_query.compare_exchange_weak(expected, true))
 	{
 		LOG_ERROR("ctp trader _is_in_query not return");
 		return false;
@@ -174,9 +175,10 @@ bool ctp_api_trader::query_positions(bool is_sync)
 	if (iResult != 0)
 	{
 		LOG_ERROR("ReqQryInvestorPosition failed:", iResult);
+		while (!_is_in_query.exchange(false));
 		return false;
 	}
-	while (!_is_in_query.exchange(true));
+	
 	if(is_sync)
 	{
 		while (!_is_sync_wait.exchange(true));
@@ -191,7 +193,8 @@ bool ctp_api_trader::query_orders(bool is_sync)
 	{
 		return false;
 	}
-	if (_is_in_query)
+	bool expected = false;
+	if (!_is_in_query.compare_exchange_weak(expected, true))
 	{
 		LOG_ERROR("ctp mini trader _is_in_query not return");
 		return false;
@@ -204,9 +207,9 @@ bool ctp_api_trader::query_orders(bool is_sync)
 	if (iResult != 0)
 	{
 		LOG_ERROR("ReqQryOrder failed:", iResult);
+		while (!_is_in_query.exchange(false));
 		return false;
 	}
-	while (!_is_in_query.exchange(true));
 	if (is_sync)
 	{
 		while (!_is_sync_wait.exchange(true));
@@ -385,24 +388,6 @@ void ctp_api_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *p
 	}
 }
 
-
-void ctp_api_trader::OnRspQryTrade(CThostFtdcTradeField *pTrade, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
-{
-	if (_is_in_query)
-	{
-		while (!_is_in_query.exchange(false));
-	}
-	if (pRspInfo&& pRspInfo->ErrorID != 0)
-	{
-		LOG_ERROR("OnRspQryTrade \tErrorID =", pRspInfo->ErrorID,"ErrorMsg = ", pRspInfo->ErrorMsg);
-		return;
-	}
-	if (bIsLast && _is_sync_wait)
-	{
-		while (!_is_sync_wait.exchange(false));
-		_process_signal.notify_all();
-	}
-}
 
 void ctp_api_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {

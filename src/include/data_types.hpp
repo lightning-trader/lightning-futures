@@ -512,7 +512,7 @@ struct position_info
 
 	bool empty()const
 	{
-		return today_long.empty() && today_short.empty() && history_long.empty() && history_short.empty();
+		return today_long.empty() && today_short.empty() && history_long.empty() && history_short.empty() && long_pending==0U && short_pending==0U;
 	}
 
 	uint32_t get_total()const
@@ -543,7 +543,7 @@ struct position_info
 	{
 		return today_short.frozen + history_short.frozen;
 	}
-	position_info():long_pending(0), short_pending(0)
+	position_info():long_pending(0U), short_pending(0U)
 	{}
 };
 
