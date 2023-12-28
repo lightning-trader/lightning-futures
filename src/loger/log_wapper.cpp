@@ -2,6 +2,8 @@
 #include "nanolog.hpp"
 #include <chrono>
 #include <time_utils.hpp>
+#include <string_helper.hpp>
+#include <process_helper.hpp>
 
 
 bool _is_log_ready = false ;
@@ -10,8 +12,9 @@ using namespace nanolog;
 
 bool init_log_environment()
 {
-	auto file_name = datetime_to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()),"%Y-%m-%d_%H%M%S");
-	initialize(GuaranteedLogger(), "./log/","lt_" + file_name, 128);
+	auto time_string = datetime_to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()),"%Y-%m-%d_%H%M%S");
+	auto file_name = string_helper::format("lt_{0}.{1}", time_string, process_helper::get_pid());
+	initialize(GuaranteedLogger(), "./log/", file_name, 128);
 #ifndef NDEBUG
 	uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) | static_cast<uint8_t>(LogField::SOURCE_FILE);
 	uint8_t print = static_cast<uint8_t>(LogPrint::LOG_FILE) | static_cast<uint8_t>(LogPrint::CONSOLE);

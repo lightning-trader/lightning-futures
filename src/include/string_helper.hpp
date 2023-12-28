@@ -25,6 +25,10 @@ public:
     {
         return std::string(value);
     }
+    static std::string to_string(const std::string& value)
+    {
+        return (value);
+    }
     template<typename T>
     static std::string to_string(const T& value)
     {
@@ -63,12 +67,6 @@ public:
         std::vector<std::string> args;
         extract_to_string(args, values...);
         std::string result;
-
-        using unused = int[];
-        (void)unused {
-            0, (args.push_back(to_string(values)), 0)...
-        };
-
         for (const auto& s : args) {
             result.append(s);
             result.append(separator);
