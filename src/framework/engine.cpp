@@ -207,9 +207,12 @@ void engine::cancel_order(estid_t estid)
 	}
 	else 
 	{
-		set_cancel_condition(estid, [](estid_t estid)->bool {
-			return true;
-		});
+		if(!lt_get_order(_lt, estid).is_valid())
+		{
+			set_cancel_condition(estid, [](estid_t estid)->bool {
+				return true;
+				});
+		}
 	}
 }
 
@@ -255,7 +258,7 @@ void engine::check_condition()
 	{
 		if (it->second(it->first))
 		{
-			if (lt_cancel_order(_lt,it->first)) 
+			if (lt_get_order(_lt,it->first).is_valid() || lt_cancel_order(_lt, it->first))
 			{
 				it = _need_check_condition.erase(it);
 			}
