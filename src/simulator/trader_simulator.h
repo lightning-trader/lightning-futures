@@ -60,8 +60,7 @@ class trader_simulator : public dummy_trader
 
 	struct position_detail
 	{
-		code_t id; //合约ID
-		position_detail(const code_t& code) :id(code) {}
+	
 		//今仓
 		position_item today_long;
 		position_item today_short;

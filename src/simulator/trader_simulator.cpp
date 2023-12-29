@@ -44,16 +44,22 @@ void trader_simulator::crossday(uint32_t trading_day)
 	}
 	for (auto& it : _position_info)
 	{
-		if (it.second.id.is_distinct())
+		if (it.first.is_distinct())
 		{
-			it.second.today_long.price = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.today_long.postion * it.second.today_long.price) / (it.second.yestoday_long.postion + it.second.today_long.postion);
-			it.second.today_short.price = (it.second.yestoday_short.postion * it.second.yestoday_short.price + it.second.today_short.postion * it.second.today_short.price) / (it.second.yestoday_short.postion + it.second.today_short.postion);
-			it.second.today_long.postion += it.second.yestoday_long.postion ;
-			it.second.today_short.postion += it.second.yestoday_short.postion;
+			if(it.second.yestoday_long.postion > 0)
+			{
+				it.second.today_long.price = (it.second.yestoday_long.postion * it.second.yestoday_long.price + it.second.today_long.postion * it.second.today_long.price) / (it.second.yestoday_long.postion + it.second.today_long.postion);
+				it.second.today_long.postion += it.second.yestoday_long.postion;
+				it.second.yestoday_long.postion = 0;
+			} 
+			if(it.second.yestoday_short.postion > 0)
+			{
+				it.second.today_short.price = (it.second.yestoday_short.postion * it.second.yestoday_short.price + it.second.today_short.postion * it.second.today_short.price) / (it.second.yestoday_short.postion + it.second.today_short.postion);
+				it.second.today_short.postion += it.second.yestoday_short.postion;
+				it.second.yestoday_short.postion = 0;
+			}
 			it.second.yestoday_long.frozen = 0;
 			it.second.yestoday_short.frozen = 0;
-			
-
 		}
 	}
 	
@@ -72,6 +78,55 @@ void trader_simulator::update()
 		match_entrust(&tk_it.second);
 		_last_frame_volume[tk_it.second.id] = tk_it.second.volume;
 	}
+	double_t frozen_monery = .0;
+	for(const auto& it : _order_info)
+	{
+		bool is_matching = false ;
+
+		auto match = _order_match.find(it.second.code);
+		if (match != _order_match.end())
+		{
+			estid_t estid = it.first;
+			auto mch_odr = std::find_if(match->second.begin(), match->second.end(), [estid](const order_match& p)->bool {
+				return p.estid == estid;
+				});
+			if (mch_odr != match->second.end())
+			{
+				is_matching = mch_odr->state != order_state::OS_INVALID;
+			}
+		}
+
+		if(!is_matching|| it.second.offset != offset_type::OT_OPEN)
+		{
+			continue;
+		}
+		auto contract_info = _contract_parser.get_contract_info(it.second.code);
+		if (contract_info == nullptr)
+		{
+			LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", it.second.code.get_id());
+			return;
+		}
+		frozen_monery += (it.second.last_volume * it.second.price * contract_info->multiple * contract_info->margin_rate);
+	}
+	for (const auto& it : _position_info)
+	{
+		auto contract_info = _contract_parser.get_contract_info(it.first);
+		if (contract_info == nullptr)
+		{
+			LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", it.first.get_id());
+			return;
+		}
+		frozen_monery += it.second.today_long.price * it.second.today_long.postion * contract_info->multiple* contract_info->margin_rate ;
+		frozen_monery += it.second.today_short.price * it.second.today_short.postion * contract_info->multiple * contract_info->margin_rate;
+		frozen_monery += it.second.yestoday_long.price * it.second.yestoday_long.postion * contract_info->multiple * contract_info->margin_rate;
+		frozen_monery += it.second.yestoday_short.price * it.second.yestoday_short.postion * contract_info->multiple * contract_info->margin_rate;
+	}
+	if(_account_info.frozen_monery - frozen_monery>100|| _account_info.frozen_monery - frozen_monery<-100)
+	{
+		LOG_ERROR("11111", _account_info.frozen_monery, frozen_monery);
+		return;
+	}
+
 }
 
 bool trader_simulator::is_usable()const
@@ -148,7 +203,6 @@ std::shared_ptr<trader_data> trader_simulator::get_trader_data()
 	for(const auto& it : _position_info)
 	{
 		position_seed pos ;
-		pos.id = it.second.id;
 		pos.today_long = it.second.today_long.postion;
 		pos.today_short = it.second.today_short.postion;
 		pos.history_long = it.second.yestoday_long.postion;
@@ -292,11 +346,7 @@ void trader_simulator::handle_entrust(const tick_info* tick, order_match& match,
 }
 void trader_simulator::handle_sell(const tick_info* tick,order_match& match, order_info& order, uint32_t max_volume)
 {
-	if (order.price == 0)
-	{
-		//市价单直接成交(暂时先不考虑一次成交不完的情况)
-		order.price = tick->buy_price();
-	}
+
 	if (match.flag == order_flag::OF_FOK)
 	{
 		if (order.last_volume <= max_volume && order.price <= tick->buy_price())
@@ -372,11 +422,7 @@ void trader_simulator::handle_sell(const tick_info* tick,order_match& match, ord
 
 void trader_simulator::handle_buy(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)
 {
-	if (order.price == 0)
-	{
-		//市价单直接成交
-		order.price = tick->sell_price();
-	}
+
 	if (match.flag == order_flag::OF_FOK)
 	{
 		if (order.last_volume <= max_volume&& order.price >= tick->sell_price())
@@ -618,7 +664,7 @@ void trader_simulator::visit_match_info(estid_t estid,std::function<void(order_m
 	}
 }
 
-error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,offset_type offset, direction_type direction,uint32_t count,double_t price)
+error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,offset_type offset, direction_type direction,uint32_t volume,double_t price)
 {
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)
@@ -628,7 +674,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 	}
 	if (offset == offset_type::OT_OPEN)
 	{
-		double_t frozen_monery = (count * price * contract_info->multiple * contract_info->margin_rate);
+		double_t frozen_monery = (volume * price * contract_info->multiple * contract_info->margin_rate);
 		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
 		{
 			return error_code::EC_MarginNotEnough;
@@ -649,20 +695,20 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 		if (direction == direction_type::DT_LONG)
 		{
 			LOG_TRACE("frozen_deduction long today", code.get_id(), estid, it->second.today_long.usable());
-			if (it->second.today_long.usable() < count)
+			if (it->second.today_long.usable() < volume)
 			{
 				return error_code::EC_PositionNotEnough;
 			}
-			it->second.today_long.frozen += std::min<uint32_t>(count, it->second.today_long.frozen);
+			it->second.today_long.frozen += volume;
 		}
 		else if (direction == direction_type::DT_SHORT)
 		{
 			LOG_TRACE("frozen_deduction short today", code.get_id(), estid, it->second.today_short.usable());
-			if (it->second.today_short.usable() < count)
+			if (it->second.today_short.usable() < volume)
 			{
 				return error_code::EC_PositionNotEnough;
 			}
-			it->second.today_short.frozen += std::min<uint32_t>(count, it->second.today_short.frozen);
+			it->second.today_short.frozen += volume;
 		}
 		return error_code::EC_Success;
 	}
@@ -671,21 +717,21 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 		if (direction == direction_type::DT_LONG)
 		{
 			LOG_TRACE("frozen_deduction long yestoday", code.get_id(), estid, it->second.yestoday_long.usable());
-			if (it->second.yestoday_long.usable() < count)
+			if (it->second.yestoday_long.usable() < volume)
 			{
 				return error_code::EC_PositionNotEnough;
 			}
-			it->second.yestoday_long.frozen += std::min<uint32_t>(count, it->second.yestoday_long.frozen);
+			it->second.yestoday_long.frozen += volume;
 
 		}
 		else if (direction == direction_type::DT_SHORT)
 		{
 			LOG_TRACE("frozen_deduction short yestoday", code.get_id(), estid, it->second.yestoday_short.usable());
-			if (it->second.yestoday_short.usable() < count)
+			if (it->second.yestoday_short.usable() < volume)
 			{
 				return error_code::EC_PositionNotEnough;
 			}
-			it->second.yestoday_short.frozen += std::min<uint32_t>(count, it->second.yestoday_short.frozen);
+			it->second.yestoday_short.frozen += volume;
 		}
 		return error_code::EC_Success;
 	}
