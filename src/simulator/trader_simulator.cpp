@@ -78,6 +78,7 @@ void trader_simulator::update()
 		match_entrust(&tk_it.second);
 		_last_frame_volume[tk_it.second.id] = tk_it.second.volume;
 	}
+	/*
 	double_t frozen_monery = .0;
 	for(const auto& it : _order_info)
 	{
@@ -123,10 +124,10 @@ void trader_simulator::update()
 	}
 	if(_account_info.frozen_monery - frozen_monery>100|| _account_info.frozen_monery - frozen_monery<-100)
 	{
-		LOG_ERROR("11111", _account_info.frozen_monery, frozen_monery);
+		LOG_ERROR("frozen_monery not match ", _account_info.frozen_monery, frozen_monery);
 		return;
 	}
-
+	*/
 }
 
 bool trader_simulator::is_usable()const
@@ -151,7 +152,18 @@ estid_t trader_simulator::place_order(offset_type offset, direction_type directi
 	order.direction = direction;
 	order.total_volume = count;
 	order.last_volume = count;
-	order.price = price;
+	if (price == .0F)
+	{
+		auto tick_it = _current_tick_info.find(code);
+		if (tick_it != _current_tick_info.end())
+		{
+			order.price = tick_it->second.price;
+		}
+	}
+	else
+	{
+		order.price = price;
+	}
 	_order_info[order.estid] = order;
 	LOG_TRACE("order_container add_order", order.code.get_id(), order.estid, _order_info.size());
 	_order_match[order.code].emplace_back(order_match(order.estid, flag));
@@ -203,6 +215,7 @@ std::shared_ptr<trader_data> trader_simulator::get_trader_data()
 	for(const auto& it : _position_info)
 	{
 		position_seed pos ;
+		pos.id = it.first;
 		pos.today_long = it.second.today_long.postion;
 		pos.today_short = it.second.today_short.postion;
 		pos.history_long = it.second.yestoday_long.postion;

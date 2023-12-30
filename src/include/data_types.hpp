@@ -608,9 +608,9 @@ struct order_info
 		price(.0f)
 	{}
 
-	bool is_valid()const
+	bool invalid()const
 	{
-		return estid != INVALID_ESTID;
+		return estid == INVALID_ESTID;
 	}
 
 	bool is_buy()const
