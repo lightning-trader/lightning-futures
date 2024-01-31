@@ -696,7 +696,7 @@ struct today_market_info
 
 	double_t get_control_price()const
 	{
-		double_t control_price = .0;
+		double_t control_price = last_tick_info.price;
 		uint32_t max_volume = 0;
 		for(const auto& it : volume_distribution)
 		{

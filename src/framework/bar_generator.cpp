@@ -5,6 +5,19 @@ using namespace lt ;
 
 void bar_generator::insert_tick(const tick_info& tick)
 {
+	if (tick.time / ONE_MINUTE_MILLISECONDS - _minute >= _period)
+	{
+		//合成
+		if (_minute > 0)
+		{
+			for (auto it : _bar_callback)
+			{
+				it->on_bar(_bar);
+			}
+		}
+		_minute = (tick.time / ONE_MINUTE_MILLISECONDS);
+		_bar.clear();
+	}
 	uint32_t delta_volume = static_cast<uint32_t>(tick.volume - _prev_volume);
 	if(_bar.open == .0F)
 	{
@@ -46,17 +59,7 @@ void bar_generator::insert_tick(const tick_info& tick)
 		_bar.price_buy_volume[tick.price] += delta_volume;
 		_bar.delta += delta_volume;
 	}
-	if(tick.time / ONE_MINUTE_MILLISECONDS - _minute >= _period)
-	{
-		//合成
-		_bar.close = tick.price;
-		for(auto it : _bar_callback)
-		{
-			it->on_bar(_bar);
-		}
-		_minute = (tick.time / ONE_MINUTE_MILLISECONDS);
-		_bar.clear();
-	}
+
 	_prev_volume = tick.volume;
 }
 
