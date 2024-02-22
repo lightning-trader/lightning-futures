@@ -92,7 +92,7 @@ namespace lt
 					{
 						if (tprc)
 						{
-							tape_info deal_info;
+							tape_info deal_info(tick.id,tick.time,tick.price);
 							const auto& prev_tick = lt_get_previous_tick(_self->_lt,tick.id);
 							deal_info.volume_delta = static_cast<uint32_t>(tick.volume - prev_tick.volume);
 							deal_info.interest_delta = tick.open_interest - prev_tick.open_interest;
@@ -220,9 +220,12 @@ namespace lt
 				}
 				else if (type == error_type::ET_CANCEL_ORDER)
 				{
+					LOG_FATAL("cancel order error :", estid);
+					/*
 					_self->set_cancel_condition(estid, [](estid_t estid)->bool {
 						return true;
 						});
+					*/
 				}
 				
 			}

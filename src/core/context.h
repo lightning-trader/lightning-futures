@@ -56,6 +56,8 @@ private:
 
 	int16_t _bind_cpu_core ;
 
+	int16_t _thread_priority;
+
 	uint32_t _loop_interval ;
 
 	std::map<code_t,tick_info> _previous_tick;

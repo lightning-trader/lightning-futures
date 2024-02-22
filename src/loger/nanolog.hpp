@@ -26,25 +26,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #ifndef NANO_LOG_HEADER_GUARD
 #define NANO_LOG_HEADER_GUARD
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <iosfwd>
 #include <thread>
-#include <type_traits>
 #include <log_wapper.hpp>
 
 namespace nanolog
 {
-	enum class LogLevel : uint8_t 
-	{
-		LOG_TRACE = 0U,
-		LOG_DEBUG = 1U,
-		LOG_INFO = 2U,
-		LOG_WARNING = 3U,
-		LOG_ERROR = 4U,
-		LOG_FATAL = 5U,
-	};
 	enum class LogField : uint8_t
 	{
 		TIME_SPAMP = 0B00000001,
@@ -55,79 +41,61 @@ namespace nanolog
 	};
 
 
-	enum class LogPrint : uint8_t 
+	enum class LogPrint : uint8_t
 	{
 		LOG_FILE = 0B00000001,
 		CONSOLE = 0B00000010,
 	};
-	class NanoLogLine
+
+	class LogWriter
 	{
 	public:
+		virtual void write(const NanoLogLine& logline, uint8_t field) = 0;
+	};
 
-		NanoLogLine();
+	class NanoLogger
+	{
 
-		NanoLogLine(LogLevel level, char const* file, char const* function, uint32_t line, const unsigned char* msg_data);
+	public:
 
-		~NanoLogLine();
+		NanoLogger() = default;
 
-		NanoLogLine(NanoLogLine&&) = default;
+		NanoLogger(std::string const& log_directory, std::string const& log_file_name, uint32_t file_size_mb,size_t pool_size);
 
-		NanoLogLine& operator=(NanoLogLine&&) = default;
-
-		void stringify(std::ostream& os, uint8_t field);
-
-		unsigned char m_buffer[LOG_BUFFER_SIZE];
-
-	private:
-		uint64_t m_timestamp;
-		std::thread::id m_thread_id;
-		LogLevel m_log_level;
-		const char* m_source_file;
-		const char* m_function;
-		uint32_t	m_source_line;
+		~NanoLogger();
 		
+		void set_option(LogLevel level, uint8_t field, uint8_t print);
+
+		bool is_logged(LogLevel level);
+
+		void pop();
+		
+		NanoLogLine* alloc();
+		
+		void recycle(NanoLogLine* line);
+		
+		void dump(NanoLogLine* line);
+		
+	private:
+
+
+		std::unique_ptr<LogWriter> _file_writer;
+
+		std::unique_ptr<LogWriter> _console_writer;
+
+		std::unique_ptr<std::thread> _thread;
+
+		LoglinePool _lp;
+		LoglineQueue _mq;
+
+		std::atomic<bool> _is_runing = false;
+		
+		LogLevel _level = LogLevel::LLV_TRACE;
+		uint8_t _field = 0U;
+		uint8_t _print = 0U;
 	};
 
-	void add_logline(NanoLogLine&& logline);
 
-	void set_log_option(LogLevel level, uint8_t field, uint8_t print);
-
-	bool is_logged(LogLevel level);
-
-
-	/*
-	 * Non guaranteed logging. Uses a ring buffer to hold log lines.
-	 * When the ring gets full, the previous log line in the slot will be dropped.
-	 * Does not block producer even if the ring buffer is full.
-	 * ring_buffer_size_mb - LogLines are pushed into a mpsc ring buffer whose size
-	 * is determined by this parameter. Since each LogLine is 256 bytes,
-	 * ring_buffer_size = ring_buffer_size_mb * 1024 * 1024 / 256
-	 */
-	struct NonGuaranteedLogger
-	{
-		NonGuaranteedLogger(uint32_t ring_buffer_size_mb_) : ring_buffer_size_mb(ring_buffer_size_mb_) {}
-		uint32_t ring_buffer_size_mb;
-	};
-
-	/*
-	 * Provides a guarantee log lines will not be dropped.
-	 */
-	struct GuaranteedLogger
-	{
-	};
-
-	/*
-	 * Ensure initialize() is called prior to any log statements.
-	 * log_directory - where to create the logs. For example - "/tmp/"
-	 * log_file_name - root of the file name. For example - "nanolog"
-	 * This will create log files of the form -
-	 * /tmp/nanolog.1.txt
-	 * /tmp/nanolog.2.txt
-	 * etc.
-	 * log_file_roll_size_mb - mega bytes after which we roll to next log file.
-	 */
-	void initialize(GuaranteedLogger gl, std::string const& log_directory, std::string const& log_file_name, uint32_t log_file_roll_size_mb);
-	void initialize(NonGuaranteedLogger ngl, std::string const& log_directory, std::string const& log_file_name, uint32_t log_file_roll_size_mb);
 
 } // namespace nanolog
 

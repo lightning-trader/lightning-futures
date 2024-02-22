@@ -1,95 +1,155 @@
 ﻿#pragma once
 #include <define.h>
 #include <chrono>
+#include <memory>
+#include <thread>
+#include <mpsc_queue.hpp>
+#include <atomic_pool.hpp>
 #include <stream_buffer.hpp>
 
 
-typedef enum log_level : uint8_t
+enum class LogLevel : uint8_t
 {
-	LLV_TRACE,
-	LLV_DEBUG,
-	LLV_INFO,
-	LLV_WARNING,
-	LLV_ERROR,
-	LLV_FATAL
-}log_level;
+	LLV_TRACE = 0U,
+	LLV_DEBUG = 1U,
+	LLV_INFO = 2U,
+	LLV_WARNING = 3U,
+	LLV_ERROR = 4U,
+	LLV_FATAL = 5U,
+};
+
+#define LOG_BUFFER_SIZE 1024U
+#ifndef NDEBUG
+#define LOG_QUEUE_SIZE 16384U
+#else
+#define LOG_QUEUE_SIZE 8192U
+#endif
+struct NanoLogLine
+{
+public:
+
+	NanoLogLine() = default;
+
+	~NanoLogLine() = default;
+
+	NanoLogLine(NanoLogLine&&) = default;
+
+	NanoLogLine& operator=(NanoLogLine&&) = default;
+
+	unsigned char _buffer[LOG_BUFFER_SIZE];
+
+	uint64_t _timestamp = 0LLU;
+
+	std::thread::id _thread_id = std::this_thread::get_id();
+	
+	LogLevel _log_level = LogLevel::LLV_TRACE;
+	
+	std::string _source_file = "";
+	
+	std::string _function = "";
+	
+	uint32_t	_source_line = 0U;
+
+	void initialize(LogLevel lv, const char* file, char const* func, uint32_t line)
+	{
+		_log_level = lv;
+		_source_file = file;
+		_function = func;
+		_source_line = line;
+		_timestamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		_thread_id = std::this_thread::get_id();
+		memset(_buffer, 0, LOG_BUFFER_SIZE);
+	}
+
+};
+typedef atomic_pool<NanoLogLine, LOG_QUEUE_SIZE> LoglinePool;
+typedef mpsc::mpsc_queue<NanoLogLine> LoglineQueue;
 
 extern "C"
 {
+	EXPORT_FLAG void init_log(const char* path, size_t file_size);
 
-	EXPORT_FLAG void log_print(log_level lv, const char* file, char const* func, uint32_t line, const unsigned char* msg_data);
+	EXPORT_FLAG bool is_ready() ;
 
-	EXPORT_FLAG void log_profile(log_level lv, const char* file, char const* func, uint32_t line, const char* msg);
+	EXPORT_FLAG NanoLogLine* alloc_logline();
+
+	EXPORT_FLAG void recycle_logline(NanoLogLine* line);
+
+	EXPORT_FLAG void dump_logline(NanoLogLine* line);
+
 }
 
-#define LOG_BUFFER_SIZE 1024
+
 
 class logline 
 {
-	unsigned char _buffer[LOG_BUFFER_SIZE] ;
-	stream_carbureter _sd;
+	std::unique_ptr<stream_carbureter> _sd;
 	
-	log_level _lv;
-	const char* _file;
-	char const* _func;
-	uint32_t _line;
+	NanoLogLine* _line;
+
+	bool _is_dump ;
 
 public:
 
 
-	logline(log_level lv, const char* file, char const* func, uint32_t line) :
-		_lv(lv),
-		_file(file),
-		_func(func),
-		_line(line),
-		_buffer{0},
-		_sd(_buffer, LOG_BUFFER_SIZE)
+	logline(LogLevel lv, const char* file, char const* func, uint32_t line):_is_dump(false), _line(nullptr)
 	{
-		_sd.clear();
+		_line = alloc_logline();
+		_line->initialize(lv, file, func, line);
+		_sd = std::make_unique<stream_carbureter>(_line->_buffer, LOG_BUFFER_SIZE);
+	}
+
+	~logline()
+	{
+		if(!_is_dump)
+		{
+			recycle_logline(_line);
+		}
 	}
 
 	template <typename Frist, typename... Types>
 	typename std::enable_if < !std::is_enum <Frist>::value, void >::type
 		print(Frist firstArg, Types... args) {
-		_sd <<static_cast<std::decay_t<Frist>>(firstArg)<<" ";
+		*_sd << static_cast<std::decay_t<Frist>>(firstArg) << " ";
 		print(args...);
 	}
 	template <typename Frist, typename... Types>
 	typename std::enable_if < std::is_enum <Frist>::value, void >::type
 		print(Frist firstArg, Types... args) {
-		_sd << static_cast<uint8_t>(firstArg) << " ";
+		*_sd << static_cast<uint8_t>(firstArg) << " ";
 		print(args...);
 	}
 	template <typename... Types>
 	void print(const std::string& firstArg, Types... args) {
-		_sd << firstArg.c_str() << " ";
+		*_sd << firstArg.c_str() << " ";
 		print(args...);
 	}
 	template <typename... Types>
 	void print(char* firstArg, Types... args) {
-		_sd << static_cast<const char*>(firstArg) << " ";
+		*_sd << static_cast<const char*>(firstArg) << " ";
 		print(args...);
 	}
 	void print()
 	{
-		log_print(_lv, _file, _func, _line,_buffer);
+		_is_dump = true;
+		dump_logline(_line);
 	}
 	
 };
 
 
 #ifndef NDEBUG
-#define LOG_TRACE(...) logline(LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_DEBUG(...) logline(LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define PROFILE_DEBUG(msg) log_profile(LLV_DEBUG,__FILE__,__func__,__LINE__,msg);
+#define LOG_TRACE(...) if(is_ready())logline(LogLevel::LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_DEBUG(...) if(is_ready())logline(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define PROFILE_DEBUG(msg) //log_profile(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__,msg);
 #else
 #define LOG_TRACE(...) 
 #define LOG_DEBUG(...) 
 #define PROFILE_DEBUG(msg) 
 #endif
-#define LOG_INFO(...) logline(LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_WARNING(...) logline(LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_ERROR(...) logline(LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_FATAL(...) logline(LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_INFO(...) if(is_ready())logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_WARNING(...) if(is_ready())logline(LogLevel::LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_ERROR(...) if(is_ready())logline(LogLevel::LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_FATAL(...) if(is_ready())logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 
-#define PROFILE_INFO(msg) log_profile(LLV_INFO,__FILE__,__func__,__LINE__,msg);
+#define PROFILE_INFO(msg) //log_profile(LLV_INFO,__FILE__,__func__,__LINE__,msg);

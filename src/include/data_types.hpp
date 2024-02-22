@@ -246,9 +246,9 @@ struct tick_info
 		sell_order(sell_ord)
 	{}
 
-	int32_t total_buy_valume()const
+	uint32_t total_buy_valume()const
 	{
-		int32_t reuslt = 0;
+		uint32_t reuslt = 0;
 		for (auto& it : buy_order)
 		{
 			reuslt += it.second;
@@ -256,9 +256,9 @@ struct tick_info
 		return reuslt;
 	}
 
-	int32_t total_sell_valume()const
+	uint32_t total_sell_valume()const
 	{
-		int32_t reuslt = 0;
+		uint32_t reuslt = 0;
 		for (auto& it : sell_order)
 		{
 			reuslt += it.second;
@@ -305,6 +305,11 @@ enum class error_code : uint8_t
 //盘口信息
 struct tape_info
 {
+	code_t		id;
+	
+	double_t	price;
+
+	daytm_t		time ;
 	//现手
 	uint32_t	volume_delta;
 	//增仓
@@ -312,9 +317,12 @@ struct tape_info
 	//方向
 	deal_direction	direction;
 
-	tape_info() :
+	tape_info(const code_t& cod,daytm_t dtm,double_t prc) :
+		id(cod),
+		time(dtm),
+		price(prc),
 		volume_delta(0),
-		interest_delta(.0F),
+		interest_delta(.0),
 		direction(deal_direction::DD_FLAT)
 	{}
 

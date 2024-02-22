@@ -1,12 +1,12 @@
 ﻿#include "context.h"
 #include <market_api.h>
 #include <trader_api.h>
-#include <cpu_helper.hpp>
 #include "pod_chain.h"
 #include <interface.h>
 #include <params.hpp>
 #include <mmf_wapper.hpp>
 #include <time_utils.hpp>
+#include <process_helper.hpp>
 
 
 context::context():
@@ -46,10 +46,21 @@ void context::init(const params& control_config, const params& include_config,bo
 	_max_position = control_config.get<uint32_t>("position_limit");
 	_bind_cpu_core = control_config.get<int16_t>("bind_cpu_core");
 	_loop_interval = control_config.get<uint32_t>("loop_interval");
+	_thread_priority = control_config.get<int16_t>("thread_priority");
 	_include_config = include_config.data() ;
 	_default_chain = create_chain(false);
 	auto section_config = include_config.get<std::string>("section_config");
 	_section_config = std::make_shared<trading_section>(section_config);
+	int16_t process_priority = control_config.get<int16_t>("process_priority");
+	if(static_cast<int16_t>(PriorityLevel::LowPriority) <= process_priority && process_priority <= static_cast<int16_t>(PriorityLevel::RealtimePriority))
+	{
+		PriorityLevel level = static_cast<PriorityLevel>(process_priority);
+		if (!process_helper::set_priority(level))
+		{
+			LOG_WARNING("set_priority failed");
+		}
+	}
+	
 }
 
 void context::load_trader_data()
@@ -129,13 +140,22 @@ bool context::start_service()
 	get_market().bind_event(market_event_type::MET_TickReceived, std::bind(&context::handle_tick, this, std::placeholders::_1));
 
 	_realtime_thread = new std::thread([this]()->void{
-		if(0 <= _bind_cpu_core && _bind_cpu_core < static_cast<int16_t>(cpu_helper::get_cpu_cores()))
+		if(0 <= _bind_cpu_core && _bind_cpu_core < static_cast<int16_t>(std::thread::hardware_concurrency()))
 		{
-			if (!cpu_helper::bind_core(static_cast<uint32_t>(_bind_cpu_core)))
+			if (!process_helper::thread_bind_core(static_cast<uint32_t>(_bind_cpu_core)))
 			{
 				LOG_WARNING("bind to core failed :", _bind_cpu_core);
 			}
 		}
+		if (static_cast<int16_t>(PriorityLevel::LowPriority) <= _thread_priority && _thread_priority <= static_cast<int16_t>(PriorityLevel::RealtimePriority))
+		{
+			PriorityLevel level = static_cast<PriorityLevel>(_thread_priority);
+			if (!process_helper::set_thread_priority(level))
+			{
+				LOG_WARNING("set_thread_priority failed");
+			}
+		}
+		
 		check_crossday();
 		if (this->_init_callback)
 		{

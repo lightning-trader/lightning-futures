@@ -57,7 +57,7 @@ void start_evaluate(const char* account_config, const std::vector<uint32_t>& tra
 
 int main(int argc, char* argv[])
 {
-
+	init_log("./log", 128);
 	if (argc > 1)
 	{
 		start_runtime("runtime.ini");
