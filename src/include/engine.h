@@ -144,7 +144,7 @@ namespace lt
 			}
 		};
 
-		static inline void _deal_callback(estid_t estid, uint32_t deal_volume, uint32_t total_volume)
+		static inline void _deal_callback(estid_t estid, uint32_t deal_volume)
 		{
 			if (_self)
 			{
@@ -156,7 +156,7 @@ namespace lt
 				auto stra = _self->get_strategy(it->second);
 				if (stra)
 				{
-					stra->on_deal(estid, deal_volume, total_volume);
+					stra->on_deal(estid, deal_volume);
 				}
 			}
 		}

@@ -263,7 +263,7 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)
 				{
 					order.last_volume = info->OrderQty - info->OrderMatchQty;
 					//触发 deal 事件
-					this->fire_event(trader_event_type::TET_OrderDeal, estid, deal_volume, info->OrderQty);
+					this->fire_event(trader_event_type::TET_OrderDeal, estid, deal_volume, order.last_volume);
 				}
 				if (info->OrderState == TAPI_ORDER_STATE_CANCELED || info->OrderState == TAPI_ORDER_STATE_LEFTDELETED)
 				{
@@ -310,7 +310,7 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)
 				if(info->OrderMatchQty > 0)
 				{
 					//触发 deal 事件
-					this->fire_event(trader_event_type::TET_OrderDeal, estid, info->OrderMatchQty, info->OrderQty);
+					this->fire_event(trader_event_type::TET_OrderDeal, estid, info->OrderMatchQty, order.last_volume);
 				}
 				
 			}
@@ -322,7 +322,7 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)
 					
 					ordit->second.last_volume = info->OrderQty - info->OrderMatchQty;
 					//触发 deal 事件
-					this->fire_event(trader_event_type::TET_OrderDeal, estid, deal_volume, info->OrderQty);
+					this->fire_event(trader_event_type::TET_OrderDeal, estid, deal_volume, ordit->second.last_volume);
 				}
 				else
 				{

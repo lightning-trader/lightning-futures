@@ -482,16 +482,16 @@ void context::handle_deal(const std::vector<std::any>& param)
 	{
 		estid_t estid = std::any_cast<estid_t>(param[0]);
 		uint32_t deal_volume = std::any_cast<uint32_t>(param[1]);
-		uint32_t total_volume = std::any_cast<uint32_t>(param[2]);
+		uint32_t last_volume = std::any_cast<uint32_t>(param[2]);
 		auto it = _order_info.find(estid);
 		if (it != _order_info.end())
 		{
 			calculate_position(it->second.code, it->second.direction, it->second.offset, deal_volume, it->second.price);
-			it->second.last_volume = total_volume - deal_volume;
+			it->second.last_volume = last_volume;
 		}
 		if(realtime_event.on_deal)
 		{
-			realtime_event.on_deal(estid, deal_volume, total_volume);
+			realtime_event.on_deal(estid, deal_volume);
 		}
 	}
 }

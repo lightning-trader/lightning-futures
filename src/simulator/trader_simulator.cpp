@@ -600,7 +600,7 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 	
 	order.last_volume = (order.estid,order.last_volume - deal_volume);
 	//部分成交
-	fire_event(trader_event_type::TET_OrderDeal, order.estid, deal_volume, order.total_volume);
+	fire_event(trader_event_type::TET_OrderDeal, order.estid, deal_volume, order.last_volume);
 	if(order.last_volume == 0)
 	{
 		LOG_TRACE(" order_deal _order_info.del_order", order.estid);

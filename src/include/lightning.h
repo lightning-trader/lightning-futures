@@ -51,7 +51,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef void (PORTER_FLAG * entrust_callback)(const order_info&);
 
-	typedef void (PORTER_FLAG * deal_callback)(estid_t, uint32_t , uint32_t);
+	typedef void (PORTER_FLAG * deal_callback)(estid_t, uint32_t );
 
 	typedef void (PORTER_FLAG * trade_callback)(estid_t, const code_t&, offset_type, direction_type, double_t, uint32_t);
 

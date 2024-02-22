@@ -102,7 +102,7 @@ namespace lt
 		 *
 		 *	@estid	本地订单id
 		*/
-		virtual void on_deal(estid_t estid, uint32_t deal_volume, uint32_t total_volume) {}
+		virtual void on_deal(estid_t estid, uint32_t deal_volume) {}
 
 		/*
 		 *	成交完成回报
