@@ -124,6 +124,11 @@ namespace nanolog
 	
 	public:
 
+		ConsoleWriter()
+		{
+			std::ios::sync_with_stdio(false);
+		}
+
 		virtual void write(const NanoLogLine& logline, uint8_t field)
 		{
 			logline_stringify(std::cout, logline, field);
@@ -131,6 +136,7 @@ namespace nanolog
 
 		~ConsoleWriter()
 		{
+			std::ios::sync_with_stdio(true);
 			std::cout.flush();
 		}
 	};

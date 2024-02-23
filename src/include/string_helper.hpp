@@ -10,7 +10,7 @@ public:
 		std::size_t current = str.find(delim);
 		std::vector<std::string> elems;
 		while (current != std::string::npos) {
-			if (current > previous) {
+			if (current >= previous) {
 				elems.push_back(str.substr(previous, current - previous));
 			}
 			previous = current + 1;
