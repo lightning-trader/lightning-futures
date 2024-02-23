@@ -234,7 +234,7 @@ namespace nanolog
 				{
 					_console_writer->write(*logline, _field);
 				}
-				_lp.recycle(logline);
+				recycle(logline);
 			}
 			else
 			{

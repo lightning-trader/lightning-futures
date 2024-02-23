@@ -94,7 +94,7 @@ public:
 		{
 			if( _data[i] == data )
 			{
-				data->~T();
+				//data->~T();
 				_used[i].store(false, std::memory_order_release);
 				break;
 			}

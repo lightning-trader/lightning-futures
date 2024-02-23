@@ -36,7 +36,7 @@ public:
 
 	NanoLogLine& operator=(NanoLogLine&&) = default;
 
-	unsigned char _buffer[LOG_BUFFER_SIZE];
+	unsigned char _buffer[LOG_BUFFER_SIZE] = {0};
 
 	uint64_t _timestamp = 0LLU;
 
