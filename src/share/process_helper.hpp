@@ -81,6 +81,7 @@ public:
 		return true;
 #else
 		int max_value = sched_get_priority_max(SCHED_FIFO);
+		int value = 10;
 		switch (prio)
 		{
 		case PriorityLevel::RealtimePriority:
@@ -98,7 +99,8 @@ public:
 
 		}
 		sched_param param;
-		param.sched_priority = prio;
+		// param.sched_priority = prio;
+		param.sched_priority = static_cast<int>(prio);
 		if (sched_setscheduler(0, SCHED_FIFO, &param))
 		{
 			return false;
@@ -128,7 +130,8 @@ public:
 		CPU_SET(i, &cpuset);
 		return (pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset) == 0);
 #else
-		int cores = get_cpu_cores();
+		//int cores = get_cpu_cores();
+		int cores = std::thread::hardware_concurrency();
 		if (i >= cores)
 			return false;
 		cpu_set_t mask;
@@ -190,7 +193,9 @@ public:
 		}
 		return true;
 #else
-		int max_value = max_priority = sched_get_priority_max(SCHED_FIFO);
+		//int max_value = max_priority = sched_get_priority_max(SCHED_FIFO);
+		int max_value = sched_get_priority_max(SCHED_FIFO);
+		int value = 10;
 		if(max_value == -1)
 		{
 			return false;
