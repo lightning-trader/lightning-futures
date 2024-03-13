@@ -217,6 +217,7 @@ namespace nanolog
 	{
 		if(_thread)
 		{
+			_is_runing.store(false, std::memory_order_release);
 			_thread->join();
 		}
 	}

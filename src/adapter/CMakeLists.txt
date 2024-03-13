@@ -17,8 +17,11 @@ if(APPLE)
     find_library(thostmduserapi_mac_lib NAMES thostmduserapi_mac PATHS ${LIBS_PATH} NO_DEFAULT_PATH)
     SET(MARKET_LIBS ${comunicationkey_lib} ${crypto_lib} ${ssl_lib} ${thostmduserapi_mac_lib})
 
+elseif(UNIX)
+    add_definitions( "-fPIC" )
+    set(LINK_LIBS dl)
 endif()
 
 add_library(lightning_adapter SHARED "interface.cpp" ${MARKET_DIR} ${TRADER_DIR})
 
-target_link_libraries(lightning_adapter "lightning_loger" ${MARKET_LIBS})
+target_link_libraries(lightning_adapter "lightning_loger" ${MARKET_LIBS} ${LINK_LIBS})
