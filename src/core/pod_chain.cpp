@@ -44,18 +44,16 @@ estid_t price_to_cancel_chain::place_order(offset_type offset, direction_type di
 	PROFILE_DEBUG(code.get_id());
 	LOG_DEBUG("price_to_cancel_chain place_order %s", code.get_id());
 	std::vector<order_info> order_list ;
-	if(direction == direction_type::DT_LONG)
-	{
-		_ctx.find_orders(order_list,[code,count, price](const order_info& order)->bool{
-			return order.direction == direction_type::DT_SHORT&&order.code == code && order.last_volume == count && order.price == price;
+	_ctx.find_orders(order_list, [code, count, price, offset, direction](const order_info& order)->bool {
+		return order.direction != direction 
+			&& order.code == code 
+			&& order.last_volume == count 
+			&& order.price == price
+			&&((offset == offset_type::OT_OPEN 
+				&& order.offset != offset_type::OT_OPEN)
+				|| (offset != offset_type::OT_OPEN
+					&& order.offset == offset_type::OT_OPEN));
 		});
-	}
-	if (direction == direction_type::DT_SHORT)
-	{
-		_ctx.find_orders(order_list, [code,count, price](const order_info& order)->bool {
-			return order.direction == direction_type::DT_LONG && order.code == code && order.last_volume == count && order.price == price;
-			});
-	}
 	if (!order_list.empty())
 	{
 		_trader.cancel_order(order_list.begin()->estid);
