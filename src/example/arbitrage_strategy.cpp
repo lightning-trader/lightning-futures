@@ -33,40 +33,8 @@ void arbitrage_strategy::on_init(subscriber& suber)
 	suber.regist_tick_receiver(_code1,this);
 	suber.regist_tick_receiver(_code2, this);
 	use_custom_chain(false);
-	_order_data = maping_file<persist_data>(string_helper::format("./arbitrage_strategy_{0}.mmf", get_id()).c_str());
 	uint32_t trading_day = get_trading_day();
-	if (_order_data->trading_day != trading_day)
-	{
-		_order_data->trading_day = trading_day;
-		for(size_t i=0;i<PSRDT_ORDER_COUNT;i++)
-		{
-			_order_data->order_estids[i] = INVALID_ESTID;
-		}
-	}
-	else
-	{
-		for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
-		{
-			auto& buy_order = get_order(_order_data->order_estids[i]);
-			if (buy_order.estid != INVALID_ESTID)
-			{
-				set_cancel_condition(buy_order.estid, [this](estid_t estid)->bool {
-
-					if (is_close_coming())
-					{
-						return true;
-					}
-					return false;
-					});
-			}
-			else
-			{
-				_order_data->order_estids[i] = INVALID_ESTID;
-			}
-		}
-
-	}
-
+	
 }
 
 void arbitrage_strategy::on_tick(const tick_info& tick)
@@ -95,15 +63,15 @@ void arbitrage_strategy::on_tick(const tick_info& tick)
 		//触发了一个市场平衡的信号，
 		//买入1号合约 卖出2号合约
 		//假设1号合约成交量大于2号合约
-		_order_data->a_state = arbitrage_state::AS_BUY_INTEREST;
+		_order_data.a_state = arbitrage_state::AS_BUY_INTEREST;
 	}
 	else if(_price2 - _price1 > _offset)
 	{
-		_order_data->a_state = arbitrage_state::AS_SELL_INTEREST;
+		_order_data.a_state = arbitrage_state::AS_SELL_INTEREST;
 	}
 	else
 	{
-		_order_data->a_state = arbitrage_state::AS_INVALID;
+		_order_data.a_state = arbitrage_state::AS_INVALID;
 	}
 
 }
@@ -115,7 +83,7 @@ void arbitrage_strategy::on_entrust(const order_info& order)
 	LOG_INFO("on_entrust :", order.estid, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
-		if (_order_data->order_estids[i] == order.estid)
+		if (_order_data.order_estids[i] == order.estid)
 		{
 			set_cancel_condition(order.estid, [this](estid_t estid)->bool {
 
@@ -135,56 +103,56 @@ void arbitrage_strategy::on_entrust(const order_info& order)
 void arbitrage_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
 	LOG_INFO("on_trade :", localid, code.get_id(), direction, offset, price, volume);
-	if (_order_data->a_state == arbitrage_state::AS_BUY_INTEREST)
+	if (_order_data.a_state == arbitrage_state::AS_BUY_INTEREST)
 	{
-		if(localid == _order_data->order_estids[PSRDT_BUY_ORDER_1])
+		if(localid == _order_data.order_estids[PSRDT_BUY_ORDER_1])
 		{
-			if(_order_data->order_estids[PSRDT_SELL_ORDER_2] == INVALID_ESTID)
+			if(_order_data.order_estids[PSRDT_SELL_ORDER_2] == INVALID_ESTID)
 			{
 				//卖2已经成交了
-				_order_data->t_state = trade_state::TS_BUY_ALREADY_TRADE;
+				_order_data.t_state = trade_state::TS_BUY_ALREADY_TRADE;
 			}else
 			{
-				_order_data->t_state = trade_state::TS_BUY_SINGLE_TRADE;
+				_order_data.t_state = trade_state::TS_BUY_SINGLE_TRADE;
 			}
 		}
-		else if (localid == _order_data->order_estids[PSRDT_SELL_ORDER_2])
+		else if (localid == _order_data.order_estids[PSRDT_SELL_ORDER_2])
 		{
-			if (_order_data->order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
 			{
 				//卖2已经成交了
-				_order_data->t_state = trade_state::TS_BUY_ALREADY_TRADE;
+				_order_data.t_state = trade_state::TS_BUY_ALREADY_TRADE;
 			}
 			else
 			{
-				_order_data->t_state = trade_state::TS_BUY_SINGLE_TRADE;
+				_order_data.t_state = trade_state::TS_BUY_SINGLE_TRADE;
 			}
 		}
 	}
-	else if (_order_data->a_state == arbitrage_state::AS_SELL_INTEREST)
+	else if (_order_data.a_state == arbitrage_state::AS_SELL_INTEREST)
 	{
-		if (localid == _order_data->order_estids[PSRDT_SELL_ORDER_1])
+		if (localid == _order_data.order_estids[PSRDT_SELL_ORDER_1])
 		{
-			if (_order_data->order_estids[PSRDT_BUY_ORDER_2] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_BUY_ORDER_2] == INVALID_ESTID)
 			{
 				//卖2已经成交了
-				_order_data->t_state = trade_state::TS_SELL_ALREADY_TRADE;
+				_order_data.t_state = trade_state::TS_SELL_ALREADY_TRADE;
 			}
 			else
 			{
-				_order_data->t_state = trade_state::TS_SELL_SINGLE_TRADE;
+				_order_data.t_state = trade_state::TS_SELL_SINGLE_TRADE;
 			}
 		}
-		else if (localid == _order_data->order_estids[PSRDT_BUY_ORDER_2])
+		else if (localid == _order_data.order_estids[PSRDT_BUY_ORDER_2])
 		{
-			if (_order_data->order_estids[PSRDT_SELL_ORDER_1] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_SELL_ORDER_1] == INVALID_ESTID)
 			{
 				//卖2已经成交了
-				_order_data->t_state = trade_state::TS_SELL_ALREADY_TRADE;
+				_order_data.t_state = trade_state::TS_SELL_ALREADY_TRADE;
 			}
 			else
 			{
-				_order_data->t_state = trade_state::TS_SELL_SINGLE_TRADE;
+				_order_data.t_state = trade_state::TS_SELL_SINGLE_TRADE;
 			}
 		}
 	}
@@ -192,9 +160,9 @@ void arbitrage_strategy::on_trade(estid_t localid, const code_t& code, offset_ty
 
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
-		if(_order_data->order_estids[i] == localid)
+		if(_order_data.order_estids[i] == localid)
 		{
-			_order_data->order_estids[i] = INVALID_ESTID;
+			_order_data.order_estids[i] = INVALID_ESTID;
 			break;
 		}
 	}
@@ -207,9 +175,9 @@ void arbitrage_strategy::on_cancel(estid_t localid, const code_t& code, offset_t
 
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
-		if (_order_data->order_estids[i] == localid)
+		if (_order_data.order_estids[i] == localid)
 		{
-			_order_data->order_estids[i] = INVALID_ESTID;
+			_order_data.order_estids[i] = INVALID_ESTID;
 			break;
 		}
 	}
@@ -220,9 +188,9 @@ void arbitrage_strategy::on_error(error_type type, estid_t localid, const error_
 	LOG_ERROR("on_error :", localid, error);
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
-		if (_order_data->order_estids[i] == localid)
+		if (_order_data.order_estids[i] == localid)
 		{
-			_order_data->order_estids[i] = INVALID_ESTID;
+			_order_data.order_estids[i] = INVALID_ESTID;
 			break;
 		}
 	}
@@ -233,87 +201,86 @@ void arbitrage_strategy::on_destroy(lt::unsubscriber& unsuber)
 {
 	unsuber.unregist_tick_receiver(_code1, this);
 	unsuber.unregist_tick_receiver(_code2, this);
-	unmaping_file(_order_data);
 }
 
 void arbitrage_strategy::on_update()
 {
-	if (_order_data->a_state == arbitrage_state::AS_BUY_INTEREST)
+	if (_order_data.a_state == arbitrage_state::AS_BUY_INTEREST)
 	{
-		if (_order_data->order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
+		if (_order_data.order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
 		{
-			_order_data->order_estids[PSRDT_BUY_ORDER_1] = try_buy(_code1);
+			_order_data.order_estids[PSRDT_BUY_ORDER_1] = try_buy(_code1);
 		}
-		if (_order_data->order_estids[PSRDT_SELL_ORDER_2] == INVALID_ESTID)
+		if (_order_data.order_estids[PSRDT_SELL_ORDER_2] == INVALID_ESTID)
 		{
-			_order_data->order_estids[PSRDT_SELL_ORDER_2] = try_sell(_code2);
+			_order_data.order_estids[PSRDT_SELL_ORDER_2] = try_sell(_code2);
 		}
 	}
-	else if (_order_data->a_state == arbitrage_state::AS_SELL_INTEREST)
+	else if (_order_data.a_state == arbitrage_state::AS_SELL_INTEREST)
 	{
-		if (_order_data->order_estids[PSRDT_SELL_ORDER_1] == INVALID_ESTID)
+		if (_order_data.order_estids[PSRDT_SELL_ORDER_1] == INVALID_ESTID)
 		{
-			_order_data->order_estids[PSRDT_SELL_ORDER_1] = try_sell(_code1);
+			_order_data.order_estids[PSRDT_SELL_ORDER_1] = try_sell(_code1);
 		}
-		if (_order_data->order_estids[PSRDT_BUY_ORDER_2] == INVALID_ESTID)
+		if (_order_data.order_estids[PSRDT_BUY_ORDER_2] == INVALID_ESTID)
 		{
-			_order_data->order_estids[PSRDT_BUY_ORDER_2] = try_buy(_code2);
+			_order_data.order_estids[PSRDT_BUY_ORDER_2] = try_buy(_code2);
 		}
 	}
-	else if (_order_data->a_state == arbitrage_state::AS_INVALID)
+	else if (_order_data.a_state == arbitrage_state::AS_INVALID)
 	{
-		if (_order_data->t_state == trade_state::TS_BUY_SINGLE_TRADE)
+		if (_order_data.t_state == trade_state::TS_BUY_SINGLE_TRADE)
 		{
 			//套利的止损，平单腿
-			if (_order_data->order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
 			{
 				//说明买一已经成交了，平调买一单子
-				_order_data->order_estids[PSRDT_BUY_ORDER_1] = try_sell(_code1);
+				_order_data.order_estids[PSRDT_BUY_ORDER_1] = try_sell(_code1);
 			}
-			else if (_order_data->order_estids[PSRDT_SELL_ORDER_2] == INVALID_ESTID)
+			else if (_order_data.order_estids[PSRDT_SELL_ORDER_2] == INVALID_ESTID)
 			{
-				_order_data->order_estids[PSRDT_SELL_ORDER_2] = try_buy(_code2);
+				_order_data.order_estids[PSRDT_SELL_ORDER_2] = try_buy(_code2);
 			}
 		}
-		else if (_order_data->t_state == trade_state::TS_BUY_ALREADY_TRADE)
+		else if (_order_data.t_state == trade_state::TS_BUY_ALREADY_TRADE)
 		{
 			//套利盈利，平双腿
 			//套利的止损，平单腿
-			if (_order_data->order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_BUY_ORDER_1] == INVALID_ESTID)
 			{
 				//说明买一已经成交了，平调买一单子
-				_order_data->order_estids[PSRDT_BUY_ORDER_1] = try_sell(_code1);
+				_order_data.order_estids[PSRDT_BUY_ORDER_1] = try_sell(_code1);
 			}
-			if (_order_data->order_estids[PSRDT_SELL_ORDER_2] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_SELL_ORDER_2] == INVALID_ESTID)
 			{
-				_order_data->order_estids[PSRDT_SELL_ORDER_2] = try_buy(_code2);
+				_order_data.order_estids[PSRDT_SELL_ORDER_2] = try_buy(_code2);
 			}
 		}
-		else if (_order_data->t_state == trade_state::TS_SELL_SINGLE_TRADE)
+		else if (_order_data.t_state == trade_state::TS_SELL_SINGLE_TRADE)
 		{
 			//套利的止损，平单腿
-			if (_order_data->order_estids[PSRDT_SELL_ORDER_1] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_SELL_ORDER_1] == INVALID_ESTID)
 			{
 				//说明买一已经成交了，平调买一单子
-				_order_data->order_estids[PSRDT_SELL_ORDER_1] = try_buy(_code1);
+				_order_data.order_estids[PSRDT_SELL_ORDER_1] = try_buy(_code1);
 			}
-			else if (_order_data->order_estids[PSRDT_BUY_ORDER_2] == INVALID_ESTID)
+			else if (_order_data.order_estids[PSRDT_BUY_ORDER_2] == INVALID_ESTID)
 			{
-				_order_data->order_estids[PSRDT_BUY_ORDER_2] = try_sell(_code2);
+				_order_data.order_estids[PSRDT_BUY_ORDER_2] = try_sell(_code2);
 			}
 		}
-		else if (_order_data->t_state == trade_state::TS_SELL_ALREADY_TRADE)
+		else if (_order_data.t_state == trade_state::TS_SELL_ALREADY_TRADE)
 		{
 			//套利盈利，平双腿
 			//套利的止损，平单腿
-			if (_order_data->order_estids[PSRDT_SELL_ORDER_1] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_SELL_ORDER_1] == INVALID_ESTID)
 			{
 				//说明买一已经成交了，平调买一单子
-				_order_data->order_estids[PSRDT_SELL_ORDER_1] = try_buy(_code1);
+				_order_data.order_estids[PSRDT_SELL_ORDER_1] = try_buy(_code1);
 			}
-			if (_order_data->order_estids[PSRDT_BUY_ORDER_2] == INVALID_ESTID)
+			if (_order_data.order_estids[PSRDT_BUY_ORDER_2] == INVALID_ESTID)
 			{
-				_order_data->order_estids[PSRDT_BUY_ORDER_2] = try_sell(_code2);
+				_order_data.order_estids[PSRDT_BUY_ORDER_2] = try_sell(_code2);
 			}
 		}
 		else
@@ -321,9 +288,9 @@ void arbitrage_strategy::on_update()
 			//双腿未成交，这时候撤单
 			for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 			{
-				if (_order_data->order_estids[i] != INVALID_ESTID)
+				if (_order_data.order_estids[i] != INVALID_ESTID)
 				{
-					cancel_order(_order_data->order_estids[i]);
+					cancel_order(_order_data.order_estids[i]);
 				}
 			}
 		}

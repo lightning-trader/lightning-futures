@@ -4,12 +4,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 project ("lightning")
-
-if(APPLE)
-    message(STATUS "MacOS!!!")
-    add_definitions( "-fPIC" )
-    set(SYS_LIBS pthread)
-elseif(UNIX)
+if(UNIX)
     add_definitions( "-fPIC" )
     set(SYS_LIBS pthread)
 endif()
@@ -42,8 +37,6 @@ add_subdirectory("core")
 add_subdirectory("adapter")
 
 add_subdirectory("simulator")
-
-add_subdirectory("persist")
 
 add_subdirectory("loger")
 

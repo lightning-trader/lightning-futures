@@ -33,7 +33,6 @@ class marketing_strategy : public lt::strategy,public lt::tick_receiver
 
 	struct persist_data
 	{
-		uint32_t trading_day;
 		estid_t sell_order;
 		estid_t buy_order;
 	};
@@ -44,7 +43,6 @@ public:
 		_code(code),
 		_open_once(open_once),
 		_open_delta(open_detla),
-		_order_data(nullptr),
 		_random(0, 1)
 	{
 
@@ -52,7 +50,6 @@ public:
 
 	~marketing_strategy()
 	{
-		_order_data = nullptr;
 	};
 
 
@@ -112,7 +109,7 @@ private:
 
 	uint32_t _open_once;
 
-	persist_data* _order_data;
+	persist_data _order_data;
 
 	std::default_random_engine _random_engine;
 

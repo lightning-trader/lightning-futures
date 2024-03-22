@@ -43,7 +43,6 @@ public:
 		_code(code),
 		_open_once(open_once),
 		_period(period),
-		_order_data(nullptr),
 		_multiple(multiple),
 		_threshold(threshold),
 		_position_limit(position_limit)
@@ -52,7 +51,7 @@ public:
 
 	~orderflow_strategy()
 	{
-		_order_data = nullptr;
+		
 	};
 
 
@@ -128,7 +127,7 @@ private:
 	//¶©µ¥ÏÞÖÆ
 	uint32_t _position_limit;
 
-	persist_data* _order_data;
+	persist_data _order_data;
 
 };
 

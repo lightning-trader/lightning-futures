@@ -58,7 +58,6 @@ class arbitrage_strategy : public lt::strategy,public lt::tick_receiver
 
 	struct persist_data
 	{
-		uint32_t trading_day;
 		estid_t order_estids[PSRDT_ORDER_COUNT];
 		arbitrage_state a_state ;
 		trade_state t_state ;
@@ -72,7 +71,6 @@ public:
 		_price1(.0),
 		_price2(.0),
 		_open_once(open_once),
-		_order_data(nullptr),
 		_offset(offset)
 
 	{
@@ -81,7 +79,6 @@ public:
 
 	virtual ~arbitrage_strategy()
 	{
-		_order_data = nullptr;
 	};
 
 
@@ -150,7 +147,7 @@ private:
 
 	uint32_t _open_once;
 
-	persist_data* _order_data;
+	persist_data _order_data;
 
 	double_t _price1 ;
 
