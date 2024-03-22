@@ -147,10 +147,6 @@ daytm_t strategy::get_last_time() const
 	return _engine.get_last_time();
 }
 
-void strategy::use_custom_chain(bool flag)
-{
-	return _engine.use_custom_chain( _id, flag);
-}
 
 void strategy::set_cancel_condition(estid_t estid, std::function<bool(estid_t)> callback)
 {

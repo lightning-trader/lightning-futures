@@ -24,7 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "orderflow_strategy.h"
 #include "time_utils.hpp"
 #include <string_helper.hpp>
-#include <mmf_wapper.hpp>
 
 using namespace lt;
 
@@ -32,10 +31,9 @@ using namespace lt;
 void orderflow_strategy::on_init(subscriber& suber)
 {
 	suber.regist_bar_receiver(_code, _period,this);
-	use_custom_chain(true);
 }
 
-void orderflow_strategy::on_bar(const bar_info& bar)
+void orderflow_strategy::on_bar(const lt::bar_info& bar)
 {
 
 	auto unbalance = bar.get_unbalance(_multiple);

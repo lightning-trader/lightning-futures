@@ -23,10 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "context.h"
 #include <market_api.h>
 #include <trader_api.h>
-#include "pod_chain.h"
 #include <interface.h>
 #include <params.hpp>
-#include <mmf_wapper.hpp>
 #include <time_utils.hpp>
 #include <process_helper.hpp>
 
@@ -35,8 +33,6 @@ context::context():
 	_is_runing(false),
 	_realtime_thread(nullptr),
 	_max_position(10000),
-	_default_chain(nullptr),
-	_trading_filter(nullptr),
 	_tick_callback(nullptr),
 	_last_order_time(0),
 	_bind_cpu_core(-1),
@@ -50,17 +46,6 @@ context::context():
 }
 context::~context()
 {
-	if(_default_chain)
-	{
-		delete _default_chain;
-		_default_chain = nullptr ;
-	}
-	for(auto it : _custom_chain)
-	{
-		delete it.second;
-	}
-	_custom_chain.clear();
-	
 }
 
 void context::init(const params& control_config, const params& include_config,bool reset_trading_day)
@@ -70,7 +55,6 @@ void context::init(const params& control_config, const params& include_config,bo
 	_loop_interval = control_config.get<uint32_t>("loop_interval");
 	_thread_priority = control_config.get<int16_t>("thread_priority");
 	_include_config = include_config.data() ;
-	_default_chain = create_chain(false);
 	auto section_config = include_config.get<std::string>("section_config");
 	_section_config = std::make_shared<trading_section>(section_config);
 	int16_t process_priority = control_config.get<int16_t>("process_priority");
@@ -234,27 +218,6 @@ bool context::stop_service()
 	return true ;
 }
 
-pod_chain* context::create_chain(bool flag)
-{
-
-	pod_chain* chain = new verify_chain(*this);
-	if (flag)
-	{
-		chain = new price_to_cancel_chain(*this, chain);
-	}
-	
-	return chain;
-}
-
-pod_chain* context::get_chain(untid_t untid)
-{
-	auto it = _custom_chain.find(untid );
-	if(it != _custom_chain.end())
-	{
-		return it->second;
-	}
-	return _default_chain;
-}
 
 order_statistic context::get_all_statistic()const
 {
@@ -280,12 +243,7 @@ const tick_info& context::get_previous_tick(const code_t& code)
 	return it->second ;
 }
 
-void context::set_trading_filter(filter_callback callback)
-{
-	_trading_filter = callback;
-}
-
-estid_t context::place_order(untid_t untid,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
+estid_t context::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	PROFILE_DEBUG(code.get_id());
 	if (!is_in_trading())
@@ -293,14 +251,8 @@ estid_t context::place_order(untid_t untid,offset_type offset, direction_type di
 		LOG_WARNING("place order code not in trading", code.get_id());
 		return INVALID_ESTID;
 	}
-	auto chain = get_chain(untid);
-	if (chain == nullptr)
-	{
-		LOG_ERROR("place_order _chain nullptr");
-		return INVALID_ESTID;
-	}
 
-	estid_t estid = chain->place_order(offset, direction, code, count, price, flag);
+	estid_t estid = get_trader().place_order(offset, direction, code, count, price, flag);
 	if (estid != INVALID_ESTID)
 	{
 		_statistic_info[code].place_order_amount++;
@@ -432,16 +384,6 @@ const char* context::get_include_config(const char* key)
 	return it->second.c_str();
 }
 
-void context::use_custom_chain(untid_t untid,bool flag)
-{
-	auto it = _custom_chain.find(untid);
-	if(it != _custom_chain.end())
-	{
-		delete it->second;
-	}
-	auto chain = create_chain(flag);
-	_custom_chain[untid] = chain;
-}
 
 const today_market_info& context::get_today_market_info(const code_t& id)const
 {

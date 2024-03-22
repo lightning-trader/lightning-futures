@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #pragma once
 #include <define.h>
-#include <data_types.hpp>
 #include <string_helper.hpp>
 #include <stdexcept>
 #include <regex>

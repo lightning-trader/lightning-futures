@@ -23,16 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "marketing_strategy.h"
 #include "time_utils.hpp"
 #include <string_helper.hpp>
-#include <mmf_wapper.hpp>
 
 using namespace lt;
 
 
 void marketing_strategy::on_init(subscriber& suber)
 {
-	suber.regist_tick_receiver(_code,this);
-	use_custom_chain(false);
-	
+	suber.regist_tick_receiver(_code,this);	
 }
 
 void marketing_strategy::on_tick(const tick_info& tick)

@@ -67,7 +67,7 @@ public:
 	/*
 	 *	barÍÆËÍ
 	 */
-	virtual void on_bar(const bar_info& bar) override;
+	virtual void on_bar(const lt::bar_info& bar) override;
 
 
 	/*

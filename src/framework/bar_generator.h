@@ -22,41 +22,45 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #pragma once
 #include "define.h"
-#include "data_types.hpp"
+#include <engine_types.hpp>
 #include <receiver.h>
 
-/***  
-* 
-* bar 生成器
-*/
-class bar_generator
+namespace lt
 {
+	/***
+	*
+	* bar 生成器
+	*/
+	class bar_generator
+	{
 
-private:
-	
-	uint32_t _period;
+	private:
 
-	bar_info _bar;
+		uint32_t _period;
 
-	uint32_t _minute;
+		bar_info _bar;
 
-	uint64_t _prev_volume;
+		uint32_t _minute;
 
-	double_t _price_step ;
+		uint64_t _prev_volume;
 
-	std::map<double_t,uint32_t> _poc_data;
+		double_t _price_step;
 
-	std::set<lt::bar_receiver*> _bar_callback;
-	
-public:
+		std::map<double_t, uint32_t> _poc_data;
 
-	bar_generator(uint32_t period,double_t price_step) :_period(period), _price_step(price_step), _minute(0), _prev_volume(0) {}
+		std::set<lt::bar_receiver*> _bar_callback;
 
-	void insert_tick(const tick_info& tick);
+	public:
 
-	void add_receiver(lt::bar_receiver* receiver);
+		bar_generator(uint32_t period, double_t price_step) :_period(period), _price_step(price_step), _minute(0), _prev_volume(0) {}
 
-	void remove_receiver(lt::bar_receiver* receiver);
+		void insert_tick(const tick_info& tick);
 
-	bool invalid()const ;
-};
+		void add_receiver(lt::bar_receiver* receiver);
+
+		void remove_receiver(lt::bar_receiver* receiver);
+
+		bool invalid()const;
+	};
+
+}

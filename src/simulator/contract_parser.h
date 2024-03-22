@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #pragma once
 #include <rapidcsv.h>
 #include <define.h>
-#include <data_types.hpp>
+#include <define_types.hpp>
 
 enum class charge_type
 {

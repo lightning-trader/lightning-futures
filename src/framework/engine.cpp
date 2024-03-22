@@ -199,8 +199,7 @@ void engine::unregist_estid_strategy(estid_t estid)
 
 void engine::set_trading_filter(filter_function callback)
 {
-	engine::_filter_function = callback;
-	lt_set_trading_filter(_lt, engine::_filter_callback);
+	_filter_function = callback;
 }
 
 const order_statistic& lt::engine::get_order_statistic(const code_t& code)const
@@ -208,11 +207,20 @@ const order_statistic& lt::engine::get_order_statistic(const code_t& code)const
 	return lt_get_order_statistic(_lt,code);
 }
 
-estid_t engine::place_order(untid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
+estid_t engine::place_order(straid_t id,offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	PROFILE_DEBUG(code.get_id());
+	if(_filter_function)
+	{
+		if(!_filter_function(code, offset, direction, count, price, flag))
+		{
+			LOG_WARNING("engine place order : _filter_function false", code.get_id(), offset, direction, price, count);
+			return INVALID_ESTID;
+		}
+	}
+	
 	LOG_INFO("engine place order : ", code.get_id(), offset, direction, price, count);
-	estid_t estid = lt_place_order(_lt, id, offset, direction, code, count,price, flag);
+	estid_t estid = lt_place_order(_lt, offset, direction, code, count,price, flag);
 	if (estid != INVALID_ESTID)
 	{
 		regist_estid_strategy(estid, id);
@@ -258,10 +266,6 @@ daytm_t engine::get_close_time() const
 	return lt_get_close_time(_lt);
 }
 
-void engine::use_custom_chain(untid_t id,bool flag)
-{
-	lt_use_custom_chain(_lt, id, flag);
-}
 
 void engine::set_cancel_condition(estid_t estid, std::function<bool(estid_t)> callback)
 {
@@ -320,10 +324,6 @@ const today_market_info& engine::get_today_market_info(const code_t& code)const
 	return lt_get_today_market_info(_lt, code);
 }
 
-void engine::bind_delayed_notify(std::shared_ptr<notify> notify)
-{
-	_all_notify.emplace_back(notify);
-}
 
 double_t engine::get_proximate_price(const code_t& code, double_t price)const
 {

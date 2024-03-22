@@ -21,7 +21,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "trader_simulator.h"
-#include <data_types.hpp>
 #include <event_center.hpp>
 #include "contract_parser.h"
 #include "./tick_loader/csv_tick_loader.h"

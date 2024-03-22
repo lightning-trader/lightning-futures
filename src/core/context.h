@@ -23,14 +23,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #pragma once
 #include <thread>
 #include <log_wapper.hpp>
-#include <mmf_wapper.hpp>
 #include <define.h>
 #include <lightning.h>
 #include "event_center.hpp"
 #include <market_api.h>
 #include <trader_api.h>
 #include <params.hpp>
-#include "pod_chain.h"
 #include "trading_section.h"
 
 class context
@@ -69,12 +67,6 @@ private:
 	daytm_t _last_tick_time;
 
 	uint32_t _max_position;
-	
-	pod_chain* _default_chain;
-
-	std::unordered_map<untid_t, pod_chain*> _custom_chain;
-
-	filter_callback _trading_filter;
 
 	int16_t _bind_cpu_core ;
 
@@ -120,12 +112,7 @@ public:
 		this->_destroy_callback = destroy_cb;
 	}
 
-	/*
-	* 设置交易过滤器
-	*/
-	void set_trading_filter(filter_callback callback);
-
-	estid_t place_order(untid_t untid, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
+	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
 	
 	bool cancel_order(estid_t estid);
 	
@@ -153,16 +140,9 @@ public:
 	
 	bool is_in_trading()const;
 
-	void use_custom_chain(untid_t untid, bool flag);
-
 	inline uint32_t get_max_position()const
 	{
 		return _max_position;
-	}
-
-	inline filter_callback get_trading_filter()const
-	{
-		return _trading_filter;
 	}
 
 	//
@@ -194,10 +174,6 @@ private:
 	void handle_tick(const std::vector<std::any>& param);
 
 	void handle_error(const std::vector<std::any>& param);
-
-	pod_chain * create_chain(bool flag);
-
-	pod_chain * get_chain(untid_t untid);
 
 	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price);
 	

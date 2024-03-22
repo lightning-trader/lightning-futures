@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "arbitrage_strategy.h"
 #include "time_utils.hpp"
 #include <string_helper.hpp>
-#include <mmf_wapper.hpp>
 
 using namespace lt;
 
@@ -32,7 +31,6 @@ void arbitrage_strategy::on_init(subscriber& suber)
 {
 	suber.regist_tick_receiver(_code1,this);
 	suber.regist_tick_receiver(_code2, this);
-	use_custom_chain(false);
 	uint32_t trading_day = get_trading_day();
 	
 }

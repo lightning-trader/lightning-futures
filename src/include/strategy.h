@@ -21,8 +21,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define.h>
-#include <data_types.hpp>
+#include <engine_types.hpp>
 #include <params.hpp>
 
 namespace lt
@@ -34,7 +33,7 @@ namespace lt
 
 	class unsubscriber;
 
-	typedef untid_t straid_t;
+	typedef uint32_t straid_t;
 
 	class strategy
 	{
@@ -216,11 +215,6 @@ namespace lt
 		*
 		*/
 		daytm_t get_last_time() const;
-
-		/**
-		* 使用自定义交易通道
-		*/
-		void use_custom_chain(bool flag);
 
 		/*
 		* 设置撤销条件(返回true时候撤销)

@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #pragma once
 #include <define.h>
-#include <data_types.hpp>
 #include "event_center.hpp"
 #include <shared_types.h>
 

@@ -21,18 +21,27 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define.h>
 #include <lightning.h>
+#include <engine_types.hpp>
 #include <event_center.hpp>
 #include <receiver.h>
 #include <strategy.h>
-#include "notify.h"
 #include <log_wapper.hpp>
 #include "../framework/price_step.h"
 #include "../framework/bar_generator.h"
 
 namespace lt
 {
+	struct bar_info;
+
+	struct tape_info;
+
+	enum class deal_direction;
+
+	enum class deal_status;
+
+	typedef std::function<bool(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)> filter_function;
+
 
 	class engine;
 
@@ -74,17 +83,7 @@ namespace lt
 		friend subscriber;
 		friend unsubscriber;
 		friend strategy;
-	private:
 
-		static inline filter_function _filter_function = nullptr;
-		static inline bool _filter_callback(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)
-		{
-			if (_filter_function)
-			{
-				return _filter_function(code, offset, direction, count, price, flag);
-			}
-			return true;
-		}
 	private:
 
 		static inline engine* _self;
@@ -347,7 +346,7 @@ namespace lt
 		*	下单单
 		*	estid 下单返回的id
 		*/
-		estid_t place_order(untid_t id, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
+		estid_t place_order(straid_t id, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price = 0, order_flag flag = order_flag::OF_NOR);
 		/*
 		 *	撤单
 		 *	estid 下单返回的id
@@ -377,10 +376,6 @@ namespace lt
 		*/
 		daytm_t get_close_time() const;
 
-		/**
-		* 使用自定义交易通道
-		*/
-		void use_custom_chain(untid_t id, bool flag);
 
 		/*
 		* 设置撤销条件(返回true时候撤销)
@@ -404,11 +399,6 @@ namespace lt
 		*/
 		const today_market_info& get_today_market_info(const code_t& code)const;
 
-		
-		/*
-		* 绑定延时通知
-		*/
-		void bind_delayed_notify(std::shared_ptr<notify> notify);
 
 		/*
 		* 获取下单价格
@@ -469,10 +459,10 @@ namespace lt
 
 		std::map<estid_t, straid_t> _estid_to_strategy;
 
-		std::vector<std::shared_ptr<notify>> _all_notify;
-
 		std::shared_ptr<price_step> _ps_config;
 
 		std::map<estid_t, std::function<bool(estid_t)>> _need_check_condition;
+
+		filter_function _filter_function;
 	};
 }

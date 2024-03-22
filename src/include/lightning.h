@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #pragma once
 #include "define.h"
-#include "data_types.hpp"
+#include "define_types.hpp"
 
 
-#define LIGHTNING_VERSION 2.4.0
+#define LIGHTNING_VERSION 0.2.0
 
 
 enum context_type
@@ -83,8 +83,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 
 	typedef void (PORTER_FLAG * cycle_callback)();
 
-	typedef bool (PORTER_FLAG * filter_callback)(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag);
-
 	
 	struct order_event
 	{
@@ -128,7 +126,7 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	/*
 	下单
 	*/
-	LT_INTERFACE_DECLARE(estid_t, place_order, (const ltobj&, untid_t, offset_type, direction_type, const code_t&, uint32_t, double_t, order_flag));
+	LT_INTERFACE_DECLARE(estid_t, place_order, (const ltobj&, offset_type, direction_type, const code_t&, uint32_t, double_t, order_flag));
 	
 	/*
 	* 撤销订单
@@ -161,10 +159,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	*/
 	LT_INTERFACE_DECLARE(daytm_t, get_last_time, (const ltobj&));
 
-	/*
-	* 设置交易过滤器
-	*/
-	LT_INTERFACE_DECLARE(void, set_trading_filter, (const ltobj&, filter_callback));
 	
 	/*
 	* 绑定实时回调 
@@ -212,10 +206,6 @@ LT_INTERFACE_CALL(func_name,real_args)\
 	*/
 	LT_INTERFACE_DECLARE(const char *, get_include_config, (const ltobj&, const char *));
 
-	/**
-	* 使用自定义交易通道
-	*/
-	LT_INTERFACE_DECLARE(void, use_custom_chain, (const ltobj&, untid_t, bool));
 
 	/**
 	* 获取今日行情数据

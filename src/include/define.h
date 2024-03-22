@@ -54,14 +54,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 struct code_t;
 
-typedef uint8_t untid_t;
-
 //日内时间（精度到毫秒）
 typedef uint32_t daytm_t;
 
-constexpr uint8_t MAX_UNITID = 0xFFU;
-
-//#define MAX_UNITID 0xFFU 
 
 typedef uint64_t estid_t;
 
@@ -77,10 +72,6 @@ constexpr estid_t INVALID_ESTID = 0x0LLU;
 
 struct tick_info;
 
-struct bar_info;
-
-struct tape_info;
-
 struct position_info;
 
 struct today_market_info;
@@ -95,8 +86,3 @@ enum class event_type;
 
 enum class error_type;
 
-enum class deal_direction ;
-
-enum class deal_status;
-
-typedef std::function<bool(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)> filter_function;

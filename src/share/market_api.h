@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #pragma once
 #include "define.h"
+#include "define_types.hpp"
 #include "event_center.hpp"
-#include "data_types.hpp"
 
 enum class market_event_type
 {

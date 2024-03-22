@@ -27,7 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <define.h>
 #include <log_wapper.hpp>
 #include <trader_api.h>
-#include <data_types.hpp>
+#include <define_types.hpp>
 #include <params.hpp>
 #include <condition_variable>
 #include <../../api/CTP_V6.6.9_20220920/ThostFtdcTraderApi.h>
