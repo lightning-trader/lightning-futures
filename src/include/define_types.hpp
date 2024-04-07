@@ -396,8 +396,8 @@ const position_info default_position;
 enum class order_flag
 {
 	OF_NOR = '0',		//普通订单
-	OF_FAK,			//全成全撤，不等待自动撤销
-	OF_FOK,			//部成部撤，不等待自动撤销
+	OF_FAK,			//部成部撤，不等待自动撤销
+	OF_FOK,			//全成全撤，不等待自动撤销
 } ;
 
 /*
