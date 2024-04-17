@@ -35,23 +35,23 @@ private:
 	std::shared_ptr<class csv_recorder> _recorder;
 
 public:
-	evaluate();
-	virtual ~evaluate();
+	evaluate()noexcept;
+	virtual ~evaluate()noexcept;
 public:
 
-	bool init_from_file(const std::string& config_path);
+	bool init_from_file(const std::string& config_path)noexcept;
 
-	void playback_history();
+	void playback_history()noexcept;
 
-	void simulate_crossday(uint32_t trading_day);
+	void simulate_crossday(uint32_t trading_day)noexcept;
 
-	virtual trader_api& get_trader() override;
+	virtual trader_api& get_trader() noexcept override;
 
-	virtual market_api& get_market() override;
+	virtual market_api& get_market() noexcept override;
 
-	virtual void on_update() override;
+	virtual void on_update() noexcept override;
 
-	virtual bool is_terminaled() override;
+	virtual bool is_terminaled() noexcept override;
 
 
 };

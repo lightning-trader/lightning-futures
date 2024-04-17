@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "tick_loader/csv_tick_loader.h"
 #include <log_wapper.hpp>
 
-market_simulator::market_simulator(const params& config) :_loader(nullptr),
+market_simulator::market_simulator(const params& config)noexcept :_loader(nullptr),
 _current_trading_day(0),
 _current_time(0),
 _current_index(0),
@@ -61,7 +61,7 @@ _state(execute_state::ES_Idle)
 	}
 	
 }
-market_simulator::~market_simulator()
+market_simulator::~market_simulator()noexcept
 {
 	if (_loader)
 	{
@@ -70,7 +70,7 @@ market_simulator::~market_simulator()
 	}
 }
 
-void market_simulator::play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback)
+void market_simulator::play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback)noexcept
 {
 	_current_trading_day = trading_day;
 	_is_finished = false ;
@@ -78,12 +78,12 @@ void market_simulator::play(uint32_t trading_day, std::function<void(const tick_
 	_state = execute_state::ES_LoadingData;
 }
 
-bool market_simulator::is_finished() const
+bool market_simulator::is_finished() const noexcept
 {
 	return 	_is_finished;
 }
 
-void market_simulator::subscribe(const std::set<code_t>& codes)
+void market_simulator::subscribe(const std::set<code_t>& codes) noexcept
 {
 	for(auto& it : codes)
 	{
@@ -91,7 +91,7 @@ void market_simulator::subscribe(const std::set<code_t>& codes)
 	}
 }
 
-void market_simulator::unsubscribe(const std::set<code_t>& codes)
+void market_simulator::unsubscribe(const std::set<code_t>& codes)noexcept
 {
 	for (auto& it : codes)
 	{
@@ -103,7 +103,7 @@ void market_simulator::unsubscribe(const std::set<code_t>& codes)
 	}
 }
 
-void market_simulator::update()
+void market_simulator::update()noexcept
 {
 	switch(_state)
 	{
@@ -117,7 +117,7 @@ void market_simulator::update()
 }
 
 
-void market_simulator::load_data()
+void market_simulator::load_data()noexcept
 {
 	if(_loader)
 	{
@@ -129,7 +129,7 @@ void market_simulator::load_data()
 	}
 }
 
-void market_simulator::publish_tick()
+void market_simulator::publish_tick()noexcept
 {	
 	const tick_info* tick = nullptr;
 	if (_current_index < _pending_tick_info.size())
@@ -167,7 +167,7 @@ void market_simulator::publish_tick()
 	
 }
 
-void market_simulator::finish_publish()
+void market_simulator::finish_publish()noexcept
 {
 	_current_time = 0;
 	_current_index = 0;

@@ -49,84 +49,84 @@ class ctp_api_trader : public asyn_actual_trader, public CThostFtdcTraderSpi
 
 public:
 	
-	ctp_api_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
+	ctp_api_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept;
 	
-	virtual ~ctp_api_trader();
+	virtual ~ctp_api_trader()noexcept;
 
 
 	//////////////////////////////////////////////////////////////////////////
 	//trader_api接口
 public:
 
-	virtual bool login() override;
+	virtual bool login() noexcept override;
 
-	virtual void logout()override;
+	virtual void logout()noexcept override;
 
-	virtual bool is_usable() const override;
+	virtual bool is_usable() const noexcept override;
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) noexcept override;
 
-	virtual bool cancel_order(estid_t estid) override ;
+	virtual bool cancel_order(estid_t estid) noexcept override ;
 
-	virtual uint32_t get_trading_day()const override;
+	virtual uint32_t get_trading_day()const noexcept override;
 
-	virtual std::shared_ptr<trader_data> get_trader_data() override;
+	virtual std::shared_ptr<trader_data> get_trader_data() noexcept override;
 
 	//////////////////////////////////////////////////////////////////////////
 	//CTP交易接口实现
 public:
-	virtual void OnFrontConnected() override;
+	virtual void OnFrontConnected() noexcept override;
 
-	virtual void OnFrontDisconnected(int nReason) override;
+	virtual void OnFrontDisconnected(int nReason) noexcept override;
 
 	
-	virtual void OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 
-	virtual void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 
-	virtual void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 
-	virtual void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 
-	virtual void OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 
-	virtual void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 
-	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 	
-	virtual void OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 
-	virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
+	virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
 
-	virtual void OnRtnOrder(CThostFtdcOrderField *pOrder) override;
+	virtual void OnRtnOrder(CThostFtdcOrderField *pOrder) noexcept override;
 
-	virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo) override;
+	virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo) noexcept override;
 
-	virtual void OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo) override;
+	virtual void OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo) noexcept override;
 
-	virtual void OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus) override;
+	virtual void OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus) noexcept override;
 
 
 private:
 
 	//认证
-	bool do_auth();
+	bool do_auth()noexcept;
 	//登录
-	bool do_login();
+	bool do_login()noexcept;
 
-	bool do_logout();
+	bool do_logout()noexcept;
 
-	bool query_positions(bool is_sync);
+	bool query_positions(bool is_sync)noexcept;
 
-	bool query_orders(bool is_sync);
+	bool query_orders(bool is_sync)noexcept;
 
-	void submit_settlement();
+	void submit_settlement()noexcept;
 
 	
 private:
 	
 
-	inline int convert_direction_offset(direction_type dir_type, offset_type offset_type)
+	inline int convert_direction_offset(direction_type dir_type, offset_type offset_type)noexcept
 	{
 		if (direction_type::DT_LONG == dir_type)
 			if (offset_type == offset_type::OT_OPEN)
@@ -140,7 +140,7 @@ private:
 				return THOST_FTDC_D_Buy;
 	}
 
-	inline direction_type wrap_direction_offset(TThostFtdcDirectionType dir_type, TThostFtdcOffsetFlagType offset_type)
+	inline direction_type wrap_direction_offset(TThostFtdcDirectionType dir_type, TThostFtdcOffsetFlagType offset_type)noexcept
 	{
 		if (THOST_FTDC_D_Buy == dir_type)
 			if (offset_type == THOST_FTDC_OF_Open)
@@ -154,7 +154,7 @@ private:
 				return direction_type::DT_LONG;
 	}
 
-	inline int convert_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)
+	inline int convert_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)noexcept
 	{
 		if (offset_type::OT_OPEN == offset)
 		{
@@ -168,7 +168,7 @@ private:
 		return THOST_FTDC_OF_CloseToday;
 	}
 
-	inline offset_type wrap_offset_type(TThostFtdcOffsetFlagType offset_type)
+	inline offset_type wrap_offset_type(TThostFtdcOffsetFlagType offset_type)noexcept
 	{
 		if (THOST_FTDC_OF_Open == offset_type)
 			return offset_type::OT_OPEN;
@@ -178,20 +178,20 @@ private:
 			return offset_type::OT_CLOSE;
 	}
 
-	inline int convert_action_flag(action_flag action_flag)
+	inline int convert_action_flag(action_flag action_flag)noexcept
 	{
 		if (action_flag::AF_CANCEL == action_flag)
 			return THOST_FTDC_AF_Delete;
 		else
 			return THOST_FTDC_AF_Modify;
 	}
-	inline estid_t generate_estid()
+	inline estid_t generate_estid()noexcept
 	{
 		_order_ref.fetch_add(1);
 		return generate_estid(_front_id, _session_id, _order_ref);
 	}
 
-	inline estid_t generate_estid(uint32_t front_id,uint32_t session_id,uint32_t order_ref)
+	inline estid_t generate_estid(uint32_t front_id,uint32_t session_id,uint32_t order_ref)noexcept
 	{
 		uint64_t p1 = (uint64_t)session_id<<32;
 		uint64_t p2 = (uint64_t)front_id<<16;
@@ -202,7 +202,7 @@ private:
 		return v1+v2+v3;
 	}
 	
-	inline void	extract_estid(estid_t estid, uint32_t& front_id, uint32_t& session_id, uint32_t& order_ref)
+	inline void	extract_estid(estid_t estid, uint32_t& front_id, uint32_t& session_id, uint32_t& order_ref)noexcept
 	{
 		uint64_t v1 = estid & 0xFFFFFFFF00000000LLU;
 		uint64_t v2 = estid & 0x00000000FFFF0000LLU;
@@ -212,7 +212,7 @@ private:
 		order_ref = static_cast<uint32_t>(v3);
 	}
 
-	inline uint32_t genreqid()
+	inline uint32_t genreqid()noexcept
 	{
 		return _reqid.fetch_add(1);
 	}

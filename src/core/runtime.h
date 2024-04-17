@@ -32,24 +32,24 @@ class runtime : public context
 
 public:
 
-	runtime();
- 	virtual ~runtime();
+	runtime()noexcept;
+ 	virtual ~runtime()noexcept;
 	
 public:
 
-	bool init_from_file(const std::string& config_path);
+	bool init_from_file(const std::string& config_path)noexcept;
 
-	bool login_account();
+	bool login_account()noexcept;
 
-	void logout_account();
+	void logout_account()noexcept;
 
-	virtual trader_api& get_trader() override;
+	virtual trader_api& get_trader() noexcept override;
 
-	virtual market_api& get_market() override;
+	virtual market_api& get_market() noexcept override;
 
-	virtual void on_update() override;
+	virtual void on_update() noexcept override;
 
-	virtual bool is_terminaled() override;
+	virtual bool is_terminaled() noexcept override;
 
 
 };

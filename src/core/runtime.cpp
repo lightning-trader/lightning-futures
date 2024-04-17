@@ -28,10 +28,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "inipp.h"
 
 
-runtime::runtime():_market(nullptr), _trader(nullptr)
+runtime::runtime()noexcept :_market(nullptr), _trader(nullptr)
 {
 }
-runtime::~runtime()
+runtime::~runtime()noexcept
 {
 	if (_market)
 	{
@@ -44,7 +44,7 @@ runtime::~runtime()
 
 }
 
-bool runtime::init_from_file(const std::string& config_path)
+bool runtime::init_from_file(const std::string& config_path)noexcept
 {
 	if (!std::filesystem::exists(config_path.c_str()))
 	{
@@ -100,7 +100,7 @@ bool runtime::init_from_file(const std::string& config_path)
 }
 
 
-bool runtime::login_account()
+bool runtime::login_account()noexcept
 {
 	if (_trader && _trader->login())
 	{
@@ -112,7 +112,7 @@ bool runtime::login_account()
 	return false ;
 }
 
-void runtime::logout_account()
+void runtime::logout_account()noexcept
 {
 	if (_trader)
 	{
@@ -124,22 +124,22 @@ void runtime::logout_account()
 	}
 }
 
-trader_api& runtime::get_trader()
+trader_api& runtime::get_trader()noexcept
 {
 	return *_trader;
 }
 
-market_api& runtime::get_market()
+market_api& runtime::get_market()noexcept
 {
 	return *_market;
 }
 
-void runtime::on_update()
+void runtime::on_update()noexcept
 {
 	
 }
 
-bool runtime::is_terminaled()
+bool runtime::is_terminaled()noexcept
 {
 	if (_trader)
 	{

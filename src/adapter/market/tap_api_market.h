@@ -36,34 +36,34 @@ class tap_api_market :	public asyn_actual_market,public ITapQuoteAPINotify
 {
 public:
 
-	tap_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
+	tap_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept;
 
-	virtual ~tap_api_market();
+	virtual ~tap_api_market()noexcept;
 	
 	
 //market_api 接口
 public:
 
-	virtual bool login() override;
+	virtual bool login() noexcept override;
 
-	virtual void logout()override;
+	virtual void logout()noexcept override;
 
-	virtual void subscribe(const std::set<code_t>& codes) override;
+	virtual void subscribe(const std::set<code_t>& codes) noexcept override;
 
-	virtual void unsubscribe(const std::set<code_t>& codes) override;
+	virtual void unsubscribe(const std::set<code_t>& codes) noexcept override;
 
 
 //CThostFtdcMdSpi 接口
 public:
 	
-	virtual void TAP_CDECL OnRspLogin(TAPIINT32 errorCode, const TapAPIQuotLoginRspInfo* info);
-	virtual void TAP_CDECL OnAPIReady();
-	virtual void TAP_CDECL OnDisconnect(TAPIINT32 reasonCode);
-	virtual void TAP_CDECL OnRspQryCommodity(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteCommodityInfo* info){};
-	virtual void TAP_CDECL OnRspQryContract(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteContractInfo* info){};
-	virtual void TAP_CDECL OnRspSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteWhole* info);
-	virtual void TAP_CDECL OnRspUnSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIContract* info);
-	virtual void TAP_CDECL OnRtnQuote(const TapAPIQuoteWhole* info);
+	virtual void TAP_CDECL OnRspLogin(TAPIINT32 errorCode, const TapAPIQuotLoginRspInfo* info)noexcept;
+	virtual void TAP_CDECL OnAPIReady()noexcept;
+	virtual void TAP_CDECL OnDisconnect(TAPIINT32 reasonCode)noexcept;
+	virtual void TAP_CDECL OnRspQryCommodity(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteCommodityInfo* info)noexcept{};
+	virtual void TAP_CDECL OnRspQryContract(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteContractInfo* info)noexcept{};
+	virtual void TAP_CDECL OnRspSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteWhole* info)noexcept;
+	virtual void TAP_CDECL OnRspUnSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIContract* info)noexcept;
+	virtual void TAP_CDECL OnRtnQuote(const TapAPIQuoteWhole* info)noexcept;
 
 private:
 

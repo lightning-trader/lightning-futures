@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "./tick_loader/csv_tick_loader.h"
 #include <log_wapper.hpp>
 
-trader_simulator::trader_simulator(const params& config) :
+trader_simulator::trader_simulator(const params& config) noexcept :
 	_trading_day(0),
 	_order_ref(0),
 	_interval(1),
@@ -45,17 +45,17 @@ trader_simulator::trader_simulator(const params& config) :
 	}
 
 }
-trader_simulator::~trader_simulator()
+trader_simulator::~trader_simulator()noexcept
 {
 }
 
 
-void trader_simulator::push_tick(const tick_info& tick)
+void trader_simulator::push_tick(const tick_info& tick)noexcept
 {
 	_current_tick_info[tick.id] = tick;
 }
 
-void trader_simulator::crossday(uint32_t trading_day)
+void trader_simulator::crossday(uint32_t trading_day)noexcept
 {
 	_trading_day = trading_day;
 	std::vector<order_info> order;
@@ -86,12 +86,12 @@ void trader_simulator::crossday(uint32_t trading_day)
 	
 }
 
-uint32_t trader_simulator::get_trading_day()const
+uint32_t trader_simulator::get_trading_day()const noexcept
 {
 	return _trading_day;
 }
 
-void trader_simulator::update()
+void trader_simulator::update()noexcept
 {
 	for (const auto& tk_it : _current_tick_info)
 	{
@@ -151,12 +151,12 @@ void trader_simulator::update()
 	*/
 }
 
-bool trader_simulator::is_usable()const
+bool trader_simulator::is_usable()const noexcept
 {
 	return true ;
 }
 
-estid_t trader_simulator::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
+estid_t trader_simulator::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) noexcept
 {
 	
 	//boost::posix_time::ptime pt2 = boost::posix_time::microsec_clock::local_time();
@@ -191,7 +191,7 @@ estid_t trader_simulator::place_order(offset_type offset, direction_type directi
 	return order.estid;
 }
 
-bool trader_simulator::cancel_order(estid_t estid)
+bool trader_simulator::cancel_order(estid_t estid)noexcept
 {
 	LOG_DEBUG("tick_simulator cancel_order", estid);
 	auto odit = _order_info.find(estid);
@@ -224,7 +224,7 @@ bool trader_simulator::cancel_order(estid_t estid)
 }
 
 
-std::shared_ptr<trader_data> trader_simulator::get_trader_data()
+std::shared_ptr<trader_data> trader_simulator::get_trader_data()noexcept
 {
 	auto result = std::make_shared<trader_data>();
 	
@@ -247,7 +247,7 @@ std::shared_ptr<trader_data> trader_simulator::get_trader_data()
 }
 
 
-estid_t trader_simulator::make_estid()
+estid_t trader_simulator::make_estid()noexcept
 {
 	_order_ref++;
 	uint64_t p1 = (uint64_t)_current_time<<32;
@@ -260,7 +260,7 @@ estid_t trader_simulator::make_estid()
 	return v1 + v2 + v3;
 }
 
-uint32_t trader_simulator::get_buy_front(const code_t& code,double_t price)
+uint32_t trader_simulator::get_buy_front(const code_t& code,double_t price)noexcept
 {
 	auto tick_it = _current_tick_info.find(code);
 	if(tick_it == _current_tick_info.end())
@@ -279,7 +279,7 @@ uint32_t trader_simulator::get_buy_front(const code_t& code,double_t price)
 
 	return 0U;
 }
-uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)
+uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)noexcept
 {
 	auto tick_it = _current_tick_info.find(code);
 	if (tick_it == _current_tick_info.end())
@@ -298,7 +298,7 @@ uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)
 	return 0U;
 }
 
-void trader_simulator::match_entrust(const tick_info* tick)
+void trader_simulator::match_entrust(const tick_info* tick)noexcept
 {
 	auto last_volume = _last_frame_volume.find(tick->id);
 	if(last_volume == _last_frame_volume.end())
@@ -321,7 +321,7 @@ void trader_simulator::match_entrust(const tick_info* tick)
 	
 }
 
-void trader_simulator::handle_entrust(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)
+void trader_simulator::handle_entrust(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)noexcept
 {
 	if(match.state == OS_INVALID)
 	{
@@ -378,7 +378,7 @@ void trader_simulator::handle_entrust(const tick_info* tick, order_match& match,
 		}
 	}
 }
-void trader_simulator::handle_sell(const tick_info* tick,order_match& match, order_info& order, uint32_t max_volume)
+void trader_simulator::handle_sell(const tick_info* tick,order_match& match, order_info& order, uint32_t max_volume)noexcept
 {
 
 	if (match.flag == order_flag::OF_FOK)
@@ -454,7 +454,7 @@ void trader_simulator::handle_sell(const tick_info* tick,order_match& match, ord
 
 }
 
-void trader_simulator::handle_buy(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)
+void trader_simulator::handle_buy(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)noexcept
 {
 
 	if (match.flag == order_flag::OF_FOK)
@@ -530,7 +530,7 @@ void trader_simulator::handle_buy(const tick_info* tick, order_match& match, ord
 	}
 }
 
-void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
+void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)noexcept
 {
 	
 	auto contract_info = _contract_parser.get_contract_info(order.code);
@@ -631,12 +631,12 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 	}
 	
 }
-void trader_simulator::order_error(error_type type,estid_t estid, error_code err)
+void trader_simulator::order_error(error_type type,estid_t estid, error_code err)noexcept
 {
 	fire_event(trader_event_type::TET_OrderError, type, estid, (uint8_t)err);
 	remove_order(estid);
 }
-void trader_simulator::order_cancel(const order_info& order)
+void trader_simulator::order_cancel(const order_info& order)noexcept
 {
 	auto it = _order_info.find(order.estid);
 	if(it == _order_info.end())
@@ -658,7 +658,7 @@ void trader_simulator::order_cancel(const order_info& order)
 	}
 }
 
-void trader_simulator::remove_order(estid_t estid)
+void trader_simulator::remove_order(estid_t estid)noexcept
 {
 	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
@@ -679,7 +679,7 @@ void trader_simulator::remove_order(estid_t estid)
 	}
 }
 
-void trader_simulator::visit_match_info(estid_t estid,std::function<void(order_match&)> cursor)
+void trader_simulator::visit_match_info(estid_t estid,std::function<void(order_match&)> cursor)noexcept
 {
 	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
@@ -698,7 +698,7 @@ void trader_simulator::visit_match_info(estid_t estid,std::function<void(order_m
 	}
 }
 
-error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,offset_type offset, direction_type direction,uint32_t volume,double_t price)
+error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,offset_type offset, direction_type direction,uint32_t volume,double_t price)noexcept
 {
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)
@@ -771,7 +771,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 	}
 	return error_code::EC_OrderFieldError;
 }
-bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
+bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)noexcept
 {
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)

@@ -29,11 +29,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "inipp.h"
 #include <params.hpp>
 
-evaluate::evaluate():_market_simulator(nullptr), _trader_simulator(nullptr)
+evaluate::evaluate()noexcept :_market_simulator(nullptr), _trader_simulator(nullptr)
 {
 }
 
-evaluate::~evaluate()
+evaluate::~evaluate()noexcept
 {
 	if (_market_simulator)
 	{
@@ -45,7 +45,7 @@ evaluate::~evaluate()
 	}
 }
 
-bool evaluate::init_from_file(const std::string& config_path)
+bool evaluate::init_from_file(const std::string& config_path)noexcept
 {
 	
 	if (!std::filesystem::exists(config_path.c_str()))
@@ -106,7 +106,7 @@ bool evaluate::init_from_file(const std::string& config_path)
 	return true;
 }
 
-void evaluate::playback_history()
+void evaluate::playback_history()noexcept
 {
 	
 	if(_market_simulator)
@@ -127,7 +127,7 @@ void evaluate::playback_history()
 	}
 }
 
-void evaluate::simulate_crossday(uint32_t trading_day)
+void evaluate::simulate_crossday(uint32_t trading_day)noexcept
 {
 	if(_trader_simulator)
 	{
@@ -135,22 +135,22 @@ void evaluate::simulate_crossday(uint32_t trading_day)
 	}
 }
 
-trader_api& evaluate::get_trader()
+trader_api& evaluate::get_trader()noexcept
 {
 	return *_trader_simulator;
 }
 
-market_api& evaluate::get_market()
+market_api& evaluate::get_market()noexcept
 {
 	return *_market_simulator;
 }
 
-void evaluate::on_update()
+void evaluate::on_update()noexcept
 {
 	
 }
 
-bool evaluate::is_terminaled()
+bool evaluate::is_terminaled()noexcept
 {
 	return true;
 }

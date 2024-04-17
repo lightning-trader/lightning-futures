@@ -36,19 +36,19 @@ class context
 
 public:
 
-	context();
+	context()noexcept;
 
-	virtual ~context();
+	virtual ~context()noexcept;
 	
 private:
 
-	context(const context&) = delete;
+	context(const context&)noexcept = delete;
 
-	context& operator=(const context&) = delete;
+	context& operator=(const context&)noexcept = delete;
 
-	context(context&&) = delete;
+	context(context&&)noexcept = delete;
 
-	context& operator=(context&&) = delete;
+	context& operator=(context&&)noexcept = delete;
 
 private:
 	
@@ -94,17 +94,17 @@ private:
 public:
 
 	/*加载数据*/
-	void load_trader_data();
+	void load_trader_data()noexcept;
 
 	/*启动*/
-	bool start_service() ;
+	bool start_service()noexcept;
 	
-	void update();
+	void update()noexcept;
 	/*停止*/
-	bool stop_service();
+	bool stop_service()noexcept;
 
 	//绑定实时事件
-	void bind_realtime_event(const order_event& event_cb, cycle_callback init_cb, cycle_callback update_cb,cycle_callback destroy_cb)
+	void bind_realtime_event(const order_event& event_cb, cycle_callback init_cb, cycle_callback update_cb,cycle_callback destroy_cb)noexcept
 	{
 		realtime_event = event_cb;
 		this->_init_callback = init_cb;
@@ -112,80 +112,80 @@ public:
 		this->_destroy_callback = destroy_cb;
 	}
 
-	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag);
+	estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)noexcept;
 	
-	bool cancel_order(estid_t estid);
+	bool cancel_order(estid_t estid)noexcept;
 	
-	const position_info& get_position(const code_t& code)const;
+	const position_info& get_position(const code_t& code)const noexcept;
 	
-	const order_info& get_order(estid_t estid)const;
+	const order_info& get_order(estid_t estid)const noexcept;
 
-	void find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const;
+	void find_orders(std::vector<order_info>& order_result, std::function<bool(const order_info&)> func) const noexcept;
 
-	uint32_t get_total_position() const;
+	uint32_t get_total_position() const noexcept;
 
-	void subscribe(const std::set<code_t>& tick_data,tick_callback tick_cb);
+	void subscribe(const std::set<code_t>& tick_data,tick_callback tick_cb)noexcept;
 
-	void unsubscribe(const std::set<code_t>& tick_data);
+	void unsubscribe(const std::set<code_t>& tick_data)noexcept;
 	
-	daytm_t get_last_time();
+	daytm_t get_last_time()noexcept;
 
-	daytm_t last_order_time();
+	daytm_t last_order_time()noexcept;
 
-	const order_statistic& get_order_statistic(const code_t& code)const;
+	const order_statistic& get_order_statistic(const code_t& code)const noexcept;
 
-	uint32_t get_trading_day();
+	uint32_t get_trading_day()noexcept;
 
-	daytm_t get_close_time()const;
+	daytm_t get_close_time()const noexcept;
 	
-	bool is_in_trading()const;
+	bool is_in_trading()const noexcept;
 
-	inline uint32_t get_max_position()const
+	inline uint32_t get_max_position()const noexcept
 	{
 		return _max_position;
 	}
 
 	//
-	const today_market_info& get_today_market_info(const code_t& id)const;
+	const today_market_info& get_today_market_info(const code_t& id)const noexcept;
 
-	uint32_t get_total_pending();
+	uint32_t get_total_pending()noexcept;
 
-	const tick_info& get_previous_tick(const code_t& code);
+	const tick_info& get_previous_tick(const code_t& code)noexcept;
 
-	const char* get_include_config(const char* key);
+	const char* get_include_config(const char* key)noexcept;
 
 protected :
 
-	order_statistic get_all_statistic()const;
+	order_statistic get_all_statistic()const noexcept;
 
 private:
 
 	
-	void check_crossday();
+	void check_crossday()noexcept;
 
-	void handle_entrust(const std::vector<std::any>& param);
+	void handle_entrust(const std::vector<std::any>& param)noexcept;
 
-	void handle_deal(const std::vector<std::any>& param);
+	void handle_deal(const std::vector<std::any>& param)noexcept;
 
-	void handle_trade(const std::vector<std::any>& param);
+	void handle_trade(const std::vector<std::any>& param)noexcept;
 
-	void handle_cancel(const std::vector<std::any>& param);
+	void handle_cancel(const std::vector<std::any>& param)noexcept;
 
-	void handle_tick(const std::vector<std::any>& param);
+	void handle_tick(const std::vector<std::any>& param)noexcept;
 
-	void handle_error(const std::vector<std::any>& param);
+	void handle_error(const std::vector<std::any>& param)noexcept;
 
-	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price);
+	void calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price)noexcept;
 	
-	void frozen_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+	void frozen_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)noexcept;
 	
-	void unfreeze_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+	void unfreeze_deduction(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)noexcept;
 
-	void record_pending(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+	void record_pending(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)noexcept;
 
-	void recover_pending(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume);
+	void recover_pending(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume)noexcept;
 
-	inline void print_position(const char* title)
+	inline void print_position(const char* title)noexcept
 	{
 		if (!_position_info.empty())
 		{
@@ -201,17 +201,17 @@ private:
 
 protected:
 
-	void init(const params& control_config, const params& include_config, bool reset_trading_day=false);
+	void init(const params& control_config, const params& include_config, bool reset_trading_day=false)noexcept;
 
 public:
 
-	virtual trader_api& get_trader() = 0;
+	virtual trader_api& get_trader()noexcept = 0;
 
-	virtual market_api& get_market() = 0;
+	virtual market_api& get_market()noexcept = 0;
 
-	virtual void on_update() = 0;
+	virtual void on_update()noexcept = 0;
 
-	virtual bool is_terminaled() = 0;
+	virtual bool is_terminaled()noexcept = 0;
 
 
 };

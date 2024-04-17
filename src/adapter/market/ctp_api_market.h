@@ -36,52 +36,52 @@ class ctp_api_market :	public asyn_actual_market,public CThostFtdcMdSpi
 {
 public:
 
-	ctp_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
+	ctp_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept;
 
-	virtual ~ctp_api_market();
+	virtual ~ctp_api_market()noexcept;
 	
 //IMarketAPI 接口
 public:
 
-	virtual bool login() override;
+	virtual bool login() noexcept override;
 
-	virtual void logout()override;
+	virtual void logout() noexcept override;
 
-	virtual void subscribe(const std::set<code_t>& codes) override;
+	virtual void subscribe(const std::set<code_t>& codes) noexcept override;
 
-	virtual void unsubscribe(const std::set<code_t>& codes) override;
+	virtual void unsubscribe(const std::set<code_t>& codes) noexcept override;
 
 
 //CThostFtdcMdSpi 接口
 public:
-	virtual void OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast );
+	virtual void OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )noexcept;
 
-	virtual void OnFrontConnected();
+	virtual void OnFrontConnected()noexcept;
 
-	virtual void OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast );
+	virtual void OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )noexcept;
 
 	///登出请求响应
-	virtual void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+	virtual void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)noexcept;
 
-	virtual void OnFrontDisconnected( int nReason );
+	virtual void OnFrontDisconnected( int nReason )noexcept;
 
-	virtual void OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMarketData );
+	virtual void OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMarketData )noexcept;
 
-	virtual void OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast );
+	virtual void OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )noexcept;
 
-	virtual void OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast);
+	virtual void OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)noexcept;
 
 private:
 	/*
 	 *	发送登录请求
 	 */
-	void do_userlogin();
+	void do_userlogin()noexcept;
 	/*
 	 *	订阅品种行情
 	 */
-	void do_subscribe();
+	void do_subscribe()noexcept;
 	
-	void do_unsubscribe(const std::vector<code_t>& code_list);
+	void do_unsubscribe(const std::vector<code_t>& code_list)noexcept;
 
 private:
 	

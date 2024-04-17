@@ -44,7 +44,7 @@ class trader_simulator : public dummy_trader
 		order_flag		flag;
 		estid_t estid;
 
-		order_match(estid_t& ord, order_flag flg) :estid(ord), queue_seat(0), state(OS_INVALID), flag(flg)
+		order_match(estid_t& ord, order_flag flg)noexcept :estid(ord), queue_seat(0), state(OS_INVALID), flag(flg)
 		{}
 	};
 	struct position_item
@@ -56,23 +56,23 @@ class trader_simulator : public dummy_trader
 		//冻结
 		uint32_t	frozen;
 
-		position_item() :
+		position_item()noexcept :
 			postion(0),
 			price(.0F),
 			frozen(0)
 		{}
 
-		uint32_t usable()const
+		uint32_t usable()const noexcept
 		{
 			return postion - frozen;
 		}
 
-		bool empty()const
+		bool empty()const noexcept
 		{
 			return postion == 0;
 		}
 
-		void clear()
+		void clear()noexcept
 		{
 			postion = 0;
 			price = .0F;
@@ -91,36 +91,36 @@ class trader_simulator : public dummy_trader
 		position_item yestoday_long;
 		position_item yestoday_short;
 
-		bool empty()const
+		bool empty()const noexcept
 		{
 			return today_long.empty() && today_short.empty() && yestoday_long.empty() && yestoday_short.empty();
 		}
 
-		uint32_t get_total()const
+		uint32_t get_total()const noexcept
 		{
 			return today_long.postion + today_short.postion + yestoday_long.postion + yestoday_short.postion;
 		}
 
-		int32_t get_real()const
+		int32_t get_real()const noexcept
 		{
 			return today_long.postion + yestoday_long.postion - (today_short.postion + yestoday_short.postion);
 		}
 
-		uint32_t get_long_position()const
+		uint32_t get_long_position()const noexcept
 		{
 			return today_long.postion + yestoday_long.postion;
 		}
 
-		uint32_t get_short_position()const
+		uint32_t get_short_position()const noexcept
 		{
 			return today_short.postion + yestoday_short.postion;
 		}
-		uint32_t get_long_frozen()const
+		uint32_t get_long_frozen()const noexcept
 		{
 			return today_long.frozen + yestoday_long.frozen;
 		}
 
-		uint32_t get_short_frozen()const
+		uint32_t get_short_frozen()const noexcept
 		{
 			return today_short.frozen + yestoday_short.frozen;
 		}
@@ -158,64 +158,64 @@ private:
 
 public:
 
-	trader_simulator(const params& config);
+	trader_simulator(const params& config)noexcept;
 	
-	virtual ~trader_simulator();
+	virtual ~trader_simulator()noexcept;
 
 	
 public:
 	
-	virtual void push_tick(const tick_info& tick) override;
+	virtual void push_tick(const tick_info& tick) noexcept override;
 	
-	virtual void crossday(uint32_t trading_day) override;
+	virtual void crossday(uint32_t trading_day) noexcept override;
 
-	virtual const account_info& get_account() override
+	virtual const account_info& get_account() noexcept override
 	{
 		return _account_info;
 	}
 
-	virtual void update()override ;
+	virtual void update()noexcept override ;
 
 public:
 
-	virtual uint32_t get_trading_day()const override;
+	virtual uint32_t get_trading_day()const noexcept override;
 	// td
-	virtual bool is_usable()const override;
+	virtual bool is_usable()const noexcept override;
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) noexcept override;
 
-	virtual bool cancel_order(estid_t estid) override;
+	virtual bool cancel_order(estid_t estid) noexcept override;
 
-	virtual std::shared_ptr<trader_data> get_trader_data() override;
+	virtual std::shared_ptr<trader_data> get_trader_data() noexcept override;
 
 private:
 	
-	estid_t make_estid();
+	estid_t make_estid()noexcept;
 
-	uint32_t get_buy_front(const code_t& code, double_t price);
+	uint32_t get_buy_front(const code_t& code, double_t price)noexcept;
 	
-	uint32_t get_sell_front(const code_t& code, double_t price);
+	uint32_t get_sell_front(const code_t& code, double_t price)noexcept;
 
-	void match_entrust(const tick_info* tick);
+	void match_entrust(const tick_info* tick)noexcept;
 
-	void handle_entrust(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume);
+	void handle_entrust(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)noexcept;
 
-	void handle_sell(const tick_info* tick, order_match& match, order_info& order, uint32_t deal_volume);
+	void handle_sell(const tick_info* tick, order_match& match, order_info& order, uint32_t deal_volume)noexcept;
 	
-	void handle_buy(const tick_info* tick, order_match& match, order_info& order, uint32_t deal_volume);
+	void handle_buy(const tick_info* tick, order_match& match, order_info& order, uint32_t deal_volume)noexcept;
 
-	void order_deal(order_info& order, uint32_t deal_volume);
+	void order_deal(order_info& order, uint32_t deal_volume)noexcept;
 
-	void order_error(error_type type, estid_t estid, error_code err);
+	void order_error(error_type type, estid_t estid, error_code err)noexcept;
 
-	void order_cancel(const order_info& order);
+	void order_cancel(const order_info& order)noexcept;
 
-	void remove_order(estid_t estid);
+	void remove_order(estid_t estid)noexcept;
 
-	void visit_match_info(estid_t estid, std::function<void(order_match&)> cursor);
+	void visit_match_info(estid_t estid, std::function<void(order_match&)> cursor)noexcept;
 	//冻结
-	error_code frozen_deduction(estid_t estid, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price);
+	error_code frozen_deduction(estid_t estid, const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price)noexcept;
 	//解冻
-	bool unfrozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price);
+	bool unfrozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)noexcept;
 
 };

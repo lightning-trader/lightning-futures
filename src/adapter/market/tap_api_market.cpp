@@ -28,7 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <../../api/TAP_V9_20200808/TapAPIError.h>
 
 
-tap_api_market::tap_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)
+tap_api_market::tap_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept
 	:asyn_actual_market(id_excg_map)
 	,_md_api(nullptr)
 	, _port(0)
@@ -65,12 +65,12 @@ tap_api_market::tap_api_market(const std::shared_ptr<std::unordered_map<std::str
 }
 
 
-tap_api_market::~tap_api_market()
+tap_api_market::~tap_api_market()noexcept
 {
 
 }
 
-bool tap_api_market::login()
+bool tap_api_market::login()noexcept
 {
 	TapAPIApplicationInfo stAppInfo;
 	strcpy(stAppInfo.AuthCode, _authcode.c_str());
@@ -111,7 +111,7 @@ bool tap_api_market::login()
 	return true ;
 }
 
-void tap_api_market::logout()
+void tap_api_market::logout()noexcept
 {
 	//do_logout();
 	_id_excg_map->clear();
@@ -123,13 +123,13 @@ void tap_api_market::logout()
 	_is_inited = false;
 }
 
-void tap_api_market::OnAPIReady()
+void tap_api_market::OnAPIReady()noexcept
 {
 	LOG_INFO("OnAPIReady :", _ip.c_str(),_port);
 	_process_signal.notify_all();
 }
 
-void tap_api_market::OnRspLogin(TAPIINT32 errorCode, const TapAPIQuotLoginRspInfo* info)
+void tap_api_market::OnRspLogin(TAPIINT32 errorCode, const TapAPIQuotLoginRspInfo* info)noexcept
 {
 	if (TAPIERROR_SUCCEED == errorCode) {
 		LOG_INFO("登录成功，等待API初始化...");
@@ -145,12 +145,12 @@ void tap_api_market::OnRspLogin(TAPIINT32 errorCode, const TapAPIQuotLoginRspInf
 }
 
 
-void tap_api_market::OnDisconnect(TAPIINT32 reasonCode)
+void tap_api_market::OnDisconnect(TAPIINT32 reasonCode)noexcept
 {
 	LOG_INFO("tap_api_market OnDisconnect : Reason -> %d", reasonCode);
 }
 
-void tap_api_market::OnRtnQuote(const TapAPIQuoteWhole* info)
+void tap_api_market::OnRtnQuote(const TapAPIQuoteWhole* info)noexcept
 {	
 	if (info == nullptr)
 	{
@@ -194,17 +194,17 @@ void tap_api_market::OnRtnQuote(const TapAPIQuoteWhole* info)
 	this->fire_event(market_event_type::MET_TickReceived, tick);
 }
 
-void tap_api_market::OnRspSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteWhole* info)
+void tap_api_market::OnRspSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteWhole* info)noexcept
 {
 	LOG_INFO("SubMarketData : code ", errorCode);
 }
 
-void tap_api_market::OnRspUnSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIContract* info)
+void tap_api_market::OnRspUnSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIContract* info)noexcept
 {
 	LOG_INFO("UnSubMarketData : code ", errorCode);
 }
 
-void tap_api_market::subscribe(const std::set<code_t>& code_list)
+void tap_api_market::subscribe(const std::set<code_t>& code_list)noexcept
 {
 	//订阅行情
 	for(const auto& it : code_list)
@@ -227,7 +227,7 @@ void tap_api_market::subscribe(const std::set<code_t>& code_list)
 	
 }
 
-void tap_api_market::unsubscribe(const std::set<code_t>& code_list)
+void tap_api_market::unsubscribe(const std::set<code_t>& code_list)noexcept
 {
 	for (const auto& it : code_list)
 	{

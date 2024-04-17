@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <time_utils.hpp>
 #include <log_wapper.hpp>
 
-csv_recorder::csv_recorder(const char* basic_path) :_crossday_flow_csv(std::string(),rapidcsv::LabelParams(0,-1))
+csv_recorder::csv_recorder(const char* basic_path)noexcept :_crossday_flow_csv(std::string(),rapidcsv::LabelParams(0,-1))
 {
 	if (!std::filesystem::exists(basic_path))
 	{
@@ -49,7 +49,7 @@ csv_recorder::csv_recorder(const char* basic_path) :_crossday_flow_csv(std::stri
 }
 
 //结算表
-void csv_recorder::record_crossday_flow(uint32_t trading_day, const order_statistic& statistic, const account_info& account)
+void csv_recorder::record_crossday_flow(uint32_t trading_day, const order_statistic& statistic, const account_info& account)noexcept
 {
 	try
 	{

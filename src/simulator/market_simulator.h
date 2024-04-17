@@ -61,32 +61,32 @@ private:
 	
 public:
 
-	market_simulator(const params& config);
+	market_simulator(const params& config)noexcept;
 	
-	virtual ~market_simulator();
+	virtual ~market_simulator()noexcept;
 	
 
 public:
 
 	//simulator
-	virtual void play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback) override;
-	virtual bool is_finished() const override;
+	virtual void play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback) noexcept override;
+	virtual bool is_finished() const noexcept override;
 
 public:
 
 	
-	virtual void subscribe(const std::set<code_t>& codes)override;
+	virtual void subscribe(const std::set<code_t>& codes)noexcept override;
 
-	virtual void unsubscribe(const std::set<code_t>& codes)override;
+	virtual void unsubscribe(const std::set<code_t>& codes)noexcept override;
 
-	virtual void update() override;
+	virtual void update() noexcept override;
 
 private:
 
-	void load_data();
+	void load_data()noexcept;
 
-	void publish_tick();
+	void publish_tick()noexcept;
 
-	void finish_publish();
+	void finish_publish()noexcept;
 
 };

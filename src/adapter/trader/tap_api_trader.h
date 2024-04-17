@@ -45,77 +45,77 @@ class tap_api_trader : public asyn_actual_trader, public ITapTradeAPINotify
 
 public:
 
-	tap_api_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
+	tap_api_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept;
 
-	virtual ~tap_api_trader();
+	virtual ~tap_api_trader()noexcept;
 
 	//////////////////////////////////////////////////////////////////////////
 	//trader_api接口
 public:
 
-	virtual bool login() override;
+	virtual bool login() noexcept override;
 
-	virtual void logout()override;
+	virtual void logout()noexcept override;
 
-	virtual bool is_usable() const override;
+	virtual bool is_usable() const noexcept override;
 
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) noexcept override;
 
-	virtual bool cancel_order(estid_t estid) override;
+	virtual bool cancel_order(estid_t estid) noexcept override;
 
-	virtual uint32_t get_trading_day()const override;
+	virtual uint32_t get_trading_day()const noexcept override;
 
-	virtual std::shared_ptr<trader_data> get_trader_data() override;
+	virtual std::shared_ptr<trader_data> get_trader_data() noexcept override;
 
 	//////////////////////////////////////////////////////////////////////////
 	
 public:
 	//对ITapTradeAPINotify的实现
-	virtual void TAP_CDECL OnConnect();
-	virtual void TAP_CDECL OnRspLogin(TAPIINT32 errorCode, const TapAPITradeLoginRspInfo* loginRspInfo);
-	virtual void TAP_CDECL OnAPIReady();
-	virtual void TAP_CDECL OnDisconnect(TAPIINT32 reasonCode);
-	virtual void TAP_CDECL OnRspChangePassword(TAPIUINT32 sessionID, TAPIINT32 errorCode){};
-	virtual void TAP_CDECL OnRspSetReservedInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, const TAPISTR_50 info) {};
-	virtual void TAP_CDECL OnRspQryAccount(TAPIUINT32 sessionID, TAPIUINT32 errorCode, TAPIYNFLAG isLast, const TapAPIAccountInfo* info) {};
-	virtual void TAP_CDECL OnRspQryFund(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIFundData* info) {};
-	virtual void TAP_CDECL OnRtnFund(const TapAPIFundData* info) {};
-	virtual void TAP_CDECL OnRspQryExchange(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIExchangeInfo* info) {};
-	virtual void TAP_CDECL OnRspQryCommodity(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPICommodityInfo* info) {};
-	virtual void TAP_CDECL OnRspQryContract(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPITradeContractInfo* info) {};
-	virtual void TAP_CDECL OnRtnContract(const TapAPITradeContractInfo* info) {};
-	virtual void TAP_CDECL OnRtnOrder(const TapAPIOrderInfoNotice* info);
-	virtual void TAP_CDECL OnRspOrderAction(TAPIUINT32 sessionID, TAPIUINT32 errorCode, const TapAPIOrderActionRsp* info);
-	virtual void TAP_CDECL OnRspQryOrder(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIOrderInfo* info);
-	virtual void TAP_CDECL OnRspQryOrderProcess(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIOrderInfo* info) {};
-	virtual void TAP_CDECL OnRspQryFill(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIFillInfo* info) {};
-	virtual void TAP_CDECL OnRtnFill(const TapAPIFillInfo* info) {};
-	virtual void TAP_CDECL OnRspQryPosition(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIPositionInfo* info);
-	virtual void TAP_CDECL OnRtnPosition(const TapAPIPositionInfo* info) {};
-	virtual void TAP_CDECL OnRspQryClose(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPICloseInfo* info) {};
-	virtual void TAP_CDECL OnRtnClose(const TapAPICloseInfo* info) {};
-	virtual void TAP_CDECL OnRtnPositionProfit(const TapAPIPositionProfitNotice* info) {};
-	virtual void TAP_CDECL OnRspQryDeepQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIDeepQuoteQryRsp* info) {};
-	virtual void TAP_CDECL OnRspQryExchangeStateInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIExchangeStateInfo* info) {};
-	virtual void TAP_CDECL OnRtnExchangeStateInfo(const TapAPIExchangeStateInfoNotice* info) {};
-	virtual void TAP_CDECL OnRtnReqQuoteNotice(const TapAPIReqQuoteNotice* info) {}; //V9.0.2.0 20150520
-	virtual void TAP_CDECL OnRspUpperChannelInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIUpperChannelInfo* info) {};
-	virtual void TAP_CDECL OnRspAccountRentInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIAccountRentInfo* info) {};
-	virtual void TAP_CDECL OnRspSubmitUserLoginInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPISubmitUserLoginRspInfo* info) {};
-	virtual void TAP_CDECL OnRspQryBill(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIBillQryRsp* info) {};
-	virtual void TAP_CDECL OnRspQryAccountStorage(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIAccountStorageInfo* info) {};
-	virtual void TAP_CDECL OnRtnAccountStorage(const TapAPIAccountStorageInfo* info) {};
+	virtual void TAP_CDECL OnConnect()noexcept;
+	virtual void TAP_CDECL OnRspLogin(TAPIINT32 errorCode, const TapAPITradeLoginRspInfo* loginRspInfo)noexcept;
+	virtual void TAP_CDECL OnAPIReady()noexcept;
+	virtual void TAP_CDECL OnDisconnect(TAPIINT32 reasonCode)noexcept;
+	virtual void TAP_CDECL OnRspChangePassword(TAPIUINT32 sessionID, TAPIINT32 errorCode)noexcept {};
+	virtual void TAP_CDECL OnRspSetReservedInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, const TAPISTR_50 info)noexcept {};
+	virtual void TAP_CDECL OnRspQryAccount(TAPIUINT32 sessionID, TAPIUINT32 errorCode, TAPIYNFLAG isLast, const TapAPIAccountInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRspQryFund(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIFundData* info)noexcept {};
+	virtual void TAP_CDECL OnRtnFund(const TapAPIFundData* info)noexcept {};
+	virtual void TAP_CDECL OnRspQryExchange(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIExchangeInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRspQryCommodity(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPICommodityInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRspQryContract(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPITradeContractInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRtnContract(const TapAPITradeContractInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRtnOrder(const TapAPIOrderInfoNotice* info)noexcept;
+	virtual void TAP_CDECL OnRspOrderAction(TAPIUINT32 sessionID, TAPIUINT32 errorCode, const TapAPIOrderActionRsp* info)noexcept;
+	virtual void TAP_CDECL OnRspQryOrder(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIOrderInfo* info)noexcept;
+	virtual void TAP_CDECL OnRspQryOrderProcess(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIOrderInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRspQryFill(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIFillInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRtnFill(const TapAPIFillInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRspQryPosition(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIPositionInfo* info)noexcept;
+	virtual void TAP_CDECL OnRtnPosition(const TapAPIPositionInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRspQryClose(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPICloseInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRtnClose(const TapAPICloseInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRtnPositionProfit(const TapAPIPositionProfitNotice* info) noexcept {};
+	virtual void TAP_CDECL OnRspQryDeepQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIDeepQuoteQryRsp* info)noexcept {};
+	virtual void TAP_CDECL OnRspQryExchangeStateInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIExchangeStateInfo* info)noexcept {};
+	virtual void TAP_CDECL OnRtnExchangeStateInfo(const TapAPIExchangeStateInfoNotice* info)noexcept {};
+	virtual void TAP_CDECL OnRtnReqQuoteNotice(const TapAPIReqQuoteNotice* info) noexcept {}; //V9.0.2.0 20150520
+	virtual void TAP_CDECL OnRspUpperChannelInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIUpperChannelInfo* info) noexcept {};
+	virtual void TAP_CDECL OnRspAccountRentInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIAccountRentInfo* info) noexcept {};
+	virtual void TAP_CDECL OnRspSubmitUserLoginInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPISubmitUserLoginRspInfo* info) noexcept {};
+	virtual void TAP_CDECL OnRspQryBill(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIBillQryRsp* info) noexcept {};
+	virtual void TAP_CDECL OnRspQryAccountStorage(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIAccountStorageInfo* info) noexcept {};
+	virtual void TAP_CDECL OnRtnAccountStorage(const TapAPIAccountStorageInfo* info) noexcept {};
 
 private:
 
-	bool query_positions(bool is_sync);
+	bool query_positions(bool is_sync)noexcept;
 
-	bool query_orders(bool is_sync);
+	bool query_orders(bool is_sync)noexcept;
 
 private:
 
 
-	inline int convert_direction_offset(direction_type dir_type, offset_type offset_type)
+	inline int convert_direction_offset(direction_type dir_type, offset_type offset_type)noexcept
 	{
 		if (direction_type::DT_LONG == dir_type)
 			if (offset_type == offset_type::OT_OPEN)
@@ -129,7 +129,7 @@ private:
 				return TAPI_SIDE_BUY;
 	}
 
-	inline direction_type wrap_direction_offset(TAPISideType dir_type, TAPIPositionEffectType offset_type)
+	inline direction_type wrap_direction_offset(TAPISideType dir_type, TAPIPositionEffectType offset_type)noexcept
 	{
 		if (TAPI_SIDE_BUY == dir_type)
 			if (offset_type == TAPI_PositionEffect_OPEN)
@@ -143,7 +143,7 @@ private:
 				return direction_type::DT_LONG;
 	}
 
-	inline int convert_offset_type(const code_t& code, uint32_t volume, offset_type offset, direction_type direction)
+	inline int convert_offset_type(const code_t& code, uint32_t volume, offset_type offset, direction_type direction)noexcept
 	{
 		if (offset_type::OT_OPEN == offset)
 		{
@@ -169,7 +169,7 @@ private:
 		}
 	}
 
-	inline offset_type wrap_offset_type(const code_t& code ,TAPIPositionEffectType offset_type)
+	inline offset_type wrap_offset_type(const code_t& code ,TAPIPositionEffectType offset_type)noexcept
 	{
 		if (TAPI_PositionEffect_OPEN == offset_type)
 		{
@@ -191,7 +191,7 @@ private:
 		}
 	}
 
-	inline estid_t generate_estid()
+	inline estid_t generate_estid()noexcept
 	{
 		_order_ref++ ;
 		uint64_t p1 = (uint64_t)_login_time << 32;
