@@ -370,35 +370,37 @@ void ctp_api_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *p
 			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
 
-				pos.today_long += pInvestorPosition->TodayPosition;
-				if (!code.is_distinct())
+				if (code.is_distinct())
 				{
-					uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-					pos.today_long += yestoday_position;
+					pos.today_long += pInvestorPosition->TodayPosition;
+				}
+				else
+				{
+					pos.today_long += pInvestorPosition->Position;
 				}
 				
 			}
 			else
 			{
-				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-				pos.history_long += yestoday_position;
+				pos.history_long += (pInvestorPosition->Position - pInvestorPosition->TodayPosition);
 			}
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
 			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-				pos.today_short += pInvestorPosition->TodayPosition;
-				if(!code.is_distinct())
+				if(code.is_distinct())
 				{
-					uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-					pos.today_short += yestoday_position;
+					pos.today_short += pInvestorPosition->TodayPosition;
+				}
+				else
+				{
+					pos.today_short += pInvestorPosition->Position;
 				}
 			}
 			else
 			{
-				uint32_t yestoday_position = pInvestorPosition->Position - pInvestorPosition->TodayPosition;
-				pos.history_short += yestoday_position;
+				pos.history_short += (pInvestorPosition->Position - pInvestorPosition->TodayPosition);
 			}
 		}
 		_position_info[code] = pos;
