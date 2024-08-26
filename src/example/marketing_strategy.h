@@ -101,6 +101,11 @@ public:
 	 */
 	virtual void on_destroy(lt::unsubscriber& unsuber)override;
 
+
+private:
+
+	bool is_close_coming() const;
+
 private:
 
 	code_t _code;
@@ -114,5 +119,6 @@ private:
 	std::default_random_engine _random_engine;
 
 	std::uniform_int_distribution<int> _random;
+
 };
 

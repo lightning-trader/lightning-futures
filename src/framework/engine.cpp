@@ -168,13 +168,11 @@ void engine::regist_strategy(const std::vector<std::shared_ptr<lt::strategy>>& s
 	subscriber suber(*this);
 	for (auto it : strategys)
 	{
-		this->add_handle(it->get_id(),std::bind(&lt::strategy::handle_change, &(*it), std::placeholders::_1));
 		_strategy_map[it->get_id()] = (it);
 	}
 }
 void engine::clear_strategy()
 {
-	this->clear_handle();
 	//策略不存在了那么订单和策略的映射关系也要清掉
 	_estid_to_strategy.clear();
 	_need_check_condition.clear();

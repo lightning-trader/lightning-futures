@@ -29,7 +29,7 @@ using namespace lt;
 
 strategy::strategy(straid_t id, engine* engine, bool openable, bool closeable):_id(id), _engine(*engine),_openable(openable),_closeable(closeable)
 {
-	_coming_to_close = _engine.get_close_time() - 2 * ONE_MINUTE_MILLISECONDS;
+	
 }
 strategy::~strategy()
 {
@@ -52,17 +52,6 @@ void strategy::destroy(unsubscriber& unsuber)
 	this->on_destroy(unsuber);
 }
 
-void strategy::handle_change(const std::vector<std::any>& msg)
-{
-	if (msg.size() >= 3)
-	{
-		_openable = std::any_cast<bool>(msg[0]);
-		_closeable = std::any_cast<bool>(msg[1]);
-		params p(std::any_cast<std::string>(msg[2]));
-		this->on_change(p);
-		LOG_INFO("strategy change :",get_id(), _openable, _closeable, std::any_cast<std::string>(msg[2]));
-	}
-}
 
 estid_t strategy::buy_for_open(const code_t& code,uint32_t count ,double_t price , order_flag flag )
 {
@@ -133,15 +122,6 @@ const order_info& strategy::get_order(estid_t estid) const
 	return _engine.get_order(estid);
 }
 
-bool strategy::is_close_coming(daytm_t dtm) const
-{
-	return _coming_to_close < dtm ;
-}
-
-bool strategy::is_close_coming() const
-{
-	return _coming_to_close < get_last_time();
-}
 daytm_t strategy::get_last_time() const
 {
 	return _engine.get_last_time();

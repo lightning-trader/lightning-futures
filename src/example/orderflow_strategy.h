@@ -105,6 +105,10 @@ public:
 
 private:
 
+	bool is_close_coming() const;
+
+private:
+
 	void try_buy();
 
 	void try_sell();

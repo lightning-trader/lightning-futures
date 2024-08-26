@@ -153,3 +153,7 @@ void marketing_strategy::on_destroy(lt::unsubscriber& unsuber)
 {
 	unsuber.unregist_tick_receiver(_code, this);
 }
+
+bool marketing_strategy::is_close_coming()const {
+	return make_daytm("14:58:00") < get_last_time();
+}

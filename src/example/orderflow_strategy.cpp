@@ -169,3 +169,8 @@ void orderflow_strategy::try_sell()
 		_order_data.sell_order = sell_for_open(_code, _open_once, tick.buy_price());
 	}
 }
+
+
+bool orderflow_strategy::is_close_coming()const {
+	return make_daytm("14:58:00") < get_last_time();
+}

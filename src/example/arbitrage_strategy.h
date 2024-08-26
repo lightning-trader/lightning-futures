@@ -26,6 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "receiver.h"
 #include "engine.h"
 #include <random>
+#include <time_utils.hpp>
 
 
 
@@ -74,7 +75,6 @@ public:
 		_offset(offset)
 
 	{
-
 	};
 
 	virtual ~arbitrage_strategy()
@@ -135,9 +135,15 @@ public:
 	 */
 	virtual void on_update() override;
 
+
+private:
+
 	estid_t try_buy(const code_t& code);
 
 	estid_t try_sell(const code_t& code);
+
+	bool is_close_coming() const;
+	
 
 private:
 

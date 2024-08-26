@@ -75,7 +75,6 @@ void arbitrage_strategy::on_tick(const tick_info& tick)
 }
 
 
-
 void arbitrage_strategy::on_entrust(const order_info& order)
 {
 	LOG_INFO("on_entrust :", order.estid, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
@@ -325,4 +324,11 @@ estid_t arbitrage_strategy::try_sell(const code_t& code)
 		return sell_for_close(code, _open_once, tick.buy_price(), true);
 	}
 	return sell_for_open(code, _open_once, tick.buy_price());
+}
+
+
+
+bool arbitrage_strategy::is_close_coming() const
+{
+	return make_daytm("14:58:00") < get_last_time();
 }

@@ -49,8 +49,6 @@ namespace lt
 
 		bool _closeable;
 
-		daytm_t _coming_to_close;
-
 	public:
 
 		strategy(straid_t id, engine* engine, bool openable, bool closeable);
@@ -78,10 +76,6 @@ namespace lt
 		*/
 		void destroy(unsubscriber& unsuber);
 
-		/*
-		*	收到消息
-		*/
-		virtual void handle_change(const std::vector<std::any>& msg) ;
 
 		//回调函数
 	private:
@@ -101,11 +95,6 @@ namespace lt
 		*	更新
 		*/
 		virtual void on_update() {};
-
-		/*
-		*	收到消息
-		*/
-		virtual void on_change(const params& p) {};
 
 
 	public:
@@ -203,12 +192,6 @@ namespace lt
 		**/
 		const order_info& get_order(estid_t estid) const;
 
-		/**
-		* 是否即将收盘
-		*/
-		bool is_close_coming(daytm_t dtm) const ;
-
-		bool is_close_coming() const ;
 
 		/**
 		* 获取时间

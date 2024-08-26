@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #pragma once
 #include <lightning.h>
 #include <engine_types.hpp>
-#include <event_center.hpp>
 #include <receiver.h>
 #include <strategy.h>
 #include <log_wapper.hpp>
@@ -78,7 +77,7 @@ namespace lt
 
 	};
 
-	class engine : public queue_event_source<straid_t,1024>
+	class engine
 	{
 		friend subscriber;
 		friend unsubscriber;
@@ -139,7 +138,6 @@ namespace lt
 		{
 			if (_self)
 			{
-				_self->process();
 				for(auto& it: _self->_strategy_map)
 				{
 					it.second->update();
@@ -405,14 +403,6 @@ namespace lt
 		*/
 		double_t get_proximate_price(const code_t& code,double_t price)const;
 
-
-		/*
-		* 发送消息
-		*/
-		void change_strategy(straid_t straid,bool openable,bool closeable,const std::string& param)
-		{
-			this->fire_event(straid, openable, closeable, param);
-		}
 	
 	private:
 		/**
