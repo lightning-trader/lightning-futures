@@ -172,5 +172,5 @@ void orderflow_strategy::try_sell()
 
 
 bool orderflow_strategy::is_close_coming()const {
-	return make_daytm("14:58:00") < get_last_time();
+	return make_daytm("14:58:00", 0U) < get_last_time();
 }

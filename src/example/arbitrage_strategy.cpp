@@ -330,5 +330,5 @@ estid_t arbitrage_strategy::try_sell(const code_t& code)
 
 bool arbitrage_strategy::is_close_coming() const
 {
-	return make_daytm("14:58:00") < get_last_time();
+	return make_daytm("14:58:00",0U) < get_last_time();
 }
