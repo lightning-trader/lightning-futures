@@ -319,6 +319,36 @@ void trader_simulator::match_entrust(const tick_info* tick)noexcept
 		}
 	}
 	
+	for(auto& mc_it = _order_match.begin();mc_it != _order_match.end();){
+		for(auto& it = mc_it->second.begin();it!= mc_it->second.end();){
+			if(it->state == OS_DELETE)
+			{
+				auto odit = _order_info.find(it->estid);
+				if (odit != _order_info.end())
+				{
+
+					LOG_INFO("remove_order", it->estid);
+					_order_info.erase(odit);
+				}
+				it = mc_it->second.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+		if(mc_it->second.empty())
+		{
+			mc_it = _order_match.erase(mc_it);
+		}
+		else
+		{
+			mc_it++;
+		}
+	}
+
+
+
 }
 
 void trader_simulator::handle_entrust(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)noexcept
@@ -627,14 +657,19 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)noexce
 		LOG_TRACE(" order_deal _order_info.del_order", order.estid);
 		//全部成交
 		fire_event(trader_event_type::TET_OrderTrade, order.estid, order.code, order.offset, order.direction, order.price, order.total_volume);
-		remove_order(order.estid);
+		visit_match_info(order.estid, [this](order_match& mh)->void {
+			mh.state = OS_DELETE;
+			});
+		
 	}
 	
 }
 void trader_simulator::order_error(error_type type,estid_t estid, error_code err)noexcept
 {
 	fire_event(trader_event_type::TET_OrderError, type, estid, (uint8_t)err);
-	remove_order(estid);
+	visit_match_info(estid, [this](order_match& mh)->void {
+		mh.state = OS_DELETE;
+		});
 }
 void trader_simulator::order_cancel(const order_info& order)noexcept
 {
@@ -649,7 +684,9 @@ void trader_simulator::order_cancel(const order_info& order)noexcept
 		{
 			LOG_INFO(" order_cancel _order_info.del_order", order.estid);
 			fire_event(trader_event_type::TET_OrderCancel, order.estid, order.code, order.offset, order.direction, order.price, order.last_volume, order.total_volume);
-			remove_order(order.estid);
+			visit_match_info(order.estid, [this](order_match& mh)->void {
+				mh.state = OS_DELETE;
+				});
 		}
 		else
 		{
@@ -658,26 +695,6 @@ void trader_simulator::order_cancel(const order_info& order)noexcept
 	}
 }
 
-void trader_simulator::remove_order(estid_t estid)noexcept
-{
-	auto odit = _order_info.find(estid);
-	if (odit != _order_info.end())
-	{
-		auto match = _order_match.find(odit->second.code);
-		if (match != _order_match.end())
-		{
-			auto mch_odr = std::find_if(match->second.begin(), match->second.end(), [estid](const order_match& p)->bool {
-				return p.estid == estid;
-				});
-			if (mch_odr != match->second.end())
-			{
-				match->second.erase(mch_odr);
-			}
-		}
-		LOG_INFO("remove_order", estid);
-		_order_info.erase(odit);
-	}
-}
 
 void trader_simulator::visit_match_info(estid_t estid,std::function<void(order_match&)> cursor)noexcept
 {
@@ -744,7 +761,6 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 			}
 			it->second.today_short.frozen += volume;
 		}
-		return error_code::EC_Success;
 	}
 	else
 	{
@@ -767,9 +783,8 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 			}
 			it->second.yestoday_short.frozen += volume;
 		}
-		return error_code::EC_Success;
 	}
-	return error_code::EC_OrderFieldError;
+	return error_code::EC_Success;
 }
 bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)noexcept
 {

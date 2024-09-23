@@ -35,6 +35,7 @@ class trader_simulator : public dummy_trader
 		OS_INVALID,
 		OS_IN_MATCH,
 		OS_CANELED,
+		OS_DELETE,
 	};
 
 	struct order_match
@@ -209,8 +210,6 @@ private:
 	void order_error(error_type type, estid_t estid, error_code err)noexcept;
 
 	void order_cancel(const order_info& order)noexcept;
-
-	void remove_order(estid_t estid)noexcept;
 
 	void visit_match_info(estid_t estid, std::function<void(order_match&)> cursor)noexcept;
 	//冻结
