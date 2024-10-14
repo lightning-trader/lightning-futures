@@ -24,21 +24,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <rapidcsv.h>
 #include <define.h>
 
-class price_step
-{
+namespace lt::hft{
 
-public:
-	price_step(const std::string& config_path);
-	virtual ~price_step();
+	class price_step
+	{
 
-private:
+	public:
+		price_step(const std::string& config_path);
+		virtual ~price_step();
 
-	std::map<code_t,double_t> _price_step_data;
+	private:
 
-public:
-	
-	double_t get_price_step(const code_t& code)const;
+		std::map<code_t, double_t> _price_step_data;
 
-	double_t get_proximate_price(const code_t& code,double_t row_price)const;
-};
+	public:
+
+		double_t get_price_step(const code_t& code)const;
+	};
+
+}
 

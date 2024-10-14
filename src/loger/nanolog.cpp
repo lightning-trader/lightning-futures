@@ -196,12 +196,11 @@ namespace nanolog
 		std::unique_ptr < std::ofstream > m_os;
 	};
 
-	NanoLogger::NanoLogger(std::string const& log_directory, std::string const& log_file_name, uint32_t file_size_mb, size_t pool_size)
+	NanoLogger::NanoLogger(std::string const& log_directory, std::string const& log_file_name, uint32_t file_size_mb)
 		: _file_writer(nullptr)
 		, _console_writer(nullptr)
 		, _is_runing(false)
 		, _mq()
-		, _lp(pool_size)
 		, _level(LogLevel::LLV_TRACE)
 		, _field(0)
 		, _print(0)
@@ -255,12 +254,12 @@ namespace nanolog
 
 	NanoLogLine* NanoLogger::alloc()
 	{
-		return _lp.alloc(true);
+		return new NanoLogLine();
 	}
 
 	void NanoLogger::recycle(NanoLogLine* line)
 	{
-		_lp.recycle(line);
+		delete line;
 	}
 
 	void NanoLogger::dump(NanoLogLine* line)

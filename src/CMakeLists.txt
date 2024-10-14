@@ -32,7 +32,6 @@ add_subdirectory ("example")
 
 add_subdirectory("framework")
 
-add_subdirectory("core")
 
 add_subdirectory("adapter")
 

@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <string_helper.hpp>
 
 using namespace lt;
-
+using namespace lt::hft;
 
 void arbitrage_strategy::on_init(subscriber& suber)
 {
@@ -90,7 +90,7 @@ void arbitrage_strategy::on_entrust(const order_info& order)
 				}
 				return false;
 				});
-			regist_order_estid(order.estid);
+			regist_order_listener(order.estid);
 			break;
 		}
 	}
@@ -194,7 +194,7 @@ void arbitrage_strategy::on_error(error_type type, estid_t localid, const error_
 	
 }
 
-void arbitrage_strategy::on_destroy(lt::unsubscriber& unsuber)
+void arbitrage_strategy::on_destroy(unsubscriber& unsuber)
 {
 	unsuber.unregist_tick_receiver(_code1, this);
 	unsuber.unregist_tick_receiver(_code2, this);
@@ -298,32 +298,32 @@ void arbitrage_strategy::on_update()
 
 estid_t arbitrage_strategy::try_buy(const code_t& code)
 {
-	auto& tick = get_last_tick(code);
+	const auto& market = get_market_info(code);
 	auto pos = get_position(code);
 	if (pos.history_short.usable() > 0 && _open_once >= pos.history_short.usable())
 	{
-		return buy_for_close(code, _open_once, tick.sell_price());
+		return buy_close(code, _open_once, market.last_tick_info.sell_price());
 	}
 	if (pos.today_short.usable() > 0 && _open_once >= pos.today_short.usable())
 	{
-		return buy_for_close(code, _open_once, tick.sell_price(), true);
+		return buy_close(code, _open_once, market.last_tick_info.sell_price(), true);
 	}
-	return buy_for_open(code, _open_once, tick.sell_price());
+	return buy_open(code, _open_once, market.last_tick_info.sell_price());
 }
 
 estid_t arbitrage_strategy::try_sell(const code_t& code)
 {
-	auto& tick = get_last_tick(code);
+	const auto& market = get_market_info(code);
 	auto pos = get_position(code);
 	if (pos.history_long.usable() > 0 && _open_once >= pos.history_long.usable())
 	{
-		return sell_for_close(code, _open_once, tick.buy_price());
+		return sell_close(code, _open_once, market.last_tick_info.buy_price());
 	}
 	if (pos.today_long.usable() > 0 && _open_once >= pos.today_long.usable())
 	{
-		return sell_for_close(code, _open_once, tick.buy_price(), true);
+		return sell_close(code, _open_once, market.last_tick_info.buy_price(), true);
 	}
-	return sell_for_open(code, _open_once, tick.buy_price());
+	return sell_open(code, _open_once, market.last_tick_info.buy_price());
 }
 
 

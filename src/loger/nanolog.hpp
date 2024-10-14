@@ -60,7 +60,7 @@ namespace nanolog
 
 		NanoLogger() = default;
 
-		NanoLogger(std::string const& log_directory, std::string const& log_file_name, uint32_t file_size_mb,size_t pool_size);
+		NanoLogger(std::string const& log_directory, std::string const& log_file_name, uint32_t file_size_mb);
 
 		~NanoLogger();
 		
@@ -85,7 +85,6 @@ namespace nanolog
 
 		std::unique_ptr<std::thread> _thread;
 
-		LoglinePool _lp;
 		LoglineQueue _mq;
 
 		std::atomic<bool> _is_runing = false;

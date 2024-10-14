@@ -26,7 +26,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "tick_loader/csv_tick_loader.h"
 #include <log_wapper.hpp>
 
-market_simulator::market_simulator(const params& config)noexcept :_loader(nullptr),
+using namespace lt;
+using namespace lt::driver;
+
+market_simulator::market_simulator(const params& config) :_loader(nullptr),
 _current_trading_day(0),
 _current_time(0),
 _current_index(0),
@@ -61,7 +64,7 @@ _state(execute_state::ES_Idle)
 	}
 	
 }
-market_simulator::~market_simulator()noexcept
+market_simulator::~market_simulator()
 {
 	if (_loader)
 	{
@@ -70,7 +73,7 @@ market_simulator::~market_simulator()noexcept
 	}
 }
 
-void market_simulator::play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback)noexcept
+void market_simulator::play(uint32_t trading_day, std::function<void(const std::vector<const tick_info*>&)> publish_callback)
 {
 	_current_trading_day = trading_day;
 	_is_finished = false ;
@@ -78,12 +81,12 @@ void market_simulator::play(uint32_t trading_day, std::function<void(const tick_
 	_state = execute_state::ES_LoadingData;
 }
 
-bool market_simulator::is_finished() const noexcept
+bool market_simulator::is_finished() const
 {
 	return 	_is_finished;
 }
 
-void market_simulator::subscribe(const std::set<code_t>& codes) noexcept
+void market_simulator::subscribe(const std::set<code_t>& codes)
 {
 	for(auto& it : codes)
 	{
@@ -91,7 +94,7 @@ void market_simulator::subscribe(const std::set<code_t>& codes) noexcept
 	}
 }
 
-void market_simulator::unsubscribe(const std::set<code_t>& codes)noexcept
+void market_simulator::unsubscribe(const std::set<code_t>& codes)
 {
 	for (auto& it : codes)
 	{
@@ -103,7 +106,7 @@ void market_simulator::unsubscribe(const std::set<code_t>& codes)noexcept
 	}
 }
 
-void market_simulator::update()noexcept
+void market_simulator::update()
 {
 	switch(_state)
 	{
@@ -117,7 +120,7 @@ void market_simulator::update()noexcept
 }
 
 
-void market_simulator::load_data()noexcept
+void market_simulator::load_data()
 {
 	if(_loader)
 	{
@@ -129,45 +132,54 @@ void market_simulator::load_data()noexcept
 	}
 }
 
-void market_simulator::publish_tick()noexcept
+void market_simulator::publish_tick()
 {	
-	const tick_info* tick = nullptr;
-	if (_current_index < _pending_tick_info.size())
+	if (_current_index >= _pending_tick_info.size())
 	{
-		tick = &(_pending_tick_info[_current_index]);
-		_current_time = tick->time;
-	}
-	else
-	{
-		//结束了触发收盘事件
-		finish_publish();
 		return;
 	}
+	const tick_detail* tick = &(_pending_tick_info[_current_index]);
+	_current_time = tick->time;
+	std::vector<const tick_detail*> current_tick;
+	
 	while(_current_time == tick->time)
 	{
-		PROFILE_INFO(tick->id.get_id());
-		if (_publish_callback)
-		{
-			_publish_callback(*tick);
-		}
-		fire_event(market_event_type::MET_TickReceived, *tick);
+		current_tick.emplace_back(tick);
 		_current_index++;
 		if(_current_index < _pending_tick_info.size())
 		{
 			tick = &(_pending_tick_info[_current_index]);
-			
 		}
 		else
 		{
 			//结束了触发收盘事件
-			finish_publish();
 			break;
 		}
 	}
-	
+
+	if (_publish_callback)
+	{
+		std::vector<const tick_info*> tick_info;
+		for (auto tick : current_tick)
+		{
+			tick_info.emplace_back(tick);
+		}
+		_publish_callback(tick_info);
+	}
+
+	for(auto tick : current_tick)
+	{
+		PROFILE_INFO(tick->id.get_id());
+		fire_event(market_event_type::MET_TickReceived, *static_cast<const tick_info*>(tick),tick->extend);
+	}
+
+	if (_current_index >= _pending_tick_info.size())
+	{
+		finish_publish();
+	}
 }
 
-void market_simulator::finish_publish()noexcept
+void market_simulator::finish_publish()
 {
 	_current_time = 0;
 	_current_index = 0;

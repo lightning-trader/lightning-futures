@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <engine_types.hpp>
 #include <receiver.h>
 
-namespace lt
+namespace lt::hft
 {
 	/***
 	*
@@ -38,7 +38,7 @@ namespace lt
 
 		uint32_t _period;
 
-		bar_info _bar;
+		lt::bar_info _bar;
 
 		uint32_t _minute;
 
@@ -48,7 +48,7 @@ namespace lt
 
 		std::map<double_t, uint32_t> _poc_data;
 
-		std::set<lt::bar_receiver*> _bar_callback;
+		std::set<lt::hft::bar_receiver*> _bar_callback;
 
 	public:
 
@@ -56,9 +56,9 @@ namespace lt
 
 		void insert_tick(const tick_info& tick);
 
-		void add_receiver(lt::bar_receiver* receiver);
+		void add_receiver(lt::hft::bar_receiver* receiver);
 
-		void remove_receiver(lt::bar_receiver* receiver);
+		void remove_receiver(lt::hft::bar_receiver* receiver);
 
 		bool invalid()const;
 	};

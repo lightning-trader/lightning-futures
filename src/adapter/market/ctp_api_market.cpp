@@ -26,8 +26,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <params.hpp>
 #include <log_wapper.hpp>
 
+using namespace lt;
+using namespace lt::driver;
 
-ctp_api_market::ctp_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept
+
+ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_excg_map, const params& config)
 	:asyn_actual_market(id_excg_map)
 	,_md_api(nullptr)
 	,_reqid(0)
@@ -66,13 +69,13 @@ ctp_api_market::ctp_api_market(const std::shared_ptr<std::unordered_map<std::str
 }
 
 
-ctp_api_market::~ctp_api_market()noexcept
+ctp_api_market::~ctp_api_market()
 {
 	dll_helper::free_library(_market_handle);
 	_market_handle = nullptr;
 }
 
-bool ctp_api_market::login()noexcept
+bool ctp_api_market::login()
 {
 	char path_buff[64] = {0};
 	sprintf(path_buff, "md_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
@@ -89,10 +92,10 @@ bool ctp_api_market::login()noexcept
 	return true ;
 }
 
-void ctp_api_market::logout()noexcept
+void ctp_api_market::logout()
 {
 	_reqid = 0;
-	_id_excg_map->clear();
+	_id_excg_map.clear();
 	if (_md_api)
 	{
 		_md_api->RegisterSpi(nullptr);
@@ -159,25 +162,19 @@ void ctp_api_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDept
 	PROFILE_INFO(pDepthMarketData->InstrumentID);
 	LOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice, pDepthMarketData->UpdateTime, pDepthMarketData->UpdateMillisec);
 	const char * excg_id = pDepthMarketData->ExchangeID;
-	auto excg_it = _id_excg_map->find(pDepthMarketData->InstrumentID);
-	if (excg_it != _id_excg_map->end())
+	auto excg_it = _id_excg_map.find(pDepthMarketData->InstrumentID);
+	if (excg_it != _id_excg_map.end())
 	{
 		excg_id = excg_it->second.c_str();
 	}
 	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
-	
-	tick_info tick(
+	tick_info tick_data(
 		code_t(pDepthMarketData->InstrumentID, excg_id),
-		make_daytm(pDepthMarketData->UpdateTime,static_cast<uint32_t>(pDepthMarketData->UpdateMillisec)),
-		pDepthMarketData->OpenPrice,
-		pDepthMarketData->ClosePrice,
-		pDepthMarketData->HighestPrice,
-		pDepthMarketData->LowestPrice,
+		make_daytm(pDepthMarketData->UpdateTime, static_cast<uint32_t>(pDepthMarketData->UpdateMillisec)),
 		pDepthMarketData->LastPrice,
-		pDepthMarketData->PreSettlementPrice,
 		pDepthMarketData->Volume,
-		std::atoi(pDepthMarketData->TradingDay),
 		pDepthMarketData->OpenInterest,
+		std::atoi(pDepthMarketData->TradingDay),
 		{
 			std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1),
 			std::make_pair(pDepthMarketData->BidPrice2, pDepthMarketData->BidVolume2),
@@ -193,12 +190,18 @@ void ctp_api_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDept
 			std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5)
 		}
 	);
-	
-
-	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
+	auto extend_data = std::make_tuple(
+		pDepthMarketData->OpenPrice,
+		pDepthMarketData->ClosePrice,
+		pDepthMarketData->HighestPrice,
+		pDepthMarketData->LowestPrice,
+		pDepthMarketData->UpperLimitPrice,
+		pDepthMarketData->LowerLimitPrice,
+		pDepthMarketData->PreSettlementPrice
+	);
 
 	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
-	this->fire_event(market_event_type::MET_TickReceived, tick);
+	this->fire_event(market_event_type::MET_TickReceived, tick_data, extend_data);
 	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
 }
 
@@ -218,7 +221,7 @@ void ctp_api_market::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSp
 	}
 }
 
-void ctp_api_market::do_userlogin()noexcept
+void ctp_api_market::do_userlogin()
 {
 	if(_md_api == nullptr)
 	{
@@ -237,11 +240,11 @@ void ctp_api_market::do_userlogin()noexcept
 	}
 }
 
-void ctp_api_market::do_subscribe()noexcept
+void ctp_api_market::do_subscribe()
 {
 	char* id_list[500];
 	int num = 0;
-	for (auto& it : *_id_excg_map)
+	for (auto& it : _id_excg_map)
 	{
 		id_list[num] = const_cast<char*>(it.first.c_str());
 		num++;
@@ -258,7 +261,7 @@ void ctp_api_market::do_subscribe()noexcept
 	}
 }
 
-void ctp_api_market::do_unsubscribe(const std::vector<code_t>& code_list)noexcept
+void ctp_api_market::do_unsubscribe(const std::vector<code_t>& code_list)
 {
 	char* id_list[500];
 	int num = 0;
@@ -279,25 +282,25 @@ void ctp_api_market::do_unsubscribe(const std::vector<code_t>& code_list)noexcep
 	}
 }
 
-void ctp_api_market::subscribe(const std::set<code_t>& code_list)noexcept
+void ctp_api_market::subscribe(const std::set<code_t>& code_list)
 {
 	for(auto& it : code_list)
 	{
-		(*_id_excg_map)[it.get_id()] = it.get_excg();
+		(_id_excg_map)[it.get_id()] = it.get_excg();
 	}
 	do_subscribe();
 }
 
-void ctp_api_market::unsubscribe(const std::set<code_t>& code_list)noexcept
+void ctp_api_market::unsubscribe(const std::set<code_t>& code_list)
 {
 	std::vector<code_t> delete_code_list ;
 	for (auto& it : code_list)
 	{
-		auto n = _id_excg_map->find(it.get_id());
-		if(n != _id_excg_map->end())
+		auto n = _id_excg_map.find(it.get_id());
+		if(n != _id_excg_map.end())
 		{
 			delete_code_list.emplace_back(it);
-			_id_excg_map->erase(n);
+			_id_excg_map.erase(n);
 		}
 	}
 	do_unsubscribe(delete_code_list);

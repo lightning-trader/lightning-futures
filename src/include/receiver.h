@@ -23,21 +23,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #pragma once
 #include <define.h>
 
-namespace lt
+namespace lt::hft
 {
 	struct tick_receiver
 	{
-		virtual void on_tick(const tick_info& tick) = 0;
+		virtual void on_tick(const lt::tick_info& tick) = 0;
 	};
 
 	struct tape_receiver
 	{
-		virtual void on_tape(const tape_info& tape) = 0;
+		virtual void on_tape(const lt::tape_info& tape) = 0;
 	};
 
 	struct bar_receiver
 	{
-		virtual void on_bar(const bar_info& bar) = 0;
+		virtual void on_bar(const lt::bar_info& bar) = 0;
 	};
 
 }

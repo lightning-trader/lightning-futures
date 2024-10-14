@@ -26,7 +26,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "./tick_loader/csv_tick_loader.h"
 #include <log_wapper.hpp>
 
-trader_simulator::trader_simulator(const params& config) noexcept :
+using namespace lt;
+using namespace lt::driver;
+
+trader_simulator::trader_simulator(const params& config) :
 	_trading_day(0),
 	_order_ref(0),
 	_interval(1),
@@ -45,17 +48,24 @@ trader_simulator::trader_simulator(const params& config) noexcept :
 	}
 
 }
-trader_simulator::~trader_simulator()noexcept
+trader_simulator::~trader_simulator()
 {
 }
 
 
-void trader_simulator::push_tick(const tick_info& tick)noexcept
+void trader_simulator::push_tick(const std::vector<const tick_info*>& current_tick)
 {
-	_current_tick_info[tick.id] = tick;
+	for(auto tick : current_tick)
+	{
+		if(tick)
+		{
+			_current_tick_info[tick->id] = *tick;
+		}
+	}
+	
 }
 
-void trader_simulator::crossday(uint32_t trading_day)noexcept
+void trader_simulator::crossday(uint32_t trading_day)
 {
 	_trading_day = trading_day;
 	std::vector<order_info> order;
@@ -86,17 +96,17 @@ void trader_simulator::crossday(uint32_t trading_day)noexcept
 	
 }
 
-uint32_t trader_simulator::get_trading_day()const noexcept
+uint32_t trader_simulator::get_trading_day()const
 {
 	return _trading_day;
 }
 
-void trader_simulator::update()noexcept
+void trader_simulator::update()
 {
 	for (const auto& tk_it : _current_tick_info)
 	{
 		_current_time = tk_it.second.time;
-		match_entrust(&tk_it.second);
+		match_entrust(tk_it.second);
 		_last_frame_volume[tk_it.second.id] = tk_it.second.volume;
 	}
 	/*
@@ -151,12 +161,12 @@ void trader_simulator::update()noexcept
 	*/
 }
 
-bool trader_simulator::is_usable()const noexcept
+bool trader_simulator::is_usable()const
 {
 	return true ;
 }
 
-estid_t trader_simulator::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) noexcept
+estid_t trader_simulator::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
 	
 	//boost::posix_time::ptime pt2 = boost::posix_time::microsec_clock::local_time();
@@ -191,7 +201,7 @@ estid_t trader_simulator::place_order(offset_type offset, direction_type directi
 	return order.estid;
 }
 
-bool trader_simulator::cancel_order(estid_t estid)noexcept
+bool trader_simulator::cancel_order(estid_t estid)
 {
 	LOG_DEBUG("tick_simulator cancel_order", estid);
 	auto odit = _order_info.find(estid);
@@ -224,7 +234,7 @@ bool trader_simulator::cancel_order(estid_t estid)noexcept
 }
 
 
-std::shared_ptr<trader_data> trader_simulator::get_trader_data()noexcept
+std::shared_ptr<trader_data> trader_simulator::get_trader_data()
 {
 	auto result = std::make_shared<trader_data>();
 	
@@ -247,7 +257,7 @@ std::shared_ptr<trader_data> trader_simulator::get_trader_data()noexcept
 }
 
 
-estid_t trader_simulator::make_estid()noexcept
+estid_t trader_simulator::make_estid()
 {
 	_order_ref++;
 	uint64_t p1 = (uint64_t)_current_time<<32;
@@ -260,7 +270,7 @@ estid_t trader_simulator::make_estid()noexcept
 	return v1 + v2 + v3;
 }
 
-uint32_t trader_simulator::get_buy_front(const code_t& code,double_t price)noexcept
+uint32_t trader_simulator::get_buy_front(const code_t& code,double_t price)
 {
 	auto tick_it = _current_tick_info.find(code);
 	if(tick_it == _current_tick_info.end())
@@ -268,18 +278,18 @@ uint32_t trader_simulator::get_buy_front(const code_t& code,double_t price)noexc
 		return 0U;
 	}
 	const auto& tick = tick_it->second;
-	auto buy_it = std::find_if(tick.buy_order.begin(), tick.buy_order.end(), [price](const std::pair<double_t, uint32_t>& cur) ->bool {
+	auto buy_it = std::find_if(tick.bid_order.begin(), tick.bid_order.end(), [price](const std::pair<double_t, uint32_t>& cur) ->bool {
 
 		return cur.first == price;
 		});
-	if (buy_it != tick.buy_order.end())
+	if (buy_it != tick.bid_order.end())
 	{
 		return buy_it->second;
 	}
 
 	return 0U;
 }
-uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)noexcept
+uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)
 {
 	auto tick_it = _current_tick_info.find(code);
 	if (tick_it == _current_tick_info.end())
@@ -287,26 +297,26 @@ uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)noe
 		return 0U;
 	}
 	const auto& tick = tick_it->second;
-	auto sell_it = std::find_if(tick.sell_order.begin(), tick.sell_order.end(), [price](const std::pair<double_t, uint32_t>& cur) ->bool {
+	auto sell_it = std::find_if(tick.ask_order.begin(), tick.ask_order.end(), [price](const std::pair<double_t, uint32_t>& cur) ->bool {
 
 		return cur.first == price;
 		});
-	if (sell_it != tick.sell_order.end())
+	if (sell_it != tick.ask_order.end())
 	{
 		return sell_it->second;
 	}
 	return 0U;
 }
 
-void trader_simulator::match_entrust(const tick_info* tick)noexcept
+void trader_simulator::match_entrust(const tick_info& tick)
 {
-	auto last_volume = _last_frame_volume.find(tick->id);
-	if(last_volume == _last_frame_volume.end())
+	uint32_t current_volume = static_cast<uint32_t>(tick.volume);
+	auto last_volume = _last_frame_volume.find(tick.id);
+	if(last_volume != _last_frame_volume.end())
 	{
-		return ;
+		current_volume = static_cast<uint32_t>(tick.volume - last_volume->second);
 	}
-	uint32_t current_volume = static_cast<uint32_t>(tick->volume - last_volume->second);
-	auto it = _order_match.find(tick->id);
+	auto it = _order_match.find(tick.id);
 	if (it != _order_match.end())
 	{
 		for (order_match& mc_it : it->second)
@@ -346,44 +356,39 @@ void trader_simulator::match_entrust(const tick_info* tick)noexcept
 			mc_it++;
 		}
 	}
-
-
-
 }
 
-void trader_simulator::handle_entrust(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)noexcept
+void trader_simulator::handle_entrust(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume)
 {
-	if(match.state == OS_INVALID)
-	{
-		error_code err = frozen_deduction(order.estid, order.code, order.offset, order.direction, order.last_volume, order.price);
-		if (err == error_code::EC_Success)
-		{
-			this->fire_event(trader_event_type::TET_OrderPlace, order);
-			
-			visit_match_info(order.estid,[this,&order](order_match& mh)->void{
-				if(order.is_buy())
-				{
-					mh.queue_seat = this->get_buy_front(order.code, order.price);
-				}
-				else if (order.is_sell())
-				{
-					mh.queue_seat = this->get_sell_front(order.code, order.price);
-				}
-				mh.state = OS_IN_MATCH;
-			});
-		}
-		else
-		{
-			order_error(error_type::ET_PLACE_ORDER,order.estid, err);
-		}
-		return ;
-	}
-	if(match.state == OS_CANELED)
+	if (match.state == OS_CANELED)
 	{
 		//撤单
 		order_cancel(order);
 		return;
 	}
+	if(match.state == OS_INVALID)
+	{
+		error_code err = frozen_deduction(order.estid, order.code, order.offset, order.direction, order.last_volume, order.price);
+		if (err != error_code::EC_Success)
+		{
+			order_error(error_type::ET_PLACE_ORDER,order.estid, err);
+			return;
+		}
+		this->fire_event(trader_event_type::TET_OrderPlace, order);
+
+		visit_match_info(order.estid, [this, &order](order_match& mh)->void {
+			if (order.is_buy())
+			{
+				mh.queue_seat = this->get_buy_front(order.code, order.price);
+			}
+			else if (order.is_sell())
+			{
+				mh.queue_seat = this->get_sell_front(order.code, order.price);
+			}
+			mh.state = OS_IN_MATCH;
+		});
+	}
+
 	if (order.direction == direction_type::DT_LONG)
 	{	
 		if(order.offset == offset_type::OT_OPEN)
@@ -408,12 +413,12 @@ void trader_simulator::handle_entrust(const tick_info* tick, order_match& match,
 		}
 	}
 }
-void trader_simulator::handle_sell(const tick_info* tick,order_match& match, order_info& order, uint32_t max_volume)noexcept
+void trader_simulator::handle_sell(const tick_info& tick,order_match& match, order_info& order, uint32_t max_volume)
 {
 
 	if (match.flag == order_flag::OF_FOK)
 	{
-		if (order.last_volume <= max_volume && order.price <= tick->buy_price())
+		if (order.last_volume <= max_volume && order.price <= tick.buy_price())
 		{
 			//全成
 			order_deal(order, order.last_volume);
@@ -426,7 +431,7 @@ void trader_simulator::handle_sell(const tick_info* tick,order_match& match, ord
 	}
 	else if (match.flag == order_flag::OF_FAK)
 	{
-		if(order.price <= tick->buy_price())
+		if(order.price <= tick.buy_price())
 		{
 			//部成
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
@@ -448,7 +453,7 @@ void trader_simulator::handle_sell(const tick_info* tick,order_match& match, ord
 	}
 	else
 	{
-		if (order.price <= tick->buy_price())
+		if (order.price <= tick.buy_price())
 		{
 			//不需要排队，直接降价成交
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
@@ -457,7 +462,7 @@ void trader_simulator::handle_sell(const tick_info* tick,order_match& match, ord
 				order_deal(order, deal_volume);
 			}
 		}
-		else if (order.price <= tick->price)
+		else if (order.price <= tick.price)
 		{
 			//排队成交，移动排队位置
 			int32_t new_seat = match.queue_seat - max_volume;
@@ -484,12 +489,12 @@ void trader_simulator::handle_sell(const tick_info* tick,order_match& match, ord
 
 }
 
-void trader_simulator::handle_buy(const tick_info* tick, order_match& match, order_info& order, uint32_t max_volume)noexcept
+void trader_simulator::handle_buy(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume)
 {
 
 	if (match.flag == order_flag::OF_FOK)
 	{
-		if (order.last_volume <= max_volume&& order.price >= tick->sell_price())
+		if (order.last_volume <= max_volume&& order.price >= tick.sell_price())
 		{
 			//全成
 			order_deal(order, order.last_volume);
@@ -503,7 +508,7 @@ void trader_simulator::handle_buy(const tick_info* tick, order_match& match, ord
 	else if (match.flag == order_flag::OF_FAK)
 	{
 		//部成
-		if(order.price >= tick->sell_price())
+		if(order.price >= tick.sell_price())
 		{
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0U)
@@ -526,7 +531,7 @@ void trader_simulator::handle_buy(const tick_info* tick, order_match& match, ord
 	else
 	{
 		//剩下都不是第一帧自动撤销的订单
-		if (order.price >= tick->sell_price())
+		if (order.price >= tick.sell_price())
 		{
 			//不需要排队，直接降价成交
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
@@ -535,7 +540,7 @@ void trader_simulator::handle_buy(const tick_info* tick, order_match& match, ord
 				order_deal(order, deal_volume);
 			}
 		}
-		else if (order.price >= tick->price)
+		else if (order.price >= tick.price)
 		{
 			//有排队的情况
 			//排队成交，移动排队位置
@@ -560,7 +565,7 @@ void trader_simulator::handle_buy(const tick_info* tick, order_match& match, ord
 	}
 }
 
-void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)noexcept
+void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 {
 	
 	auto contract_info = _contract_parser.get_contract_info(order.code);
@@ -664,14 +669,14 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)noexce
 	}
 	
 }
-void trader_simulator::order_error(error_type type,estid_t estid, error_code err)noexcept
+void trader_simulator::order_error(error_type type,estid_t estid, error_code err)
 {
 	fire_event(trader_event_type::TET_OrderError, type, estid, (uint8_t)err);
 	visit_match_info(estid, [this](order_match& mh)->void {
 		mh.state = OS_DELETE;
 		});
 }
-void trader_simulator::order_cancel(const order_info& order)noexcept
+void trader_simulator::order_cancel(const order_info& order)
 {
 	auto it = _order_info.find(order.estid);
 	if(it == _order_info.end())
@@ -696,7 +701,7 @@ void trader_simulator::order_cancel(const order_info& order)noexcept
 }
 
 
-void trader_simulator::visit_match_info(estid_t estid,std::function<void(order_match&)> cursor)noexcept
+void trader_simulator::visit_match_info(estid_t estid,std::function<void(order_match&)> cursor)
 {
 	auto odit = _order_info.find(estid);
 	if (odit != _order_info.end())
@@ -715,7 +720,7 @@ void trader_simulator::visit_match_info(estid_t estid,std::function<void(order_m
 	}
 }
 
-error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,offset_type offset, direction_type direction,uint32_t volume,double_t price)noexcept
+error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,offset_type offset, direction_type direction,uint32_t volume,double_t price)
 {
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)
@@ -786,7 +791,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 	}
 	return error_code::EC_Success;
 }
-bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)noexcept
+bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset, direction_type direction, uint32_t last_volume, double_t price)
 {
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)

@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "bar_generator.h"
 #include "time_utils.hpp"
 
-using namespace lt ;
+using namespace lt::hft ;
 
 void bar_generator::insert_tick(const tick_info& tick)
 {

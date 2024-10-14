@@ -28,6 +28,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <time_utils.hpp>
 #include <log_wapper.hpp>
 
+using namespace lt::driver;
+
 bool csv_tick_loader::init(const std::string& root_path)
 {
 	_root_path = root_path;
@@ -35,7 +37,7 @@ bool csv_tick_loader::init(const std::string& root_path)
 }
 
 
-void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& code, uint32_t trade_day)noexcept
+void csv_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t& code, uint32_t trade_day)
 {
 	char filename[128]={0};
 	sprintf(filename, _root_path.c_str(), code.get_id(), trade_day);
@@ -58,7 +60,7 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		{
 			continue;
 		}
-		tick_info tick;
+		tick_detail tick;
 		tick.id = code;
 		//const std::string& date_str = doc.GetCell<std::string>("业务日期",i);
 		const std::string& time_str = cell[20];
@@ -76,26 +78,32 @@ void csv_tick_loader::load_tick(std::vector<tick_info>& result , const code_t& c
 		}
 		tick.time = make_daytm(time_str.c_str(), current_tick);
 		tick.price = std::stod(cell[4]);
-		tick.open = std::stod(cell[8]);
-		tick.close = std::stod(cell[14]);
-		tick.high = std::stod(cell[9]);
-		tick.low = std::stod(cell[10]);
-		tick.standard = std::stod(cell[5]);
 		tick.volume = std::stoi(cell[11]);
 		tick.open_interest = std::stoi(cell[13]);
 		tick.trading_day = std::stoi(cell[0]);
 
-		tick.buy_order[0] = std::make_pair(std::stod(cell[22]), std::stoi(cell[23]));
-		tick.buy_order[1] = std::make_pair(std::stod(cell[26]), std::stoi(cell[27]));
-		tick.buy_order[2] = std::make_pair(std::stod(cell[30]), std::stoi(cell[31]));
-		tick.buy_order[3] = std::make_pair(std::stod(cell[34]), std::stoi(cell[35]));
-		tick.buy_order[4] = std::make_pair(std::stod(cell[38]), std::stoi(cell[39]));
+		tick.bid_order[0] = std::make_pair(std::stod(cell[22]), std::stoi(cell[23]));
+		tick.bid_order[1] = std::make_pair(std::stod(cell[26]), std::stoi(cell[27]));
+		tick.bid_order[2] = std::make_pair(std::stod(cell[30]), std::stoi(cell[31]));
+		tick.bid_order[3] = std::make_pair(std::stod(cell[34]), std::stoi(cell[35]));
+		tick.bid_order[4] = std::make_pair(std::stod(cell[38]), std::stoi(cell[39]));
 
-		tick.sell_order[0] = std::make_pair(std::stod(cell[24]), std::stoi(cell[25]));
-		tick.sell_order[1] = std::make_pair(std::stod(cell[28]), std::stoi(cell[29]));
-		tick.sell_order[2] = std::make_pair(std::stod(cell[32]), std::stoi(cell[33]));
-		tick.sell_order[3] = std::make_pair(std::stod(cell[36]), std::stoi(cell[37]));
-		tick.sell_order[4] = std::make_pair(std::stod(cell[40]), std::stoi(cell[41]));
+		tick.ask_order[0] = std::make_pair(std::stod(cell[24]), std::stoi(cell[25]));
+		tick.ask_order[1] = std::make_pair(std::stod(cell[28]), std::stoi(cell[29]));
+		tick.ask_order[2] = std::make_pair(std::stod(cell[32]), std::stoi(cell[33]));
+		tick.ask_order[3] = std::make_pair(std::stod(cell[36]), std::stoi(cell[37]));
+		tick.ask_order[4] = std::make_pair(std::stod(cell[40]), std::stoi(cell[41]));
+
+		tick.extend = std::make_tuple(
+			std::stod(cell[8]),		//open
+			std::stod(cell[14]),	//close
+			std::stod(cell[5]),		//standard
+			std::stod(cell[9]),		//high
+			std::stod(cell[10]),	//low
+			std::stod(cell[16]),	//max
+			std::stod(cell[17])		//min
+		);
+
 		result.emplace_back(tick);
 	}
 

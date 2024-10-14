@@ -23,6 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "contract_parser.h"
 #include <log_wapper.hpp>
 
+
+using namespace lt::driver;
+
 contract_parser::contract_parser()
 {
 

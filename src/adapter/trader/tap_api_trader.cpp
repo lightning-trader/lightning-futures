@@ -25,7 +25,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <time_utils.hpp>
 #include "../../api/TAP_V9_20200808/TapAPIError.h"
 
-tap_api_trader::tap_api_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept
+using namespace lt;
+using namespace lt::driver;
+
+tap_api_trader::tap_api_trader(std::unordered_map<std::string, std::string>& id_excg_map, const params& config)
 	: asyn_actual_trader(id_excg_map)
 	, _td_api(nullptr)
 	, _reqid(0)
@@ -68,13 +71,13 @@ tap_api_trader::tap_api_trader(const std::shared_ptr<std::unordered_map<std::str
 }
 
 
-tap_api_trader::~tap_api_trader()noexcept
+tap_api_trader::~tap_api_trader()
 {
 	dll_helper::free_library(_trader_handle);
 	_trader_handle = nullptr;
 }
 
-bool tap_api_trader::login()noexcept
+bool tap_api_trader::login()
 {
 	_is_runing = true;
 	//创建API实例
@@ -131,7 +134,7 @@ bool tap_api_trader::login()noexcept
 	return true ;
 }
 
-void tap_api_trader::logout()noexcept
+void tap_api_trader::logout()
 {
 	
 	_is_runing = false;
@@ -156,7 +159,7 @@ void tap_api_trader::logout()noexcept
 
 
 
-bool tap_api_trader::query_positions(bool is_sync)noexcept
+bool tap_api_trader::query_positions(bool is_sync)
 {
 	if (_td_api == nullptr)
 	{
@@ -185,7 +188,7 @@ bool tap_api_trader::query_positions(bool is_sync)noexcept
 	return true;
 }
 
-bool tap_api_trader::query_orders(bool is_sync)noexcept
+bool tap_api_trader::query_orders(bool is_sync)
 {
 	if (_td_api == nullptr)
 	{
@@ -465,7 +468,7 @@ void tap_api_trader::OnRspQryPosition(TAPIUINT32 sessionID, TAPIINT32 errorCode,
 	}
 }
 
-bool tap_api_trader::is_usable()const noexcept
+bool tap_api_trader::is_usable()const
 {
 	if (_td_api == nullptr)
 	{
@@ -479,7 +482,7 @@ bool tap_api_trader::is_usable()const noexcept
 }
 
 
-estid_t tap_api_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag) noexcept
+estid_t tap_api_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
 {
 	if (_td_api == nullptr)
 	{
@@ -554,7 +557,7 @@ estid_t tap_api_trader::place_order(offset_type offset, direction_type direction
 	return extid;
 }
 
-bool tap_api_trader::cancel_order(estid_t estid)noexcept
+bool tap_api_trader::cancel_order(estid_t estid)
 {
 	if (_td_api == nullptr)
 	{
@@ -583,7 +586,7 @@ bool tap_api_trader::cancel_order(estid_t estid)noexcept
 	return true;
 }
 
-uint32_t tap_api_trader::get_trading_day()const noexcept
+uint32_t tap_api_trader::get_trading_day()const
 {
 	if (_td_api)
 	{
@@ -592,7 +595,7 @@ uint32_t tap_api_trader::get_trading_day()const noexcept
 	return 0X0U;
 }
 
-std::shared_ptr<trader_data> tap_api_trader::get_trader_data() noexcept
+std::shared_ptr<trader_data> tap_api_trader::get_trader_data()
 {
 	auto result = std::make_shared<trader_data>();
 	if (!query_positions(true))
