@@ -181,14 +181,6 @@ public:
 		{
 			return true;
 		}
-		if (strcmp(EXCHANGE_ID_SGE, get_excg())==0)
-		{
-			return true;
-		}
-		if (strcmp(EXCHANGE_ID_CFFEX, get_excg())==0)
-		{
-			return true;
-		}
 		return false;
 	}
 };
