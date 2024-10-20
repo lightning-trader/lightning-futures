@@ -164,6 +164,10 @@ namespace lt
 		{
 			return (_data + CMDTID_BEGIN);
 		}
+		const std::string to_string()const
+		{
+			return get_excg() + std::string(".") + get_id();
+		}
 		uint16_t get_cmdtno()const
 		{
 			return *reinterpret_cast<const uint16_t*>(_data + CMDTNO_BEGIN);
@@ -189,8 +193,7 @@ namespace lt
 	const code_t default_code;
 
 	//
-	typedef std::array<std::pair<double_t, uint32_t>, 5> price_volume_array;
-
+	
 	struct tick_info
 	{
 		code_t id; //合约ID
@@ -273,7 +276,6 @@ namespace lt
 	};
 
 	const tick_info default_tick;
-
 
 	enum class error_code : uint8_t
 	{

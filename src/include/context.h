@@ -132,7 +132,7 @@ namespace lt::hft
 		void init(const params& control_config, const params& include_config, market_api* market, trader_api* trader, bool reset_trading_day = false);
 
 		/*加载数据*/
-		bool load_trader_data();
+		bool load_data();
 
 		/*启动*/
 		bool start_service();

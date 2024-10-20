@@ -72,6 +72,18 @@ namespace lt{
 
 	struct tick_info;
 
+	constexpr uint8_t TEI_OPEN_PRICE = 0;
+	constexpr uint8_t TEI_CLOSE_PRICE = 1;
+	constexpr uint8_t TEI_HIGH_PRICE = 2;
+	constexpr uint8_t TEI_LOW_PRICE = 3;
+	constexpr uint8_t TEI_MAX_PRICE = 4;
+	constexpr uint8_t TEI_MIN_PRICE = 5;
+	constexpr uint8_t TEI_STANDARD_PRICE = 6;
+
+	typedef std::tuple<double_t, double_t, double_t, double_t, double_t, double_t, double_t> tick_extend;
+
+	typedef std::array<std::pair<double_t, uint32_t>, 5> price_volume_array;
+
 	struct position_info;
 
 	struct market_info;

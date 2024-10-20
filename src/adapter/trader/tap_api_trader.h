@@ -29,7 +29,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <trader_api.h>
 #include <params.hpp>
 #include <condition_variable>
-#include <../../api/TAP_V9_20200808/TapTradeAPI.h>
+#include <TAP_V9_20200808/TapTradeAPI.h>
 #include <dll_helper.hpp>
 
 

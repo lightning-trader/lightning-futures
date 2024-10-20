@@ -329,8 +329,8 @@ void trader_simulator::match_entrust(const tick_info& tick)
 		}
 	}
 	
-	for(auto& mc_it = _order_match.begin();mc_it != _order_match.end();){
-		for(auto& it = mc_it->second.begin();it!= mc_it->second.end();){
+	for(auto mc_it = _order_match.begin();mc_it != _order_match.end();){
+		for(auto it = mc_it->second.begin();it!= mc_it->second.end();){
 			if(it->state == OS_DELETE)
 			{
 				auto odit = _order_info.find(it->estid);

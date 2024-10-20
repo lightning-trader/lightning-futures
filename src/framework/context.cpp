@@ -74,7 +74,7 @@ void context::init(const params& control_config, const params& include_config, m
 	
 }
 
-bool context::load_trader_data()
+bool context::load_data()
 {
 	if(!_trader)
 	{
@@ -149,7 +149,7 @@ bool context::start_service()
 		return false;
 	}
 
-	if(!load_trader_data())
+	if(!load_data())
 	{
 		return false ;
 	}
@@ -161,7 +161,6 @@ bool context::start_service()
 		_trader->bind_event(trader_event_type::TET_OrderDeal, std::bind(&context::handle_deal, this, std::placeholders::_1));
 		_trader->bind_event(trader_event_type::TET_OrderTrade, std::bind(&context::handle_trade, this, std::placeholders::_1));
 		_trader->bind_event(trader_event_type::TET_OrderError, std::bind(&context::handle_error, this, std::placeholders::_1));
-
 	}
 	if(_market)
 	{
@@ -619,17 +618,17 @@ void context::handle_tick(const std::vector<std::any>& param)
 			tick_info& prev_tick = it->second;
 			if (is_in_trading())
 			{
-				auto&& extend_data = std::any_cast<std::tuple<double_t, double_t, double_t, double_t, double_t, double_t, double_t>>(param[1]);
+				auto&& extend_data = std::any_cast<tick_extend>(param[1]);
 				auto& current_market_info = _market_info[last_tick.id];
 				current_market_info.code = last_tick.id;
 				current_market_info.last_tick_info = last_tick;
-				current_market_info.open_price = std::get<0>(extend_data);
-				current_market_info.close_price = std::get<1>(extend_data);
-				current_market_info.standard_price = std::get<6>(extend_data);
-				current_market_info.high_price = std::get<2>(extend_data);
-				current_market_info.low_price = std::get<3>(extend_data);
-				current_market_info.max_price = std::get<4>(extend_data);
-				current_market_info.min_price = std::get<5>(extend_data);
+				current_market_info.open_price = std::get<TEI_OPEN_PRICE>(extend_data);
+				current_market_info.close_price = std::get<TEI_CLOSE_PRICE>(extend_data);
+				current_market_info.standard_price = std::get<TEI_STANDARD_PRICE>(extend_data);
+				current_market_info.high_price = std::get<TEI_HIGH_PRICE>(extend_data);
+				current_market_info.low_price = std::get<TEI_LOW_PRICE>(extend_data);
+				current_market_info.max_price = std::get<TEI_MAX_PRICE>(extend_data);
+				current_market_info.min_price = std::get<TEI_MIN_PRICE>(extend_data);
 				current_market_info.trading_day = last_tick.trading_day;
 				current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
 				if (this->_tick_callback)

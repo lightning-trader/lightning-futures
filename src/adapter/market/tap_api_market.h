@@ -27,7 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <mutex>
 #include <condition_variable>
 #include <params.hpp>
-#include <../../api/TAP_V9_20200808/TapQuoteAPI.h>
+#include <TAP_V9_20200808/TapQuoteAPI.h>
 #include <dll_helper.hpp>
 
 namespace lt::driver

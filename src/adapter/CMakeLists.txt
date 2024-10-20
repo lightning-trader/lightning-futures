@@ -1,5 +1,5 @@
 ﻿
-include_directories(${CMAKE_INCLUDE_PATH})
+include_directories(${CMAKE_INCLUDE_PATH} "../../api/")
 
 link_directories(${CMAKE_LIBRARY_PATH})
 
