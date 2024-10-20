@@ -30,7 +30,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 
 
-class arbitrage_strategy : public lt::strategy,public lt::tick_receiver
+class arbitrage_strategy : public lt::hft::strategy,public lt::hft::tick_receiver
 {
 	enum class arbitrage_state
 	{
@@ -59,14 +59,14 @@ class arbitrage_strategy : public lt::strategy,public lt::tick_receiver
 
 	struct persist_data
 	{
-		estid_t order_estids[PSRDT_ORDER_COUNT];
+		lt::estid_t order_estids[PSRDT_ORDER_COUNT];
 		arbitrage_state a_state ;
 		trade_state t_state ;
 	};
 public:
 
-	arbitrage_strategy(lt::straid_t id, lt::engine* engine, const code_t& code1, const code_t& code2, double_t offset, uint32_t open_once) :
-		lt::strategy(id, engine, true ,true),
+	arbitrage_strategy(lt::hft::straid_t id, lt::hft::engine* engine, const lt::code_t& code1, const lt::code_t& code2, double_t offset, uint32_t open_once) :
+		lt::hft::strategy(id, engine, true ,true),
 		_code1(code1),
 		_code2(code2),
 		_price1(.0),
@@ -89,12 +89,12 @@ public:
 	 *	初始化事件
 	 *	生命周期中只会回调一次
 	 */
-	virtual void on_init(lt::subscriber& suber) override;
+	virtual void on_init(lt::hft::subscriber& suber) override;
 
 	/*
 	 *	tick推送
 	 */
-	virtual void on_tick(const tick_info& tick)  override;
+	virtual void on_tick(const lt::tick_info& tick)  override;
 
 
 	/*
@@ -102,33 +102,33 @@ public:
 	 *  @is_success	是否成功
 	 *	@order	本地订单
 	 */
-	virtual void on_entrust(const order_info& order) override;
+	virtual void on_entrust(const lt::order_info& order) override;
 
 	/*
 	 *	成交回报
 	 *
 	 *	@localid	本地订单id
 	 */
-	virtual void on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)  override;
+	virtual void on_trade(lt::estid_t localid, const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, double_t price, uint32_t volume)  override;
 
 
 	/*
 	 *	撤单
 	 *	@localid	本地订单id
 	 */
-	virtual void on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type directionv, double_t price, uint32_t cancel_volume, uint32_t total_volume)  override;
+	virtual void on_cancel(lt::estid_t localid, const lt::code_t& code, lt::offset_type offset, lt::direction_type directionv, double_t price, uint32_t cancel_volume, uint32_t total_volume)  override;
 
 	/*
 	 *	错误
 	 *	@localid	本地订单id
 	 *	@error 错误代码
 	 */
-	virtual void on_error(error_type type, estid_t localid, const error_code error) override;
+	virtual void on_error(lt::error_type type, lt::estid_t localid, const lt::error_code error) override;
 
 	/*
 	 *	销毁
 	 */
-	virtual void on_destroy(lt::unsubscriber& unsuber)override;
+	virtual void on_destroy(lt::hft::unsubscriber& unsuber)override;
 
 	/*
 	 *	每帧调用
@@ -138,18 +138,18 @@ public:
 
 private:
 
-	estid_t try_buy(const code_t& code);
+	lt::estid_t try_buy(const lt::code_t& code);
 
-	estid_t try_sell(const code_t& code);
+	lt::estid_t try_sell(const lt::code_t& code);
 
 	bool is_close_coming() const;
 	
 
 private:
 
-	code_t _code1;
+	lt::code_t _code1;
 
-	code_t _code2;
+	lt::code_t _code2;
 
 	uint32_t _open_once;
 

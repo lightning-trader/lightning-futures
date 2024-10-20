@@ -20,25 +20,36 @@ OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHE
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 #pragma once
-#include <rapidcsv.h>
-#include <shared_types.h>
+#include <define.h>
 
-class csv_recorder 
+namespace lt::hft
 {
-private:
-
-	std::string _basic_path;
-
-	rapidcsv::Document _crossday_flow_csv;
-
-public :
-
-	csv_recorder(const char* basic_path)noexcept;
 	
-public:
+	class trading_section
+	{
 
-	//结算表
-	void record_crossday_flow(uint32_t trading_day, const order_statistic& statistic, const account_info& account)noexcept;
+	public:
 
-};
+		trading_section(const std::string& config_path);
+		virtual ~trading_section();
+
+	private:
+		std::vector<std::pair<daytm_t, daytm_t>> _trading_section;
+
+	public:
+
+		bool is_in_trading(daytm_t last_time);
+
+		daytm_t get_open_time();
+
+		daytm_t get_close_time();
+
+		daytm_t next_open_time(daytm_t now);
+
+	};
+
+
+}
+

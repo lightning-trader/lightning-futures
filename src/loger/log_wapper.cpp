@@ -30,6 +30,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 
 bool _is_log_ready = false ;
+
+using namespace lt;
 using namespace nanolog;
 
 std::unique_ptr < NanoLogger > nanologger;
@@ -67,14 +69,13 @@ void init_log(const char* path,size_t file_size)
 	}
 	auto time_string = datetime_to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()),"%Y-%m-%d_%H%M%S");
 	auto file_name = string_helper::format("lt_{0}.{1}", time_string, process_helper::get_pid());
+	nanologger.reset(new NanoLogger(path, file_name, file_size));
 
 #ifndef NDEBUG
-	nanologger.reset(new NanoLogger(path, file_name, file_size, 10240));
 	uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) | static_cast<uint8_t>(LogField::SOURCE_FILE);
 	uint8_t print = static_cast<uint8_t>(LogPrint::LOG_FILE) | static_cast<uint8_t>(LogPrint::CONSOLE);
 	nanologger->set_option(LogLevel::LLV_TRACE, field, print);
 #else
-	nanologger.reset(new NanoLogger(path, file_name, file_size, 1024));
 	uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) ;
 	uint8_t print = static_cast<uint8_t>(LogPrint::LOG_FILE) ;
 	nanologger->set_option(LogLevel::LLV_INFO, field, print);

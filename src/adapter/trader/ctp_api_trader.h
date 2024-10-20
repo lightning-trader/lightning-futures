@@ -33,226 +33,226 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <../../api/CTP_V6.6.9_20220920/ThostFtdcTraderApi.h>
 #include <dll_helper.hpp>
 
-
-
-
-class ctp_api_trader : public asyn_actual_trader, public CThostFtdcTraderSpi
+namespace lt::driver
 {
-	/*
-	 *	订单操作类型
-	 */
-	enum class action_flag
+	class ctp_api_trader : public asyn_actual_trader, public CThostFtdcTraderSpi
 	{
-		AF_CANCEL = '0',	//撤销
-		AF_MODIFY = '3',	//修改
+		/*
+		 *	订单操作类型
+		 */
+		enum class action_flag
+		{
+			AF_CANCEL = '0',	//撤销
+			AF_MODIFY = '3',	//修改
+		};
+
+	public:
+
+		ctp_api_trader(std::unordered_map<std::string, std::string>& id_excg_map, const params& config);
+
+		virtual ~ctp_api_trader();
+
+
+		//////////////////////////////////////////////////////////////////////////
+		//trader_api接口
+	public:
+
+		virtual bool login() override;
+
+		virtual void logout()override;
+
+		virtual bool is_usable() const override;
+
+		virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) override;
+
+		virtual bool cancel_order(estid_t estid) override;
+
+		virtual uint32_t get_trading_day()const override;
+
+		virtual std::shared_ptr<trader_data> get_trader_data() override;
+
+		//////////////////////////////////////////////////////////////////////////
+		//CTP交易接口实现
+	public:
+		virtual void OnFrontConnected() noexcept override;
+
+		virtual void OnFrontDisconnected(int nReason) noexcept override;
+
+
+		virtual void OnRspAuthenticate(CThostFtdcRspAuthenticateField* pRspAuthenticateField, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+
+		virtual void OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+
+		virtual void OnRspUserLogout(CThostFtdcUserLogoutField* pUserLogout, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+
+		virtual void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField* pSettlementInfoConfirm, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+
+		virtual void OnRspOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+
+		virtual void OnRspOrderAction(CThostFtdcInputOrderActionField* pInputOrderAction, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+
+		virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* pInvestorPosition, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+
+		virtual void OnRspQryOrder(CThostFtdcOrderField* pOrder, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)noexcept override;
+
+		virtual void OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+
+		virtual void OnRtnOrder(CThostFtdcOrderField* pOrder) noexcept override;
+
+		virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo) noexcept override;
+
+		virtual void OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo) noexcept override;
+
+		virtual void OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus) noexcept override;
+
+
+	private:
+
+		//认证
+		bool do_auth();
+		//登录
+		bool do_login();
+
+		bool do_logout();
+
+		bool query_positions(bool is_sync);
+
+		bool query_orders(bool is_sync);
+
+		void submit_settlement();
+
+
+	private:
+
+
+		inline int convert_direction_offset(direction_type dir_type, offset_type offset_type)
+		{
+			if (direction_type::DT_LONG == dir_type)
+				if (offset_type == offset_type::OT_OPEN)
+					return THOST_FTDC_D_Buy;
+				else
+					return THOST_FTDC_D_Sell;
+			else
+				if (offset_type == offset_type::OT_OPEN)
+					return THOST_FTDC_D_Sell;
+				else
+					return THOST_FTDC_D_Buy;
+		}
+
+		inline direction_type wrap_direction_offset(TThostFtdcDirectionType dir_type, TThostFtdcOffsetFlagType offset_type)
+		{
+			if (THOST_FTDC_D_Buy == dir_type)
+				if (offset_type == THOST_FTDC_OF_Open)
+					return direction_type::DT_LONG;
+				else
+					return direction_type::DT_SHORT;
+			else
+				if (offset_type == THOST_FTDC_OF_Open)
+					return direction_type::DT_SHORT;
+				else
+					return direction_type::DT_LONG;
+		}
+
+		inline int convert_offset_type(const code_t& code, uint32_t volume, offset_type offset, direction_type direction)
+		{
+			if (offset_type::OT_OPEN == offset)
+			{
+				return THOST_FTDC_OF_Open;
+			}
+			else if (offset_type::OT_CLOSE == offset)
+			{
+				return THOST_FTDC_OF_CloseYesterday;
+			}
+
+			return THOST_FTDC_OF_CloseToday;
+		}
+
+		inline offset_type wrap_offset_type(TThostFtdcOffsetFlagType offset_type)
+		{
+			if (THOST_FTDC_OF_Open == offset_type)
+				return offset_type::OT_OPEN;
+			else if (THOST_FTDC_OF_CloseToday == offset_type)
+				return offset_type::OT_CLSTD;
+			else
+				return offset_type::OT_CLOSE;
+		}
+
+		inline int convert_action_flag(action_flag action_flag)
+		{
+			if (action_flag::AF_CANCEL == action_flag)
+				return THOST_FTDC_AF_Delete;
+			else
+				return THOST_FTDC_AF_Modify;
+		}
+		inline estid_t generate_estid()
+		{
+			_order_ref.fetch_add(1);
+			return generate_estid(_front_id, _session_id, _order_ref);
+		}
+
+		inline estid_t generate_estid(uint32_t front_id, uint32_t session_id, uint32_t order_ref)
+		{
+			uint64_t p1 = (uint64_t)session_id << 32;
+			uint64_t p2 = (uint64_t)front_id << 16;
+			uint64_t p3 = (uint64_t)order_ref;
+			uint64_t v1 = p1 & 0xFFFFFFFF00000000LLU;
+			uint64_t v2 = p2 & 0x00000000FFFF0000LLU;
+			uint64_t v3 = p3 & 0x000000000000FFFFLLU;
+			return v1 + v2 + v3;
+		}
+
+		inline void	extract_estid(estid_t estid, uint32_t& front_id, uint32_t& session_id, uint32_t& order_ref)
+		{
+			uint64_t v1 = estid & 0xFFFFFFFF00000000LLU;
+			uint64_t v2 = estid & 0x00000000FFFF0000LLU;
+			uint64_t v3 = estid & 0x000000000000FFFFLLU;
+			session_id = static_cast<uint32_t>(v1 >> 32);
+			front_id = static_cast<uint32_t>(v2 >> 16);
+			order_ref = static_cast<uint32_t>(v3);
+		}
+
+		inline uint32_t genreqid()
+		{
+			return _reqid.fetch_add(1);
+		}
+
+	protected:
+
+		CThostFtdcTraderApi* _td_api;
+		std::atomic<uint32_t>	_reqid;
+
+		std::string				_front_addr;
+		std::string				_broker_id;
+		std::string				_userid;
+		std::string				_password;
+		std::string				_appid;
+		std::string				_authcode;
+		std::string				_product_info;
+
+
+		uint32_t				_front_id;		//前置编号
+		uint32_t				_session_id;	//会话编号
+		std::atomic<uint32_t>	_order_ref;		//报单引用
+
+		//boost::pool_allocator<code_t, position_info> a ;
+		//std::vector<int, boost::pool_allocator<int>> v;
+		//
+		std::map<code_t, position_seed>		_position_info;
+		//
+		entrust_map							_order_info;
+
+		bool								_is_runing;
+
+		std::mutex _mutex;
+		std::unique_lock<std::mutex>	_process_mutex;
+		std::condition_variable			_process_signal;
+		std::atomic<bool>				_is_in_query;
+		bool							_is_inited;
+		bool							_is_connected;
+		std::atomic<bool>				_is_sync_wait;
+		typedef CThostFtdcTraderApi* (*trader_creator)(const char*);
+		trader_creator					_ctp_creator;
+		dll_handle						_trader_handle;
 	};
 
-public:
-	
-	ctp_api_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept;
-	
-	virtual ~ctp_api_trader()noexcept;
-
-
-	//////////////////////////////////////////////////////////////////////////
-	//trader_api接口
-public:
-
-	virtual bool login() noexcept override;
-
-	virtual void logout()noexcept override;
-
-	virtual bool is_usable() const noexcept override;
-
-	virtual estid_t place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag) noexcept override;
-
-	virtual bool cancel_order(estid_t estid) noexcept override ;
-
-	virtual uint32_t get_trading_day()const noexcept override;
-
-	virtual std::shared_ptr<trader_data> get_trader_data() noexcept override;
-
-	//////////////////////////////////////////////////////////////////////////
-	//CTP交易接口实现
-public:
-	virtual void OnFrontConnected() noexcept override;
-
-	virtual void OnFrontDisconnected(int nReason) noexcept override;
-
-	
-	virtual void OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-
-	virtual void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-
-	virtual void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-
-	virtual void OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-
-	virtual void OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-
-	virtual void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-
-	virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-	
-	virtual void OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-
-	virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) noexcept override;
-
-	virtual void OnRtnOrder(CThostFtdcOrderField *pOrder) noexcept override;
-
-	virtual void OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo) noexcept override;
-
-	virtual void OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo) noexcept override;
-
-	virtual void OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus) noexcept override;
-
-
-private:
-
-	//认证
-	bool do_auth()noexcept;
-	//登录
-	bool do_login()noexcept;
-
-	bool do_logout()noexcept;
-
-	bool query_positions(bool is_sync)noexcept;
-
-	bool query_orders(bool is_sync)noexcept;
-
-	void submit_settlement()noexcept;
-
-	
-private:
-	
-
-	inline int convert_direction_offset(direction_type dir_type, offset_type offset_type)noexcept
-	{
-		if (direction_type::DT_LONG == dir_type)
-			if (offset_type == offset_type::OT_OPEN)
-				return THOST_FTDC_D_Buy;
-			else
-				return THOST_FTDC_D_Sell;
-		else
-			if (offset_type == offset_type::OT_OPEN)
-				return THOST_FTDC_D_Sell;
-			else
-				return THOST_FTDC_D_Buy;
-	}
-
-	inline direction_type wrap_direction_offset(TThostFtdcDirectionType dir_type, TThostFtdcOffsetFlagType offset_type)noexcept
-	{
-		if (THOST_FTDC_D_Buy == dir_type)
-			if (offset_type == THOST_FTDC_OF_Open)
-				return direction_type::DT_LONG;
-			else
-				return direction_type::DT_SHORT;
-		else
-			if (offset_type == THOST_FTDC_OF_Open)
-				return direction_type::DT_SHORT;
-			else
-				return direction_type::DT_LONG;
-	}
-
-	inline int convert_offset_type(const code_t& code,uint32_t volume,offset_type offset, direction_type direction)noexcept
-	{
-		if (offset_type::OT_OPEN == offset)
-		{
-			return THOST_FTDC_OF_Open;
-		}
-		else if (offset_type::OT_CLOSE == offset)
-		{
-			return THOST_FTDC_OF_CloseYesterday;
-		}
-		
-		return THOST_FTDC_OF_CloseToday;
-	}
-
-	inline offset_type wrap_offset_type(TThostFtdcOffsetFlagType offset_type)noexcept
-	{
-		if (THOST_FTDC_OF_Open == offset_type)
-			return offset_type::OT_OPEN;
-		else if (THOST_FTDC_OF_CloseToday == offset_type)
-			return offset_type::OT_CLSTD;
-		else
-			return offset_type::OT_CLOSE;
-	}
-
-	inline int convert_action_flag(action_flag action_flag)noexcept
-	{
-		if (action_flag::AF_CANCEL == action_flag)
-			return THOST_FTDC_AF_Delete;
-		else
-			return THOST_FTDC_AF_Modify;
-	}
-	inline estid_t generate_estid()noexcept
-	{
-		_order_ref.fetch_add(1);
-		return generate_estid(_front_id, _session_id, _order_ref);
-	}
-
-	inline estid_t generate_estid(uint32_t front_id,uint32_t session_id,uint32_t order_ref)noexcept
-	{
-		uint64_t p1 = (uint64_t)session_id<<32;
-		uint64_t p2 = (uint64_t)front_id<<16;
-		uint64_t p3 = (uint64_t)order_ref;
-		uint64_t v1 = p1 & 0xFFFFFFFF00000000LLU;
-		uint64_t v2 = p2 & 0x00000000FFFF0000LLU;
-		uint64_t v3 = p3 & 0x000000000000FFFFLLU;
-		return v1+v2+v3;
-	}
-	
-	inline void	extract_estid(estid_t estid, uint32_t& front_id, uint32_t& session_id, uint32_t& order_ref)noexcept
-	{
-		uint64_t v1 = estid & 0xFFFFFFFF00000000LLU;
-		uint64_t v2 = estid & 0x00000000FFFF0000LLU;
-		uint64_t v3 = estid & 0x000000000000FFFFLLU;
-		session_id = static_cast<uint32_t>(v1 >> 32);
-		front_id = static_cast<uint32_t>(v2 >> 16);
-		order_ref = static_cast<uint32_t>(v3);
-	}
-
-	inline uint32_t genreqid()noexcept
-	{
-		return _reqid.fetch_add(1);
-	}
-
-protected:
-
-	CThostFtdcTraderApi*	_td_api;
-	std::atomic<uint32_t>	_reqid;
-
-	std::string				_front_addr;
-	std::string				_broker_id;
-	std::string				_userid;
-	std::string				_password;
-	std::string				_appid;
-	std::string				_authcode;
-	std::string				_product_info;
-
-
-	uint32_t				_front_id;		//前置编号
-	uint32_t				_session_id;	//会话编号
-	std::atomic<uint32_t>	_order_ref;		//报单引用
-
-	//boost::pool_allocator<code_t, position_info> a ;
-	//std::vector<int, boost::pool_allocator<int>> v;
-	//
-	std::map<code_t, position_seed>		_position_info;
-	//
-	entrust_map							_order_info;
-
-	bool								_is_runing ;
-	
-	std::mutex _mutex;
-	std::unique_lock<std::mutex>	_process_mutex;
-	std::condition_variable			_process_signal;
-	std::atomic<bool>				_is_in_query ;
-	bool							_is_inited ;
-	bool							_is_connected ;
-	std::atomic<bool>				_is_sync_wait;
-	typedef CThostFtdcTraderApi* (*trader_creator)(const char*);
-	trader_creator					_ctp_creator;
-	dll_handle						_trader_handle ;
-};
-
+}

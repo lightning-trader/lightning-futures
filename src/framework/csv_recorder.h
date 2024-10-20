@@ -21,35 +21,26 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include "context.h"
-
-class runtime : public context
+#include <rapidcsv.h>
+#include <shared_types.h>
+namespace lt::hft
 {
+	class csv_recorder
+	{
+	private:
 
-	class actual_market* _market;
+		std::string _basic_path;
 
-	class actual_trader* _trader;
+		rapidcsv::Document _crossday_flow_csv;
 
-public:
+	public:
 
-	runtime()noexcept;
- 	virtual ~runtime()noexcept;
-	
-public:
+		csv_recorder(const char* basic_path);
 
-	bool init_from_file(const std::string& config_path)noexcept;
+	public:
 
-	bool login_account()noexcept;
+		//结算表
+		void record_crossday_flow(uint32_t trading_day, const order_statistic& statistic, const account_info& account);
 
-	void logout_account()noexcept;
-
-	virtual trader_api& get_trader() noexcept override;
-
-	virtual market_api& get_market() noexcept override;
-
-	virtual void on_update() noexcept override;
-
-	virtual bool is_terminaled() noexcept override;
-
-
-};
+	};
+}

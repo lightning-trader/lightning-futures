@@ -24,6 +24,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "trader_simulator.h"
 #include <interface.h>
 
+using namespace lt;
+using namespace lt::driver;
+
 dummy_market* create_dummy_market(const params& config)
 {
 	return new market_simulator(config);

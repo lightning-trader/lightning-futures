@@ -27,8 +27,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <log_wapper.hpp>
 #include <../../api/TAP_V9_20200808/TapAPIError.h>
 
+using namespace lt;
+using namespace lt::driver;
 
-tap_api_market::tap_api_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept
+tap_api_market::tap_api_market(std::unordered_map<std::string, std::string>& id_excg_map, const params& config)
 	:asyn_actual_market(id_excg_map)
 	,_md_api(nullptr)
 	, _port(0)
@@ -65,12 +67,12 @@ tap_api_market::tap_api_market(const std::shared_ptr<std::unordered_map<std::str
 }
 
 
-tap_api_market::~tap_api_market()noexcept
+tap_api_market::~tap_api_market()
 {
 
 }
 
-bool tap_api_market::login()noexcept
+bool tap_api_market::login()
 {
 	TapAPIApplicationInfo stAppInfo;
 	strcpy(stAppInfo.AuthCode, _authcode.c_str());
@@ -111,10 +113,10 @@ bool tap_api_market::login()noexcept
 	return true ;
 }
 
-void tap_api_market::logout()noexcept
+void tap_api_market::logout()
 {
 	//do_logout();
-	_id_excg_map->clear();
+	_id_excg_map.clear();
 	if (_md_api)
 	{
 		_tap_destroyer(_md_api);
@@ -158,19 +160,13 @@ void tap_api_market::OnRtnQuote(const TapAPIQuoteWhole* info)noexcept
 	}
 	
 	PROFILE_INFO(info->Contract.Commodity.CommodityNo);
-	
-	tick_info tick(
+	auto tick_data = tick_info(
 		code_t(info->Contract.Commodity.CommodityNo, info->Contract.ContractNo1, info->Contract.Commodity.ExchangeNo),
-		make_daytm(info->DateTimeStamp+11,true),
-		info->QOpeningPrice,
-		info->QClosingPrice,
-		info->QHighPrice,
-		info->QLowPrice,
+		make_daytm(info->DateTimeStamp + 11, true),
 		info->QLastPrice,
-		info->QPreSettlePrice,
 		info->QTotalQty,
-		_trading_day,//
 		static_cast<double_t>(info->QPositionQty),
+		_trading_day,//
 		{
 			std::make_pair(info->QBidPrice[0], static_cast<uint32_t>(info->QBidQty[0])),
 			std::make_pair(info->QBidPrice[1], static_cast<uint32_t>(info->QBidQty[1])),
@@ -186,12 +182,17 @@ void tap_api_market::OnRtnQuote(const TapAPIQuoteWhole* info)noexcept
 			std::make_pair(info->QAskPrice[4], static_cast<uint32_t>(info->QAskQty[4]))
 		}
 	);
-	
-
-	//业务日期返回的是空，所以这里自己获取本地日期加上更新时间来计算业务日期时间
-
+	auto extend_data = std::make_tuple(
+		info->QOpeningPrice,
+		info->QClosingPrice,
+		info->QHighPrice,
+		info->QLowPrice,
+		info->QLimitUpPrice,
+		info->QLimitDownPrice,
+		info->QPreSettlePrice
+	);
 	PROFILE_DEBUG(tick.id.get_id());
-	this->fire_event(market_event_type::MET_TickReceived, tick);
+	this->fire_event(market_event_type::MET_TickReceived, tick_data);
 }
 
 void tap_api_market::OnRspSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIQuoteWhole* info)noexcept
@@ -204,7 +205,7 @@ void tap_api_market::OnRspUnSubscribeQuote(TAPIUINT32 sessionID, TAPIINT32 error
 	LOG_INFO("UnSubMarketData : code ", errorCode);
 }
 
-void tap_api_market::subscribe(const std::set<code_t>& code_list)noexcept
+void tap_api_market::subscribe(const std::set<code_t>& code_list)
 {
 	//订阅行情
 	for(const auto& it : code_list)
@@ -227,7 +228,7 @@ void tap_api_market::subscribe(const std::set<code_t>& code_list)noexcept
 	
 }
 
-void tap_api_market::unsubscribe(const std::set<code_t>& code_list)noexcept
+void tap_api_market::unsubscribe(const std::set<code_t>& code_list)
 {
 	for (const auto& it : code_list)
 	{

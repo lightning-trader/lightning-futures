@@ -41,11 +41,7 @@ enum class LogLevel : uint8_t
 };
 
 #define LOG_BUFFER_SIZE 1024U
-#ifndef NDEBUG
-#define LOG_QUEUE_SIZE 16384U
-#else
-#define LOG_QUEUE_SIZE 8192U
-#endif
+
 struct NanoLogLine
 {
 public:
@@ -84,7 +80,7 @@ public:
 	}
 
 };
-typedef atomic_pool<NanoLogLine, LOG_QUEUE_SIZE> LoglinePool;
+
 typedef mpsc::mpsc_queue<NanoLogLine> LoglineQueue;
 
 extern "C"

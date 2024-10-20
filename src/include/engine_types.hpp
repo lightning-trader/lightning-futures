@@ -66,6 +66,14 @@ namespace lt
 			direction(deal_direction::DD_FLAT)
 		{}
 
+		tape_info()
+			:time(0U),
+			price(.0),
+			volume_delta(0),
+			interest_delta(.0),
+			direction(deal_direction::DD_FLAT)
+		{}
+
 		deal_status get_status()
 		{
 			if (volume_delta == interest_delta && interest_delta > 0)
@@ -111,7 +119,7 @@ namespace lt
 		//成交量
 		uint32_t volume;
 
-		//订单流中delta（price_buy_volume - price_sell_volume）
+		//订单流中delta
 		int32_t delta;
 
 		//订单流中poc (最大成交量的价格，表示bar重心)
@@ -142,10 +150,18 @@ namespace lt
 			}
 			return it->second;
 		}
+		//（price_buy_volume - price_sell_volume）
+		int32_t get_price_delta(double_t price)const{
+		
+			return static_cast<int32_t>(get_buy_volume(price) - get_sell_volume(price));
+		}
 
 		std::vector<std::tuple<double_t, uint32_t, uint32_t>> get_order_book()const
 		{
 			std::vector < std::tuple<double_t, uint32_t, uint32_t>> result;
+			if(low==.0|| high==.0|| price_step==.0){
+				return result;
+			}
 			for (double_t price = low; price <= high; price += price_step)
 			{
 				result.emplace_back(std::make_tuple(price, get_buy_volume(price), get_sell_volume(price)));
@@ -162,21 +178,23 @@ namespace lt
 			auto supply_unbalance = std::make_shared<std::vector<double_t>>();
 			//构建订单薄
 			auto order_book = get_order_book();
-
-			for (size_t i = 0; i < order_book.size() - 1; i++)
+			if(order_book.size() > 0)
 			{
-				auto demand_cell = order_book[i];
-				auto supply_cell = order_book[i + 1];
-				if (std::get<1>(demand_cell) * multiple > std::get<2>(supply_cell))
+				for (size_t i = 0; i < order_book.size() - 1; i++)
 				{
-					demand_unbalance->emplace_back(std::get<0>(demand_cell));
-				}
-				else if (std::get<2>(supply_cell) * multiple > std::get<1>(demand_cell))
-				{
-					supply_unbalance->emplace_back(std::get<0>(supply_cell));
+					auto demand_cell = order_book[i];
+					auto supply_cell = order_book[i + 1];
+					if (std::get<1>(demand_cell) * multiple > std::get<2>(supply_cell))
+					{
+						demand_unbalance->emplace_back(std::get<0>(demand_cell));
+					}
+					else if (std::get<2>(supply_cell) * multiple > std::get<1>(demand_cell))
+					{
+						supply_unbalance->emplace_back(std::get<0>(supply_cell));
+					}
 				}
 			}
-
+		
 			return std::make_pair(demand_unbalance, supply_unbalance);
 		}
 

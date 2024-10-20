@@ -22,15 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #pragma once
 #include <define.h>
-#include <lightning.h>
 #include <strategy.h>
 #include <engine.h>
 
 namespace lt
 {
 
+	class dummy_market;
+
+	class dummy_trader;
+}
+
+namespace lt::hft
+{
+
 	class evaluate_engine : public engine
 	{
+
+		dummy_market* _market_simulator;
+
+		dummy_trader* _trader_simulator;
+
+		std::shared_ptr<class csv_recorder> _recorder;
 
 	public:
 
@@ -39,7 +52,13 @@ namespace lt
 
 	public:
 
-		void back_test(const std::vector<std::shared_ptr<lt::strategy>>& strategys, uint32_t trading_day);
+		void back_test(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategys, uint32_t trading_day);
+
+	private:
+
+		void playback_history();
+
+		void simulate_crossday(uint32_t trading_day);
 
 	};
 

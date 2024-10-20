@@ -25,175 +25,177 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <string_helper.hpp>
 #include <stdexcept>
 #include <regex>
-
-class params
+namespace lt 
 {
-	std::map<std::string, std::string> _params;
+	class params
+	{
+		std::map<std::string, std::string> _params;
 
-public:
-	params() = default;
+	public:
+		params() = default;
 
-	params(const std::map<std::string, std::string>& params) :_params(params) {}
-	
-	void set_data(const std::map<std::string, std::string>& params) 
-	{
-		_params = params;
-	}
-	std::map<std::string, std::string> data() const
-	{
-		return (_params);
-	}
-	
-	params(const std::string& param)
-	{
-		_params.clear();
-		auto param_pair = string_helper::split(param, '&');
-		for (auto it : param_pair)
-		{
-			auto param = string_helper::split(it, '=');
-			_params[param[0]] = param[1];
-		}
-	}
+		params(const std::map<std::string, std::string>& params) :_params(params) {}
 
-	template <typename T>
-	T get(const char key[]) const
-	{
-		return get<T>(std::string(key));
-	}
+		void set_data(const std::map<std::string, std::string>& params)
+		{
+			_params = params;
+		}
+		std::map<std::string, std::string> data() const
+		{
+			return (_params);
+		}
 
-private:
-	template <typename T>
-	typename std::enable_if<std::is_same<T, const char*>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
+		params(const std::string& param)
 		{
-			throw std::invalid_argument("key not find : " + key);
+			_params.clear();
+			auto param_pair = string_helper::split(param, '&');
+			for (auto it : param_pair)
+			{
+				auto param = string_helper::split(it, '=');
+				_params[param[0]] = param[1];
+			}
 		}
-		return it->second.c_str();
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, std::string>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
-		{
-			throw std::invalid_argument("key not find : " + key);
-		}
-		return it->second;
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, code_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
-		{
-			throw std::invalid_argument("key not find : " + key);
-		}
-		return code_t(it->second.c_str());
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, int8_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
-		{
-			throw std::invalid_argument("key not find : " + key);
-		}
-		return static_cast<int8_t>(std::atoi(it->second.c_str()));
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, uint8_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
-		{
-			throw std::invalid_argument("key not find : " + key);
-		}
-		return static_cast<uint8_t>(std::atoi(it->second.c_str()));
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, int16_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
-		{
-			throw std::invalid_argument("key not find : " + key);
-		}
-		return static_cast<int16_t>(std::atoi(it->second.c_str()));
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, uint16_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
-		{
-			throw std::invalid_argument("key not find : " + key);
-		}
-		return static_cast<uint16_t>(std::atoi(it->second.c_str()));
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, int32_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
-		{
-			throw std::invalid_argument("key not find : " + key);
-		}
-		return std::atoi(it->second.c_str());
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, uint32_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
-		{
-			throw std::invalid_argument("key not find : " + key);
-		}
-		return static_cast<uint32_t>(std::atoi(it->second.c_str()));
-	}
 
-	template <typename T>
-	typename std::enable_if<std::is_same<T, double_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
+		template <typename T>
+		T get(const char key[]) const
 		{
-			throw std::invalid_argument("key not find : " + key);
+			return get<T>(std::string(key));
 		}
-		return std::atof(it->second.c_str());
-	}
-	template <typename T>
-	typename std::enable_if<std::is_same<T, int64_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
+
+	private:
+		template <typename T>
+		typename std::enable_if<std::is_same<T, const char*>::value, T>::type get(const std::string& key)const
 		{
-			throw std::invalid_argument("key not find : " + key);
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return it->second.c_str();
 		}
-		return std::atoll(it->second.c_str());
-	}
-	
-	template <typename T>
-	typename std::enable_if<std::is_same<T, uint64_t>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
+		template <typename T>
+		typename std::enable_if<std::is_same<T, std::string>::value, T>::type get(const std::string& key)const
 		{
-			throw std::invalid_argument("key not find : " + key);
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return it->second;
 		}
-		return static_cast<uint64_t>(std::atoll(it->second.c_str()));
-	}
-	
-	template <typename T>
-	typename std::enable_if<std::is_same<T, bool>::value, T>::type get(const std::string& key)const
-	{
-		auto it = _params.find(key);
-		if (it == _params.end())
+		template <typename T>
+		typename std::enable_if<std::is_same<T, code_t>::value, T>::type get(const std::string& key)const
 		{
-			throw std::invalid_argument("key not find : " + key);
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return code_t(it->second.c_str());
 		}
-		return "true"==it->second || "True" == it->second || "TRUE" == it->second || std::atoll(it->second.c_str()) > 0;
-	}
-};
+		template <typename T>
+		typename std::enable_if<std::is_same<T, int8_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return static_cast<int8_t>(std::atoi(it->second.c_str()));
+		}
+		template <typename T>
+		typename std::enable_if<std::is_same<T, uint8_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return static_cast<uint8_t>(std::atoi(it->second.c_str()));
+		}
+		template <typename T>
+		typename std::enable_if<std::is_same<T, int16_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return static_cast<int16_t>(std::atoi(it->second.c_str()));
+		}
+		template <typename T>
+		typename std::enable_if<std::is_same<T, uint16_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return static_cast<uint16_t>(std::atoi(it->second.c_str()));
+		}
+		template <typename T>
+		typename std::enable_if<std::is_same<T, int32_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return std::atoi(it->second.c_str());
+		}
+		template <typename T>
+		typename std::enable_if<std::is_same<T, uint32_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return static_cast<uint32_t>(std::atoi(it->second.c_str()));
+		}
+
+		template <typename T>
+		typename std::enable_if<std::is_same<T, double_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return std::atof(it->second.c_str());
+		}
+		template <typename T>
+		typename std::enable_if<std::is_same<T, int64_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return std::atoll(it->second.c_str());
+		}
+
+		template <typename T>
+		typename std::enable_if<std::is_same<T, uint64_t>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return static_cast<uint64_t>(std::atoll(it->second.c_str()));
+		}
+
+		template <typename T>
+		typename std::enable_if<std::is_same<T, bool>::value, T>::type get(const std::string& key)const
+		{
+			auto it = _params.find(key);
+			if (it == _params.end())
+			{
+				throw std::invalid_argument("key not find : " + key);
+			}
+			return "true" == it->second || "True" == it->second || "TRUE" == it->second || std::atoll(it->second.c_str()) > 0;
+		}
+	};
+}
 

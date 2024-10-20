@@ -26,6 +26,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "log_wapper.hpp"
 #include <time_utils.hpp>
 
+using namespace lt::hft;
+
 price_step::price_step(const std::string& config_path)
 {
 	LOG_INFO("price_step init ");
@@ -54,10 +56,4 @@ double_t price_step::get_price_step(const code_t& code)const
 		return it->second;
 	}
 	return 1.0;
-}
-
-double_t price_step::get_proximate_price(const code_t& code, double_t row_price)const
-{
-	auto step = get_price_step(code);
-	return std::round( row_price / step ) * step;
 }

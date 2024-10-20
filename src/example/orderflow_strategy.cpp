@@ -26,6 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <string_helper.hpp>
 
 using namespace lt;
+using namespace lt::hft;
 
 
 void orderflow_strategy::on_init(subscriber& suber)
@@ -121,52 +122,52 @@ void orderflow_strategy::on_error(error_type type, estid_t localid, const error_
 	
 }
 
-void orderflow_strategy::on_destroy(lt::unsubscriber& unsuber)
+void orderflow_strategy::on_destroy(unsubscriber& unsuber)
 {
 	unsuber.unregist_bar_receiver(_code, _period, this);
 }
 
 void orderflow_strategy::try_buy()
 {
-	auto& tick = get_last_tick(_code);
+	const auto& market = get_market_info(_code);
 	auto pos = get_position(_code);
 	if(pos.history_short.usable()>0)
 	{
 		auto volume = std::min(_open_once, pos.history_short.usable());
-		_order_data.buy_order = buy_for_close(_code, volume, tick.sell_price());
+		_order_data.buy_order = buy_close(_code, volume, market.last_tick_info.sell_price());
 		return ;
 	}
 	if (pos.today_short.usable() > 0)
 	{
 		auto volume = std::min(_open_once, pos.today_short.usable());
-		_order_data.buy_order = buy_for_close(_code, volume, tick.sell_price(), true);
+		_order_data.buy_order = buy_close(_code, volume, market.last_tick_info.sell_price(), true);
 		return;
 	}
 	if(_open_once + pos.get_long_position() + pos.long_pending < _position_limit)
 	{
-		_order_data.buy_order = buy_for_open(_code, _open_once, tick.sell_price());
+		_order_data.buy_order = buy_open(_code, _open_once, market.last_tick_info.sell_price());
 	}
 }
 
 void orderflow_strategy::try_sell()
 {
-	auto& tick = get_last_tick(_code);
+	const auto& market = get_market_info(_code);
 	auto pos = get_position(_code);
 	if (pos.history_long.usable() > 0)
 	{
 		auto min = std::min(_open_once, pos.history_long.usable());
-		_order_data.sell_order = sell_for_close(_code, min, tick.buy_price());
+		_order_data.sell_order = sell_close(_code, min, market.last_tick_info.buy_price());
 		return;
 	}
 	if (pos.today_long.usable() > 0)
 	{
 		auto min = std::min(_open_once, pos.today_long.usable());
-		_order_data.sell_order = sell_for_close(_code, min, tick.buy_price(), true);
+		_order_data.sell_order = sell_close(_code, min, market.last_tick_info.buy_price(), true);
 		return;
 	}
 	if (_open_once + pos.get_short_position() + pos.short_pending < _position_limit)
 	{
-		_order_data.sell_order = sell_for_open(_code, _open_once, tick.buy_price());
+		_order_data.sell_order = sell_open(_code, _open_once, market.last_tick_info.buy_price());
 	}
 }
 

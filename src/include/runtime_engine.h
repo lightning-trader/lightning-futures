@@ -22,13 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #pragma once
 #include <define.h>
-#include <lightning.h>
 #include <engine.h>
 
 namespace lt
 {
+	class actual_market;
+
+	class actual_trader;
+}
+
+namespace lt::hft
+{
 	class runtime_engine : public engine
 	{
+
+		actual_market* _market;
+
+		actual_trader* _trader;
 
 	public:
 
@@ -37,7 +47,7 @@ namespace lt
 
 	public:
 
-		void start_trading(const std::vector<std::shared_ptr<lt::strategy>>& strategys);
+		void start_trading(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategys);
 
 		void stop_trading();
 

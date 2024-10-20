@@ -52,16 +52,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #endif
 #endif
 
-struct code_t;
-
-//日内时间（精度到毫秒）
-typedef uint32_t daytm_t;
-
-
-typedef uint64_t estid_t;
-
-constexpr estid_t INVALID_ESTID = 0x0LLU;
-
 #define EXCHANGE_ID_SHFE	"SHFE"	//上期所
 #define EXCHANGE_ID_DCE		"DCE"	//大商所
 #define EXCHANGE_ID_INE		"INE"	//能源中心
@@ -69,20 +59,33 @@ constexpr estid_t INVALID_ESTID = 0x0LLU;
 #define EXCHANGE_ID_SGE		"SGE"	//广期所
 #define EXCHANGE_ID_CFFEX	"CFFEX"	//中金所
 
+#define INVALID_ESTID 0x0LLU
 
-struct tick_info;
+namespace lt{
 
-struct position_info;
+	struct code_t;
 
-struct today_market_info;
+	//日内时间（精度到毫秒）
+	typedef uint32_t daytm_t;
 
-enum class order_flag;
+	typedef uint64_t estid_t;
 
-enum class offset_type;
+	struct tick_info;
 
-enum class direction_type;
+	struct position_info;
 
-enum class event_type;
+	struct market_info;
 
-enum class error_type;
+	enum class order_flag;
+
+	enum class offset_type;
+
+	enum class direction_type;
+
+	enum class event_type;
+
+	enum class error_type;
+
+}
+
 

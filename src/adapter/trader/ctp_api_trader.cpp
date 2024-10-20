@@ -24,7 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <filesystem>
 #include <time_utils.hpp>
 
-ctp_api_trader::ctp_api_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config)noexcept
+using namespace lt;
+using namespace lt::driver;
+
+ctp_api_trader::ctp_api_trader(std::unordered_map<std::string, std::string>& id_excg_map, const params& config)
 	:asyn_actual_trader(id_excg_map)
 	, _td_api(nullptr)
 	, _reqid(0)
@@ -74,13 +77,13 @@ ctp_api_trader::ctp_api_trader(const std::shared_ptr<std::unordered_map<std::str
 }
 
 
-ctp_api_trader::~ctp_api_trader()noexcept
+ctp_api_trader::~ctp_api_trader()
 {
 	dll_helper::free_library(_trader_handle);
 	_trader_handle = nullptr ;
 }
 
-bool ctp_api_trader::login()noexcept
+bool ctp_api_trader::login()
 {
 	_is_runing = true;
 	char path_buff[64];
@@ -105,7 +108,7 @@ bool ctp_api_trader::login()noexcept
 	return true ;
 }
 
-void ctp_api_trader::logout()noexcept
+void ctp_api_trader::logout()
 {
 	_is_runing = false;
 	do_logout();
@@ -135,7 +138,7 @@ void ctp_api_trader::logout()noexcept
 	LOG_INFO("ctp_api_trader logout");
 }
 
-bool ctp_api_trader::do_login()noexcept
+bool ctp_api_trader::do_login()
 {
 	if (_td_api == nullptr)
 	{
@@ -156,7 +159,7 @@ bool ctp_api_trader::do_login()noexcept
 	return true;
 }
 
-bool ctp_api_trader::do_logout()noexcept
+bool ctp_api_trader::do_logout()
 {
 	if (_td_api == nullptr)
 	{
@@ -177,7 +180,7 @@ bool ctp_api_trader::do_logout()noexcept
 	return true;
 }
 
-bool ctp_api_trader::query_positions(bool is_sync)noexcept
+bool ctp_api_trader::query_positions(bool is_sync)
 {
 	if (_td_api == nullptr)
 	{
@@ -209,7 +212,7 @@ bool ctp_api_trader::query_positions(bool is_sync)noexcept
 	return true ;
 }
 
-bool ctp_api_trader::query_orders(bool is_sync)noexcept
+bool ctp_api_trader::query_orders(bool is_sync)
 {
 	if (_td_api == nullptr)
 	{
@@ -589,7 +592,7 @@ void ctp_api_trader::OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pIns
 	
 }
 
-bool ctp_api_trader::do_auth()noexcept
+bool ctp_api_trader::do_auth()
 {
 	if (_td_api == nullptr)
 	{
@@ -611,7 +614,7 @@ bool ctp_api_trader::do_auth()noexcept
 	return true ;
 }
 
-bool ctp_api_trader::is_usable()const noexcept
+bool ctp_api_trader::is_usable()const 
 {
 	if (_td_api == nullptr)
 	{
@@ -625,7 +628,7 @@ bool ctp_api_trader::is_usable()const noexcept
 }
 
 
-estid_t ctp_api_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)noexcept
+estid_t ctp_api_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
 {
 	PROFILE_DEBUG(code.get_id());
 	LOG_INFO("ctp_api_trader place_order %s %d",code.get_id(), volume);
@@ -709,7 +712,7 @@ estid_t ctp_api_trader::place_order(offset_type offset, direction_type direction
 	return estid;
 }
 
-bool ctp_api_trader::cancel_order(estid_t estid)noexcept
+bool ctp_api_trader::cancel_order(estid_t estid)
 {
 	if (_td_api == nullptr)
 	{
@@ -759,7 +762,7 @@ bool ctp_api_trader::cancel_order(estid_t estid)noexcept
 }
 
 
-uint32_t ctp_api_trader::get_trading_day()const noexcept
+uint32_t ctp_api_trader::get_trading_day()const 
 {
 	if(_td_api)
 	{
@@ -768,7 +771,7 @@ uint32_t ctp_api_trader::get_trading_day()const noexcept
 	return 0X0U;
 }
 
-std::shared_ptr<trader_data> ctp_api_trader::get_trader_data() noexcept
+std::shared_ptr<trader_data> ctp_api_trader::get_trader_data() 
 {
 	auto result = std::make_shared<trader_data>();
 	if (!query_positions(true))
@@ -793,7 +796,7 @@ std::shared_ptr<trader_data> ctp_api_trader::get_trader_data() noexcept
 	return result ;
 }
 
-void ctp_api_trader::submit_settlement() noexcept
+void ctp_api_trader::submit_settlement() 
 {
 	if (_td_api == nullptr)
 	{

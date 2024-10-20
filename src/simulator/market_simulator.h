@@ -26,67 +26,69 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <tick_loader.h>
 #include <params.hpp>
 
-
-class market_simulator : public dummy_market
+namespace lt::driver
 {
-
-	enum class execute_state
+	class market_simulator : public dummy_market
 	{
-		ES_Idle,
-		ES_LoadingData,
-		ES_PublishTick
+
+		enum class execute_state
+		{
+			ES_Idle,
+			ES_LoadingData,
+			ES_PublishTick
+		};
+
+	private:
+
+		tick_loader* _loader;
+
+		std::set<code_t> _instrument_id_list;
+
+		uint32_t _current_trading_day;
+
+		std::vector<tick_detail> _pending_tick_info;
+
+		std::function<void(const std::vector<const tick_info*>&)> _publish_callback;
+
+		daytm_t _current_time;
+
+		size_t _current_index;
+
+		uint32_t	_interval;			//间隔毫秒数
+
+		bool _is_finished;
+
+		execute_state _state;
+
+	public:
+
+		market_simulator(const params& config);
+
+		virtual ~market_simulator();
+
+
+	public:
+
+		//simulator
+		virtual void play(uint32_t trading_day, std::function<void(const std::vector<const lt::tick_info*>&)> publish_callback) override;
+		virtual bool is_finished() const override;
+
+	public:
+
+
+		virtual void subscribe(const std::set<lt::code_t>& codes)override;
+
+		virtual void unsubscribe(const std::set<lt::code_t>& codes)override;
+
+		virtual void update() override;
+
+	private:
+
+		void load_data();
+
+		void publish_tick();
+
+		void finish_publish();
+
 	};
-
-private:
-	
-	tick_loader* _loader ;
-
-	std::set<code_t> _instrument_id_list ;
-
-	uint32_t _current_trading_day ;
-
-	std::vector<tick_info> _pending_tick_info ;
-
-	std::function<void(const tick_info&)> _publish_callback;
-
-	daytm_t _current_time ;
-
-	size_t _current_index ;
-
-	uint32_t	_interval;			//间隔毫秒数
-	
-	bool _is_finished;
-
-	execute_state _state ;
-	
-public:
-
-	market_simulator(const params& config)noexcept;
-	
-	virtual ~market_simulator()noexcept;
-	
-
-public:
-
-	//simulator
-	virtual void play(uint32_t trading_day, std::function<void(const tick_info&)> publish_callback) noexcept override;
-	virtual bool is_finished() const noexcept override;
-
-public:
-
-	
-	virtual void subscribe(const std::set<code_t>& codes)noexcept override;
-
-	virtual void unsubscribe(const std::set<code_t>& codes)noexcept override;
-
-	virtual void update() noexcept override;
-
-private:
-
-	void load_data()noexcept;
-
-	void publish_tick()noexcept;
-
-	void finish_publish()noexcept;
-
-};
+}

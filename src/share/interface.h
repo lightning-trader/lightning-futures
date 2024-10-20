@@ -26,20 +26,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <params.hpp>
 
 
-EXPORT_FLAG actual_market* create_actual_market(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
+EXPORT_FLAG lt::actual_market* create_actual_market(const lt::params& config);
 
-EXPORT_FLAG void destory_actual_market(actual_market*& api);
+EXPORT_FLAG void destory_actual_market(lt::actual_market*& api);
 
-EXPORT_FLAG actual_trader* create_actual_trader(const std::shared_ptr<std::unordered_map<std::string, std::string>>& id_excg_map, const params& config);
+EXPORT_FLAG lt::actual_trader* create_actual_trader(const lt::params& config);
 
-EXPORT_FLAG void destory_actual_trader(actual_trader*& api);
+EXPORT_FLAG void destory_actual_trader(lt::actual_trader*& api);
 
 
-EXPORT_FLAG dummy_trader* create_dummy_trader(const params& config);
+EXPORT_FLAG lt::dummy_trader* create_dummy_trader(const lt::params& config);
 
-EXPORT_FLAG void destory_dummy_trader(dummy_trader*& api);
+EXPORT_FLAG void destory_dummy_trader(lt::dummy_trader*& api);
 
-EXPORT_FLAG dummy_market* create_dummy_market(const params& config);
+EXPORT_FLAG lt::dummy_market* create_dummy_market(const lt::params& config);
 
-EXPORT_FLAG void destory_dummy_market(dummy_market*& api);
+EXPORT_FLAG void destory_dummy_market(lt::dummy_market*& api);
 

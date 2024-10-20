@@ -23,11 +23,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 #pragma once
 #include "define.h"
+#include "shared_types.h"
 
-struct tick_loader
+namespace lt::driver
 {
-public:
 
+	struct tick_loader
+	{
+	public:
 
-	virtual void load_tick(std::vector<tick_info>& result, const code_t& code, uint32_t trade_day) = 0;
-};
+		virtual void load_tick(std::vector<tick_detail>& result, const code_t& code, uint32_t trade_day) = 0;
+	};
+}
