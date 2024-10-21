@@ -16,7 +16,7 @@ lightning-trader轻量级期货量化开发库，适合高频交易，3.5GHz处�
 
 lightning-futures框架分两层架构
 
-- 底层是交易系统API(ctp、ctpmini、易胜、盛立等)和高精度模拟器(基于tick数据的模拟撮合)
+- 底层是交易系统API(ctp、ctpmini、易胜、盛立等)和高精度模拟器
 - 上层分为高频交易框架，数据服务采集器，强化学习引擎
 ![输入图片说明](doc/images/%E6%9E%B6%E6%9E%84%E5%9B%BE.png)
 
