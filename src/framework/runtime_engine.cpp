@@ -112,7 +112,7 @@ void runtime_engine::start_trading(const std::vector<std::shared_ptr<lt::hft::st
 void runtime_engine::stop_trading()
 {
 	//std::this_thread::sleep_for(std::chrono::seconds(1));
-	if (_ctx.start_service())
+	if (_ctx.stop_service())
 	{
 		clear_strategy();
 		if (_trader)
