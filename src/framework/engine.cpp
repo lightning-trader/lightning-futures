@@ -151,7 +151,7 @@ void unsubscriber::unregist_bar_receiver(const code_t& code, uint32_t period, ba
 
 engine::engine():_ctx(this)
 {
-	
+
 }
 
 engine::~engine()
@@ -255,10 +255,10 @@ void engine::on_destroy()
 
 }
 
-void engine::regist_strategy(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategys)
+void engine::regist_strategy(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategies)
 {
 	subscriber suber(*this);
-	for (auto it : strategys)
+	for (auto it : strategies)
 	{
 		this->add_handle(it->get_id(),std::bind(&lt::hft::strategy::handle_change, &(*it), std::placeholders::_1));
 		_strategy_map[it->get_id()] = (it);

@@ -30,3 +30,4 @@ bin/record/
 .idea
 build
 cmake-build-debug
+.vscode/

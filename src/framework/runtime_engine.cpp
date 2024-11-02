@@ -94,13 +94,13 @@ runtime_engine::~runtime_engine()
 }
 
 
-void runtime_engine::start_trading(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategys)
+void runtime_engine::start_trading(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategies)
 {
 	if (_trader && _trader->login())
 	{
 		if (_market && _market->login())
 		{
-			this->regist_strategy(strategys);
+			this->regist_strategy(strategies);
 			if(_ctx.start_service())
 			{
 				LOG_INFO("runtime_engine run in start_trading");
@@ -126,4 +126,3 @@ void runtime_engine::stop_trading()
 		LOG_INFO("runtime_engine run end");
 	}
 }
-

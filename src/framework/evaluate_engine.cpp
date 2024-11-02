@@ -101,13 +101,13 @@ evaluate_engine::~evaluate_engine()
 	}
 }
 
-void evaluate_engine::back_test(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategys, uint32_t trading_day)
+void evaluate_engine::back_test(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategies, uint32_t trading_day)
 {
 	if (!_trader_simulator)
 	{
 	}
 	_trader_simulator->crossday(trading_day);
-	this->regist_strategy(strategys);
+	this->regist_strategy(strategies);
 	if(this->_ctx.start_service())
 	{
 		_market_simulator->play(_trader_simulator->get_trading_day(), [this](const std::vector<const tick_info*>& current_tick)->void {

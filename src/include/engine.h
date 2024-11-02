@@ -33,7 +33,7 @@ namespace lt
 	enum class deal_direction;
 
 	enum class deal_status;
-	
+
 	struct bar_info;
 
 	struct tape_info;
@@ -46,13 +46,13 @@ namespace lt::hft
 
 	class subscriber
 	{
-	
+
 	private:
-	
+
 		engine& _engine;
-		
+
 	public:
-	
+
 		subscriber(engine& engine) :
 			_engine(engine)
 		{}
@@ -65,9 +65,9 @@ namespace lt::hft
 
 	class unsubscriber
 	{
-	
+
 	private:
-		engine& _engine; 
+		engine& _engine;
 	public:
 		unsubscriber(engine& engine) :
 			_engine(engine)
@@ -84,7 +84,7 @@ namespace lt::hft
 		friend unsubscriber;
 		friend strategy;
 
-	private: 
+	private:
 
 		virtual void on_init() override;
 
@@ -97,7 +97,7 @@ namespace lt::hft
 		/***
 		* 注册策略
 		*/
-		void regist_strategy(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategys);
+		void regist_strategy(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategies);
 
 		void clear_strategy();
 
@@ -112,7 +112,7 @@ namespace lt::hft
 		*/
 		inline void set_trading_filter(filter_function callback)
 		{
-		
+
 			_ctx.set_trading_filter(callback);
 		}
 
@@ -167,7 +167,7 @@ namespace lt::hft
 		{
 			this->fire_event(straid, openable, closeable, param);
 		}
-	
+
 	private:
 
 		/**

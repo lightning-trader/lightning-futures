@@ -47,11 +47,9 @@ namespace lt::hft
 
 	public:
 
-		void start_trading(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategys);
+		void start_trading(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategies);
 
 		void stop_trading();
 
 	};
 }
-
-
