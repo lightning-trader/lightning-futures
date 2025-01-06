@@ -23,7 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "market_simulator.h"
 #include <event_center.hpp>
 #include <thread>
-#include "tick_loader/csv_tick_loader.h"
+#include "csv_tick_loader.h"
+#include "ltds_tick_loader.h"
 #include <log_wapper.hpp>
 
 using namespace lt;
@@ -37,32 +38,21 @@ _interval(1),
 _is_finished(false),
 _state(execute_state::ES_Idle)
 {
-	std::string loader_type;
-	std::string csv_data_path;
-	try
+	_interval = config.get<uint32_t>("interval");
+	const auto & loader_type = config.get<std::string>("loader_type");
+	if (loader_type == "ltds")
 	{
-		_interval = config.get<uint32_t>("interval");
-		loader_type = config.get<std::string>("loader_type");
-		csv_data_path = config.get<std::string>("csv_data_path");
+		const auto& token = config.get<std::string>("token");
+		const auto& cache_path = config.get<std::string>("cache_path");
+		const auto& lru_size = config.get<size_t>("lru_size");
+		_loader = new ltds_tick_loader(token, cache_path, lru_size);
 	}
-	catch (...)
+	else if (loader_type == "csv")
 	{
-		LOG_ERROR("tick_simulator init error ");
+		const auto& data_path = config.get<std::string>("csv_data_path");
+		_loader = new csv_tick_loader(data_path);
+
 	}
-	if (loader_type == "csv")
-	{
-		csv_tick_loader* loader = new csv_tick_loader();
-		if (!loader->init(csv_data_path))
-		{
-			delete loader;
-		}
-		else
-		{
-			_loader = loader;
-		}
-		
-	}
-	
 }
 market_simulator::~market_simulator()
 {

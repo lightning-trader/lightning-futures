@@ -9,16 +9,17 @@ IF(UNIX)
     )
 ENDIF()
 
-include_directories(${CMAKE_INCLUDE_PATH})
+include_directories(${CMAKE_INCLUDE_PATH} ./strategy)
 link_directories(${CMAKE_LIBRARY_PATH})
 
-add_executable(example "example.cpp" "marketing_strategy.cpp" "orderflow_strategy.cpp" "arbitrage_strategy.cpp")
+aux_source_directory(strategy STRATEGY_DIR)
 
-target_link_libraries(example "framework")
+add_executable(evaluate "evaluate.cpp" ${STRATEGY_DIR})
+target_link_libraries(evaluate "framework")
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET example PROPERTY CXX_STANDARD 20)
-endif()
+add_executable(runtime "runtime.cpp" ${STRATEGY_DIR})
+target_link_libraries(runtime "framework")
+
 
 # TODO: 如有需要，请添加测试并安装目标。
 

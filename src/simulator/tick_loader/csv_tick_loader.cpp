@@ -30,10 +30,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 using namespace lt::driver;
 
-bool csv_tick_loader::init(const std::string& root_path)
+csv_tick_loader::csv_tick_loader(const std::string& root_path)  :_root_path(root_path)
 {
-	_root_path = root_path;
-	return true ;
 }
 
 

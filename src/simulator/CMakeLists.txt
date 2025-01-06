@@ -1,4 +1,4 @@
-﻿include_directories(${CMAKE_INCLUDE_PATH})
+﻿include_directories(${CMAKE_INCLUDE_PATH} "./" "tick_loader")
 link_directories(${CMAKE_LIBRARY_PATH})
 
 #SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/build_${PLATFORM}/${CMAKE_BUILD_TYPE}/bin)

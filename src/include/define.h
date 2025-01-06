@@ -82,7 +82,8 @@ namespace lt{
 
 	typedef std::tuple<double_t, double_t, double_t, double_t, double_t, double_t, double_t> tick_extend;
 
-	typedef std::array<std::pair<double_t, uint32_t>, 5> price_volume_array;
+	constexpr size_t PRICE_VOLUME_SIZE = 5U;
+	typedef std::array<std::pair<double_t, uint32_t>, PRICE_VOLUME_SIZE> price_volume_array;
 
 	struct position_info;
 

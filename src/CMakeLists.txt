@@ -32,7 +32,6 @@ add_subdirectory ("example")
 
 add_subdirectory("framework")
 
-
 add_subdirectory("adapter")
 
 add_subdirectory("simulator")
