@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin)
-set(CMAKE_DEBUG_POSTFIX "_d")
+set(CMAKE_DEBUG_POSTFIX "-d")
 #set(CMAKE_CXX_FLAGS_RELEASE"-O2")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 
@@ -37,5 +37,5 @@ add_subdirectory("adapter")
 
 add_subdirectory("simulator")
 
-add_subdirectory("loger")
+add_subdirectory("logger")
 

@@ -28,9 +28,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <process_helper.hpp>
 #include <filesystem>
 
-
-bool _is_log_ready = false ;
-
 using namespace lt;
 using namespace nanolog;
 
@@ -40,7 +37,7 @@ std::atomic < NanoLogger* > atomic_nanologger;
 
 std::atomic <bool> _is_ready = false ;
 
-bool is_ready()
+bool is_logger_ready()
 {
 	return _is_ready.load();
 }
@@ -61,7 +58,7 @@ void dump_logline(NanoLogLine* line)
 }
 
 
-void init_log(const char* path,size_t file_size)
+void init_logger(const char* path,size_t file_size)
 {
 	if (!std::filesystem::exists(path))
 	{

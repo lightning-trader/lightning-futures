@@ -85,9 +85,9 @@ typedef mpsc::mpsc_queue<NanoLogLine> LoglineQueue;
 
 extern "C"
 {
-	EXPORT_FLAG void init_log(const char* path, size_t file_size);
+	EXPORT_FLAG void init_logger(const char* path, size_t file_size);
 
-	EXPORT_FLAG bool is_ready() ;
+	EXPORT_FLAG bool is_logger_ready() ;
 
 	EXPORT_FLAG NanoLogLine* alloc_logline();
 
@@ -157,17 +157,17 @@ public:
 
 
 #ifndef NDEBUG
-#define LOG_TRACE(...) if(is_ready())logline(LogLevel::LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_DEBUG(...) if(is_ready())logline(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_TRACE(...) if(is_logger_ready())logline(LogLevel::LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_DEBUG(...) if(is_logger_ready())logline(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define PROFILE_DEBUG(msg) //log_profile(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__,msg);
 #else
 #define LOG_TRACE(...) 
 #define LOG_DEBUG(...) 
 #define PROFILE_DEBUG(msg) 
 #endif
-#define LOG_INFO(...) if(is_ready())logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_WARNING(...) if(is_ready())logline(LogLevel::LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_ERROR(...) if(is_ready())logline(LogLevel::LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_FATAL(...) if(is_ready())logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_INFO(...) if(is_logger_ready())logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_WARNING(...) if(is_logger_ready())logline(LogLevel::LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_ERROR(...) if(is_logger_ready())logline(LogLevel::LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_FATAL(...) if(is_logger_ready())logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);throw std::runtime_error("log fatal ");
 
 #define PROFILE_INFO(msg) //log_profile(LLV_INFO,__FILE__,__func__,__LINE__,msg);
