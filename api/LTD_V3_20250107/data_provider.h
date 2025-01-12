@@ -58,6 +58,8 @@ extern "C"
 
 		double_t open_interest;
 
+		double_t average_price;
+
 		ltd_price_volume bid_order[PRICE_VOLUME_LENGTH];
 
 		ltd_price_volume ask_order[PRICE_VOLUME_LENGTH];
