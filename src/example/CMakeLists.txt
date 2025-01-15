@@ -9,7 +9,7 @@ IF(UNIX)
     )
 ENDIF()
 
-include_directories(${CMAKE_INCLUDE_PATH} ./strategy)
+include_directories(${CMAKE_INCLUDE_PATH} "./strategy" "../../api/LTD_V3_20250107")
 link_directories(${CMAKE_LIBRARY_PATH})
 
 aux_source_directory(strategy STRATEGY_DIR)
@@ -20,6 +20,9 @@ target_link_libraries(evaluate "framework")
 add_executable(runtime "runtime.cpp" ${STRATEGY_DIR})
 target_link_libraries(runtime "framework")
 
+add_executable(demo-ltd 
+	"demo/demo.cpp" 
+	)
 
 # TODO: 如有需要，请添加测试并安装目标。
 

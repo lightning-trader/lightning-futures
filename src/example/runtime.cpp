@@ -63,7 +63,6 @@ void start_runtime(const char* account_config)
 
 int main(int argc, char* argv[])
 {
-	init_logger("./log", 128);
-	start_runtime("runtime.ini");
+	start_runtime("runtime_ctpdev.ini");
 	return 0;
 }

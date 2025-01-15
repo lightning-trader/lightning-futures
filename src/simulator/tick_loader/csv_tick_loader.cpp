@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <define_types.hpp>
 #include <string_helper.hpp>
 #include <time_utils.hpp>
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 
 using namespace lt::driver;
 

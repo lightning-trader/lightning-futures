@@ -56,7 +56,7 @@ ctp_api_trader::ctp_api_trader(std::unordered_map<std::string, std::string>& id_
 	{
 		LOG_ERROR("ctp_api_trader config error ");
 	}
-	_trader_handle = dll_helper::load_library("thosttraderapi_se");
+	_trader_handle = library_helper::load_library("thosttraderapi_se");
 	if(_trader_handle)
 	{
 #ifdef _WIN32
@@ -68,7 +68,7 @@ ctp_api_trader::ctp_api_trader(std::unordered_map<std::string, std::string>& id_
 #else
 		const char* creator_name = "_ZN19CThostFtdcTraderApi19CreateFtdcTraderApiEPKc";
 #endif
-		_ctp_creator = (trader_creator)dll_helper::get_symbol(_trader_handle, creator_name);
+		_ctp_creator = (trader_creator)library_helper::get_symbol(_trader_handle, creator_name);
 	}
 	else
 	{
@@ -79,7 +79,7 @@ ctp_api_trader::ctp_api_trader(std::unordered_map<std::string, std::string>& id_
 
 ctp_api_trader::~ctp_api_trader()
 {
-	dll_helper::free_library(_trader_handle);
+	library_helper::free_library(_trader_handle);
 	_trader_handle = nullptr ;
 }
 

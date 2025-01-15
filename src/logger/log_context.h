@@ -1,4 +1,4 @@
-/*
+﻿/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -21,63 +21,16 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <string>
+#include <library_define.h>
+#include <log_define.hpp>
 
-#ifdef _MSC_VER
-#include <wtypes.h>
-typedef HMODULE		dll_handle;
-typedef void*		process_handle;
-#else
-#include <dlfcn.h>
-typedef void*		dll_handle;
-typedef void*		process_handle;
-#endif
-
-class dll_helper
+extern "C"
 {
-public:
-	static dll_handle load_library(const char *filename)
-	{
-		//std::string dllname = get_dllname(filename);
-		try
-		{
-#ifdef _MSC_VER
-			return ::LoadLibrary(filename);
-#else
-			dll_handle ret = dlopen(filename, RTLD_NOW);
-			if (ret == NULL)
-				printf("%s\n", dlerror());
-			return ret;
-#endif
-		}
-		catch(...)
-		{
-			return NULL;
-		}
-	}
 
-	static void free_library(dll_handle handle)
-	{
-		if (NULL == handle)
-			return;
+	EXPORT_FLAG NanoLogLine* ltl_alloc_logline();
 
-#ifdef _MSC_VER
-		::FreeLibrary(handle);
-#else
-		dlclose(handle);
-#endif
-	}
+	EXPORT_FLAG void ltl_recycle_logline(NanoLogLine* line);
 
-	static process_handle get_symbol(dll_handle handle, const char* name)
-	{
-		if (NULL == handle)
-			return NULL;
+	EXPORT_FLAG void ltl_dump_logline(NanoLogLine* line);
 
-#ifdef _MSC_VER
-		return ::GetProcAddress(handle, name);
-#else
-		return dlsym(handle, name);
-#endif
-	}
-
-};
+}

@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <thread>
 #include "csv_tick_loader.h"
 #include "ltds_tick_loader.h"
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 
 using namespace lt;
 using namespace lt::driver;

@@ -31,7 +31,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <atomic>
 #include <fstream>
 #include <iostream>
-#include <log_wapper.hpp>
+#include <filesystem>
+#include <time_utils.hpp>
+#include <process_helper.hpp>
+#include <format>
+#include <string_helper.hpp>
 
 namespace
 {
@@ -113,9 +117,7 @@ namespace nanolog
 		{
 			os << '[' << logline._function << ':' << logline._source_line << "] ";
 		}
-		stream_extractor sd(const_cast<unsigned char*>(logline._buffer), LOG_BUFFER_SIZE);
-		sd.out(os);
-		os << std::endl;
+		os << logline._buffer.str() << std::endl;
 		//os.flush();
 	}
 
@@ -196,7 +198,7 @@ namespace nanolog
 		std::unique_ptr < std::ofstream > m_os;
 	};
 
-	NanoLogger::NanoLogger(std::string const& log_directory, std::string const& log_file_name, uint32_t file_size_mb)
+	NanoLogger::NanoLogger(std::atomic<NanoLogger*>& holder, std::string const& log_directory, uint32_t file_size_mb)
 		: _file_writer(nullptr)
 		, _console_writer(nullptr)
 		, _is_runing(false)
@@ -205,7 +207,27 @@ namespace nanolog
 		, _field(0)
 		, _print(0)
 	{
-		_file_writer = std::make_unique<FileWriter>(log_directory, log_file_name, std::max(1u, file_size_mb));
+
+
+		if (!std::filesystem::exists(log_directory))
+		{
+			std::filesystem::create_directories(log_directory);
+		}
+		auto time_string = lt::datetime_to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), "%Y-%m-%d_%H%M%S");
+		auto file_name = lt::string_helper::format("lt_{0}.{1}", time_string, process_helper::get_pid());
+		
+#ifndef NDEBUG
+		uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) | static_cast<uint8_t>(LogField::SOURCE_FILE);
+		uint8_t print = static_cast<uint8_t>(LogPrint::LOG_FILE) | static_cast<uint8_t>(LogPrint::CONSOLE);
+		this->set_option(LogLevel::LLV_TRACE, field, print);
+#else
+		uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL);
+		uint8_t print = static_cast<uint8_t>(LogPrint::LOG_FILE);
+		this->set_option(LogLevel::LLV_INFO, field, print);
+#endif
+		holder.store(this, std::memory_order_seq_cst);
+
+		_file_writer = std::make_unique<FileWriter>(log_directory, file_name, std::max<uint32_t>(1u, file_size_mb));
 		_console_writer = std::make_unique<ConsoleWriter>();
 	
 		_is_runing.store(true, std::memory_order_release);

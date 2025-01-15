@@ -28,7 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <condition_variable>
 #include <params.hpp>
 #include <CTP_V6.6.9_20220920/ThostFtdcMdApi.h>
-#include <dll_helper.hpp>
+#include <library_helper.hpp>
 
 namespace lt::driver
 {

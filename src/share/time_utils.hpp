@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #pragma once
 
 #include<string>
+#include<define.h>
 //#include "stringbuilder.h"
 #define ONE_DAY_SECONDS 86400
 #define ONE_MINUTE_SECONDS 60

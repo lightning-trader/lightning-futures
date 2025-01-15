@@ -24,6 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <engine_types.hpp>
 #include <params.hpp>
 #include <context.h>
+#include <library_define.h>
 
 namespace lt::hft
 {

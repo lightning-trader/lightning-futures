@@ -1,4 +1,4 @@
-﻿/*
+/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -22,37 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #pragma once
 
-#include <tick_loader.h>
-#include <library_helper.hpp>
-#include <data_provider.h>
+#ifndef EXPORT_FLAG
+#ifdef _MSC_VER
+#	define EXPORT_FLAG __declspec(dllexport)
+#else
+#	define EXPORT_FLAG __attribute__((__visibility__("default")))
+#endif
+#endif
 
-namespace lt::driver
-{
-	class ltds_tick_loader : public tick_loader
-	{
-	private:
+#ifndef PORTER_FLAG
+#ifdef _MSC_VER
+#	define PORTER_FLAG _cdecl
+#else
+#	define PORTER_FLAG 
+#endif
+#endif
 
-		typedef const void* (*ltd_initialize)(const char*, size_t);
-
-		typedef size_t(*ltd_get_history_tick)(const void*, ltd_tick_info*, size_t, const char*, uint32_t);
-
-		typedef void (*ltd_destroy)(const void*);
-
-	public:
-		
-		ltds_tick_loader(const std::string& token, const std::string& cache_path, size_t lru_size);
-
-		virtual ~ltds_tick_loader();
-
-	public:
-
-		virtual void load_tick(std::vector<tick_detail>& result, const code_t& code, uint32_t trade_day) override;
-
-	private:
-
-		dll_handle _handle;
-
-		const void* _provider;
-
-	};
-}

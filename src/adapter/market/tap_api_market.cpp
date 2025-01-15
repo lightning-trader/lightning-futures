@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <filesystem>
 #include <time_utils.hpp>
 #include <params.hpp>
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 #include <../../api/TAP_V9_20200808/TapAPIError.h>
 
 using namespace lt;
@@ -50,11 +50,11 @@ tap_api_market::tap_api_market(std::unordered_map<std::string, std::string>& id_
 	{
 		LOG_ERROR("tap_api_market init error ");
 	}
-	_market_handle = dll_helper::load_library("TapQuoteAPI");
+	_market_handle = library_helper::load_library("TapQuoteAPI");
 	if (_market_handle)
 	{
-		_tap_creator = (market_creator)dll_helper::get_symbol(_market_handle, "CreateTapQuoteAPI");
-		_tap_destroyer = (market_destroyer)dll_helper::get_symbol(_market_handle, "FreeTapQuoteAPI");
+		_tap_creator = (market_creator)library_helper::get_symbol(_market_handle, "CreateTapQuoteAPI");
+		_tap_destroyer = (market_destroyer)library_helper::get_symbol(_market_handle, "FreeTapQuoteAPI");
 	}
 	else
 	{
