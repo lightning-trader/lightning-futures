@@ -109,7 +109,11 @@ namespace lt::log
 
 		log_wapper() :_alloc_logline(nullptr), _recycle_logline(nullptr), _dump_logline(nullptr)
 		{
+#ifndef NDEBUG
+			_handle = library_helper::load_library("liblt-logger-v3x-d");
+#else
 			_handle = library_helper::load_library("liblt-logger-v3x");
+#endif
 			if (_handle)
 			{
 				_alloc_logline = (ltl_alloc_logline)library_helper::get_symbol(_handle, "ltl_alloc_logline");
