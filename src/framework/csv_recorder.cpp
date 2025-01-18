@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "csv_recorder.h"
 #include <filesystem>
 #include <time_utils.hpp>
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 
 using namespace lt::hft;
 

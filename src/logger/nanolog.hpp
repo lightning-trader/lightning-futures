@@ -27,7 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #define NANO_LOG_HEADER_GUARD
 
 #include <thread>
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 
 namespace nanolog
 {
@@ -60,7 +60,7 @@ namespace nanolog
 
 		NanoLogger() = default;
 
-		NanoLogger(std::string const& log_directory, std::string const& log_file_name, uint32_t file_size_mb);
+		NanoLogger(std::atomic<NanoLogger*>& holder,  std::string const& log_directory, uint32_t file_size_mb);
 
 		~NanoLogger();
 		

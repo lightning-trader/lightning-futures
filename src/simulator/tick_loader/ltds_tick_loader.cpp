@@ -23,30 +23,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <define.h>
 #include "ltds_tick_loader.h"
 #include <define_types.hpp>
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 
 using namespace lt::driver;
 
 ltds_tick_loader::ltds_tick_loader(const std::string& token,const std::string& cache_path,size_t lru_size):_handle(nullptr)
 {
-	_handle = dll_helper::load_library("liblt-data-v3xp");
-	ltd_initialize initialize = (ltd_initialize)dll_helper::get_symbol(_handle, "ltd_initialize");
+	_handle = library_helper::load_library("liblt-data-v3xp");
+	ltd_initialize initialize = (ltd_initialize)library_helper::get_symbol(_handle, "ltd_initialize");
 	_provider = initialize(cache_path.c_str(), lru_size);
 	
 }
 
 ltds_tick_loader::~ltds_tick_loader()
 {
-	ltd_destroy destroy = (ltd_destroy)dll_helper::get_symbol(_handle, "ltd_destroy");
+	ltd_destroy destroy = (ltd_destroy)library_helper::get_symbol(_handle, "ltd_destroy");
 	destroy(_provider);
-	dll_helper::free_library(_handle);
+	library_helper::free_library(_handle);
 }
 
 void ltds_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t& code, uint32_t trading_day)
 {
 	std::vector<ltd_tick_info> res;
 	res.resize(72000U);
-	ltd_get_history_tick get_history_tick = (ltd_get_history_tick)dll_helper::get_symbol(_handle, "ltd_get_history_tick");
+	ltd_get_history_tick get_history_tick = (ltd_get_history_tick)library_helper::get_symbol(_handle, "ltd_get_history_tick");
 	size_t real_size = get_history_tick(_provider, res.data(), res.size(), code.to_string().c_str(), trading_day);
 	result.resize(real_size);
 	for(size_t i=0;i<res.size();i++)

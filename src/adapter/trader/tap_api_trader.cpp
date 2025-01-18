@@ -54,11 +54,11 @@ tap_api_trader::tap_api_trader(std::unordered_map<std::string, std::string>& id_
 	{
 		LOG_ERROR("tap trader init error ");
 	}
-	_trader_handle = dll_helper::load_library("TapTradeAPI");
+	_trader_handle = library_helper::load_library("TapTradeAPI");
 	if (_trader_handle)
 	{
-		_tap_creator = (trader_creator)dll_helper::get_symbol(_trader_handle, "CreateTapTradeAPI");
-		_tap_destroyer = (trader_destroyer)dll_helper::get_symbol(_trader_handle, "FreeTapTradeAPI");
+		_tap_creator = (trader_creator)library_helper::get_symbol(_trader_handle, "CreateTapTradeAPI");
+		_tap_destroyer = (trader_destroyer)library_helper::get_symbol(_trader_handle, "FreeTapTradeAPI");
 	}
 	else
 	{
@@ -66,14 +66,14 @@ tap_api_trader::tap_api_trader(std::unordered_map<std::string, std::string>& id_
 	}
 
 	LOG_INFO("tap market init");
-	_trader_handle = dll_helper::load_library("thosttraderapi");
+	_trader_handle = library_helper::load_library("thosttraderapi");
 	
 }
 
 
 tap_api_trader::~tap_api_trader()
 {
-	dll_helper::free_library(_trader_handle);
+	library_helper::free_library(_trader_handle);
 	_trader_handle = nullptr;
 }
 

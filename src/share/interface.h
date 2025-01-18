@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "market_api.h"
 #include "trader_api.h"
 #include <params.hpp>
-
+#include <library_define.h>
 
 EXPORT_FLAG lt::actual_market* create_actual_market(const lt::params& config);
 

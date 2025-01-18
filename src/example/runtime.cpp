@@ -36,10 +36,10 @@ void start_runtime(const char* account_config)
 {
 	auto app = std::make_shared<lt::hft::runtime_engine>(account_config);
 	std::vector<std::shared_ptr<lt::hft::strategy>> strategys;
-	strategys.emplace_back(std::make_shared<marketing_strategy>(1, app.get(), "SHFE.rb2210", 1, 1));
-	strategys.emplace_back(std::make_shared<marketing_strategy>(2, app.get(), "SHFE.hc2210", 1, 1));
-	strategys.emplace_back(std::make_shared<orderflow_strategy>(3, app.get(), "SHFE.rb2210", 1, 1, 3, 3, 10));
-	strategys.emplace_back(std::make_shared<orderflow_strategy>(4, app.get(), "SHFE.hc2210", 1, 1, 3, 3, 10));
+	strategys.emplace_back(std::make_shared<marketing_strategy>(1, app.get(), "SHFE.rb2510", 1, 1));
+	strategys.emplace_back(std::make_shared<marketing_strategy>(2, app.get(), "SHFE.hc2510", 1, 1));
+	strategys.emplace_back(std::make_shared<orderflow_strategy>(3, app.get(), "SHFE.rb2510", 1, 1, 3, 3, 10));
+	strategys.emplace_back(std::make_shared<orderflow_strategy>(4, app.get(), "SHFE.hc2510", 1, 1, 3, 3, 10));
 	app->set_trading_filter([app](const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, uint32_t count, double_t price, lt::order_flag flag)->bool {
 		auto now = app->get_last_time();
 		auto last_order = app->last_order_time();
@@ -63,7 +63,6 @@ void start_runtime(const char* account_config)
 
 int main(int argc, char* argv[])
 {
-	init_logger("./log", 128);
-	start_runtime("runtime.ini");
+	start_runtime("runtime_ctpdev.ini");
 	return 0;
 }

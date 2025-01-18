@@ -25,13 +25,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <stdint.h>
 #include <thread>
 #include <define.h>
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 #include <trader_api.h>
 #include <define_types.hpp>
 #include <params.hpp>
 #include <condition_variable>
 #include <CTP_V6.6.9_20220920/ThostFtdcTraderApi.h>
-#include <dll_helper.hpp>
+#include <library_helper.hpp>
 
 namespace lt::driver
 {

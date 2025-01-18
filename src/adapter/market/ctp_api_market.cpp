@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <filesystem>
 #include <time_utils.hpp>
 #include <params.hpp>
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 
 using namespace lt;
 using namespace lt::driver;
@@ -48,7 +48,7 @@ ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_
 	{
 		LOG_ERROR("ctp_api_market config error ");
 	}
-	_market_handle = dll_helper::load_library("thostmduserapi_se");
+	_market_handle = library_helper::load_library("thostmduserapi_se");
 	if (_market_handle)
 	{
 #ifdef _WIN32
@@ -60,7 +60,7 @@ ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_
 #else
 		const char* creator_name = "_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb";
 #endif
-		_ctp_creator = (market_creator)dll_helper::get_symbol(_market_handle, creator_name);
+		_ctp_creator = (market_creator)library_helper::get_symbol(_market_handle, creator_name);
 	}
 	else
 	{
@@ -71,7 +71,7 @@ ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_
 
 ctp_api_market::~ctp_api_market()
 {
-	dll_helper::free_library(_market_handle);
+	library_helper::free_library(_market_handle);
 	_market_handle = nullptr;
 }
 

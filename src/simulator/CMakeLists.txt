@@ -1,5 +1,5 @@
 ﻿
-include_directories(${CMAKE_INCLUDE_PATH} "../../api/LTD_V3_20250107"
+include_directories(${CMAKE_INCLUDE_PATH} "../../api/LTD_V3_20250116"
 	"./" "tick_loader")
 
 link_directories(${CMAKE_LIBRARY_PATH})

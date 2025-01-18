@@ -36,22 +36,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <cstdarg>
 #include <unordered_map>
 
-#ifndef EXPORT_FLAG
-#ifdef _MSC_VER
-#	define EXPORT_FLAG __declspec(dllexport)
-#else
-#	define EXPORT_FLAG __attribute__((__visibility__("default")))
-#endif
-#endif
-
-#ifndef PORTER_FLAG
-#ifdef _MSC_VER
-#	define PORTER_FLAG _cdecl
-#else
-#	define PORTER_FLAG 
-#endif
-#endif
-
 #define EXCHANGE_ID_SHFE	"SHFE"	//上期所
 #define EXCHANGE_ID_DCE		"DCE"	//大商所
 #define EXCHANGE_ID_INE		"INE"	//能源中心

@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <engine_types.hpp>
 #include <event_center.hpp>
 #include <receiver.h>
-#include <log_wapper.hpp>
+#include <log_define.hpp>
 #include <context.h>
 #include <strategy.h>
 

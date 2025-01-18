@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "trading_section.h"
 #include <define.h>
 #include <rapidcsv.h>
-#include "log_wapper.hpp"
+#include "log_define.hpp"
 #include <time_utils.hpp>
 
 using namespace lt;

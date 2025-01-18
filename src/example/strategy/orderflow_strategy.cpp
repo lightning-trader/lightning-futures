@@ -133,13 +133,13 @@ void orderflow_strategy::try_buy()
 	auto pos = get_position(_code);
 	if(pos.history_short.usable()>0)
 	{
-		auto volume = std::min(_open_once, pos.history_short.usable());
+		auto volume = std::min<uint32_t>(_open_once, pos.history_short.usable());
 		_order_data.buy_order = buy_close(_code, volume, market.last_tick_info.sell_price());
 		return ;
 	}
 	if (pos.today_short.usable() > 0)
 	{
-		auto volume = std::min(_open_once, pos.today_short.usable());
+		auto volume = std::min<uint32_t>(_open_once, pos.today_short.usable());
 		_order_data.buy_order = buy_close(_code, volume, market.last_tick_info.sell_price(), true);
 		return;
 	}
@@ -155,13 +155,13 @@ void orderflow_strategy::try_sell()
 	auto pos = get_position(_code);
 	if (pos.history_long.usable() > 0)
 	{
-		auto min = std::min(_open_once, pos.history_long.usable());
+		auto min = std::min<uint32_t>(_open_once, pos.history_long.usable());
 		_order_data.sell_order = sell_close(_code, min, market.last_tick_info.buy_price());
 		return;
 	}
 	if (pos.today_long.usable() > 0)
 	{
-		auto min = std::min(_open_once, pos.today_long.usable());
+		auto min = std::min<uint32_t>(_open_once, pos.today_long.usable());
 		_order_data.sell_order = sell_close(_code, min, market.last_tick_info.buy_price(), true);
 		return;
 	}

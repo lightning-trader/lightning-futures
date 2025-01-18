@@ -1,4 +1,4 @@
-﻿/*
+/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -21,38 +21,64 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
+#include <string>
 
-#include <tick_loader.h>
-#include <library_helper.hpp>
-#include <data_provider.h>
+#ifdef _MSC_VER
+#include <wtypes.h>
+typedef HMODULE		dll_handle;
+typedef void* process_handle;
+#else
+#include <dlfcn.h>
+typedef void* dll_handle;
+typedef void* process_handle;
+#endif
 
-namespace lt::driver
+class library_helper
 {
-	class ltds_tick_loader : public tick_loader
+
+public:
+	static dll_handle load_library(const char *filename)
 	{
-	private:
+		//std::string dllname = get_dllname(filename);
+		try
+		{
+#ifdef _MSC_VER
+			return ::LoadLibrary(filename);
+#else
+			dll_handle ret = dlopen(filename, RTLD_NOW);
+			if (ret == NULL)
+				printf("%s\n", dlerror());
+			return ret;
+#endif
+		}
+		catch(...)
+		{
+			return NULL;
+		}
+	}
 
-		typedef const void* (*ltd_initialize)(const char*, size_t);
+	static void free_library(dll_handle handle)
+	{
+		if (NULL == handle)
+			return;
 
-		typedef size_t(*ltd_get_history_tick)(const void*, ltd_tick_info*, size_t, const char*, uint32_t);
+#ifdef _MSC_VER
+		::FreeLibrary(handle);
+#else
+		dlclose(handle);
+#endif
+	}
 
-		typedef void (*ltd_destroy)(const void*);
+	static process_handle get_symbol(dll_handle handle, const char* name)
+	{
+		if (NULL == handle)
+			return NULL;
 
-	public:
-		
-		ltds_tick_loader(const std::string& token, const std::string& cache_path, size_t lru_size);
+#ifdef _MSC_VER
+		return ::GetProcAddress(handle, name);
+#else
+		return dlsym(handle, name);
+#endif
+	}
 
-		virtual ~ltds_tick_loader();
-
-	public:
-
-		virtual void load_tick(std::vector<tick_detail>& result, const code_t& code, uint32_t trade_day) override;
-
-	private:
-
-		dll_handle _handle;
-
-		const void* _provider;
-
-	};
-}
+};
