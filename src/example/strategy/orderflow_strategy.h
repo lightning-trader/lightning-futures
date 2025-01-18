@@ -35,6 +35,7 @@ class orderflow_strategy : public lt::hft::strategy,public lt::hft::bar_receiver
 		uint32_t trading_day;
 		lt::estid_t sell_order;
 		lt::estid_t buy_order;
+		persist_data() :sell_order(INVALID_ESTID), buy_order(INVALID_ESTID), trading_day(0U){}
 	};
 public:
 
@@ -45,7 +46,8 @@ public:
 		_period(period),
 		_multiple(multiple),
 		_threshold(threshold),
-		_position_limit(position_limit)
+		_position_limit(position_limit),
+		_order_data()
 	{
 	};
 

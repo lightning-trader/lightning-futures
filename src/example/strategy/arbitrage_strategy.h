@@ -62,6 +62,13 @@ class arbitrage_strategy : public lt::hft::strategy,public lt::hft::tick_receive
 		lt::estid_t order_estids[PSRDT_ORDER_COUNT];
 		arbitrage_state a_state ;
 		trade_state t_state ;
+
+		persist_data() :a_state(arbitrage_state::AS_INVALID), t_state(trade_state::TS_INVALID) {
+			for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
+			{
+				order_estids[i] = INVALID_ESTID;
+			}
+		}
 	};
 public:
 
@@ -72,8 +79,8 @@ public:
 		_price1(.0),
 		_price2(.0),
 		_open_once(open_once),
-		_offset(offset)
-
+		_offset(offset),
+		_order_data()
 	{
 	};
 

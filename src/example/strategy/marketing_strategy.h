@@ -35,6 +35,8 @@ class marketing_strategy : public lt::hft::strategy,public lt::hft::tick_receive
 	{
 		lt::estid_t sell_order;
 		lt::estid_t buy_order;
+
+		persist_data():sell_order(INVALID_ESTID), buy_order(INVALID_ESTID){}
 	};
 public:
 
@@ -43,7 +45,8 @@ public:
 		_code(code),
 		_open_once(open_once),
 		_open_delta(open_detla),
-		_random(0, 1)
+		_random(0, 1),
+		_order_data()
 	{
 
 	};

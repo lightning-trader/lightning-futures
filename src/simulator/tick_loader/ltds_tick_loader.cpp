@@ -49,7 +49,7 @@ void ltds_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t
 	ltd_get_history_tick get_history_tick = (ltd_get_history_tick)library_helper::get_symbol(_handle, "ltd_get_history_tick");
 	size_t real_size = get_history_tick(_provider, res.data(), res.size(), code.to_string().c_str(), trading_day);
 	result.resize(real_size);
-	for(size_t i=0;i<res.size();i++)
+	for(size_t i=0;i< real_size;i++)
 	{
 		const ltd_tick_info& it = res[i];	
 		tick_detail& tick = result[i];

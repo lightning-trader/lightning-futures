@@ -13,4 +13,4 @@ endif()
 
 add_library(liblt-adapter-v3x SHARED "interface.cpp" ${MARKET_DIR} ${TRADER_DIR})
 
-target_link_libraries(liblt-adapter-v3x "liblt-logger-v3x" ${MARKET_LIBS} ${LINK_LIBS})
+target_link_libraries(liblt-adapter-v3x ${MARKET_LIBS} ${LINK_LIBS})
