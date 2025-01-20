@@ -29,7 +29,7 @@ using namespace lt::driver;
 
 ltds_tick_loader::ltds_tick_loader(const std::string& token,const std::string& cache_path,size_t lru_size):_handle(nullptr)
 {
-	_handle = library_helper::load_library("liblt-data-v3xp");
+	_handle = library_helper::load_library("latf-data-v3xp");
 	ltd_initialize initialize = (ltd_initialize)library_helper::get_symbol(_handle, "ltd_initialize");
 	_provider = initialize(cache_path.c_str(), lru_size);
 	

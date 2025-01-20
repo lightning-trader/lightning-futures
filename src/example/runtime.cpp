@@ -51,7 +51,7 @@ void start_runtime(const char* account_config)
 		});
 	app->start_trading(strategys);
 	time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-	time_t delta_seconds = lt::make_datetime(app->get_trading_day(), "15:00:00") - now;
+	time_t delta_seconds = lt::make_datetime(app->get_trading_day(), "15:20:00") - now;
 	if (delta_seconds > 0)
 	{
 		LOG_INFO("runtime_engine waiting for close :", delta_seconds);
