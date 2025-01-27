@@ -11,6 +11,6 @@ if(UNIX)
     set(LINK_LIBS dl)
 endif()
 
-add_library(liblt-adapter-v3x SHARED "interface.cpp" ${MARKET_DIR} ${TRADER_DIR})
+add_library(latf-adapter-v3x SHARED "interface.cpp" ${MARKET_DIR} ${TRADER_DIR})
 
-target_link_libraries(liblt-adapter-v3x ${MARKET_LIBS} ${LINK_LIBS})
+target_link_libraries(latf-adapter-v3x ${MARKET_LIBS} ${LINK_LIBS})
