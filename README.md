@@ -38,7 +38,10 @@ lightning-futures专为高频设计，采用双线程模型；
 - [Lightning Trader架构设计](https://zhuanlan.zhihu.com/p/622262304)
 - [高频交易中如何处理低延时](https://zhuanlan.zhihu.com/p/622293141)
 - [多线程程序设计的两种架构](https://zhuanlan.zhihu.com/p/622423099)
-
+3. B站入门视频
+- [LightningFutures量化交易开发（1）](https://www.bilibili.com/video/BV1TufUYMEqX/?share_source=copy_web&vd_source=12fb40b76f12e33f07bfc4a936d52013)
+- [LightningFutures量化交易开发（2）](https://www.bilibili.com/video/BV1TufUYMEsP/?share_source=copy_web&vd_source=12fb40b76f12e33f07bfc4a936d52013)
+- [LightningFutures量化交易开发（3）](https://www.bilibili.com/video/BV14ufUYME6T/?share_source=copy_web&vd_source=12fb40b76f12e33f07bfc4a936d52013)
 
 #### 参与贡献
 
