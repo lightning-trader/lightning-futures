@@ -43,7 +43,7 @@ void start_runtime(const char* account_config)
 	app->set_trading_filter([app](const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, uint32_t count, double_t price, lt::order_flag flag)->bool {
 		auto now = app->get_last_time();
 		auto last_order = app->last_order_time();
-		if (now - last_order < 1)
+		if (now - last_order < 1000)
 		{
 			return false;
 		}
