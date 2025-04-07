@@ -107,7 +107,7 @@ void replace_strategy::on_destroy(unsubscriber& unsuber)
 void replace_strategy::try_buy()
 {
 	const auto& market = get_market_info(_code);
-	auto pos = get_position(_code);
+	const auto& pos = get_position(_code);
 	if(pos.history_short.usable()>0)
 	{
 		order_estids[SHORT_ClOSE_HISTORY] = buy_close(_code, pos.history_short.usable(), market.last_tick_info.sell_price());
@@ -123,7 +123,7 @@ void replace_strategy::try_buy()
 void replace_strategy::try_sell()
 {
 	const auto& market = get_market_info(_code);
-	auto pos = get_position(_code);
+	const auto& pos = get_position(_code);
 	if (pos.history_long.usable() > 0)
 	{
 		order_estids[LONG_ClOSE_HISTORY] = sell_close(_code, pos.history_long.usable(), market.last_tick_info.buy_price());
@@ -139,7 +139,7 @@ void replace_strategy::try_sell()
 void replace_strategy::try_close()
 {
 	const auto& market = get_market_info(_code);
-	auto pos = get_position(_code);
+	const auto& pos = get_position(_code);
 	if (pos.history_long.usable() > 0)
 	{
 		order_estids[LONG_ClOSE_HISTORY] = sell_close(_code, pos.history_long.usable(), market.last_tick_info.buy_price());

@@ -130,7 +130,7 @@ void orderflow_strategy::on_destroy(unsubscriber& unsuber)
 void orderflow_strategy::try_buy()
 {
 	const auto& market = get_market_info(_code);
-	auto pos = get_position(_code);
+	const auto& pos = get_position(_code);
 	if(pos.history_short.usable()>0)
 	{
 		auto volume = std::min<uint32_t>(_open_once, pos.history_short.usable());
@@ -152,7 +152,7 @@ void orderflow_strategy::try_buy()
 void orderflow_strategy::try_sell()
 {
 	const auto& market = get_market_info(_code);
-	auto pos = get_position(_code);
+	const auto& pos = get_position(_code);
 	if (pos.history_long.usable() > 0)
 	{
 		auto min = std::min<uint32_t>(_open_once, pos.history_long.usable());
