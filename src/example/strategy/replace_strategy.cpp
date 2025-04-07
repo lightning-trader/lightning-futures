@@ -41,7 +41,7 @@ void replace_strategy::on_tick(const lt::tick_info& tick)
 
 void replace_strategy::on_change(const lt::params& p)
 {
-	uint8_t ratio = p.get<uint8_t>("ratio");
+	int8_t ratio = p.get<int8_t>("ratio");
 	if(ratio == 1)
 	{
 		try_buy();
