@@ -24,10 +24,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "runtime.h"
 #include <define.h>
 #include <thread>
-#include "runtime_engine.h"
-#include "evaluate_engine.h"
-#include "marketing_strategy.h"
 #include <time_utils.hpp>
+#include "runtime_engine.h"
+#include "marketing_strategy.h"
 #include "orderflow_strategy.h"
 #include "arbitrage_strategy.h"
 

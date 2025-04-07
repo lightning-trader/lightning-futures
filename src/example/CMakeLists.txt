@@ -20,6 +20,7 @@ target_link_libraries(evaluate "framework")
 add_executable(runtime "runtime.cpp" ${STRATEGY_DIR})
 target_link_libraries(runtime "framework")
 
-
+add_executable(manual "manual.cpp" ${STRATEGY_DIR})
+target_link_libraries(manual "framework")
 # TODO: 如有需要，请添加测试并安装目标。
 
