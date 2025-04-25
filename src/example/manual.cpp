@@ -80,7 +80,8 @@ void start_maual(const char* account_config)
 {
     app = std::make_shared<lt::hft::runtime_engine>(account_config);
     std::vector<std::shared_ptr<lt::hft::strategy>> strategys;
-    strategys.emplace_back(std::make_shared<replace_strategy>(1, app.get(), "SHFE.rb2510", 10));
+	current_strategy = 1U;
+    strategys.emplace_back(std::make_shared<replace_strategy>(current_strategy, app.get(), "SHFE.rb2510", 10));
     app->set_trading_filter([](const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, uint32_t count, double_t price, lt::order_flag flag)->bool {
         auto now = app->get_last_time();
         auto last_order = app->last_order_time();
@@ -113,6 +114,6 @@ void start_maual(const char* account_config)
 
 int main(int argc, char* argv[])
 {
-    start_maual("runtime_ctpdev.ini");
+    start_maual("rt_simnow.ini");
     return 0;
 }
