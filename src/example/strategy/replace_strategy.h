@@ -27,7 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 
 
-class replace_strategy : public lt::hft::strategy,public lt::hft::tick_receiver
+class replace_strategy : public lt::hft::strategy,public lt::hft::tape_receiver
 {
 	enum {
 		LONG_ClOSE_HISTORY,
@@ -67,7 +67,7 @@ public:
 	/*
 	 *	tickÍÆËÍ
 	 */
-	virtual void on_tick(const lt::tick_info& tick) override;
+	virtual void on_tape(const lt::tape_info& tape) override;
 
 
 	/*

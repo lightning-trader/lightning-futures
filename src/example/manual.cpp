@@ -114,6 +114,6 @@ void start_maual(const char* account_config)
 
 int main(int argc, char* argv[])
 {
-    start_maual("rt_simnow.ini");
+    start_maual("runtime_ctpdev.ini");
     return 0;
 }

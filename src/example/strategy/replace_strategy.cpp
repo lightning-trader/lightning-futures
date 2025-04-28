@@ -31,12 +31,12 @@ using namespace lt::hft;
 
 void replace_strategy::on_init(subscriber& suber)
 {
-	suber.regist_tick_receiver(_code, this);
+	suber.regist_tape_receiver(_code, this);
 }
 
-void replace_strategy::on_tick(const lt::tick_info& tick)
+void replace_strategy::on_tape(const lt::tape_info& tape)
 {
-	LOG_INFO(tick.price)
+	LOG_INFO(tape.price,static_cast<int32_t>(tape.direction))
 }
 
 void replace_strategy::on_change(const lt::params& p)
@@ -101,7 +101,7 @@ void replace_strategy::on_error(error_type type, estid_t localid, const error_co
 
 void replace_strategy::on_destroy(unsubscriber& unsuber)
 {
-	unsuber.unregist_tick_receiver(_code, this);
+	unsuber.unregist_tape_receiver(_code, this);
 }
 
 void replace_strategy::try_buy()
