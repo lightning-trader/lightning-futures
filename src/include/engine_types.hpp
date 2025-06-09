@@ -74,7 +74,7 @@ namespace lt
 			direction(deal_direction::DD_FLAT)
 		{}
 
-		deal_status get_status()
+		deal_status get_status()const
 		{
 			if (volume_delta == interest_delta && interest_delta > 0)
 			{
