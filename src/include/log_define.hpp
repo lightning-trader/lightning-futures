@@ -213,11 +213,11 @@ namespace lt::log
 #define LTLOG_TRACE(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LTLOG_DEBUG(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LTLOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);throw std::runtime_error("log fatal : "+std::string(__func__));
-#define PROFILE_DEBUG(msg) //log_profile(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__,msg);
+#define PROFILE_DEBUG(...) //log_profile(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__,msg);
 #else
 #define LTLOG_TRACE(...) 
 #define LTLOG_DEBUG(...) 
-#define PROFILE_DEBUG(msg) 
+#define PROFILE_DEBUG(...) 
 #define LTLOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #endif
 #define LTLOG_INFO(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
