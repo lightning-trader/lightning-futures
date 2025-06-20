@@ -21,14 +21,13 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include "strategy.h"
-#include "receiver.h"
-#include "engine.h"
 #include <random>
+#include "receiver.h"
+#include "strategy.hpp"
 
 
 
-class marketing_strategy : public lt::hft::strategy,public lt::hft::tick_receiver
+class marketing_strategy : public lt::hft::strategy,public lt::tick_receiver
 {
 
 	struct persist_data
@@ -40,8 +39,8 @@ class marketing_strategy : public lt::hft::strategy,public lt::hft::tick_receive
 	};
 public:
 
-	marketing_strategy(lt::hft::straid_t id, lt::hft::engine* engine, const lt::code_t& code, double_t open_detla, uint32_t open_once) :
-		lt::hft::strategy(id, engine, true, true),
+	marketing_strategy(lt::hft::straid_t id, lt::hft::syringe* syringe, const lt::code_t& code, double_t open_detla, uint32_t open_once) :
+		lt::hft::strategy(id, syringe),
 		_code(code),
 		_open_once(open_once),
 		_open_delta(open_detla),
@@ -63,7 +62,7 @@ public:
 	 *	初始化事件
 	 *	生命周期中只会回调一次
 	 */
-	virtual void on_init(lt::hft::subscriber& suber) override;
+	virtual void on_init(lt::subscriber& suber) override;
 
 	/*
 	 *	tick推送
@@ -102,7 +101,7 @@ public:
 	/*
 	 *	销毁
 	 */
-	virtual void on_destroy(lt::hft::unsubscriber& unsuber)override;
+	virtual void on_destroy(lt::unsubscriber& unsuber)override;
 
 
 private:

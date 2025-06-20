@@ -5,22 +5,39 @@ cmake_minimum_required (VERSION 3.8)
 
 IF(UNIX)
     SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} 
-        "${PROJECT_SOURCE_DIR}/../api/CTP_V6.6.9_20220920/linux64/" 
+        "${PROJECT_SOURCE_DIR}/../api/CTP_V6.7.9_20250319/linux64/" 
     )
 ENDIF()
 
-include_directories(${CMAKE_INCLUDE_PATH} "./strategy" "../../api/LTD_V3_20250120")
+include_directories(${CMAKE_INCLUDE_PATH} "./strategy" "../../api/LTD_V3_20250618" "../framework" )
 link_directories(${CMAKE_LIBRARY_PATH})
 
 aux_source_directory(strategy STRATEGY_DIR)
 
-add_executable(evaluate "evaluate.cpp" ${STRATEGY_DIR})
-target_link_libraries(evaluate "framework")
+# 回测环境示例
+add_executable(demo-evaluate "demo_evaluate.cpp" ${STRATEGY_DIR})
+target_link_libraries(demo-evaluate "latf-core-v3x")
 
-add_executable(runtime "runtime.cpp" ${STRATEGY_DIR})
-target_link_libraries(runtime "framework")
+# 实盘/仿真运行示例
+add_executable(demo-runtime "demo_runtime.cpp" ${STRATEGY_DIR})
+target_link_libraries(demo-runtime "latf-core-v3x")
 
-add_executable(manual "manual.cpp" ${STRATEGY_DIR})
-target_link_libraries(manual "framework")
+# 手动下单或者第三放干预策略示例
+add_executable(demo-manual "demo_manual.cpp" ${STRATEGY_DIR})
+target_link_libraries(demo-manual "latf-core-v3x")
+
+# 策略运行器分离（动态链接策略）示例
+add_executable(demo-dlstgy "demo_dlstgy.cpp")
+target_link_libraries(demo-dlstgy "latf-core-v3x")
+
+add_library(stgy-marketing SHARED 
+    "strategy/marketing_strategy.cpp"
+    )
+target_link_libraries(stgy-marketing "latf-core-v3x")
+
+# LT数据服务示例
+add_executable(demo-ltd "demo_ltd.cpp")
+
+
 # TODO: 如有需要，请添加测试并安装目标。
 

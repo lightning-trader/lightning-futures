@@ -23,6 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #pragma once
 #include <string>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 namespace lt
 {
     class string_helper
@@ -58,6 +60,19 @@ namespace lt
             return std::to_string(value);
         }
 
+        static std::string to_string(double_t value,size_t accuracy)
+        {
+            std::stringstream stream;
+            stream<< std::fixed << std::setprecision(accuracy) << value;
+            return stream.str();
+        }
+        static std::string to_string(float_t value, size_t accuracy)
+        {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(accuracy) << value;
+            return stream.str();
+        }
+
         template<typename T>
         static std::string to_string(const std::vector<T>& values)
         {
@@ -85,16 +100,17 @@ namespace lt
             return std::find(values.begin(), values.end(), value) != values.end();
         }
 
-        template<typename... T>
-        static std::string join(const std::string& separator, const std::vector<T> &... values) {
-            std::vector<std::string> args;
-            extract_to_string(args, values...);
-            std::string result;
-            for (const auto& s : args) {
-                result.append(s);
-                result.append(separator);
-            }
+        template<typename T>
+        static std::string join(const char separator, const std::vector<T>& values) {
 
+            std::string result;
+            for (auto i=0 ;i< values.size();i++) {
+                result.append(values[i]);
+                if(i< values.size()-1)
+                {
+                    result.push_back(separator);
+                }
+            }
             return result;
         }
 
@@ -150,5 +166,6 @@ namespace lt
 
             return result;
         }
+
     };
 }

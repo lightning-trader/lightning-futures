@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "arbitrage_strategy.h"
 #include "time_utils.hpp"
 #include <string_helper.hpp>
+#include <basic_types.hpp>
 
 using namespace lt;
 using namespace lt::hft;
@@ -40,7 +41,7 @@ void arbitrage_strategy::on_tick(const tick_info& tick)
 
 	if (is_close_coming())
 	{
-		LOG_DEBUG("time > _coming_to_close", tick.id.get_id(), tick.time);
+		LOG_DEBUG("time > _coming_to_close", tick.id.get_symbol(), tick.time);
 		return;
 	}
 	if(tick.id == _code1)
@@ -77,7 +78,7 @@ void arbitrage_strategy::on_tick(const tick_info& tick)
 
 void arbitrage_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("on_entrust :", order.estid, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LOG_INFO("on_entrust :", order.estid, order.code.get_symbol(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
 		if (_order_data.order_estids[i] == order.estid)
@@ -99,7 +100,7 @@ void arbitrage_strategy::on_entrust(const order_info& order)
 
 void arbitrage_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_INFO("on_trade :", localid, code.get_id(), direction, offset, price, volume);
+	LOG_INFO("on_trade :", localid, code.get_symbol(), direction, offset, price, volume);
 	if (_order_data.a_state == arbitrage_state::AS_BUY_INTEREST)
 	{
 		if(localid == _order_data.order_estids[PSRDT_BUY_ORDER_1])
@@ -168,7 +169,7 @@ void arbitrage_strategy::on_trade(estid_t localid, const code_t& code, offset_ty
 
 void arbitrage_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
-	LOG_INFO("on_cancel :", localid, code.get_id(), direction, offset, price, cancel_volume);
+	LOG_INFO("on_cancel :", localid, code.get_symbol(), direction, offset, price, cancel_volume);
 
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{

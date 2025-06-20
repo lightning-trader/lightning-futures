@@ -23,8 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "market_simulator.h"
 #include <event_center.hpp>
 #include <thread>
-#include "csv_tick_loader.h"
-#include "ltds_tick_loader.h"
+#include <csv_tick_loader.h>
+#include <ltds_tick_loader.h>
 #include <log_define.hpp>
 
 using namespace lt;
@@ -36,7 +36,7 @@ _current_time(0),
 _current_index(0),
 _interval(1),
 _is_finished(false),
-_state(execute_state::ES_Idle)
+_is_runing(false)
 {
 	_interval = config.get<uint32_t>("interval");
 	const auto & loader_type = config.get<std::string>("loader_type");
@@ -45,12 +45,13 @@ _state(execute_state::ES_Idle)
 		const auto& token = config.get<std::string>("token");
 		const auto& cache_path = config.get<std::string>("cache_path");
 		const auto& lru_size = config.get<size_t>("lru_size");
-		_loader = new ltds_tick_loader(token, cache_path, lru_size);
+		_loader = new ldts_tick_loader(token, cache_path, lru_size);
 	}
 	else if (loader_type == "csv")
 	{
 		const auto& data_path = config.get<std::string>("csv_data_path");
-		_loader = new csv_tick_loader(data_path);
+		const auto& index_file = config.get<std::string>("trading_day_file");
+		_loader = new csv_tick_loader(data_path.c_str(), index_file.c_str());
 
 	}
 }
@@ -62,13 +63,52 @@ market_simulator::~market_simulator()
 		_loader = nullptr;
 	}
 }
-
-void market_simulator::play(uint32_t trading_day, std::function<void(const std::vector<const tick_info*>&)> publish_callback)
+void market_simulator::set_trading_range(uint32_t begin, uint32_t end)
 {
-	_current_trading_day = trading_day;
-	_is_finished = false ;
+	if(_loader)
+	{
+		_loader->load_trading_day(_all_trading_day,begin,end);
+	}
+}
+
+void market_simulator::set_publish_callback(std::function<void(const std::vector<const lt::tick_info*>&)> publish_callback)
+{
 	_publish_callback = publish_callback;
-	_state = execute_state::ES_LoadingData;
+}
+
+void market_simulator::set_crossday_callback(std::function<void(uint32_t form, uint32_t to)> crossday_callback)
+{
+	_crossday_callback = crossday_callback;
+}
+
+void market_simulator::set_finish_callback(std::function<void()> finish_callback)
+{
+	_finish_callback = finish_callback;
+}
+bool market_simulator::play()
+{
+	if(_all_trading_day.empty())
+	{
+		return false;
+	}
+	_current_trading_day = *_all_trading_day.begin();
+	_current_time = 0;
+	_current_index = 0;
+	_pending_tick_info.clear();
+	_instrument_id_list.clear();
+	_is_finished.exchange(false) ;
+	_is_runing.exchange(true);
+	return true;
+}
+
+void market_simulator::pause()
+{
+	_is_runing.exchange(false);
+}
+
+void market_simulator::resume()
+{
+	_is_runing.exchange(true);
 }
 
 bool market_simulator::is_finished() const
@@ -98,14 +138,9 @@ void market_simulator::unsubscribe(const std::set<code_t>& codes)
 
 void market_simulator::update()
 {
-	switch(_state)
+	if(_is_runing)
 	{
-		case execute_state::ES_LoadingData:
-			load_data();
-		break;
-		case execute_state::ES_PublishTick:
-			publish_tick();
-		break;
+		publish_tick();
 	}
 }
 
@@ -118,12 +153,27 @@ void market_simulator::load_data()
 		{
 			_loader->load_tick(_pending_tick_info, it, _current_trading_day);
 		}
-		_state = execute_state::ES_PublishTick;
+		std::sort(_pending_tick_info.begin(), _pending_tick_info.end(), [](const auto& lh, const auto& rh)->bool {
+
+			if (lh.time < rh.time)
+			{
+				return true;
+			}
+			if (lh.time > rh.time)
+			{
+				return false;
+			}
+			return lh.id < rh.id;
+			});
 	}
 }
 
 void market_simulator::publish_tick()
 {	
+	if(_pending_tick_info.empty())
+	{
+		load_data();
+	}
 	if (_current_index >= _pending_tick_info.size())
 	{
 		return;
@@ -159,7 +209,7 @@ void market_simulator::publish_tick()
 
 	for(auto tick : current_tick)
 	{
-		PROFILE_INFO(tick->id.get_id());
+		PROFILE_INFO(tick->id.get_symbol());
 		fire_event(market_event_type::MET_TickReceived, *static_cast<const tick_info*>(tick),tick->extend);
 	}
 
@@ -175,6 +225,13 @@ void market_simulator::finish_publish()
 	_current_index = 0;
 	_pending_tick_info.clear();
 	_instrument_id_list.clear();
-	_is_finished = true;
-	_state = execute_state::ES_Idle;
+	if(_current_trading_day==*_all_trading_day.rbegin())
+	{
+		_is_finished.exchange(true);
+		_is_runing.exchange(false);
+		if(_finish_callback)
+		{
+			_finish_callback();
+		}
+	}
 }

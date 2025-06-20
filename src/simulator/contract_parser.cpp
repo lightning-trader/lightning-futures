@@ -26,23 +26,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 using namespace lt::driver;
 
-contract_parser::contract_parser()
-{
-
-}
-contract_parser::~contract_parser()
-{
-	
-}
-
-void contract_parser::init(const std::string& config_path)
+contract_parser::contract_parser(const char* config_path)
 {
 	LOG_INFO("contract_parser init");
 	_contract_info.clear();
 	rapidcsv::Document config_csv(config_path, rapidcsv::LabelParams(0, -1));
 	for (size_t i = 0; i < config_csv.GetRowCount(); i++)
 	{
-		contract_info info ;
+		contract_detail info;
 		const std::string& code_str = config_csv.GetCell<std::string>("code", i);
 		LOG_INFO("load contract code :", code_str.c_str());
 		info.code = code_t(code_str.c_str());
@@ -50,14 +41,19 @@ void contract_parser::init(const std::string& config_path)
 		info.open_charge = config_csv.GetCell<double_t>("open_charge", i);
 		info.close_today_charge = config_csv.GetCell<double_t>("close_today_charge", i);
 		info.close_yestoday_charge = config_csv.GetCell<double_t>("close_yestoday_charge", i);
-	
+
 		info.multiple = config_csv.GetCell<double_t>("multiple", i);
 		info.margin_rate = config_csv.GetCell<double_t>("margin_rate", i);
 		_contract_info[info.code] = info;
-		
+
 	}
 }
-const contract_info* contract_parser::get_contract_info(const code_t& code)const
+contract_parser::~contract_parser()
+{
+	
+}
+
+const contract_detail* contract_parser::get_contract_info(const code_t& code)const
 {
 	auto it = _contract_info.find(code);
 	if(it != _contract_info.end())

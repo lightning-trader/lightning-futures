@@ -21,14 +21,16 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define.h>
+#include <basic_define.h>
 #include <market_api.h>
 #include <event_center.hpp>
 #include <mutex>
+#include <sstream>
 #include <condition_variable>
 #include <params.hpp>
-#include <TAP_V9_20200808/TapQuoteAPI.h>
 #include <library_helper.hpp>
+#include <TAP_V9_20200808/TapQuoteAPI.h>
+#include <basic_utils.hpp>
 
 namespace lt::driver
 {
@@ -67,6 +69,66 @@ namespace lt::driver
 
 	private:
 
+		inline lt::code_t wrap_code(const TapAPIContract& contract) const
+		{
+			std::stringstream ids;
+			ids << contract.Commodity.CommodityNo << contract.ContractNo1;
+			if (contract.CallOrPutFlag1 == 'C')
+			{
+				ids << "C" << contract.StrikePrice1;
+			}
+			else if (contract.CallOrPutFlag1 == 'P')
+			{
+				ids << "P" << contract.StrikePrice1;
+			}
+			if (std::strlen(contract.ContractNo1) > 0)
+			{
+				ids << contract.Commodity.CommodityNo << contract.ContractNo2;
+				if (contract.CallOrPutFlag2 == 'C')
+				{
+					ids << "C" << contract.StrikePrice2;
+				}
+				else if (contract.CallOrPutFlag2 == 'P')
+				{
+					ids << "P" << contract.StrikePrice2;
+				}
+			}
+			return lt::make_code(contract.Commodity.ExchangeNo, ids.str());
+		}
+		inline void convert_code(TapAPIContract& contract,const code_t& code)
+		{
+			symbol_t id1 = code.extract_symbol(1);
+			strcpy(contract.Commodity.CommodityNo, id1.family.c_str());
+			snprintf(contract.ContractNo1, 11, "%d", id1.number);
+			if(id1.option_type== symbol_t::OPT_CALL)
+			{
+				contract.CallOrPutFlag1 = 'C';
+				snprintf(contract.StrikePrice1, 11, "%.0lf", id1.strike_price);
+			}else if (id1.option_type == symbol_t::OPT_PUT)
+			{
+				contract.CallOrPutFlag1 = 'P';
+				snprintf(contract.StrikePrice1, 11, "%.0lf", id1.strike_price);
+			}else
+			{
+				contract.CallOrPutFlag1 = 'N';
+			}
+			symbol_t id2 = code.extract_symbol(2);
+			snprintf(contract.ContractNo2, 11, "%d", id2.number);
+			if (id2.option_type == symbol_t::OPT_CALL)
+			{
+				contract.CallOrPutFlag2 = 'C';
+				snprintf(contract.StrikePrice2, 11, "%.0lf", id2.strike_price);
+			}
+			else if (id2.option_type == symbol_t::OPT_PUT)
+			{
+				contract.CallOrPutFlag2 = 'P';
+				snprintf(contract.StrikePrice2, 11, "%.0lf", id2.strike_price);
+			}
+			else
+			{
+				contract.CallOrPutFlag2 = 'N';
+			}
+		}
 
 	private:
 
@@ -83,11 +145,11 @@ namespace lt::driver
 		std::unique_lock<std::mutex> _process_mutex;
 		std::condition_variable _process_signal;
 
-		typedef ITapQuoteAPI* (*market_creator)(const TapAPIApplicationInfo*, TAPIINT32&);
-		market_creator					_tap_creator;
+		typedef ITapQuoteAPI* (*market_creator_function)(const TapAPIApplicationInfo*, TAPIINT32&);
+		market_creator_function			_tap_creator;
 
-		typedef void (*market_destroyer)(ITapQuoteAPI*);
-		market_destroyer				_tap_destroyer;
+		typedef void (*market_destroyer_function)(ITapQuoteAPI*);
+		market_destroyer_function		_tap_destroyer;
 
 		dll_handle						_market_handle;
 

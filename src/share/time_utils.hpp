@@ -23,7 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #pragma once
 
 #include<string>
-#include<define.h>
+#include<basic_define.h>
+
 //#include "stringbuilder.h"
 #define ONE_DAY_SECONDS 86400
 #define ONE_MINUTE_SECONDS 60
@@ -32,6 +33,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #define ONE_DAY_MILLISECONDS 86400000
 #define ONE_MINUTE_MILLISECONDS 60000
 #define ONE_SECOND_MILLISECONDS 1000
+#define ONE_WEEK_DAYS 7
+
 
 #if defined(WIN32)
 #pragma  warning(disable:4996)
@@ -99,6 +102,10 @@ namespace lt
 		tmp[p - q] = '\0';
 		time_value[i++] = atoi(tmp);
 		return time_value[0] * ONE_HOUR_SECONDS + time_value[1] * ONE_MINUTE_SECONDS + time_value[2];
+	}
+	static seqtm_t make_seqtm(uint32_t date, daytm_t daytm)
+	{
+		return static_cast<seqtm_t>(make_date(date) + daytm / ONE_SECOND_MILLISECONDS);
 	}
 
 	static time_t make_datetime(uint32_t date, const char* time)
@@ -207,7 +214,6 @@ namespace lt
 	{
 		return make_date(day) + daytm_really(dtm) / ONE_SECOND_MILLISECONDS;
 	}
-
 	static time_t get_day_begin(time_t cur)
 	{
 		if (cur < ONE_DAY_SECONDS)
@@ -216,6 +222,34 @@ namespace lt
 		if (_0 <= (cur - ONE_DAY_SECONDS))
 			_0 += ONE_DAY_SECONDS;
 		return _0;
+	}
+
+	// 计算本周一0点(ISO标准周)
+	static time_t get_week_begin(time_t cur)
+	{
+		time_t day_start = get_day_begin(cur);
+		int weekday = (day_start / ONE_DAY_SECONDS + 4) % ONE_WEEK_DAYS; // 1970-1-1是周四
+		return day_start - weekday * ONE_DAY_SECONDS;
+	}
+	// 获取当前月开始时间(1号0点)
+	static time_t get_month_begin(time_t cur) {
+		struct tm tm = *localtime(&cur);
+		tm.tm_hour = 0;
+		tm.tm_min = 0;
+		tm.tm_sec = 0;
+		tm.tm_mday = 1;
+		return mktime(&tm);
+	}
+
+	// 获取当前年开始时间(1月1日0点)
+	static time_t get_year_begin(time_t cur) {
+		struct tm tm = *localtime(&cur);
+		tm.tm_hour = 0;
+		tm.tm_min = 0;
+		tm.tm_sec = 0;
+		tm.tm_mon = 0;
+		tm.tm_mday = 1;
+		return mktime(&tm);
 	}
 
 	static daytm_t get_day_time(time_t cur)
@@ -263,5 +297,76 @@ namespace lt
 			}
 		}
 		return std::atoi(buffer);
+	}
+
+	static uint32_t get_uint_day(seqtm_t seqtm)
+	{
+		return date_to_uint(static_cast<time_t>(seqtm));
+	}
+	static daytm_t get_daytm(seqtm_t seqtm)
+	{
+		return (seqtm - static_cast<seqtm_t>(get_day_begin(seqtm)))*ONE_SECOND_MILLISECONDS;
+	}
+	static time_t seqtm_to_time(seqtm_t seqtm)
+	{
+		return get_day_begin(seqtm) + daytm_really(get_daytm(seqtm));
+	}
+	static daytm_t section_daytm_snap(daytm_t tm, daytm_t delta=3000)
+	{
+		std::vector<daytm_t> base_time = {
+			18000000, //21:00:00
+			25200000,	//23:00:00
+			32400000,	//01:00:00
+			37800000,	//02:30:00
+			61200000,	//09:00:00
+			63000000,	//09:30:00
+			65700000,	//10:15:00
+			66600000,	//10:30:00
+			70200000,	//11:30:00
+			75600000,	//13:00:00
+			77400000,	//13:30:00
+			82800000,	//15:00:00
+			83700000,	//15:15:00
+		};
+		for(auto it : base_time)
+		{
+			if ((it - delta) <= tm && tm <= (it + delta))
+			{
+				return it;
+			}
+		}
+		
+		return tm;
+	}
+
+	static bool is_same_day(time_t t1, time_t t2) 
+	{
+		struct tm* tm1 = std::localtime(&t1);
+		struct tm* tm2 = std::localtime(&t2);
+		return (tm1->tm_year == tm2->tm_year) && (tm1->tm_mon == tm2->tm_mon) && (tm1->tm_mday == tm2->tm_mday);
+	}
+	static bool is_same_week(time_t t1, time_t t2)
+	{
+		struct tm tm1 = *localtime(&t1);
+		struct tm tm2 = *localtime(&t2);
+		int y1, w1, y2, w2;
+		y1 = tm1.tm_year + 1900;
+		w1 = (tm1.tm_yday + 7 - tm1.tm_wday) / 7;
+		y2 = tm2.tm_year + 1900;
+		w2 = (tm2.tm_yday + 7 - tm2.tm_wday) / 7;
+		return y1 == y2 && w1 == w2;
+	}
+	static bool is_same_month(time_t t1, time_t t2)
+	{
+		struct tm tm1 = *localtime(&t1);
+		struct tm tm2 = *localtime(&t2);
+		return tm1.tm_year == tm2.tm_year &&
+			tm1.tm_mon == tm2.tm_mon;
+	}
+	static bool is_same_year(time_t t1, time_t t2)
+	{
+		struct tm tm1 = *localtime(&t1);
+		struct tm tm2 = *localtime(&t2);
+		return tm1.tm_year == tm2.tm_year;
 	}
 }

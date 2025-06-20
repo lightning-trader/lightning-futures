@@ -63,7 +63,7 @@ void orderflow_strategy::on_bar(const lt::bar_info& bar)
 
 void orderflow_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("on_entrust :", order.estid, order.code.get_id(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LOG_INFO("on_entrust :", order.estid, order.code.get_symbol(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 
 	if (order.estid == _order_data.buy_order || order.estid == _order_data.sell_order)
 	{
@@ -80,7 +80,7 @@ void orderflow_strategy::on_entrust(const order_info& order)
 
 void orderflow_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_INFO("on_trade :", localid, code.get_id(), direction, offset, price, volume);
+	LOG_INFO("on_trade :", localid, code.get_symbol(), direction, offset, price, volume);
 	if (localid == _order_data.buy_order)
 	{
 		_order_data.buy_order = INVALID_ESTID;
@@ -93,7 +93,7 @@ void orderflow_strategy::on_trade(estid_t localid, const code_t& code, offset_ty
 
 void orderflow_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
-	LOG_INFO("on_cancel :", localid, code.get_id(), direction, offset, price, cancel_volume);
+	LOG_INFO("on_cancel :", localid, code.get_symbol(), direction, offset, price, cancel_volume);
 
 	if (localid == _order_data.buy_order)
 	{

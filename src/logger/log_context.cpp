@@ -34,17 +34,17 @@ std::atomic < NanoLogger* > atomic_nanologger;
 
 NanoLogger nanologger(atomic_nanologger,"./log",128U);
 
-NanoLogLine* ltl_alloc_logline()
+NanoLogLine* _alloc_logline()
 {
 	return atomic_nanologger.load(std::memory_order_acquire)->alloc();
 }
 
-void ltl_recycle_logline(NanoLogLine* line)
+void _recycle_logline(NanoLogLine* line)
 {
 	atomic_nanologger.load(std::memory_order_acquire)->recycle(line);
 }
 
-void ltl_dump_logline(NanoLogLine* line)
+void _dump_logline(NanoLogLine* line)
 {
 	atomic_nanologger.load(std::memory_order_acquire)->dump(line);
 }

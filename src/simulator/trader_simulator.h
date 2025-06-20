@@ -21,7 +21,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define.h>
+#include <basic_define.h>
 #include <trader_api.h>
 #include <params.hpp>
 #include "contract_parser.h"
@@ -188,7 +188,11 @@ namespace lt::driver
 
 		virtual bool cancel_order(estid_t estid) override;
 
-		virtual std::shared_ptr<trader_data> get_trader_data() override;
+		virtual std::vector<order_info> get_all_orders() override;
+
+		virtual std::vector<position_seed> get_all_positions() override;
+
+		virtual std::vector<instrument_info> get_all_instruments() override;
 
 	private:
 

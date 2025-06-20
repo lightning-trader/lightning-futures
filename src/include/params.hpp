@@ -21,7 +21,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define.h>
+#include <basic_define.h>
 #include <string_helper.hpp>
 #include <stdexcept>
 #include <regex>
@@ -55,7 +55,10 @@ namespace lt
 				_params[param[0]] = param[1];
 			}
 		}
-
+		bool has(const char* key)const
+		{
+			return _params.end() != _params.find(key);
+		}
 		template <typename T>
 		T get(const char key[]) const
 		{

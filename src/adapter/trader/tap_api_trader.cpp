@@ -40,6 +40,9 @@ tap_api_trader::tap_api_trader(std::unordered_map<std::string, std::string>& id_
 	, _is_connected(false)
 	, _is_sync_wait(false)
 	, _is_in_query(false)
+	, _trader_handle(NULL)
+	, _tap_creator(NULL)
+	, _tap_destroyer(NULL)
 {
 	try
 	{
@@ -57,8 +60,8 @@ tap_api_trader::tap_api_trader(std::unordered_map<std::string, std::string>& id_
 	_trader_handle = library_helper::load_library("TapTradeAPI");
 	if (_trader_handle)
 	{
-		_tap_creator = (trader_creator)library_helper::get_symbol(_trader_handle, "CreateTapTradeAPI");
-		_tap_destroyer = (trader_destroyer)library_helper::get_symbol(_trader_handle, "FreeTapTradeAPI");
+		_tap_creator = (trader_creator_function)library_helper::get_symbol(_trader_handle, "CreateTapTradeAPI");
+		_tap_destroyer = (trader_destroyer_function)library_helper::get_symbol(_trader_handle, "FreeTapTradeAPI");
 	}
 	else
 	{
@@ -66,7 +69,6 @@ tap_api_trader::tap_api_trader(std::unordered_map<std::string, std::string>& id_
 	}
 
 	LOG_INFO("tap market init");
-	_trader_handle = library_helper::load_library("thosttraderapi");
 	
 }
 
@@ -218,6 +220,11 @@ bool tap_api_trader::query_orders(bool is_sync)
 	return true;
 }
 
+bool tap_api_trader::query_instruments(bool is_sync)
+{
+	return false ;
+}
+
 void tap_api_trader::OnConnect()noexcept
 {
 	_is_connected = true ;
@@ -274,7 +281,7 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)noexcept
 			return;
 		}
 		
-		code_t code(info->CommodityNo, info->ContractNo, info->ExchangeNo);
+		code_t code = wrap_code(*info);
 		auto direction = wrap_direction_offset(info->OrderSide, info->PositionEffect);
 		auto offset = wrap_offset_type(code,info->PositionEffect);
 		if (info->OrderState == TAPI_ORDER_STATE_FINISHED || info->OrderState == TAPI_ORDER_STATE_CANCELED || info->OrderState == TAPI_ORDER_STATE_LEFTDELETED)
@@ -292,12 +299,12 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)noexcept
 				}
 				if (info->OrderState == TAPI_ORDER_STATE_CANCELED || info->OrderState == TAPI_ORDER_STATE_LEFTDELETED)
 				{
-					LOG_INFO("OnRtnOrder fire_event ET_OrderCancel", estid, code.get_id(), direction, offset);
+					LOG_INFO("OnRtnOrder fire_event ET_OrderCancel", estid, code.get_symbol(), direction, offset);
 					this->fire_event(trader_event_type::TET_OrderCancel, estid, code, offset, direction, info->OrderPrice, order.last_volume, info->OrderQty);
 				}
 				if (info->OrderState == TAPI_ORDER_STATE_FINISHED)
 				{
-					LOG_INFO("OnRtnOrder fire_event ET_OrderTrade", estid, code.get_id(), direction, offset);
+					LOG_INFO("OnRtnOrder fire_event ET_OrderTrade", estid, code.get_symbol(), direction, offset);
 					this->fire_event(trader_event_type::TET_OrderTrade, estid, code, offset, direction, info->OrderPrice, info->OrderQty);
 				}
 				_order_info.erase(it);
@@ -398,7 +405,7 @@ void tap_api_trader::OnRspQryOrder(TAPIUINT32 sessionID, TAPIINT32 errorCode, TA
 			_order_index[estid] = index;
 
 			order_info order;
-			order.code = code_t(info->CommodityNo,info->ContractNo, info->ExchangeNo);
+			order.code = wrap_code(*info);
 			order.create_time = make_daytm(info->OrderInsertTime+6);
 			order.estid = estid;
 			order.direction = wrap_direction_offset(info->OrderSide, info->PositionEffect);
@@ -426,7 +433,7 @@ void tap_api_trader::OnRspQryPosition(TAPIUINT32 sessionID, TAPIINT32 errorCode,
 	}
 	if(info)
 	{
-		code_t code = code_t(info->CommodityNo, info->ContractNo, info->ExchangeNo);
+		code_t code = wrap_code(*info);
 		position_seed& pos = _position_info[code];
 		pos.id = code;
 		if(info->IsHistory == APIYNFLAG_YES&&code.is_distinct())
@@ -468,6 +475,11 @@ void tap_api_trader::OnRspQryPosition(TAPIUINT32 sessionID, TAPIINT32 errorCode,
 	}
 }
 
+void tap_api_trader::OnRtnExchangeStateInfo(const TapAPIExchangeStateInfoNotice* info) noexcept 
+{
+
+};
+
 bool tap_api_trader::is_usable()const
 {
 	if (_td_api == nullptr)
@@ -489,22 +501,16 @@ estid_t tap_api_trader::place_order(offset_type offset, direction_type direction
 		LOG_ERROR("tap trader api nullptr");
 		return INVALID_ESTID;
 	}
-	PROFILE_DEBUG(code.get_id());
-	LOG_INFO("ctp_api_trader place_order %s %d", code.get_id(), volume);
+	PROFILE_DEBUG(code.get_symbol());
+	LOG_INFO("ctp_api_trader place_order %s %d", code.get_symbol(), volume);
 
 	TapAPINewOrder stNewOrder;
 	memset(&stNewOrder, 0, sizeof(stNewOrder));
 	auto extid = generate_estid();
 	strcpy(stNewOrder.AccountNo, _userid.c_str());
-	strcpy(stNewOrder.ExchangeNo, code.get_excg());
 	stNewOrder.CommodityType = TAPI_COMMODITY_TYPE_FUTURES;
-	strcpy(stNewOrder.CommodityNo, code.get_cmdtid());
-	snprintf(stNewOrder.ContractNo, 11, "%d", code.get_cmdtno());
-	strcpy(stNewOrder.StrikePrice, "");
-	stNewOrder.CallOrPutFlag = TAPI_CALLPUT_FLAG_NONE;
-	strcpy(stNewOrder.ContractNo2, "");
-	strcpy(stNewOrder.StrikePrice2, "");
-	stNewOrder.CallOrPutFlag2 = TAPI_CALLPUT_FLAG_NONE;
+	convert_code(stNewOrder, code);
+	
 	if(price > .0)
 	{
 		stNewOrder.OrderType = TAPI_ORDER_TYPE_LIMIT;
@@ -552,8 +558,8 @@ estid_t tap_api_trader::place_order(offset_type offset, direction_type direction
 		return INVALID_ESTID;
 	}
 	
-	LOG_INFO("ctp_api_trader place_order end", code.get_id(), extid);
-	PROFILE_INFO(code.get_id());
+	LOG_INFO("ctp_api_trader place_order end", code.get_symbol(), extid);
+	PROFILE_INFO(code.get_symbol());
 	return extid;
 }
 
@@ -595,27 +601,65 @@ uint32_t tap_api_trader::get_trading_day()const
 	return 0X0U;
 }
 
-std::shared_ptr<trader_data> tap_api_trader::get_trader_data()
+std::vector<order_info> tap_api_trader::get_all_orders()
 {
-	auto result = std::make_shared<trader_data>();
-	if (!query_positions(true))
-	{
-		LOG_ERROR("query_positions error");
-		return result;
-	}
+	std::vector<order_info> result;
 	if (!query_orders(true))
 	{
 		LOG_ERROR("query_orders error");
 		return result;
 	}
-	
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 	for (auto it : _order_info)
 	{
-		result->orders.emplace_back(it.second);
-	}
-	for (auto it : _position_info)
-	{
-		result->positions.emplace_back(it.second);
+		result.emplace_back(it.second);
 	}
 	return result;
+}
+
+std::vector<position_seed> tap_api_trader::get_all_positions()
+{
+	std::vector<position_seed> result;
+	if (!query_positions(true))
+	{
+		LOG_ERROR("query_positions error");
+		return result;
+	}
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	for (auto it : _position_info)
+	{
+		result.emplace_back(it.second);
+	}
+	return result;
+}
+
+std::vector<instrument_info> tap_api_trader::get_all_instruments()
+{
+	std::vector<instrument_info> result;
+	/*
+	if (!query_instruments(true))
+	{
+		LOG_ERROR("query_positions error");
+		return result;
+	}
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	for (auto it : _instrument_info)
+	{
+		result.emplace_back(it.second);
+	}
+*/
+	return result;
+}
+
+daytm_t tap_api_trader::get_exchange_time(const char* exchange) const
+{
+	//找不到返回本地时间
+	return make_daytm(time(0), 0U);
+}
+
+std::pair<bool, daytm_t> tap_api_trader::get_product_state(const code_t& product_code) const
+{
+	return std::make_pair(false,0U);
 }

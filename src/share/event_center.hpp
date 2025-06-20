@@ -24,6 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <any>
 #include <vector>
 #include <map>
+#include <functional>
 #include "ringbuffer.hpp"
 
 namespace lt

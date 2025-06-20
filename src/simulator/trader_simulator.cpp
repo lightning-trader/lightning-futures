@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "trader_simulator.h"
 #include <event_center.hpp>
 #include "contract_parser.h"
-#include "./tick_loader/csv_tick_loader.h"
 #include <log_define.hpp>
 
 using namespace lt;
@@ -32,14 +31,13 @@ using namespace lt::driver;
 trader_simulator::trader_simulator(const params& config) :
 	_trading_day(0),
 	_order_ref(0),
-	_interval(1),
-	_current_time(0)
+	_interval(config.get<uint32_t>("interval")),
+	_current_time(0),
+	_contract_parser(config.get<std::string>("contract_config").c_str())
 {
 	try
 	{
 		_account_info.money = config.get<double_t>("initial_capital");
-		auto contract_file = config.get<std::string>("contract_config");
-		_contract_parser.init(contract_file);
 		_interval = config.get<uint32_t>("interval");
 	}
 	catch (...)
@@ -135,7 +133,7 @@ void trader_simulator::update()
 		auto contract_info = _contract_parser.get_contract_info(it.second.code);
 		if (contract_info == nullptr)
 		{
-			LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", it.second.code.get_id());
+			LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", it.second.code.get_symbol());
 			return;
 		}
 		frozen_monery += (it.second.last_volume * it.second.price * contract_info->multiple * contract_info->margin_rate);
@@ -145,7 +143,7 @@ void trader_simulator::update()
 		auto contract_info = _contract_parser.get_contract_info(it.first);
 		if (contract_info == nullptr)
 		{
-			LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", it.first.get_id());
+			LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", it.first.get_symbol());
 			return;
 		}
 		frozen_monery += it.second.today_long.price * it.second.today_long.postion * contract_info->multiple* contract_info->margin_rate ;
@@ -173,7 +171,7 @@ estid_t trader_simulator::place_order(offset_type offset, direction_type directi
 	//std::cout << "place_order : " << pt2 - pt << estid.to_str() << std::endl;
 	
 	//spin_lock lock(_mutex);
-	PROFILE_INFO(code.get_id());
+	PROFILE_INFO(code.get_symbol());
 	order_info order;
 	order.estid = make_estid();
 	LOG_DEBUG("tick_simulator::place_order", order.estid);
@@ -196,7 +194,7 @@ estid_t trader_simulator::place_order(offset_type offset, direction_type directi
 		order.price = price;
 	}
 	_order_info[order.estid] = order;
-	LOG_TRACE("order_container add_order", order.code.get_id(), order.estid, _order_info.size());
+	LOG_TRACE("order_container add_order", order.code.get_symbol(), order.estid, _order_info.size());
 	_order_match[order.code].emplace_back(order_match(order.estid, flag));
 	return order.estid;
 }
@@ -233,27 +231,48 @@ bool trader_simulator::cancel_order(estid_t estid)
 	return true;
 }
 
-
-std::shared_ptr<trader_data> trader_simulator::get_trader_data()
+std::vector<order_info> trader_simulator::get_all_orders()
 {
-	auto result = std::make_shared<trader_data>();
-	
+	std::vector<order_info> result;
+
 	for (const auto& it : _order_info)
 	{
-		result->orders.emplace_back(it.second);
+		result.emplace_back(it.second);
 	}
-	
-	for(const auto& it : _position_info)
+	return result;
+}
+
+std::vector<position_seed> trader_simulator::get_all_positions()
+{
+	std::vector<position_seed> result;
+	for (const auto& it : _position_info)
 	{
-		position_seed pos ;
+		position_seed pos;
 		pos.id = it.first;
 		pos.today_long = it.second.today_long.postion;
 		pos.today_short = it.second.today_short.postion;
 		pos.history_long = it.second.yestoday_long.postion;
 		pos.history_short = it.second.yestoday_short.postion;
-		result->positions.emplace_back(pos);
+		result.emplace_back(pos);
 	}
 	return result;
+}
+
+std::vector<instrument_info> trader_simulator::get_all_instruments()
+{
+	std::vector<instrument_info> result;
+	const auto & all_contract = _contract_parser.get_all_contract();
+	for(const auto & it : all_contract)
+	{
+		//contract_info info;
+		//info.code = it.second.code;
+		//info.multiple = it.second.multiple;
+		//info.price_step = it.second.price_step;
+		result.emplace_back(it.second);
+	}
+	return result;
+
+
 }
 
 
@@ -571,7 +590,7 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 	auto contract_info = _contract_parser.get_contract_info(order.code);
 	if(contract_info == nullptr)
 	{
-		LOG_ERROR("tick_simulator order_deal cant find the contract_info for", order.code.get_id());
+		LOG_ERROR("tick_simulator order_deal cant find the contract_info for", order.code.get_symbol());
 		return;
 	}
 
@@ -725,7 +744,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)
 	{
-		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", code.get_id());
+		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for", code.get_symbol());
 		return error_code::EC_Failure;
 	}
 	if (offset == offset_type::OT_OPEN)
@@ -742,7 +761,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 	auto it = _position_info.find(code);
 	if (it == _position_info.end())
 	{
-		LOG_ERROR("tick_simulator frozen_deduction cant find the position_info for ", code.get_id());
+		LOG_ERROR("tick_simulator frozen_deduction cant find the position_info for ", code.get_symbol());
 		return error_code::EC_PositionNotEnough;
 	}
 	if (offset == offset_type::OT_CLSTD)
@@ -750,7 +769,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 		
 		if (direction == direction_type::DT_LONG)
 		{
-			LOG_TRACE("frozen_deduction long today", code.get_id(), estid, it->second.today_long.usable());
+			LOG_TRACE("frozen_deduction long today", code.get_symbol(), estid, it->second.today_long.usable());
 			if (it->second.today_long.usable() < volume)
 			{
 				return error_code::EC_PositionNotEnough;
@@ -759,7 +778,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 		}
 		else if (direction == direction_type::DT_SHORT)
 		{
-			LOG_TRACE("frozen_deduction short today", code.get_id(), estid, it->second.today_short.usable());
+			LOG_TRACE("frozen_deduction short today", code.get_symbol(), estid, it->second.today_short.usable());
 			if (it->second.today_short.usable() < volume)
 			{
 				return error_code::EC_PositionNotEnough;
@@ -771,7 +790,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 	{
 		if (direction == direction_type::DT_LONG)
 		{
-			LOG_TRACE("frozen_deduction long yestoday", code.get_id(), estid, it->second.yestoday_long.usable());
+			LOG_TRACE("frozen_deduction long yestoday", code.get_symbol(), estid, it->second.yestoday_long.usable());
 			if (it->second.yestoday_long.usable() < volume)
 			{
 				return error_code::EC_PositionNotEnough;
@@ -781,7 +800,7 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 		}
 		else if (direction == direction_type::DT_SHORT)
 		{
-			LOG_TRACE("frozen_deduction short yestoday", code.get_id(), estid, it->second.yestoday_short.usable());
+			LOG_TRACE("frozen_deduction short yestoday", code.get_symbol(), estid, it->second.yestoday_short.usable());
 			if (it->second.yestoday_short.usable() < volume)
 			{
 				return error_code::EC_PositionNotEnough;
@@ -796,7 +815,7 @@ bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset
 	auto contract_info = _contract_parser.get_contract_info(code);
 	if (contract_info == nullptr)
 	{
-		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for ", code.get_id());
+		LOG_ERROR("tick_simulator frozen_deduction cant find the contract_info for ", code.get_symbol());
 		return false;
 	}
 
@@ -814,7 +833,7 @@ bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset
 	auto it = _position_info.find(code);
 	if (it == _position_info.end())
 	{
-		LOG_ERROR("tick_simulator frozen_deduction cant find the position_info for ", code.get_id());
+		LOG_ERROR("tick_simulator frozen_deduction cant find the position_info for ", code.get_symbol());
 		return false;
 	}
 	if (offset == offset_type::OT_CLSTD)

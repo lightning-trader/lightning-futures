@@ -22,15 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 
 #pragma once
-#include "strategy.h"
-#include "receiver.h"
-#include "engine.h"
 #include <random>
+#include "receiver.h"
+#include "strategy.hpp"
 #include <time_utils.hpp>
 
 
 
-class arbitrage_strategy : public lt::hft::strategy,public lt::hft::tick_receiver
+class arbitrage_strategy : public lt::hft::strategy,public lt::tick_receiver
 {
 	enum class arbitrage_state
 	{
@@ -72,8 +71,8 @@ class arbitrage_strategy : public lt::hft::strategy,public lt::hft::tick_receive
 	};
 public:
 
-	arbitrage_strategy(lt::hft::straid_t id, lt::hft::engine* engine, const lt::code_t& code1, const lt::code_t& code2, double_t offset, uint32_t open_once) :
-		lt::hft::strategy(id, engine, true ,true),
+	arbitrage_strategy(lt::hft::straid_t id, lt::hft::syringe* syringe, const lt::code_t& code1, const lt::code_t& code2, double_t offset, uint32_t open_once) :
+		lt::hft::strategy(id, syringe),
 		_code1(code1),
 		_code2(code2),
 		_price1(.0),
@@ -96,7 +95,7 @@ public:
 	 *	初始化事件
 	 *	生命周期中只会回调一次
 	 */
-	virtual void on_init(lt::hft::subscriber& suber) override;
+	virtual void on_init(lt::subscriber& suber) override;
 
 	/*
 	 *	tick推送
@@ -135,7 +134,7 @@ public:
 	/*
 	 *	销毁
 	 */
-	virtual void on_destroy(lt::hft::unsubscriber& unsuber)override;
+	virtual void on_destroy(lt::unsubscriber& unsuber)override;
 
 	/*
 	 *	每帧调用

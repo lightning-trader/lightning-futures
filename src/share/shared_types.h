@@ -21,7 +21,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define_types.hpp>
+#include <basic_types.hpp>
 #include "event_center.hpp"
 
 namespace lt
@@ -40,16 +40,6 @@ namespace lt
 		position_seed() :today_long(0U), today_short(0U), history_long(0U), history_short(0) {}
 	};
 
-	struct trader_data
-	{
-
-		std::vector<order_info> orders;
-
-		std::vector<position_seed> positions;
-
-	};
-
-
 	typedef std::map<code_t, position_info> position_map;
 	//
 	typedef std::map<estid_t, order_info> entrust_map;
@@ -65,8 +55,5 @@ namespace lt
 			frozen_monery(.0F)
 
 		{}
-	};
-	struct tick_detail : public tick_info {
-		std::tuple<double_t, double_t, double_t, double_t, double_t, double_t, double_t> extend;
 	};
 }

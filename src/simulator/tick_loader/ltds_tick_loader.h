@@ -21,38 +21,34 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-
 #include <tick_loader.h>
+#include <basic_define.h>
 #include <library_helper.hpp>
-#include <data_provider.h>
+#include <data_wapper.hpp>
 
 namespace lt::driver
 {
-	class ltds_tick_loader : public tick_loader
+	class ldts_tick_loader : public tick_loader
 	{
 	private:
 
-		typedef const void* (*ltd_initialize)(const char*, size_t);
 
-		typedef size_t(*ltd_get_history_tick)(const void*, ltd_tick_info*, size_t, const char*, uint32_t);
-
-		typedef void (*ltd_destroy)(const void*);
 
 	public:
 		
-		ltds_tick_loader(const std::string& token, const std::string& cache_path, size_t lru_size);
+		ldts_tick_loader(const std::string& channel, const std::string& cache_path, size_t detail_cache_size = 128U, size_t bar_cache_size = 819200U);
 
-		virtual ~ltds_tick_loader();
+		virtual ~ldts_tick_loader();
 
 	public:
+
+		virtual void load_trading_day(std::vector<uint32_t>& result, uint32_t begin, uint32_t end) override;
 
 		virtual void load_tick(std::vector<tick_detail>& result, const code_t& code, uint32_t trade_day) override;
 
 	private:
 
-		dll_handle _handle;
-
-		const void* _provider;
+		data_wapper _ltd;
 
 	};
 }

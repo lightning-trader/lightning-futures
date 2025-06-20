@@ -37,6 +37,9 @@ tap_api_market::tap_api_market(std::unordered_map<std::string, std::string>& id_
 	,_process_mutex(_mutex)
 	, _is_inited(false)
 	, _trading_day(0)
+	, _market_handle(NULL)
+	, _tap_creator(NULL)
+	, _tap_destroyer(NULL)
 {
 	try
 	{
@@ -53,8 +56,8 @@ tap_api_market::tap_api_market(std::unordered_map<std::string, std::string>& id_
 	_market_handle = library_helper::load_library("TapQuoteAPI");
 	if (_market_handle)
 	{
-		_tap_creator = (market_creator)library_helper::get_symbol(_market_handle, "CreateTapQuoteAPI");
-		_tap_destroyer = (market_destroyer)library_helper::get_symbol(_market_handle, "FreeTapQuoteAPI");
+		_tap_creator = (market_creator_function)library_helper::get_symbol(_market_handle, "CreateTapQuoteAPI");
+		_tap_destroyer = (market_destroyer_function)library_helper::get_symbol(_market_handle, "FreeTapQuoteAPI");
 	}
 	else
 	{
@@ -160,12 +163,14 @@ void tap_api_market::OnRtnQuote(const TapAPIQuoteWhole* info)noexcept
 	}
 	
 	PROFILE_INFO(info->Contract.Commodity.CommodityNo);
+
 	auto tick_data = tick_info(
-		code_t(info->Contract.Commodity.CommodityNo, info->Contract.ContractNo1, info->Contract.Commodity.ExchangeNo),
+		wrap_code(info->Contract),
 		make_daytm(info->DateTimeStamp + 11, true),
 		info->QLastPrice,
 		info->QTotalQty,
 		static_cast<double_t>(info->QPositionQty),
+		info->QAveragePrice,
 		_trading_day,//
 		{
 			std::make_pair(info->QBidPrice[0], static_cast<uint32_t>(info->QBidQty[0])),
@@ -191,7 +196,7 @@ void tap_api_market::OnRtnQuote(const TapAPIQuoteWhole* info)noexcept
 		info->QLimitDownPrice,
 		info->QPreSettlePrice
 	);
-	PROFILE_DEBUG(tick.id.get_id());
+	PROFILE_DEBUG(tick_data.id.get_symbol());
 	this->fire_event(market_event_type::MET_TickReceived, tick_data);
 }
 
@@ -213,13 +218,11 @@ void tap_api_market::subscribe(const std::set<code_t>& code_list)
 		TapAPIContract stContract;
 		memset(&stContract, 0, sizeof(stContract));
 		
-		strcpy(stContract.Commodity.ExchangeNo, it.get_excg());
+		strcpy(stContract.Commodity.ExchangeNo, it.get_exchange());
 		stContract.Commodity.CommodityType = TAPI_COMMODITY_TYPE_FUTURES;
-		strcpy(stContract.Commodity.CommodityNo, it.get_cmdtid());
-		snprintf(stContract.ContractNo1, 11, "%d", it.get_cmdtno());
-		
-		stContract.CallOrPutFlag1 = TAPI_CALLPUT_FLAG_NONE;
-		stContract.CallOrPutFlag2 = TAPI_CALLPUT_FLAG_NONE;
+
+		convert_code(stContract,it);
+
 		auto iErr = _md_api->SubscribeQuote(&_reqid, &stContract);
 		if (TAPIERROR_SUCCEED != iErr) {
 			LOG_ERROR( "SubscribeQuote Error:" , iErr);
@@ -234,10 +237,10 @@ void tap_api_market::unsubscribe(const std::set<code_t>& code_list)
 	{
 		TapAPIContract stContract;
 		memset(&stContract, 0, sizeof(stContract));
-		strcpy(stContract.Commodity.ExchangeNo, it.get_excg());
+		strcpy(stContract.Commodity.ExchangeNo, it.get_exchange());
 		stContract.Commodity.CommodityType = TAPI_COMMODITY_TYPE_FUTURES;
 		//strcpy(stContract.Commodity.CommodityNo, DEFAULT_COMMODITY_NO);
-		strcpy(stContract.ContractNo1, it.get_id());
+		strcpy(stContract.ContractNo1, it.get_symbol());
 		stContract.CallOrPutFlag1 = TAPI_CALLPUT_FLAG_NONE;
 		stContract.CallOrPutFlag2 = TAPI_CALLPUT_FLAG_NONE;
 		auto iErr = _md_api->UnSubscribeQuote(&_reqid, &stContract);

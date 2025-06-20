@@ -34,8 +34,11 @@ ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_
 	:asyn_actual_market(id_excg_map)
 	,_md_api(nullptr)
 	,_reqid(0)
+	,_is_runing(false)
 	,_process_mutex(_mutex)
 	, _is_inited(false)
+	, _ctp_creator(NULL)
+	, _market_handle(NULL)
 {
 	try
 	{
@@ -46,7 +49,7 @@ ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_
 	}
 	catch (...)
 	{
-		LOG_ERROR("ctp_api_market config error ");
+		LOG_ERROR("market config error ");
 	}
 	_market_handle = library_helper::load_library("thostmduserapi_se");
 	if (_market_handle)
@@ -60,7 +63,7 @@ ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_
 #else
 		const char* creator_name = "_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbb";
 #endif
-		_ctp_creator = (market_creator)library_helper::get_symbol(_market_handle, creator_name);
+		_ctp_creator = (market_creator_function)library_helper::get_symbol(_market_handle, creator_name);
 	}
 	else
 	{
@@ -77,8 +80,14 @@ ctp_api_market::~ctp_api_market()
 
 bool ctp_api_market::login()
 {
+	if(_is_inited)
+	{
+		LOG_ERROR("ctp_api_market already login");
+		return false;
+	}
+	_is_runing = true;
 	char path_buff[64] = {0};
-	sprintf(path_buff, "md_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
+	sprintf(path_buff, "data/md_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
 	if (!std::filesystem::exists(path_buff))
 	{
 		std::filesystem::create_directories(path_buff);
@@ -88,14 +97,18 @@ bool ctp_api_market::login()
 	_md_api->RegisterFront((char*)_front_addr.c_str());
 	_md_api->Init();
 	_process_signal.wait(_process_mutex);
-	_is_inited = true ;
-	return true ;
+	
+	return _is_inited;
 }
 
 void ctp_api_market::logout()
 {
+	_is_runing = false;
+	do_logout();
 	_reqid = 0;
 	_id_excg_map.clear();
+	_tick_time_map.clear();
+
 	if (_md_api)
 	{
 		_md_api->RegisterSpi(nullptr);
@@ -103,7 +116,7 @@ void ctp_api_market::logout()
 		_md_api->Release();
 		_md_api = nullptr;
 	}
-	_is_inited = false;
+	_is_inited.exchange(false);
 }
 
 void ctp_api_market::OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )noexcept
@@ -117,7 +130,14 @@ void ctp_api_market::OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestI
 void ctp_api_market::OnFrontConnected()noexcept
 {
 	LOG_INFO("Connected : %s", _front_addr.c_str());
-	do_userlogin();
+	if (_is_runing)
+	{
+		if(!do_login())
+		{
+			_process_signal.notify_all();
+		}
+	}
+	
 }
 
 void ctp_api_market::OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )noexcept
@@ -129,12 +149,9 @@ void ctp_api_market::OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin,
 	if(bIsLast)
 	{
 		LOG_INFO("UserLogin : Market data server logined, {%s} {%s}", pRspUserLogin->TradingDay, pRspUserLogin->UserID);
-		//订阅行情数据
-		do_subscribe();
-		if(!_is_inited)
-		{
-			_process_signal.notify_all();
-		}
+		_is_inited.exchange(true);
+		_process_signal.notify_all();
+
 	}
 }
 
@@ -167,37 +184,50 @@ void ctp_api_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDept
 	{
 		excg_id = excg_it->second.c_str();
 	}
+	code_t code(pDepthMarketData->InstrumentID, excg_id);
+	daytm_t time = make_daytm(pDepthMarketData->UpdateTime, static_cast<uint32_t>(pDepthMarketData->UpdateMillisec));
+	auto tm_it = _tick_time_map.find(code);
+	if(tm_it == _tick_time_map.end())
+	{
+		tm_it = _tick_time_map.insert(std::make_pair(code,time)).first;
+	}
+	else
+	{
+		tm_it->second = std::max<uint32_t>(time, tm_it->second+250);
+	}
 	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
 	tick_info tick_data(
-		code_t(pDepthMarketData->InstrumentID, excg_id),
-		make_daytm(pDepthMarketData->UpdateTime, static_cast<uint32_t>(pDepthMarketData->UpdateMillisec)),
-		pDepthMarketData->LastPrice,
+		code,
+		tm_it->second,
+		price_adaptation(pDepthMarketData->LastPrice),
 		pDepthMarketData->Volume,
 		pDepthMarketData->OpenInterest,
+		pDepthMarketData->AveragePrice,
 		std::atoi(pDepthMarketData->TradingDay),
 		{
-			std::make_pair(pDepthMarketData->BidPrice1, pDepthMarketData->BidVolume1),
-			std::make_pair(pDepthMarketData->BidPrice2, pDepthMarketData->BidVolume2),
-			std::make_pair(pDepthMarketData->BidPrice3, pDepthMarketData->BidVolume3),
-			std::make_pair(pDepthMarketData->BidPrice4, pDepthMarketData->BidVolume4),
-			std::make_pair(pDepthMarketData->BidPrice5, pDepthMarketData->BidVolume5)
+			std::make_pair(price_adaptation(pDepthMarketData->BidPrice1), pDepthMarketData->BidVolume1),
+			std::make_pair(price_adaptation(pDepthMarketData->BidPrice2), pDepthMarketData->BidVolume2),
+			std::make_pair(price_adaptation(pDepthMarketData->BidPrice3), pDepthMarketData->BidVolume3),
+			std::make_pair(price_adaptation(pDepthMarketData->BidPrice4), pDepthMarketData->BidVolume4),
+			std::make_pair(price_adaptation(pDepthMarketData->BidPrice5), pDepthMarketData->BidVolume5)
 		},
 		{
-			std::make_pair(pDepthMarketData->AskPrice1, pDepthMarketData->AskVolume1),
-			std::make_pair(pDepthMarketData->AskPrice2, pDepthMarketData->AskVolume2),
-			std::make_pair(pDepthMarketData->AskPrice3, pDepthMarketData->AskVolume3),
-			std::make_pair(pDepthMarketData->AskPrice4, pDepthMarketData->AskVolume4),
-			std::make_pair(pDepthMarketData->AskPrice5, pDepthMarketData->AskVolume5)
+			std::make_pair(price_adaptation(pDepthMarketData->AskPrice1), pDepthMarketData->AskVolume1),
+			std::make_pair(price_adaptation(pDepthMarketData->AskPrice2), pDepthMarketData->AskVolume2),
+			std::make_pair(price_adaptation(pDepthMarketData->AskPrice3), pDepthMarketData->AskVolume3),
+			std::make_pair(price_adaptation(pDepthMarketData->AskPrice4), pDepthMarketData->AskVolume4),
+			std::make_pair(price_adaptation(pDepthMarketData->AskPrice5), pDepthMarketData->AskVolume5)
 		}
 	);
+	double_t standard_price = price_adaptation(pDepthMarketData->PreSettlementPrice);
 	auto extend_data = std::make_tuple(
-		pDepthMarketData->OpenPrice,
-		pDepthMarketData->ClosePrice,
-		pDepthMarketData->HighestPrice,
-		pDepthMarketData->LowestPrice,
-		pDepthMarketData->UpperLimitPrice,
-		pDepthMarketData->LowerLimitPrice,
-		pDepthMarketData->PreSettlementPrice
+		price_adaptation(pDepthMarketData->OpenPrice, standard_price),
+		price_adaptation(pDepthMarketData->ClosePrice, standard_price),
+		price_adaptation(pDepthMarketData->HighestPrice, standard_price),
+		price_adaptation(pDepthMarketData->LowestPrice, standard_price),
+		price_adaptation(pDepthMarketData->UpperLimitPrice),
+		price_adaptation(pDepthMarketData->LowerLimitPrice),
+		standard_price
 	);
 
 	PROFILE_DEBUG(pDepthMarketData->InstrumentID);
@@ -221,11 +251,12 @@ void ctp_api_market::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSp
 	}
 }
 
-void ctp_api_market::do_userlogin()
+bool ctp_api_market::do_login()
 {
 	if(_md_api == nullptr)
 	{
-		return;
+		LOG_ERROR("do_login : _md_api nullptr");
+		return false;
 	}
 
 	CThostFtdcReqUserLoginField req;
@@ -236,17 +267,40 @@ void ctp_api_market::do_userlogin()
 	int iResult = _md_api->ReqUserLogin(&req, ++_reqid);
 	if(iResult != 0)
 	{
-		LOG_ERROR("do_userlogin : % d",iResult);
+		LOG_ERROR("do_login : % d",iResult);
+		return false;
 	}
+	return true;
 }
 
-void ctp_api_market::do_subscribe()
+bool ctp_api_market::do_logout()
+{
+	if (_md_api == nullptr)
+	{
+		return false;
+	}
+
+	CThostFtdcUserLogoutField req;
+	memset(&req, 0, sizeof(req));
+	strcpy(req.BrokerID, _broker_id.c_str());
+	strcpy(req.UserID, _userid.c_str());
+	int iResult = _md_api->ReqUserLogout(&req, ++_reqid);
+	if (iResult != 0)
+	{
+		LOG_ERROR("ctp_api_market logout request failed:", iResult);
+		return false;
+	}
+
+	return true;
+}
+
+void ctp_api_market::do_subscribe(const std::set<code_t>& codes)
 {
 	char* id_list[500];
 	int num = 0;
-	for (auto& it : _id_excg_map)
+	for (const auto& it : codes)
 	{
-		id_list[num] = const_cast<char*>(it.first.c_str());
+		id_list[num] = const_cast<char*>(it.get_symbol());
 		num++;
 		if (num == 500)
 		{
@@ -267,7 +321,7 @@ void ctp_api_market::do_unsubscribe(const std::vector<code_t>& code_list)
 	int num = 0;
 	for (size_t i = 0; i < code_list.size(); i++)
 	{
-		id_list[num] = const_cast<char*>(code_list[i].get_id());
+		id_list[num] = const_cast<char*>(code_list[i].get_symbol());
 		num++;
 		if (num == 500)
 		{
@@ -286,9 +340,9 @@ void ctp_api_market::subscribe(const std::set<code_t>& code_list)
 {
 	for(auto& it : code_list)
 	{
-		(_id_excg_map)[it.get_id()] = it.get_excg();
+		(_id_excg_map)[it.get_symbol()] = it.get_exchange();
 	}
-	do_subscribe();
+	do_subscribe(code_list);
 }
 
 void ctp_api_market::unsubscribe(const std::set<code_t>& code_list)
@@ -296,7 +350,7 @@ void ctp_api_market::unsubscribe(const std::set<code_t>& code_list)
 	std::vector<code_t> delete_code_list ;
 	for (auto& it : code_list)
 	{
-		auto n = _id_excg_map.find(it.get_id());
+		auto n = _id_excg_map.find(it.get_symbol());
 		if(n != _id_excg_map.end())
 		{
 			delete_code_list.emplace_back(it);

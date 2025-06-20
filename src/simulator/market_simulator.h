@@ -21,7 +21,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define.h>
+#include <basic_define.h>
 #include <market_api.h>
 #include <tick_loader.h>
 #include <params.hpp>
@@ -31,24 +31,24 @@ namespace lt::driver
 	class market_simulator : public dummy_market
 	{
 
-		enum class execute_state
-		{
-			ES_Idle,
-			ES_LoadingData,
-			ES_PublishTick
-		};
 
 	private:
 
 		tick_loader* _loader;
 
 		std::set<code_t> _instrument_id_list;
-
+		
+		std::vector<uint32_t> _all_trading_day;
+		
 		uint32_t _current_trading_day;
 
 		std::vector<tick_detail> _pending_tick_info;
 
 		std::function<void(const std::vector<const tick_info*>&)> _publish_callback;
+		
+		std::function<void(uint32_t form, uint32_t to)> _crossday_callback;
+		
+		std::function<void()> _finish_callback;
 
 		daytm_t _current_time;
 
@@ -56,9 +56,9 @@ namespace lt::driver
 
 		uint32_t	_interval;			//间隔毫秒数
 
-		bool _is_finished;
+		std::atomic<bool> _is_finished;
 
-		execute_state _state;
+		std::atomic<bool> _is_runing;
 
 	public:
 
@@ -69,8 +69,21 @@ namespace lt::driver
 
 	public:
 
+		virtual void set_trading_range(uint32_t begin,uint32_t end)override;
+
+		virtual void set_publish_callback(std::function<void(const std::vector<const lt::tick_info*>&)> publish_callback)override;
+		
+		virtual void set_crossday_callback(std::function<void(uint32_t form, uint32_t to)> crossday_callback)override;
+		
+		virtual void set_finish_callback(std::function<void()> finish_callback)override;
+
 		//simulator
-		virtual void play(uint32_t trading_day, std::function<void(const std::vector<const lt::tick_info*>&)> publish_callback) override;
+		virtual bool play() override;
+
+		virtual void pause() override;
+
+		virtual void resume() override;
+
 		virtual bool is_finished() const override;
 
 	public:

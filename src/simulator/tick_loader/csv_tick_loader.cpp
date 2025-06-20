@@ -23,27 +23,48 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "csv_tick_loader.h"
 #include <fstream>
 #include <filesystem>
-#include <define_types.hpp>
+#include <basic_types.hpp>
 #include <string_helper.hpp>
 #include <time_utils.hpp>
 #include <log_define.hpp>
 
 using namespace lt::driver;
 
-csv_tick_loader::csv_tick_loader(const std::string& root_path)  :_root_path(root_path)
+csv_tick_loader::csv_tick_loader(const char* root_path, const char* trading_day_file):_root_path(root_path)
 {
+
+	std::ifstream file(trading_day_file);
+	if (!file.is_open()) {
+		LOG_ERROR("cant open file :", trading_day_file);
+		return;
+	}
+	std::string line;
+	while (std::getline(file, line))
+	{
+		if(!line.empty())
+		{
+			_trading_day.emplace_back(std::stoul(line));
+		}
+	}
+}
+
+void csv_tick_loader::load_trading_day(std::vector<uint32_t>& result, uint32_t begin, uint32_t end)
+{
+	for(auto it : _trading_day)
+	{
+		if(begin <= it && it <= end)
+		{
+			result.emplace_back(it);
+		}
+	}
 }
 
 
 void csv_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t& code, uint32_t trade_day)
 {
 	char filename[128]={0};
-	sprintf(filename, _root_path.c_str(), code.get_id(), trade_day);
-	if (!std::filesystem::exists(filename))
-	{
-		LOG_ERROR("cant find file in path:", filename);
-		return ;
-	}
+	sprintf(filename, _root_path.c_str(), code.get_symbol(), trade_day);
+
 	std::ifstream file(filename);
 	if (!file.is_open()) {
 		LOG_ERROR("cant open file :", filename);
@@ -54,7 +75,7 @@ void csv_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t&
 	while (std::getline(file, line))
 	{
 		const auto& cell = string_helper::split(line,',');
-		if(cell.size()<44 || cell[1] != code.get_id())
+		if(cell.size()<44 || cell[1] != code.get_symbol())
 		{
 			continue;
 		}
@@ -64,7 +85,7 @@ void csv_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t&
 		const std::string& time_str = cell[20];
 		uint32_t current_tick = 0;
 		time_t current_second = make_time(time_str.c_str());
-		if (std::strcmp(code.get_excg(), "ZEC") && current_second == last_second)
+		if (std::strcmp(code.get_exchange(), "ZEC") && current_second == last_second)
 		{
 			//郑商所 没有tick问题，后一个填上500和上期所一致
 			current_tick = 500;
@@ -78,6 +99,7 @@ void csv_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t&
 		tick.price = std::stod(cell[4]);
 		tick.volume = std::stoi(cell[11]);
 		tick.open_interest = std::stoi(cell[13]);
+		tick.average_price = std::stod(cell[42]);
 		tick.trading_day = std::stoi(cell[0]);
 
 		tick.bid_order[0] = std::make_pair(std::stod(cell[22]), std::stoi(cell[23]));
@@ -104,18 +126,5 @@ void csv_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t&
 
 		result.emplace_back(tick);
 	}
-
-	std::sort(result.begin(), result.end(), [](const auto& lh, const auto& rh)->bool {
-		
-		if (lh.time < rh.time)
-		{
-			return true;
-		}
-		if (lh.time > rh.time)
-		{
-			return false;
-		}
-		return lh.id < rh.id;
-		});
 	
 }

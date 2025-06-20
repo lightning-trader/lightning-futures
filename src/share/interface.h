@@ -26,6 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <params.hpp>
 #include <library_define.h>
 
+
 EXPORT_FLAG lt::actual_market* create_actual_market(const lt::params& config);
 
 EXPORT_FLAG void destory_actual_market(lt::actual_market*& api);

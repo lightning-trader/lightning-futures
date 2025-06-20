@@ -27,10 +27,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 extern "C"
 {
 
-	EXPORT_FLAG NanoLogLine* ltl_alloc_logline();
+	EXPORT_FLAG NanoLogLine* _alloc_logline();
 
-	EXPORT_FLAG void ltl_recycle_logline(NanoLogLine* line);
+	EXPORT_FLAG void _recycle_logline(NanoLogLine* line);
 
-	EXPORT_FLAG void ltl_dump_logline(NanoLogLine* line);
+	EXPORT_FLAG void _dump_logline(NanoLogLine* line);
 
 }

@@ -21,8 +21,8 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include "define.h"
-#include "define_types.hpp"
+#include "basic_define.h"
+#include "basic_types.hpp"
 #include "event_center.hpp"
 namespace lt
 {
@@ -113,7 +113,7 @@ namespace lt
 		}
 	};
 
-	class asyn_actual_market : public actual_market, public queue_event_source<market_event_type, 1024>
+	class asyn_actual_market : public actual_market, public queue_event_source<market_event_type, 32768U>
 	{
 
 	protected:
@@ -158,7 +158,19 @@ namespace lt
 
 	public:
 
-		virtual void play(uint32_t trading_day, std::function<void(const std::vector<const tick_info*>&)> publish_callback) = 0;
+		virtual void set_trading_range(uint32_t begin, uint32_t end) = 0;
+
+		virtual void set_publish_callback(std::function<void(const std::vector<const lt::tick_info*>&)> publish_callback) = 0;
+
+		virtual void set_crossday_callback(std::function<void(uint32_t form,uint32_t to)> crossday_callback) = 0;
+
+		virtual void set_finish_callback(std::function<void()> finish_callback) = 0;
+
+		virtual bool play() = 0;
+
+		virtual void pause() = 0;
+
+		virtual void resume() = 0;
 
 		virtual bool is_finished() const = 0;
 	};

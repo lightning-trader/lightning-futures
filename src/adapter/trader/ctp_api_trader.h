@@ -21,17 +21,14 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <queue>
-#include <stdint.h>
-#include <thread>
-#include <define.h>
+#include <basic_define.h>
 #include <log_define.hpp>
 #include <trader_api.h>
-#include <define_types.hpp>
+#include <basic_types.hpp>
 #include <params.hpp>
 #include <condition_variable>
-#include <CTP_V6.6.9_20220920/ThostFtdcTraderApi.h>
-#include <library_helper.hpp>
+#include <CTP_V6.7.9_20250319/ThostFtdcTraderApi.h>
+#include <thread>
 
 namespace lt::driver
 {
@@ -69,7 +66,15 @@ namespace lt::driver
 
 		virtual uint32_t get_trading_day()const override;
 
-		virtual std::shared_ptr<trader_data> get_trader_data() override;
+		virtual std::vector<order_info> get_all_orders() override;
+
+		virtual std::vector<position_seed> get_all_positions() override;
+
+		virtual std::vector<instrument_info> get_all_instruments() override;
+
+		virtual daytm_t get_exchange_time(const char* exchange) const override;
+
+		virtual std::pair<bool, daytm_t> get_product_state(const lt::code_t& product_code) const override;
 
 		//////////////////////////////////////////////////////////////////////////
 		//CTP交易接口实现
@@ -105,7 +110,8 @@ namespace lt::driver
 
 		virtual void OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus) noexcept override;
 
-
+		virtual void OnRspQryInstrument(CThostFtdcInstrumentField* pInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept override;
+	
 	private:
 
 		//认证
@@ -119,8 +125,9 @@ namespace lt::driver
 
 		bool query_orders(bool is_sync);
 
-		void submit_settlement();
+		bool query_instruments(bool is_sync);
 
+		void submit_settlement();
 
 	private:
 
@@ -228,31 +235,41 @@ namespace lt::driver
 		std::string				_appid;
 		std::string				_authcode;
 		std::string				_product_info;
+		std::string				_public_topic;
+		std::string				_private_topic;
+		
 
 
 		uint32_t				_front_id;		//前置编号
 		uint32_t				_session_id;	//会话编号
 		std::atomic<uint32_t>	_order_ref;		//报单引用
-
-		//boost::pool_allocator<code_t, position_info> a ;
-		//std::vector<int, boost::pool_allocator<int>> v;
 		//
 		std::map<code_t, position_seed>		_position_info;
 		//
 		entrust_map							_order_info;
 
-		bool								_is_runing;
+		std::map<code_t, instrument_info>		_instrument_info;
+
+		bool							_is_runing;
+		daytm_t							_login_time;
 
 		std::mutex _mutex;
 		std::unique_lock<std::mutex>	_process_mutex;
 		std::condition_variable			_process_signal;
 		std::atomic<bool>				_is_in_query;
-		bool							_is_inited;
+		std::atomic<bool>				_is_inited;
 		bool							_is_connected;
 		std::atomic<bool>				_is_sync_wait;
-		typedef CThostFtdcTraderApi* (*trader_creator)(const char*);
-		trader_creator					_ctp_creator;
+		typedef CThostFtdcTraderApi* (*trader_creator_function)(const char*);
+		trader_creator_function			_ctp_creator;
 		dll_handle						_trader_handle;
+
+		std::map<std::string, int32_t>  _exchange_delta_time;
+
+		std::map<uint32_t, estid_t>		_request_estid_map;
+
+		//正在交易中的品种 product_code 对应 begin_time
+		std::map<std::string,daytm_t> _trading_product;
 	};
 
 }

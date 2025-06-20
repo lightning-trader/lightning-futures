@@ -21,13 +21,12 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include "strategy.h"
+#include "strategy.hpp"
 #include "receiver.h"
-#include "engine.h"
 
 
 
-class replace_strategy : public lt::hft::strategy,public lt::hft::tape_receiver
+class replace_strategy : public lt::hft::strategy,public lt::tape_receiver
 {
 	enum {
 		LONG_ClOSE_HISTORY,
@@ -42,8 +41,8 @@ class replace_strategy : public lt::hft::strategy,public lt::hft::tape_receiver
 
 public:
 
-	replace_strategy(lt::hft::straid_t id, lt::hft::engine* engine, const lt::code_t& code, uint32_t open_once) :
-		lt::hft::strategy(id, engine, true, true),
+	replace_strategy(lt::hft::straid_t id, lt::hft::syringe* syringe, const lt::code_t& code, uint32_t open_once) :
+		lt::hft::strategy(id, syringe),
 		_code(code),
 		_open_once(open_once), order_estids{INVALID_ESTID}
 	{
@@ -62,7 +61,7 @@ public:
 	 *	初始化事件
 	 *	生命周期中只会回调一次
 	 */
-	virtual void on_init(lt::hft::subscriber& suber) override;
+	virtual void on_init(lt::subscriber& suber) override;
 
 	/*
 	 *	tick推送
@@ -107,7 +106,7 @@ public:
 	/*
 	 *	销毁
 	 */
-	virtual void on_destroy(lt::hft::unsubscriber& unsuber)override;
+	virtual void on_destroy(lt::unsubscriber& unsuber)override;
 
 
 private:

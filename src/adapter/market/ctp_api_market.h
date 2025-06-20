@@ -21,14 +21,14 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define.h>
+#include <basic_define.h>
 #include <market_api.h>
 #include <event_center.hpp>
 #include <mutex>
 #include <condition_variable>
-#include <params.hpp>
-#include <CTP_V6.6.9_20220920/ThostFtdcMdApi.h>
 #include <library_helper.hpp>
+#include <params.hpp>
+#include <CTP_V6.7.9_20250319/ThostFtdcMdApi.h>
 
 namespace lt::driver
 {
@@ -75,13 +75,20 @@ namespace lt::driver
 		/*
 		 *	发送登录请求
 		 */
-		void do_userlogin();
+		bool do_login();
+
+		bool do_logout();
 		/*
 		 *	订阅品种行情
 		 */
-		void do_subscribe();
+		void do_subscribe(const std::set<code_t>& codes);
 
 		void do_unsubscribe(const std::vector<code_t>& code_list);
+
+		inline double_t price_adaptation(TThostFtdcPriceType price,double_t default = .0)
+		{
+			return (.0< price && price < DBL_MAX) ? price : default;
+		}
 
 	private:
 
@@ -92,17 +99,22 @@ namespace lt::driver
 		std::string			_userid;
 		std::string			_password;
 
+		bool				_is_runing;
+
 		int					_reqid;
 
 		std::mutex _mutex;
 		std::unique_lock<std::mutex> _process_mutex;
 		std::condition_variable _process_signal;
 
-		bool _is_inited;
+		std::atomic<bool>	_is_inited;
 
-		typedef CThostFtdcMdApi* (*market_creator)(const char*, const bool, const bool);
-		market_creator					_ctp_creator;
+		typedef CThostFtdcMdApi* (*market_creator_function)(const char*, const bool, const bool);
+		market_creator_function					_ctp_creator;
 		dll_handle						_market_handle;
+
+		//清洗时间数据使用（郑商所）
+		std::map<code_t, daytm_t> _tick_time_map;
 
 	};
 }

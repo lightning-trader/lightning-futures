@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "ctp_api_trader.h"
 #include <filesystem>
 #include <time_utils.hpp>
+#include <basic_utils.hpp>
 
 using namespace lt;
 using namespace lt::driver;
@@ -39,8 +40,10 @@ ctp_api_trader::ctp_api_trader(std::unordered_map<std::string, std::string>& id_
 	, _is_inited(false)
 	, _is_connected(false)
 	, _is_sync_wait(false)
-	, _trader_handle(nullptr)
+	, _trader_handle(NULL)
 	, _is_in_query(false)
+	, _ctp_creator(NULL)
+	, _login_time(0)
 {
 	try
 	{
@@ -50,11 +53,22 @@ ctp_api_trader::ctp_api_trader(std::unordered_map<std::string, std::string>& id_
 		_password = config.get<std::string>("passwd");
 		_appid = config.get<std::string>("appid");
 		_authcode = config.get<std::string>("authcode");
-		_product_info = config.get<std::string>("product");
+		if(config.has("product"))
+		{
+			_product_info = config.get<std::string>("product");
+		}
+		if (config.has("private_topic"))
+		{
+			_private_topic = config.get<std::string>("private_topic");
+		}
+		if (config.has("public_topic"))
+		{
+			_public_topic = config.get<std::string>("public_topic");
+		}
 	}
 	catch (...)
 	{
-		LOG_ERROR("ctp_api_trader config error ");
+		LOG_ERROR("trader config error ");
 	}
 	_trader_handle = library_helper::load_library("thosttraderapi_se");
 	if(_trader_handle)
@@ -68,11 +82,11 @@ ctp_api_trader::ctp_api_trader(std::unordered_map<std::string, std::string>& id_
 #else
 		const char* creator_name = "_ZN19CThostFtdcTraderApi19CreateFtdcTraderApiEPKc";
 #endif
-		_ctp_creator = (trader_creator)library_helper::get_symbol(_trader_handle, creator_name);
+		_ctp_creator = (trader_creator_function)library_helper::get_symbol(_trader_handle, creator_name);
 	}
 	else
 	{
-		LOG_ERROR("ctp_api_trader thosttraderapi_se load error ");
+		LOG_ERROR("thosttraderapi_se load error ");
 	}
 }
 
@@ -85,9 +99,14 @@ ctp_api_trader::~ctp_api_trader()
 
 bool ctp_api_trader::login()
 {
+	if (_is_inited)
+	{
+		LOG_ERROR("ctp_api_trader already login");
+		return false;
+	}
 	_is_runing = true;
 	char path_buff[64];
-	sprintf(path_buff,"td_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
+	sprintf(path_buff,"data/td_flow/%s/%s/", _broker_id.c_str(), _userid.c_str());
 	if (!std::filesystem::exists(path_buff))
 	{
 		std::filesystem::create_directories(path_buff);
@@ -96,16 +115,44 @@ bool ctp_api_trader::login()
 	_td_api->RegisterSpi(this);
 	//_td_api->SubscribePrivateTopic(THOST_TERT_RESTART);
 	//_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
-	_td_api->SubscribePrivateTopic(THOST_TERT_QUICK);
-	_td_api->SubscribePublicTopic(THOST_TERT_QUICK);
+	if(_private_topic =="resume")
+	{
+		_td_api->SubscribePrivateTopic(THOST_TERT_RESUME);
+	}
+	else if (_private_topic == "restart")
+	{
+		_td_api->SubscribePrivateTopic(THOST_TERT_RESTART);
+	}
+	else
+	{
+		_td_api->SubscribePrivateTopic(THOST_TERT_QUICK);
+	}
+	if (_public_topic == "resume")
+	{
+		_td_api->SubscribePublicTopic(THOST_TERT_RESUME);
+	}
+	else if (_public_topic == "restart")
+	{
+		_td_api->SubscribePublicTopic(THOST_TERT_RESTART);
+	}
+	else
+	{
+		_td_api->SubscribePublicTopic(THOST_TERT_QUICK);
+	}
+	
+	
 	_td_api->RegisterFront(const_cast<char*>(_front_addr.c_str()));
 	_td_api->Init();
 	LOG_INFO("ctp_api_trader init ");
+	//_process_signal.wait_for(_process_mutex, std::chrono::seconds(5));
 	_process_signal.wait(_process_mutex);
-	_is_inited = true ;
-	submit_settlement();
-	LOG_INFO("ctp_api_trader login");
-	return true ;
+	if(_is_inited)
+	{
+		submit_settlement();
+		LOG_INFO("trader login");
+
+	}
+	return _is_inited;
 }
 
 void ctp_api_trader::logout()
@@ -119,15 +166,14 @@ void ctp_api_trader::logout()
 	_session_id = 0;	//会话编号
 	_order_ref.exchange(0);		//报单引用
 
-
 	_position_info.clear();
 	_order_info.clear();
 	
 	_is_in_query.exchange(false);
-	_is_inited = false;
+	_is_inited.exchange(false);
 	_is_connected = false;
 	_is_sync_wait.exchange(false);
-
+	_exchange_delta_time.clear();
 	if (_td_api)
 	{
 		_td_api->RegisterSpi(nullptr);
@@ -153,7 +199,7 @@ bool ctp_api_trader::do_login()
 	int iResult = _td_api->ReqUserLogin(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_trader do_login request failed:", iResult);
+		LOG_ERROR("trader do_login request failed:", iResult);
 		return false ;
 	}
 	return true;
@@ -173,7 +219,7 @@ bool ctp_api_trader::do_logout()
 	int iResult = _td_api->ReqUserLogout(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_trader logout request failed:", iResult);
+		LOG_ERROR("trader logout request failed:", iResult);
 		return false ;
 	}
 
@@ -189,7 +235,7 @@ bool ctp_api_trader::query_positions(bool is_sync)
 	bool expected = false;
 	if (!_is_in_query.compare_exchange_weak(expected, true))
 	{
-		LOG_ERROR("ctp trader _is_in_query not return");
+		LOG_ERROR("trader _is_in_query not return");
 		return false;
 	}
 	CThostFtdcQryInvestorPositionField req;
@@ -243,19 +289,49 @@ bool ctp_api_trader::query_orders(bool is_sync)
 	return true ;
 }
 
+bool ctp_api_trader::query_instruments(bool is_sync)
+{
+	if (_td_api == nullptr)
+	{
+		return false;
+	}
+	bool expected = false;
+	if (!_is_in_query.compare_exchange_weak(expected, true))
+	{
+		LOG_ERROR("ctp mini trader _is_in_query not return");
+		return false;
+	}
+	CThostFtdcQryInstrumentField req;
+	memset(&req, 0, sizeof(req));
+
+	auto iResult = _td_api->ReqQryInstrument(&req, genreqid());
+	if (iResult != 0)
+	{
+		LOG_ERROR("ReqQryOrder failed:", iResult);
+		while (!_is_in_query.exchange(false));
+		return false;
+	}
+	while (!_is_sync_wait.exchange(true));
+	_process_signal.wait(_process_mutex);
+	return true;
+}
+
 void ctp_api_trader::OnFrontConnected()noexcept
 {
-	LOG_INFO("ctp_api_trader OnFrontConnected ");
+	LOG_INFO("trader OnFrontConnected ");
 	_is_connected = true ;
 	if (_is_runing)
 	{
-		do_auth();
+		if(!do_auth())
+		{
+			_process_signal.notify_all();
+		}
 	}
 }
 
 void ctp_api_trader::OnFrontDisconnected(int nReason)noexcept
 {
-	LOG_INFO("ctp_api_trader FrontDisconnected : Reason ->", nReason);
+	LOG_INFO("trader FrontDisconnected : Reason ->", nReason);
 	_is_connected = false ;
 }
 
@@ -263,17 +339,22 @@ void ctp_api_trader::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthe
 {
 	if (pRspInfo && pRspInfo->ErrorID)
 	{
-		LOG_ERROR("ctp_api_trader OnRspAuthenticate Error :", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		LOG_ERROR("trader OnRspAuthenticate Error :", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		_process_signal.notify_all();
 		return ;
 	}
-	do_login();
+	if(!do_login())
+	{
+		_process_signal.notify_all();
+	}
 }
 
 void ctp_api_trader::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)noexcept
 {
 	if (pRspInfo && pRspInfo->ErrorID)
 	{
-		LOG_ERROR("ctp_api_trader OnRspUserLogin Error : ", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		LOG_ERROR("trader OnRspUserLogin Error : ", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		_process_signal.notify_all();
 		return;
 	}
 
@@ -288,10 +369,30 @@ void ctp_api_trader::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, 
 		_front_id = pRspUserLogin->FrontID;
 		_session_id = pRspUserLogin->SessionID;
 		_order_ref = atoi(pRspUserLogin->MaxOrderRef);
+		_login_time = make_daytm(pRspUserLogin->LoginTime,0U);
+		uint8_t shfe_delta = static_cast<int32_t>(_login_time - make_daytm(pRspUserLogin->SHFETime, 0U));
+		_exchange_delta_time.insert(std::make_pair(std::string(EXCHANGE_ID_SHFE), shfe_delta));
+		
+		uint8_t dce_delta = static_cast<int32_t>(_login_time - make_daytm(pRspUserLogin->DCETime, 0U));
+		_exchange_delta_time.insert(std::make_pair(std::string(EXCHANGE_ID_DCE), dce_delta));
+		
+		uint8_t ine_delta = static_cast<int32_t>(_login_time - make_daytm(pRspUserLogin->INETime, 0U));
+		_exchange_delta_time.insert(std::make_pair(std::string(EXCHANGE_ID_INE), ine_delta));
+		
+		uint8_t czce_delta = static_cast<int32_t>(_login_time - make_daytm(pRspUserLogin->CZCETime, 0U));
+		_exchange_delta_time.insert(std::make_pair(std::string(EXCHANGE_ID_CZCE), czce_delta));
+		
+		uint8_t gfex_delta = static_cast<int32_t>(_login_time - make_daytm(pRspUserLogin->GFEXTime, 0U));
+		_exchange_delta_time.insert(std::make_pair(std::string(EXCHANGE_ID_GFEX), gfex_delta));
+		
+		uint8_t cffex_delta = static_cast<int32_t>(_login_time - make_daytm(pRspUserLogin->FFEXTime, 0U));
+		_exchange_delta_time.insert(std::make_pair(std::string(EXCHANGE_ID_CFFEX), cffex_delta));
+
 	}
 
-	if (bIsLast&&!_is_inited)
+	if (bIsLast)
 	{
+		_is_inited.exchange(true);
 		_process_signal.notify_all();
 	}
 
@@ -319,28 +420,32 @@ void ctp_api_trader::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmF
 
 void ctp_api_trader::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)noexcept
 {
-	if (pRspInfo && pRspInfo->ErrorID != 0)
+	auto it = _request_estid_map.find(static_cast<uint32_t>(nRequestID));
+	if (it != _request_estid_map.end())
 	{
-		LOG_ERROR("OnRspOrderInsert \tErrorID =",pRspInfo->ErrorID,"ErrorMsg =", pRspInfo->ErrorMsg);
-	}
-	if (pInputOrder && pRspInfo)
-	{
-		estid_t estid = generate_estid(_front_id, _session_id, strtol(pInputOrder->OrderRef, NULL, 10));
-		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER, estid, (uint8_t)pRspInfo->ErrorID);
+		if (pRspInfo && pRspInfo->ErrorID != 0)
+		{
+			LOG_ERROR("OnRspOrderInsert \tErrorID =", pRspInfo->ErrorID, "ErrorMsg =", pRspInfo->ErrorMsg);
+			this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER, it->second, (uint8_t)pRspInfo->ErrorID);
+		}
+		_request_estid_map.erase(it);
 	}
 }
 
 void ctp_api_trader::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)noexcept
 {
-	if (pRspInfo && pRspInfo->ErrorID != 0)
+	auto it = _request_estid_map.find(static_cast<uint32_t>(nRequestID));
+	if (it != _request_estid_map.end())
 	{
-		LOG_ERROR("OnRspOrderAction \tErrorID =", pRspInfo->ErrorID,"ErrorMsg =", pRspInfo->ErrorMsg);
+		if (pRspInfo && pRspInfo->ErrorID != 0)
+		{
+			LOG_ERROR("OnRspOrderAction \tErrorID =", pRspInfo->ErrorID, "ErrorMsg =", pRspInfo->ErrorMsg);
+			this->fire_event(trader_event_type::TET_OrderError, error_type::ET_CANCEL_ORDER, it->second, (uint8_t)pRspInfo->ErrorID);
+		}
+		_request_estid_map.erase(it);
 	}
-	if (pInputOrderAction && pRspInfo)
-	{
-		estid_t estid = generate_estid(pInputOrderAction->FrontID, pInputOrderAction->SessionID, strtol(pInputOrderAction->OrderRef, NULL, 10));
-		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_CANCEL_ORDER, estid, (uint8_t)pRspInfo->ErrorID);
-	}
+	
+	
 }
 
 void ctp_api_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)noexcept
@@ -369,10 +474,8 @@ void ctp_api_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *p
 		pos.id = code;
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
-
 			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
 			{
-
 				if (code.is_distinct())
 				{
 					pos.today_long += pInvestorPosition->TodayPosition;
@@ -436,7 +539,7 @@ void ctp_api_trader::OnRspQryOrder(CThostFtdcOrderField *pOrder, CThostFtdcRspIn
 		order.total_volume = pOrder->VolumeTotal + pOrder->VolumeTraded;
 		order.price = pOrder->LimitPrice;
 		_order_info[estid] = order;
-		LOG_INFO("OnRspQryOrder", pOrder->InstrumentID, estid, pOrder->FrontID, pOrder->SessionID, pOrder->OrderRef, pOrder->LimitPrice);
+		LOG_INFO("OnRspQryOrder", pOrder->InstrumentID, estid, pOrder->FrontID, pOrder->SessionID, pOrder->OrderRef, pOrder->LimitPrice, pOrder->InsertTime);
 	}
 
 	if (bIsLast && _is_sync_wait)
@@ -489,12 +592,12 @@ void ctp_api_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)noexcept
 			}
 			if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
 			{
-				LOG_INFO("OnRtnOrder fire_event ET_OrderCancel", estid, code.get_id(), direction, offset);
+				LOG_INFO("OnRtnOrder fire_event ET_OrderCancel", estid, code.get_symbol(), direction, offset);
 				this->fire_event(trader_event_type::TET_OrderCancel, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)pOrder->VolumeTotal, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 			}
 			if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)
 			{
-				LOG_INFO("OnRtnOrder fire_event ET_OrderTrade", estid, code.get_id(), direction, offset);
+				LOG_INFO("OnRtnOrder fire_event ET_OrderTrade", estid, code.get_symbol(), direction, offset);
 				this->fire_event(trader_event_type::TET_OrderTrade, estid, code, offset, direction, pOrder->LimitPrice, (uint32_t)(pOrder->VolumeTraded + pOrder->VolumeTotal));
 			}
 			_order_info.erase(it);
@@ -537,7 +640,7 @@ void ctp_api_trader::OnRtnOrder(CThostFtdcOrderField *pOrder)noexcept
 			{
 				if (entrust.last_volume < static_cast<uint32_t>(pOrder->VolumeTotal))
 				{
-					LOG_ERROR("OnRtnOrder Error", estid, code.get_id(), entrust.last_volume, pOrder->VolumeTotal);
+					LOG_ERROR("OnRtnOrder Error", estid, code.get_symbol(), entrust.last_volume, pOrder->VolumeTotal);
 				}
 			}
 			_order_info[estid] = entrust;
@@ -555,18 +658,19 @@ void ctp_api_trader::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder,
 	if (pRspInfo && pRspInfo->ErrorID != 0)
 	{
 		LOG_ERROR("OnErrRtnOrderInsert \tErrorID =", pRspInfo->ErrorID," ErrorMsg =", pRspInfo->ErrorMsg);
-	}
-	if(pInputOrder && pRspInfo)
-	{
-		LOG_ERROR("OnErrRtnOrderInsert", pInputOrder->InstrumentID, pInputOrder->VolumeTotalOriginal, pRspInfo->ErrorMsg);
-		estid_t estid = generate_estid(_front_id, _session_id, strtol(pInputOrder->OrderRef,NULL,10));
-		auto it = _order_info.find(estid);
-		if(it != _order_info.end())
+		if (pInputOrder)
 		{
-			_order_info.erase(it);
+			LOG_ERROR("OnErrRtnOrderInsert", pInputOrder->InstrumentID, pInputOrder->VolumeTotalOriginal, pRspInfo->ErrorMsg);
+			estid_t estid = generate_estid(_front_id, _session_id, strtol(pInputOrder->OrderRef, NULL, 10));
+			auto it = _order_info.find(estid);
+			if (it != _order_info.end())
+			{
+				_order_info.erase(it);
+			}
+			this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER, estid, (uint8_t)pRspInfo->ErrorID);
 		}
-		this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER,estid, (uint8_t)pRspInfo->ErrorID);
 	}
+	
 }
 void ctp_api_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderAction, CThostFtdcRspInfoField* pRspInfo)noexcept
 {
@@ -589,8 +693,90 @@ void ctp_api_trader::OnErrRtnOrderAction(CThostFtdcOrderActionField* pOrderActio
 
 void ctp_api_trader::OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField* pInstrumentStatus)noexcept
 {
-	
+	if(pInstrumentStatus)
+	{
+		std::string product(81,'\0');
+		for (size_t i = 0; i < 81 && pInstrumentStatus->InstrumentID[i] != '\0'; i++)
+		{
+			uint8_t c = pInstrumentStatus->InstrumentID[i];
+			product[i] = c;
+			if (std::isdigit(c))
+			{
+				break;
+			}
+		}
+		product.resize(std::strlen(product.data()));
+		const bool current_state = pInstrumentStatus->InstrumentStatus == THOST_FTDC_IS_Continous;
+		if (current_state)
+		{
+			auto it = _trading_product.find(product);
+			if (it == _trading_product.end())
+			{
+				daytm_t enter_time = make_daytm(pInstrumentStatus->EnterTime, 0U);
+				_trading_product.insert(std::make_pair(product, enter_time));
+				LOG_INFO("OnRtnInstrumentStatus begin trading", product, enter_time,_login_time);
+				if(enter_time > _login_time)
+				{
+					const auto product_code = lt::make_code(std::string(pInstrumentStatus->ExchangeID), product);
+					this->fire_event(trader_event_type::TET_StateChange, product_code, current_state, enter_time);
+				}
+			}
+		}
+		else
+		{
+			auto it = _trading_product.find(product);
+			if (it != _trading_product.end())
+			{
+				_trading_product.erase(it);
+				daytm_t enter_time = make_daytm(pInstrumentStatus->EnterTime, 0U);
+				LOG_INFO("OnRtnInstrumentStatus end trading", product, enter_time, _login_time);
+				if (enter_time > _login_time)
+				{
+					const auto product_code = lt::make_code(std::string(pInstrumentStatus->ExchangeID), product);
+					this->fire_event(trader_event_type::TET_StateChange, product_code, current_state, enter_time);
+				}
+			}
+		}
+	}
 }
+
+void ctp_api_trader::OnRspQryInstrument(CThostFtdcInstrumentField* pInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast) noexcept
+{
+	if (_is_in_query)
+	{
+		while (!_is_in_query.exchange(false));
+		_instrument_info.clear();
+	}
+	if (pRspInfo && pRspInfo->ErrorID != 0)
+	{
+		LOG_ERROR("OnRspQryInstrument \tErrorID = ", pRspInfo->ErrorID, " ErrorMsg =", pRspInfo->ErrorMsg);
+	}
+	if (pInstrument)
+	{
+		if(pInstrument->ProductClass == THOST_FTDC_PC_Futures|| pInstrument->ProductClass== THOST_FTDC_PC_Options)
+		{
+			//LOG_INFO("OnRspQryInstrument ", pInstrument->ExchangeID, pInstrument->InstrumentID);
+			code_t code(pInstrument->InstrumentID, pInstrument->ExchangeID);
+			instrument_info contract;
+			contract.code = code;
+			contract.product = pInstrument->ProductID;
+			contract.classtype = pInstrument->ProductClass == THOST_FTDC_PC_Futures ? product_type::PT_FUTURE : product_type::PT_OPTION;
+			contract.underlying = pInstrument->UnderlyingInstrID;
+			contract.price_step = pInstrument->PriceTick;
+			contract.multiple = pInstrument->VolumeMultiple;
+			contract.begin_day = static_cast<uint32_t>(std::atoi(pInstrument->OpenDate));
+			contract.end_day = static_cast<uint32_t>(std::atoi(pInstrument->ExpireDate));
+			_instrument_info.insert(std::make_pair(code, contract));
+		}
+	}
+	if (bIsLast && _is_sync_wait)
+	{
+		while (!_is_sync_wait.exchange(false));
+		_process_signal.notify_all();
+	}
+
+}
+
 
 bool ctp_api_trader::do_auth()
 {
@@ -608,7 +794,7 @@ bool ctp_api_trader::do_auth()
 	int iResult = _td_api->ReqAuthenticate(&req, genreqid());
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_trader do_auth request failed:", iResult);
+		LOG_ERROR("trader do_auth request failed:", iResult);
 		return false;
 	}
 	return true ;
@@ -630,11 +816,23 @@ bool ctp_api_trader::is_usable()const
 
 estid_t ctp_api_trader::place_order(offset_type offset, direction_type direction, const code_t& code, uint32_t volume, double_t price, order_flag flag)
 {
-	PROFILE_DEBUG(code.get_id());
-	LOG_INFO("ctp_api_trader place_order %s %d",code.get_id(), volume);
+	PROFILE_DEBUG(code.get_symbol());
+	LOG_INFO("trader place_order %s %d",code.get_symbol(), volume);
 
 	if (_td_api == nullptr)
 	{
+		LOG_ERROR("place_order _td_api nullptr");
+		return INVALID_ESTID;
+	}
+	auto cst = _instrument_info.find(code);
+	if(cst == _instrument_info.end())
+	{
+		LOG_ERROR("place_order contract not exist ", code.to_string());
+		return INVALID_ESTID;
+	}
+	if(!get_product_state(cst->second.product).first)
+	{
+		LOG_ERROR("place_order contract not in trading ", cst->second.product);
 		return INVALID_ESTID;
 	}
 	estid_t estid = generate_estid();
@@ -644,8 +842,8 @@ estid_t ctp_api_trader::place_order(offset_type offset, direction_type direction
 	strcpy(req.BrokerID, _broker_id.c_str());
 	strcpy(req.InvestorID, _userid.c_str());
 
-	strcpy(req.InstrumentID, code.get_id());
-	strcpy(req.ExchangeID, code.get_excg());
+	strcpy(req.InstrumentID, code.get_symbol());
+	strcpy(req.ExchangeID, code.get_exchange());
 
 	uint32_t order_ref = 0, season_id = 0, front_id = 0;
 	extract_estid(estid, front_id, season_id, order_ref);
@@ -701,14 +899,16 @@ estid_t ctp_api_trader::place_order(offset_type offset, direction_type direction
 	req.IsAutoSuspend = 0;
 	///用户强评标志: 否
 	req.UserForceClose = 0;
-	PROFILE_DEBUG(code.get_id());
-	int iResult = _td_api->ReqOrderInsert(&req, genreqid());
+	PROFILE_DEBUG(code.get_symbol());
+	uint32_t reqid = genreqid();
+	int iResult = _td_api->ReqOrderInsert(&req, reqid);
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_trader order_insert request failed: %d", iResult);
+		LOG_ERROR("trader order_insert request failed: %d", iResult);
 		return INVALID_ESTID;
 	}
-	PROFILE_INFO(code.get_id());
+	_request_estid_map[reqid] = estid;
+	PROFILE_INFO(code.get_symbol());
 	return estid;
 }
 
@@ -716,16 +916,28 @@ bool ctp_api_trader::cancel_order(estid_t estid)
 {
 	if (_td_api == nullptr)
 	{
-		LOG_ERROR("ctp_api_trader cancel_order _td_api nullptr : %llu", estid);
+		LOG_ERROR("trader cancel_order _td_api nullptr : %llu", estid);
 		return false;
 	}
 	auto it = _order_info.find(estid);
 	if (it == _order_info.end())
 	{
-		LOG_ERROR("ctp_api_trader cancel_order order invalid : %llu", estid);
+		LOG_ERROR("cancel_order order invalid : %llu", estid);
 		return false;
 	}
 	auto& order = it->second;
+	auto cst = _instrument_info.find(order.code);
+	if (cst == _instrument_info.end())
+	{
+		LOG_ERROR("cancel_order contract not exist ", order.code.to_string());
+		return false;
+	}
+	if (!get_product_state(cst->second.product).first)
+	{
+		LOG_ERROR("cancel_order contract not in trading ", cst->second.product);
+		return false;
+	}
+	
 	uint32_t frontid = 0, sessionid = 0, orderref = 0;
 	extract_estid(estid, frontid, sessionid, orderref);
 	CThostFtdcInputOrderActionField req;
@@ -743,21 +955,23 @@ bool ctp_api_trader::cancel_order(estid_t estid)
 	///操作标志
 	req.ActionFlag = convert_action_flag(action_flag::AF_CANCEL);
 	///合约代码
-	strcpy(req.InstrumentID, order.code.get_id());
+	strcpy(req.InstrumentID, order.code.get_symbol());
 
 	//req.LimitPrice = change.price;
 
 	//req.VolumeChange = (int)change.volume;
 
 	//strcpy_s(req.OrderSysID, change.estid.c_str());
-	strcpy(req.ExchangeID, order.code.get_excg());
+	strcpy(req.ExchangeID, order.code.get_exchange());
 	LOG_INFO("ctp_api_trader ReqOrderAction :", req.ExchangeID, req.InstrumentID, req.FrontID, req.SessionID, req.OrderRef, req.BrokerID, req.InvestorID, req.UserID, estid);
-	int iResult = _td_api->ReqOrderAction(&req, genreqid());
+	uint32_t reqid = genreqid();
+	int iResult = _td_api->ReqOrderAction(&req, reqid);
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_trader order_action request failed:", iResult);
+		LOG_ERROR("trader order_action request failed:", iResult);
 		return false;
 	}
+	_request_estid_map[reqid] = estid;
 	return true;
 }
 
@@ -771,30 +985,80 @@ uint32_t ctp_api_trader::get_trading_day()const
 	return 0X0U;
 }
 
-std::shared_ptr<trader_data> ctp_api_trader::get_trader_data() 
+std::vector<order_info> ctp_api_trader::get_all_orders()
 {
-	auto result = std::make_shared<trader_data>();
+	std::vector<order_info> result;
+	if (!query_orders(true))
+	{
+		LOG_ERROR("query_orders error");
+		return result;
+	}
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	for (auto it : _order_info)
+	{
+		result.emplace_back(it.second);
+	}
+	return result;
+}
+
+std::vector<position_seed> ctp_api_trader::get_all_positions()
+{
+	std::vector<position_seed> result;
 	if (!query_positions(true))
 	{
 		LOG_ERROR("query_positions error");
 		return result;
 	}
 	std::this_thread::sleep_for(std::chrono::seconds(1));
-	if (!query_orders(true))
-	{
-		LOG_ERROR("query_orders error");
-		return result;
-	}
-	for (auto it : _order_info)
-	{
-		result->orders.emplace_back(it.second);
-	}
+
 	for (auto it : _position_info)
 	{
-		result->positions.emplace_back(it.second);
+		result.emplace_back(it.second);
 	}
 	return result ;
 }
+
+std::vector<instrument_info> ctp_api_trader::get_all_instruments()
+{
+	std::vector<instrument_info> result;
+	if (!query_instruments(true))
+	{
+		LOG_ERROR("query_instruments error");
+		return result;
+	}
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	for (auto it : _instrument_info)
+	{
+		result.emplace_back(it.second);
+	}
+	return result ;
+}
+daytm_t ctp_api_trader::get_exchange_time(const char* exchange) const
+{
+	auto it = _exchange_delta_time.find(std::string(exchange));
+	if(it != _exchange_delta_time.end())
+	{
+		//
+		return get_day_time(time(0)-it->second);
+	}
+	//找不到返回本地时间
+	return get_day_time(time(0));
+}
+
+std::pair<bool, daytm_t> ctp_api_trader::get_product_state(const code_t& product_code) const
+{
+	auto it = _trading_product.find(product_code.get_symbol());
+	if(it != _trading_product.end())
+	{
+		return std::make_pair(true,it->second);
+	}
+	else
+	{
+		return std::make_pair(false,0U);
+	}
+}
+
 
 void ctp_api_trader::submit_settlement() 
 {
@@ -820,3 +1084,4 @@ void ctp_api_trader::submit_settlement()
 	while (!_is_sync_wait.exchange(true));
 	_process_signal.wait(_process_mutex);
 }
+

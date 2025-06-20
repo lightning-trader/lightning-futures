@@ -21,21 +21,26 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-
 #include <tick_loader.h>
-
 namespace lt::driver
 {
 	class csv_tick_loader : public tick_loader
 	{
 	public:
-		csv_tick_loader(const std::string& root_path);
+		
+		csv_tick_loader(const char* root_path,const char* trading_day_file);
 
 	public:
+
+		virtual void load_trading_day(std::vector<uint32_t>& result, uint32_t begin, uint32_t end) override;
+
 		virtual void load_tick(std::vector<tick_detail>& result, const code_t& code, uint32_t trade_day) override;
 
 	private:
 
 		std::string _root_path;
+
+		std::vector<uint32_t> _trading_day;
+
 	};
 }

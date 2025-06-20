@@ -21,16 +21,15 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <queue>
-#include <stdint.h>
+#include <basic_define.h>
+#include <sstream>
 #include <thread>
-#include <define.h>
 #include <log_define.hpp>
 #include <trader_api.h>
 #include <params.hpp>
 #include <condition_variable>
 #include <TAP_V9_20200808/TapTradeAPI.h>
-#include <library_helper.hpp>
+#include <basic_utils.hpp>
 
 
 namespace lt::driver
@@ -65,9 +64,17 @@ namespace lt::driver
 
 		virtual uint32_t get_trading_day()const override;
 
-		virtual std::shared_ptr<trader_data> get_trader_data() override;
+		virtual std::vector<order_info> get_all_orders() override;
+
+		virtual std::vector<position_seed> get_all_positions() override;
+
+		virtual std::vector<instrument_info> get_all_instruments() override;
 
 		//////////////////////////////////////////////////////////////////////////
+
+		virtual daytm_t get_exchange_time(const char* exchange) const override;
+		
+		virtual std::pair<bool, daytm_t> get_product_state(const lt::code_t& product_code) const override;
 
 	public:
 		//对ITapTradeAPINotify的实现
@@ -97,7 +104,7 @@ namespace lt::driver
 		virtual void TAP_CDECL OnRtnPositionProfit(const TapAPIPositionProfitNotice* info) noexcept {};
 		virtual void TAP_CDECL OnRspQryDeepQuote(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIDeepQuoteQryRsp* info) noexcept {};
 		virtual void TAP_CDECL OnRspQryExchangeStateInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIExchangeStateInfo* info) noexcept {};
-		virtual void TAP_CDECL OnRtnExchangeStateInfo(const TapAPIExchangeStateInfoNotice* info) noexcept {};
+		virtual void TAP_CDECL OnRtnExchangeStateInfo(const TapAPIExchangeStateInfoNotice* info) noexcept;
 		virtual void TAP_CDECL OnRtnReqQuoteNotice(const TapAPIReqQuoteNotice* info) noexcept {}; //V9.0.2.0 20150520
 		virtual void TAP_CDECL OnRspUpperChannelInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIUpperChannelInfo* info) noexcept {};
 		virtual void TAP_CDECL OnRspAccountRentInfo(TAPIUINT32 sessionID, TAPIINT32 errorCode, TAPIYNFLAG isLast, const TapAPIAccountRentInfo* info)noexcept {};
@@ -111,6 +118,8 @@ namespace lt::driver
 		bool query_positions(bool is_sync);
 
 		bool query_orders(bool is_sync);
+
+		bool query_instruments(bool is_sync);
 
 	private:
 
@@ -201,6 +210,84 @@ namespace lt::driver
 			return v1 + v2;
 		}
 
+		inline lt::code_t wrap_code(const TapAPIOrderInfo& contract) const
+		{
+			std::stringstream ids;
+			ids << contract.CommodityNo << contract.ContractNo;
+			if (contract.CallOrPutFlag == 'C')
+			{
+				ids << "C" << contract.StrikePrice;
+			}
+			else if (contract.CallOrPutFlag == 'P')
+			{
+				ids << "P" << contract.StrikePrice;
+			}
+			if (std::strlen(contract.ContractNo2) > 0)
+			{
+				ids << contract.CommodityNo << contract.ContractNo2;
+				if (contract.CallOrPutFlag2 == 'C')
+				{
+					ids << "C" << contract.StrikePrice2;
+				}
+				else if (contract.CallOrPutFlag2 == 'P')
+				{
+					ids << "P" << contract.StrikePrice2;
+				}
+			}
+			return lt::make_code(contract.ExchangeNo, ids.str());
+		}
+		inline lt::code_t wrap_code(const TapAPIPositionInfo& contract) const
+		{
+			std::stringstream ids;
+			ids << contract.CommodityNo << contract.ContractNo;
+			if (contract.CallOrPutFlag == 'C')
+			{
+				ids << "C" << contract.StrikePrice;
+			}
+			else if (contract.CallOrPutFlag == 'P')
+			{
+				ids << "P" << contract.StrikePrice;
+			}
+			
+			return lt::make_code(contract.ExchangeNo, ids.str());
+		}
+		
+		inline void convert_code(TapAPINewOrder& contract, const code_t& code)
+		{
+			symbol_t id1 = code.extract_symbol(1);
+			strcpy(contract.CommodityNo, id1.family.c_str());
+			snprintf(contract.ContractNo, 11, "%d", id1.number);
+			if (id1.option_type == symbol_t::OPT_CALL)
+			{
+				contract.CallOrPutFlag = 'C';
+				snprintf(contract.StrikePrice, 11, "%lf", id1.strike_price);
+			}
+			else if (id1.option_type == symbol_t::OPT_PUT)
+			{
+				contract.CallOrPutFlag = 'P';
+				snprintf(contract.StrikePrice, 11, "%lf", id1.strike_price);
+			}
+			else
+			{
+				contract.CallOrPutFlag = 'N';
+			}
+			symbol_t id2 = code.extract_symbol(2);
+			snprintf(contract.ContractNo2, 11, "%d", id2.number);
+			if (id2.option_type == symbol_t::OPT_CALL)
+			{
+				contract.CallOrPutFlag2 = 'C';
+				snprintf(contract.StrikePrice2, 11, "%.0lf", id2.strike_price);
+			}
+			else if (id2.option_type == symbol_t::OPT_PUT)
+			{
+				contract.CallOrPutFlag2 = 'P';
+				snprintf(contract.StrikePrice2, 11, "%.0lf", id2.strike_price);
+			}
+			else
+			{
+				contract.CallOrPutFlag2 = 'N';
+			}
+		}
 
 	protected:
 
@@ -235,11 +322,11 @@ namespace lt::driver
 		std::atomic<bool>				_is_sync_wait;
 		std::atomic<bool>				_is_in_query;
 
-		typedef ITapTradeAPI* (*trader_creator)(const TapAPIApplicationInfo* appInfo, TAPIINT32& iResult);
-		trader_creator					_tap_creator;
+		typedef ITapTradeAPI* (*trader_creator_function)(const TapAPIApplicationInfo* appInfo, TAPIINT32& iResult);
+		trader_creator_function			_tap_creator;
 
-		typedef void (*trader_destroyer)(ITapTradeAPI*);
-		trader_destroyer				_tap_destroyer;
+		typedef void (*trader_destroyer_function)(ITapTradeAPI*);
+		trader_destroyer_function		_tap_destroyer;
 
 		dll_handle						_trader_handle;
 		uint32_t						_trading_day;

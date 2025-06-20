@@ -88,17 +88,17 @@ namespace lt::log
 
 		dll_handle _handle;
 
-		typedef NanoLogLine* (*ltl_alloc_logline)();
+		typedef NanoLogLine* (*alloc_logline_function)();
 
-		typedef void (*ltl_recycle_logline)(NanoLogLine*);
+		typedef void (*recycle_logline_function)(NanoLogLine*);
 
-		typedef void (*ltl_dump_logline)(NanoLogLine*);
+		typedef void (*dump_logline_function)(NanoLogLine*);
 
-		ltl_alloc_logline _alloc_logline;
+		alloc_logline_function _alloc_logline;
 
-		ltl_recycle_logline _recycle_logline;
+		recycle_logline_function _recycle_logline;
 
-		ltl_dump_logline _dump_logline;
+		dump_logline_function _dump_logline;
 
 	public:
 
@@ -109,16 +109,12 @@ namespace lt::log
 
 		log_wapper() :_alloc_logline(nullptr), _recycle_logline(nullptr), _dump_logline(nullptr)
 		{
-#ifndef NDEBUG
-			_handle = library_helper::load_library("latf-logger-v3x-d");
-#else
 			_handle = library_helper::load_library("latf-logger-v3x");
-#endif
 			if (_handle)
 			{
-				_alloc_logline = (ltl_alloc_logline)library_helper::get_symbol(_handle, "ltl_alloc_logline");
-				_recycle_logline = (ltl_recycle_logline)library_helper::get_symbol(_handle, "ltl_recycle_logline");
-				_dump_logline = (ltl_dump_logline)library_helper::get_symbol(_handle, "ltl_dump_logline");
+				_alloc_logline = (alloc_logline_function)library_helper::get_symbol(_handle, "_alloc_logline");
+				_recycle_logline = (recycle_logline_function)library_helper::get_symbol(_handle, "_recycle_logline");
+				_dump_logline = (dump_logline_function)library_helper::get_symbol(_handle, "_dump_logline");
 			}
 		}
 
@@ -213,16 +209,17 @@ namespace lt::log
 #ifndef NDEBUG
 #define LOG_TRACE(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_DEBUG(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);throw std::runtime_error("log fatal : "+std::string(__func__));
 #define PROFILE_DEBUG(msg) //log_profile(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__,msg);
 #else
 #define LOG_TRACE(...) 
 #define LOG_DEBUG(...) 
 #define PROFILE_DEBUG(msg) 
+#define LOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #endif
 #define LOG_INFO(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_WARNING(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #define LOG_ERROR(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);throw std::runtime_error("log fatal ");
 
 //测评日志
 #define EVALUATE_INFO(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);

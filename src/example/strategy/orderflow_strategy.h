@@ -21,13 +21,12 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include "strategy.h"
 #include "receiver.h"
-#include "engine.h"
+#include "strategy.hpp"
 
 
 
-class orderflow_strategy : public lt::hft::strategy,public lt::hft::bar_receiver
+class orderflow_strategy : public lt::hft::strategy,public lt::bar_receiver
 {
 
 	struct persist_data
@@ -39,8 +38,8 @@ class orderflow_strategy : public lt::hft::strategy,public lt::hft::bar_receiver
 	};
 public:
 
-	orderflow_strategy(lt::hft::straid_t id, lt::hft::engine* engine, const lt::code_t& code, uint32_t period, uint32_t open_once, uint32_t multiple, uint32_t threshold, uint32_t position_limit) :
-		lt::hft::strategy(id, engine, true, true),
+	orderflow_strategy(lt::hft::straid_t id, lt::hft::syringe* syringe, const lt::code_t& code, uint32_t period, uint32_t open_once, uint32_t multiple, uint32_t threshold, uint32_t position_limit) :
+		lt::hft::strategy(id, syringe),
 		_code(code),
 		_open_once(open_once),
 		_period(period),
@@ -64,7 +63,7 @@ public:
 	 *	初始化事件
 	 *	生命周期中只会回调一次
 	 */
-	virtual void on_init(lt::hft::subscriber& suber) override;
+	virtual void on_init(lt::subscriber& suber) override;
 
 	/*
 	 *	bar推送
@@ -103,7 +102,7 @@ public:
 	/*
 	 *	销毁
 	 */
-	virtual void on_destroy(lt::hft::unsubscriber& unsuber)override;
+	virtual void on_destroy(lt::unsubscriber& unsuber)override;
 
 private:
 

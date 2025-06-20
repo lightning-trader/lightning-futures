@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 
 #pragma once
-#include "define.h"
+#include "basic_define.h"
 #include "shared_types.h"
 
 namespace lt::driver
@@ -32,6 +32,8 @@ namespace lt::driver
 	{
 	public:
 
+		virtual void load_trading_day(std::vector<uint32_t>& result, uint32_t begin, uint32_t end) = 0;
+		
 		virtual void load_tick(std::vector<tick_detail>& result, const code_t& code, uint32_t trade_day) = 0;
 	};
 }

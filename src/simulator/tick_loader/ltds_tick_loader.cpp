@@ -20,50 +20,52 @@ OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHE
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#include <define.h>
 #include "ltds_tick_loader.h"
-#include <define_types.hpp>
+#include <fstream>
+#include <filesystem>
+#include <basic_types.hpp>
+#include <string_helper.hpp>
+#include <time_utils.hpp>
 #include <log_define.hpp>
 
 using namespace lt::driver;
 
-ltds_tick_loader::ltds_tick_loader(const std::string& token,const std::string& cache_path,size_t lru_size):_handle(nullptr)
+ldts_tick_loader::ldts_tick_loader(const std::string& channel,const std::string& cache_path, size_t detail_cache_size , size_t bar_cache_size )
+:_ltd(channel.c_str(), cache_path.c_str(), detail_cache_size, bar_cache_size)
 {
-	_handle = library_helper::load_library("latf-data-v3xp");
-	ltd_initialize initialize = (ltd_initialize)library_helper::get_symbol(_handle, "ltd_initialize");
-	_provider = initialize(cache_path.c_str(), lru_size);
-	
+
 }
 
-ltds_tick_loader::~ltds_tick_loader()
+ldts_tick_loader::~ldts_tick_loader()
 {
-	ltd_destroy destroy = (ltd_destroy)library_helper::get_symbol(_handle, "ltd_destroy");
-	destroy(_provider);
-	library_helper::free_library(_handle);
+
 }
 
-void ltds_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t& code, uint32_t trading_day)
+void ldts_tick_loader::load_trading_day(std::vector<uint32_t>& result, uint32_t begin, uint32_t end)
+{
+	_ltd.get_trading_calendar(result, begin, end);
+}
+
+
+void ldts_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t& code, uint32_t trading_day)
 {
 	std::vector<ltd_tick_info> res;
-	res.resize(72000U);
-	ltd_get_history_tick get_history_tick = (ltd_get_history_tick)library_helper::get_symbol(_handle, "ltd_get_history_tick");
-	size_t real_size = get_history_tick(_provider, res.data(), res.size(), code.to_string().c_str(), trading_day);
-	result.resize(real_size);
-	for(size_t i=0;i< real_size;i++)
+	_ltd.get_history_tick(res,code.to_string().c_str(), trading_day);
+	for(const auto& it : res)
 	{
-		const ltd_tick_info& it = res[i];	
-		tick_detail& tick = result[i];
+		tick_detail tick;
 		tick.id = it.code;
 		tick.time = it.time;
 		tick.price = it.price;
 		tick.volume = it.volume;
 		tick.open_interest = it.open_interest;
+		tick.average_price = it.average_price;
 		tick.trading_day= it.trading_day;
-		for(size_t i = 0; i < PRICE_VOLUME_SIZE && i < PRICE_VOLUME_LENGTH;i++)
+		for(size_t i=0;i< PRICE_VOLUME_SIZE &&i< WAITING_PRICE_LENGTH;i++)
 		{
 			tick.bid_order[i] = std::make_pair(it.bid_order[i].price, it.bid_order[i].volume);
 		}
-		for (size_t i = 0; i < PRICE_VOLUME_SIZE && i < PRICE_VOLUME_LENGTH; i++)
+		for (size_t i = 0; i < PRICE_VOLUME_SIZE && i < WAITING_PRICE_LENGTH; i++)
 		{
 			tick.ask_order[i] = std::make_pair(it.ask_order[i].price, it.ask_order[i].volume);
 		}

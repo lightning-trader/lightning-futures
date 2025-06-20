@@ -21,7 +21,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
-#include <define.h>
+#include <basic_define.h>
 #include "event_center.hpp"
 #include <shared_types.h>
 
@@ -34,7 +34,8 @@ namespace lt
 		TET_OrderPlace,
 		TET_OrderDeal,
 		TET_OrderTrade,
-		TET_OrderError
+		TET_OrderError,
+		TET_StateChange
 	};
 
 	//下单接口管理接口
@@ -74,9 +75,19 @@ namespace lt
 		virtual uint32_t get_trading_day()const = 0;
 
 		/**
-		* 获取交易数据
+		* 获取订单数据
 		*/
-		virtual std::shared_ptr<trader_data> get_trader_data() = 0;
+		virtual std::vector<order_info> get_all_orders() = 0;
+
+		/**
+		* 获取持仓数据
+		*/
+		virtual std::vector<position_seed> get_all_positions() = 0;
+
+		/**
+		* 获取合约数据
+		*/
+		virtual std::vector<instrument_info> get_all_instruments() = 0;
 
 		/*
 		*	绑定事件
@@ -112,6 +123,18 @@ namespace lt
 		virtual bool is_idle()const = 0;
 
 
+		/**
+		*	获取交易所时间
+		*/
+		virtual daytm_t get_exchange_time(const char* exchange) const = 0;
+
+		/**
+		*	frist 是否在交易中
+		*	second 交易状态开始时间
+		*/
+		virtual std::pair<bool,daytm_t> get_product_state(const lt::code_t& product_code) const = 0;
+
+		
 	protected:
 
 		std::unordered_map<std::string, std::string>& _id_excg_map;
@@ -147,7 +170,7 @@ namespace lt
 		}
 	};
 
-	class asyn_actual_trader : public actual_trader, public queue_event_source<trader_event_type, 128>
+	class asyn_actual_trader : public actual_trader, public queue_event_source<trader_event_type, 32768U>
 	{
 
 	protected:

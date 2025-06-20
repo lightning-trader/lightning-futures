@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("lightning-trader")
+project ("lightning-futures")
 if(UNIX)
     add_definitions( "-fPIC" )
     set(SYS_LIBS pthread)
@@ -30,7 +30,7 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
 # 包含子项目。
 add_subdirectory ("example")
 
-add_subdirectory("framework")
+add_subdirectory("core")
 
 add_subdirectory("adapter")
 
