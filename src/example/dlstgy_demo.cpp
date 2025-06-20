@@ -31,14 +31,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 int main(int argc, char* argv[])
 {
-	//这里 strategy_name可以通过参数传进来或者写到配置文件动态调整
-#ifndef NDEBUG
-	std::string strategy_name = "stgy-marketing-d" ;
-#else
-	std::string strategy_name = "stgy-marketing" ;
-#endif
+
 	auto app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/bindcore_control.ini", "config/alltrading_section.csv");
-	lt::hft::strategy_creater sc(strategy_name);
+	lt::hft::strategy_creater sc("stgy-marketing");
 	std::vector<std::shared_ptr<lt::hft::strategy>> strategys;
 	//支持一个或者多个策略同时运行
 	strategys.emplace_back(sc.make_strategy(1, app.get(), "code=SHFE.rb2510&open_detla=1&open_once=1"));

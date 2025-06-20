@@ -164,7 +164,10 @@ namespace lt::log
 		logline(LogLevel lv, const char* file, char const* func, uint32_t line) :_is_dump(false), _line(nullptr)
 		{
 			_line = logger.alloc_logline();
-			_line->initialize(lv, file, func, line);
+			if(_line)
+			{
+				_line->initialize(lv, file, func, line);
+			}
 		}
 
 		~logline()

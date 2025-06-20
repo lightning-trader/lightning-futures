@@ -15,19 +15,19 @@ link_directories(${CMAKE_LIBRARY_PATH})
 aux_source_directory(strategy STRATEGY_DIR)
 
 # 回测环境示例
-add_executable(demo-evaluate "demo_evaluate.cpp" ${STRATEGY_DIR})
+add_executable(demo-evaluate "evaluate_demo.cpp" ${STRATEGY_DIR})
 target_link_libraries(demo-evaluate "latf-core-v3x")
 
 # 实盘/仿真运行示例
-add_executable(demo-runtime "demo_runtime.cpp" ${STRATEGY_DIR})
+add_executable(demo-runtime "runtime_demo.cpp" ${STRATEGY_DIR})
 target_link_libraries(demo-runtime "latf-core-v3x")
 
 # 手动下单或者第三放干预策略示例
-add_executable(demo-manual "demo_manual.cpp" ${STRATEGY_DIR})
+add_executable(demo-manual "manual_demo.cpp" ${STRATEGY_DIR})
 target_link_libraries(demo-manual "latf-core-v3x")
 
 # 策略运行器分离（动态链接策略）示例
-add_executable(demo-dlstgy "demo_dlstgy.cpp")
+add_executable(demo-dlstgy "dlstgy_demo.cpp")
 target_link_libraries(demo-dlstgy "latf-core-v3x")
 
 add_library(stgy-marketing SHARED 
@@ -36,7 +36,7 @@ add_library(stgy-marketing SHARED
 target_link_libraries(stgy-marketing "latf-core-v3x")
 
 # LT数据服务示例
-add_executable(demo-ltd "demo_ltd.cpp")
+add_executable(demo-ltds "ltds_demo.cpp")
 
 
 # TODO: 如有需要，请添加测试并安装目标。

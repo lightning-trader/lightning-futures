@@ -103,10 +103,6 @@ namespace lt
 		time_value[i++] = atoi(tmp);
 		return time_value[0] * ONE_HOUR_SECONDS + time_value[1] * ONE_MINUTE_SECONDS + time_value[2];
 	}
-	static seqtm_t make_seqtm(uint32_t date, daytm_t daytm)
-	{
-		return static_cast<seqtm_t>(make_date(date) + daytm / ONE_SECOND_MILLISECONDS);
-	}
 
 	static time_t make_datetime(uint32_t date, const char* time)
 	{
@@ -168,6 +164,12 @@ namespace lt
 			_0 += ONE_DAY_SECONDS;
 		return _0;
 	}
+
+	static daytm_t get_day_time(time_t cur)
+	{
+		return daytm_sequence(static_cast<daytm_t>(cur - get_day_begin(cur)) * ONE_SECOND_MILLISECONDS);
+	}
+
 	static daytm_t make_daytm(const char* time, uint32_t tick)
 	{
 		if (time != nullptr)
@@ -217,7 +219,16 @@ namespace lt
 		}
 		return -1;
 	}
-
+	static seqtm_t make_seqtm(uint32_t date, daytm_t daytm)
+	{
+		return static_cast<seqtm_t>(make_date(date) + daytm / ONE_SECOND_MILLISECONDS);
+	}
+	static seqtm_t make_seqtm(time_t datetime)
+	{
+		auto day_begin = get_day_begin(datetime);
+		auto day_time = daytm_sequence(static_cast<daytm_t>(datetime - day_begin) * ONE_SECOND_MILLISECONDS);
+		return static_cast<seqtm_t>(day_begin + day_time / ONE_SECOND_MILLISECONDS);
+	}
 
 	static time_t make_datetime(time_t date_begin, const char* time)
 	{
@@ -257,11 +268,6 @@ namespace lt
 		tm.tm_mon = 0;
 		tm.tm_mday = 1;
 		return mktime(&tm);
-	}
-
-	static daytm_t get_day_time(time_t cur)
-	{
-		return daytm_sequence(static_cast<daytm_t>(cur - get_day_begin(cur)) * ONE_SECOND_MILLISECONDS);
 	}
 
 	static time_t get_next_time(time_t cur, const char* time)

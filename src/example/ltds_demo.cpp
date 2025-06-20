@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 #include <log_define.hpp>
 #include <data_wapper.hpp>
+#include <time_utils.hpp>
 
 data_wapper ltd("ltds-release", "./cache");
 
@@ -57,8 +58,8 @@ void print_history_tick(const char* code, uint32_t trading_day)
 void print_history_bar(const char* code)
 {
 	std::vector<ltd_bar_info> result;
-	//打印最近100根1分钟K线
-	ltd.get_history_bar(result, code, ltd_period::BC_10M, time(0), 30);
+	//打印最近30根10分钟K线
+	ltd.get_history_bar(result, code, ltd_period::BC_10M, lt::make_seqtm(time(0)), 30);
 	for (const auto& it : result)
 	{
 		LOG_INFO(it.code, '\t', it.time, '\t', it.open, it.close, it.high, it.low, '\t', it.volume);

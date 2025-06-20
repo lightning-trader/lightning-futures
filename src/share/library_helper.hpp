@@ -39,13 +39,17 @@ class library_helper
 public:
 	static dll_handle load_library(const char *filename)
 	{
-		//std::string dllname = get_dllname(filename);
+#ifndef NDEBUG
+		std::string dll_name = std::string(filename) + "-d";
+#else
+		std::string dll_name(filename);
+#endif
 		try
 		{
 #ifdef _MSC_VER
-			return ::LoadLibrary(filename);
+			return ::LoadLibrary(dll_name.c_str());
 #else
-			dll_handle ret = dlopen(filename, RTLD_NOW);
+			dll_handle ret = dlopen(dll_name.c_str(), RTLD_NOW);
 			if (ret == NULL)
 				printf("%s\n", dlerror());
 			return ret;
