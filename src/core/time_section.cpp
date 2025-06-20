@@ -30,7 +30,7 @@ using namespace lt;
 
 time_section::time_section(const std::string& config_path)
 {
-	LOG_INFO("trading_section init ");
+	LTLOG_INFO("trading_section init ");
 	_trading_section.clear();
 	rapidcsv::Document config_csv(config_path, rapidcsv::LabelParams(0, 0));
 	for (size_t i = 0; i < config_csv.GetRowCount(); i++)
@@ -41,7 +41,7 @@ time_section::time_section(const std::string& config_path)
 		daytm_t begin_time = make_daytm(begin_time_str.c_str(),0U);
 		daytm_t end_time = make_daytm(end_time_str.c_str(),999U);
 		_trading_section.emplace_back(std::make_pair(begin_time, end_time));
-		//LOG_DEBUG("trading_section : ", time_to_string(begin_time), time_to_string(_trading_section[begin_time]));
+		//LTLOG_DEBUG("trading_section : ", time_to_string(begin_time), time_to_string(_trading_section[begin_time]));
 	}
 }
 time_section::~time_section()
@@ -52,7 +52,7 @@ time_section::~time_section()
 
 bool time_section::is_trading_time(daytm_t last_time)const
 {
-	//LOG_TRACE("trading_section is_in_trading : %s ", datetime_to_string(last_time).c_str());
+	//LTLOG_TRACE("trading_section is_in_trading : %s ", datetime_to_string(last_time).c_str());
 
 	for(const auto& it: _trading_section)
 	{

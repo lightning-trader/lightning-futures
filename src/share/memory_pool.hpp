@@ -125,14 +125,14 @@ public:
 	pointer allocate(size_type n)
 	{
 		pointer obj = reinterpret_cast<pointer>(_pool.allocate(n));
-		LOG_DEBUG("Alloc bytes : ", n * sizeof(T));
+		LTLOG_DEBUG("Alloc bytes : ", n * sizeof(T));
 		return obj;
 	}
 
 	void deallocate(pointer obj, size_type n)
 	{
 		_pool.deallocate(obj, n);
-		LOG_DEBUG("Dealloc bytes : ", n * sizeof(T));
+		LTLOG_DEBUG("Dealloc bytes : ", n * sizeof(T));
 	}
 
 	pool_allocator() throw() :_pool(0,sizeof(T))

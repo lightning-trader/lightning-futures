@@ -103,7 +103,7 @@ namespace lt::hft
 			{
 				params p(std::any_cast<std::string>(msg[0]));
 				this->on_change(p);
-				LOG_INFO("strategy change :", get_id(), std::any_cast<std::string>(msg[0]));
+				LTLOG_INFO("strategy change :", get_id(), std::any_cast<std::string>(msg[0]));
 			}
 		}
 
@@ -243,7 +243,7 @@ namespace lt::hft
 		 */
 		void cancel_order(estid_t estid)
 		{
-			LOG_DEBUG("cancel_order : ", estid);
+			LTLOG_DEBUG("cancel_order : ", estid);
 			if (_ctx->cancel_order(estid))
 			{
 				_ctx->remove_condition(estid);
@@ -361,7 +361,7 @@ namespace lt::hft
 			_strategy_handle = library_helper::load_library(filename.c_str());
 			if (!_strategy_handle)
 			{
-				LOG_ERROR("load strategy error:", filename);
+				LTLOG_ERROR("load strategy error:", filename);
 				throw std::invalid_argument("strategy not find : " + std::string(filename));
 			}
 		}
@@ -376,12 +376,12 @@ namespace lt::hft
 		}
 		std::shared_ptr<strategy> make_strategy(straid_t id, syringe* syringe, const std::string& param)
 		{
-			LOG_INFO("make_strategy : ", id, param);
+			LTLOG_INFO("make_strategy : ", id, param);
 			lt::params p(param);
 			create_function creator = (create_function)library_helper::get_symbol(_strategy_handle, "create_strategy");
 			if(creator == nullptr)
 			{
-				LOG_ERROR("cant find create_strategy function :", id);
+				LTLOG_ERROR("cant find create_strategy function :", id);
 				throw std::invalid_argument("cant find create_strategy function : " + id);
 			}
 			auto strategy = creator(id, syringe, p);

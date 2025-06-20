@@ -33,7 +33,7 @@ strategy* create_strategy(straid_t id, syringe* syringe, const params& p)
 	const code_t& code = p.get<code_t>("code");
 	double_t open_detla = p.get<double_t>("open_detla");
 	uint32_t open_once = p.get<uint32_t>("open_once");
-	LOG_INFO("create_strategy : ", id, code.to_string(), open_detla, open_once);
+	LTLOG_INFO("create_strategy : ", id, code.to_string(), open_detla, open_once);
 	return new marketing_strategy(id, syringe, code, open_detla, open_once);
 }
 
@@ -47,11 +47,11 @@ void marketing_strategy::on_tick(const tick_info& tick)
 
 	if (is_close_coming())
 	{
-		LOG_DEBUG("time > _coming_to_close", tick.id.get_symbol(), tick.time);
+		LTLOG_DEBUG("time > _coming_to_close", tick.id.get_symbol(), tick.time);
 		return;
 	}
 	const auto& pos = get_position(_code);
-	//LOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
+	//LTLOG_INFO("on_tick time : %d.%d %s %f %llu %llu\n", tick.time,tick.tick,tick.id.get_id(), tick.price, _buy_order, _sell_order);
 	if (_order_data.buy_order == INVALID_ESTID)
 	{
 		double_t buy_price = tick.buy_price() - _open_delta - _random(_random_engine);
@@ -102,7 +102,7 @@ void marketing_strategy::on_tick(const tick_info& tick)
 
 void marketing_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("on_entrust :", order.estid, order.code.get_symbol(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LTLOG_INFO("on_entrust :", order.estid, order.code.get_symbol(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 
 	if (order.estid == _order_data.buy_order || order.estid == _order_data.sell_order)
 	{
@@ -119,7 +119,7 @@ void marketing_strategy::on_entrust(const order_info& order)
 
 void marketing_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_INFO("on_trade :", localid, code.get_symbol(), direction, offset, price, volume);
+	LTLOG_INFO("on_trade :", localid, code.get_symbol(), direction, offset, price, volume);
 	if (localid == _order_data.buy_order)
 	{
 		cancel_order(_order_data.sell_order);
@@ -134,7 +134,7 @@ void marketing_strategy::on_trade(estid_t localid, const code_t& code, offset_ty
 
 void marketing_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
-	LOG_INFO("on_cancel :", localid, code.get_symbol(), direction, offset, price, cancel_volume);
+	LTLOG_INFO("on_cancel :", localid, code.get_symbol(), direction, offset, price, cancel_volume);
 
 	if (localid == _order_data.buy_order)
 	{
@@ -148,7 +148,7 @@ void marketing_strategy::on_cancel(estid_t localid, const code_t& code, offset_t
 
 void marketing_strategy::on_error(error_type type, estid_t localid, const error_code error)
 {
-	LOG_ERROR("on_error :", localid, error);
+	LTLOG_ERROR("on_error :", localid, error);
 	if (type == error_type::ET_PLACE_ORDER)
 	{
 		if (localid == _order_data.buy_order)

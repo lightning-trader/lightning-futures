@@ -81,10 +81,10 @@ bool trading_context::load_data()
 {
 	if(!_trader)
 	{
-		LOG_ERROR("context load trader null");
+		LTLOG_ERROR("context load trader null");
 		return false;
 	}
-	LOG_INFO("context load trader data");
+	LTLOG_INFO("context load trader data");
 	
 	const auto orders = _trader->get_all_orders();
 	_order_info.clear();
@@ -189,7 +189,7 @@ void trading_context::set_cancel_condition(estid_t estid, std::function<bool(est
 {
 	if (estid != INVALID_ESTID)
 	{
-		LOG_DEBUG("set_cancel_condition : ", estid);
+		LTLOG_DEBUG("set_cancel_condition : ", estid);
 		_need_check_condition[estid] = std::make_pair(callback,error);
 	}
 }
@@ -197,16 +197,16 @@ void trading_context::set_cancel_condition(estid_t estid, std::function<bool(est
 
 estid_t trading_context::place_order(order_listener* listener, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag)
 {
-	LOG_INFO("context place order : ", code.get_symbol(), offset, direction, price, count);
+	LTLOG_INFO("context place order : ", code.get_symbol(), offset, direction, price, count);
 	PROFILE_DEBUG(code.get_symbol());
 	if (!this->_trader)
 	{
-		LOG_ERROR("place order this->_trader null");
+		LTLOG_ERROR("place order this->_trader null");
 		return INVALID_ESTID;
 	}
 	if (!is_trading_time())
 	{
-		LOG_WARNING("place order not in trading time", code.get_symbol());
+		LTLOG_WARNING("place order not in trading time", code.get_symbol());
 		return INVALID_ESTID;
 	}
 	PROFILE_DEBUG(code.get_symbol());
@@ -216,7 +216,7 @@ estid_t trading_context::place_order(order_listener* listener, offset_type offse
 	{
 		if (!_filter_function(code, offset, direction, count, real_price, flag))
 		{
-			LOG_WARNING("engine place order : _filter_function false", code.get_symbol(), offset, direction, real_price, count);
+			LTLOG_WARNING("engine place order : _filter_function false", code.get_symbol(), offset, direction, real_price, count);
 			return INVALID_ESTID;
 		}
 	}
@@ -240,21 +240,21 @@ bool trading_context::cancel_order(estid_t estid)
 	}
 	if (!this->_trader)
 	{
-		LOG_ERROR("cancel order this->_trader null");
+		LTLOG_ERROR("cancel order this->_trader null");
 		return false;
 	}
 	if (!is_trading_time())
 	{
-		LOG_WARNING("cancel order not in trading time ", estid);
+		LTLOG_WARNING("cancel order not in trading time ", estid);
 		return false;
 	}
 	if(_cancel_freeze.find(estid) != _cancel_freeze.end())
 	{
-		LOG_WARNING("cancel order in freeze ", estid);
+		LTLOG_WARNING("cancel order in freeze ", estid);
 		return true;
 	}
 	
-	LOG_INFO("context cancel_order : ", estid);
+	LTLOG_INFO("context cancel_order : ", estid);
 	auto result = this->_trader->cancel_order(estid);
 	if(result)
 	{
@@ -349,7 +349,7 @@ void trading_context::check_crossday()
 {
 	_statistic_info.clear();
 	_last_order_time = 0U;
-	LOG_INFO("trading ready");
+	LTLOG_INFO("trading ready");
 }
 const tick_info& trading_context::get_previous_tick(const code_t& code)const
 {
@@ -432,7 +432,7 @@ void trading_context::handle_tick(const std::vector<std::any>& param)
 		PROFILE_DEBUG("pDepthMarketData->InstrumentID");
 		auto&& last_tick = std::any_cast<const tick_info>(param[0]);
 		PROFILE_DEBUG(last_tick.id.get_symbol());
-		LOG_INFO("handle_tick", last_tick.id.get_symbol(), last_tick.time, _last_tick_time, last_tick.price);
+		LTLOG_INFO("handle_tick", last_tick.id.get_symbol(), last_tick.time, _last_tick_time, last_tick.price);
 		if (last_tick.time > _last_tick_time)
 		{
 			update_time(last_tick.time);
@@ -639,7 +639,7 @@ void trading_context::handle_error(const std::vector<std::any>& param)
 		}
 		else
 		{
-			LOG_ERROR("handle_error", error);
+			LTLOG_ERROR("handle_error", error);
 		}
 	}
 }
@@ -666,12 +666,12 @@ void trading_context::handle_state(const std::vector<std::any>& param)
 		}
 
 	}
-	LOG_INFO("state change : ", product_code.to_string(), current_state, time);
+	LTLOG_INFO("state change : ", product_code.to_string(), current_state, time);
 }
 
 void trading_context::calculate_position(const code_t& code, direction_type dir_type, offset_type offset_type, uint32_t volume, double_t price)
 {
-	LOG_INFO("calculate_position ", code.get_symbol(), dir_type, offset_type, volume, price);
+	LTLOG_INFO("calculate_position ", code.get_symbol(), dir_type, offset_type, volume, price);
 	position_info p;
 	auto it = _position_info.find(code);
 	if (it != _position_info.end())
@@ -931,12 +931,12 @@ void trading_context::print_position(const char* title)
 {
 	if (!_position_info.empty())
 	{
-		LOG_INFO("print_position : ", title);
+		LTLOG_INFO("print_position : ", title);
 	}
 	for (const auto& it : _position_info)
 	{
 		const auto& pos = it.second;
-		LOG_INFO("position :", pos.id.get_symbol(), "total_long(", pos.total_long.postion, pos.total_long.frozen, ") total_short(", pos.total_short.postion, pos.total_short.frozen, ") history_long(", pos.history_long.postion, pos.history_long.frozen, ") history_short(", pos.history_short.postion, pos.history_short.frozen, ")");
-		LOG_INFO("pending :", pos.id.get_symbol(), pos.long_pending, pos.short_pending);
+		LTLOG_INFO("position :", pos.id.get_symbol(), "total_long(", pos.total_long.postion, pos.total_long.frozen, ") total_short(", pos.total_short.postion, pos.total_short.frozen, ") history_long(", pos.history_long.postion, pos.history_long.frozen, ") history_short(", pos.history_short.postion, pos.history_short.frozen, ")");
+		LTLOG_INFO("pending :", pos.id.get_symbol(), pos.long_pending, pos.short_pending);
 	}
 }

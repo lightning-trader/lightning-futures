@@ -41,7 +41,7 @@ void arbitrage_strategy::on_tick(const tick_info& tick)
 
 	if (is_close_coming())
 	{
-		LOG_DEBUG("time > _coming_to_close", tick.id.get_symbol(), tick.time);
+		LTLOG_DEBUG("time > _coming_to_close", tick.id.get_symbol(), tick.time);
 		return;
 	}
 	if(tick.id == _code1)
@@ -78,7 +78,7 @@ void arbitrage_strategy::on_tick(const tick_info& tick)
 
 void arbitrage_strategy::on_entrust(const order_info& order)
 {
-	LOG_INFO("on_entrust :", order.estid, order.code.get_symbol(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	LTLOG_INFO("on_entrust :", order.estid, order.code.get_symbol(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
 		if (_order_data.order_estids[i] == order.estid)
@@ -100,7 +100,7 @@ void arbitrage_strategy::on_entrust(const order_info& order)
 
 void arbitrage_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LOG_INFO("on_trade :", localid, code.get_symbol(), direction, offset, price, volume);
+	LTLOG_INFO("on_trade :", localid, code.get_symbol(), direction, offset, price, volume);
 	if (_order_data.a_state == arbitrage_state::AS_BUY_INTEREST)
 	{
 		if(localid == _order_data.order_estids[PSRDT_BUY_ORDER_1])
@@ -169,7 +169,7 @@ void arbitrage_strategy::on_trade(estid_t localid, const code_t& code, offset_ty
 
 void arbitrage_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
-	LOG_INFO("on_cancel :", localid, code.get_symbol(), direction, offset, price, cancel_volume);
+	LTLOG_INFO("on_cancel :", localid, code.get_symbol(), direction, offset, price, cancel_volume);
 
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
@@ -183,7 +183,7 @@ void arbitrage_strategy::on_cancel(estid_t localid, const code_t& code, offset_t
 
 void arbitrage_strategy::on_error(error_type type, estid_t localid, const error_code error)
 {
-	LOG_ERROR("on_error :", localid, error);
+	LTLOG_ERROR("on_error :", localid, error);
 	for (size_t i = 0; i < PSRDT_ORDER_COUNT; i++)
 	{
 		if (_order_data.order_estids[i] == localid)

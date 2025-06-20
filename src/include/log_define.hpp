@@ -210,19 +210,19 @@ namespace lt::log
 }
 
 #ifndef NDEBUG
-#define LOG_TRACE(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_DEBUG(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);throw std::runtime_error("log fatal : "+std::string(__func__));
+#define LTLOG_TRACE(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_TRACE,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LTLOG_DEBUG(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LTLOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);throw std::runtime_error("log fatal : "+std::string(__func__));
 #define PROFILE_DEBUG(msg) //log_profile(LogLevel::LLV_DEBUG,__FILE__,__func__,__LINE__,msg);
 #else
-#define LOG_TRACE(...) 
-#define LOG_DEBUG(...) 
+#define LTLOG_TRACE(...) 
+#define LTLOG_DEBUG(...) 
 #define PROFILE_DEBUG(msg) 
-#define LOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LTLOG_FATAL(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_FATAL,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 #endif
-#define LOG_INFO(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_WARNING(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
-#define LOG_ERROR(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LTLOG_INFO(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LTLOG_WARNING(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_WARNING,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define LTLOG_ERROR(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_ERROR,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 
 //测评日志
 #define EVALUATE_INFO(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);

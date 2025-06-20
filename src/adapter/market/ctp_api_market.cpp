@@ -49,7 +49,7 @@ ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_
 	}
 	catch (...)
 	{
-		LOG_ERROR("market config error ");
+		LTLOG_ERROR("market config error ");
 	}
 	_market_handle = library_helper::load_library("thostmduserapi_se");
 	if (_market_handle)
@@ -67,7 +67,7 @@ ctp_api_market::ctp_api_market(std::unordered_map<std::string, std::string>& id_
 	}
 	else
 	{
-		LOG_ERROR("ctp_api_trader thosttraderapi_se load error ");
+		LTLOG_ERROR("ctp_api_trader thosttraderapi_se load error ");
 	}
 }
 
@@ -82,7 +82,7 @@ bool ctp_api_market::login()
 {
 	if(_is_inited)
 	{
-		LOG_ERROR("ctp_api_market already login");
+		LTLOG_ERROR("ctp_api_market already login");
 		return false;
 	}
 	_is_runing = true;
@@ -123,13 +123,13 @@ void ctp_api_market::OnRspError( CThostFtdcRspInfoField *pRspInfo, int nRequestI
 {
 	if(pRspInfo)
 	{
-		LOG_ERROR("Error:%d->%s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		LTLOG_ERROR("Error:%d->%s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
 }
 
 void ctp_api_market::OnFrontConnected()noexcept
 {
-	LOG_INFO("Connected : %s", _front_addr.c_str());
+	LTLOG_INFO("Connected : %s", _front_addr.c_str());
 	if (_is_runing)
 	{
 		if(!do_login())
@@ -144,11 +144,11 @@ void ctp_api_market::OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin,
 {
 	if(pRspInfo)
 	{
-		LOG_DEBUG("UserLogin : %d -> %s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		LTLOG_DEBUG("UserLogin : %d -> %s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
 	if(bIsLast)
 	{
-		LOG_INFO("UserLogin : Market data server logined, {%s} {%s}", pRspUserLogin->TradingDay, pRspUserLogin->UserID);
+		LTLOG_INFO("UserLogin : Market data server logined, {%s} {%s}", pRspUserLogin->TradingDay, pRspUserLogin->UserID);
 		_is_inited.exchange(true);
 		_process_signal.notify_all();
 
@@ -159,13 +159,13 @@ void ctp_api_market::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CTh
 {
 	if (pRspInfo)
 	{
-		LOG_DEBUG("UserLogout : %d -> %s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		LTLOG_DEBUG("UserLogout : %d -> %s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
 }
 
 void ctp_api_market::OnFrontDisconnected( int nReason )noexcept
 {
-	LOG_INFO("FrontDisconnected : Reason -> %d", nReason);
+	LTLOG_INFO("FrontDisconnected : Reason -> %d", nReason);
 }
 
 
@@ -177,7 +177,7 @@ void ctp_api_market::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDept
 	}
 	
 	PROFILE_INFO(pDepthMarketData->InstrumentID);
-	LOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice, pDepthMarketData->UpdateTime, pDepthMarketData->UpdateMillisec);
+	LTLOG_DEBUG("MarketData =", pDepthMarketData->InstrumentID, pDepthMarketData->LastPrice, pDepthMarketData->UpdateTime, pDepthMarketData->UpdateMillisec);
 	const char * excg_id = pDepthMarketData->ExchangeID;
 	auto excg_it = _id_excg_map.find(pDepthMarketData->InstrumentID);
 	if (excg_it != _id_excg_map.end())
@@ -239,7 +239,7 @@ void ctp_api_market::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpe
 {
 	if(pRspInfo)
 	{
-		LOG_INFO("SubMarketData : code -> %d %s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		LTLOG_INFO("SubMarketData : code -> %d %s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
 }
 
@@ -247,7 +247,7 @@ void ctp_api_market::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSp
 {
 	if (pRspInfo)
 	{
-		LOG_INFO("UnSubMarketData : code -> %d %s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
+		LTLOG_INFO("UnSubMarketData : code -> %d %s", pRspInfo->ErrorID, pRspInfo->ErrorMsg);
 	}
 }
 
@@ -255,7 +255,7 @@ bool ctp_api_market::do_login()
 {
 	if(_md_api == nullptr)
 	{
-		LOG_ERROR("do_login : _md_api nullptr");
+		LTLOG_ERROR("do_login : _md_api nullptr");
 		return false;
 	}
 
@@ -267,7 +267,7 @@ bool ctp_api_market::do_login()
 	int iResult = _md_api->ReqUserLogin(&req, ++_reqid);
 	if(iResult != 0)
 	{
-		LOG_ERROR("do_login : % d",iResult);
+		LTLOG_ERROR("do_login : % d",iResult);
 		return false;
 	}
 	return true;
@@ -287,7 +287,7 @@ bool ctp_api_market::do_logout()
 	int iResult = _md_api->ReqUserLogout(&req, ++_reqid);
 	if (iResult != 0)
 	{
-		LOG_ERROR("ctp_api_market logout request failed:", iResult);
+		LTLOG_ERROR("ctp_api_market logout request failed:", iResult);
 		return false;
 	}
 
