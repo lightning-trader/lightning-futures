@@ -82,11 +82,11 @@ const std::vector<bar_info> bar_generator::get_kline_serial(size_t size)
 {
 
 	std::vector<bar_info> result;
-	seqtm_t previous_time = time(0);
 	size_t need_cache = size - 1; //最后一个为current bar
 	if(_bar_cache.size()< need_cache)
 	{
 		std::vector<ltd_bar_info> data;
+		seqtm_t previous_time = _bar_cache.begin()->time;
 		_dw.get_history_bar(data, _code.to_string().c_str(),static_cast<ltd_period>(_period), previous_time, need_cache - _bar_cache.size());
 		for (auto it = data.rbegin(); it != data.rend(); ++it)
 		{

@@ -474,37 +474,30 @@ void ctp_api_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *p
 		pos.id = code;
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
-			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
+			if (code.is_distinct())
 			{
-				if (code.is_distinct())
-				{
-					pos.today_long += pInvestorPosition->TodayPosition;
-				}
-				else
-				{
-					pos.today_long += pInvestorPosition->Position;
-				}
-				
+				pos.total_long += pInvestorPosition->TodayPosition;
 			}
 			else
+			{
+				pos.total_long += pInvestorPosition->Position;
+			}
+			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_History)
 			{
 				pos.history_long += (pInvestorPosition->Position - pInvestorPosition->TodayPosition);
 			}
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
-			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
+			if (code.is_distinct())
 			{
-				if(code.is_distinct())
-				{
-					pos.today_short += pInvestorPosition->TodayPosition;
-				}
-				else
-				{
-					pos.today_short += pInvestorPosition->Position;
-				}
+				pos.total_short += pInvestorPosition->TodayPosition;
 			}
 			else
+			{
+				pos.total_short += pInvestorPosition->Position;
+			}
+			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_History)
 			{
 				pos.history_short += (pInvestorPosition->Position - pInvestorPosition->TodayPosition);
 			}

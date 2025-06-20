@@ -462,9 +462,9 @@ namespace lt
 	{
 		code_t id; //合约ID
 		position_info(const code_t& code) :id(code), long_pending(0), short_pending(0) {}
-		//今仓
-		position_cell today_long;
-		position_cell today_short;
+		//全部仓位包含今仓昨仓
+		position_cell total_long;
+		position_cell total_short;
 
 		//昨仓
 		position_cell history_long;
@@ -476,37 +476,19 @@ namespace lt
 
 		bool empty()const
 		{
-			return today_long.empty() && today_short.empty() && history_long.empty() && history_short.empty() && long_pending == 0U && short_pending == 0U;
+			return total_long.empty() && total_short.empty() && long_pending == 0U && short_pending == 0U;
 		}
 
 		uint32_t get_total()const
 		{
-			return today_long.postion + today_short.postion + history_long.postion + history_short.postion;
+			return total_long.postion + total_short.postion ;
 		}
 
 		int32_t get_real()const
 		{
-			return today_long.postion + history_long.postion - (today_short.postion + history_short.postion);
+			return total_long.postion  - total_long.postion ;
 		}
 
-		uint32_t get_long_position()const
-		{
-			return today_long.postion + history_long.postion;
-		}
-
-		uint32_t get_short_position()const
-		{
-			return today_short.postion + history_short.postion;
-		}
-		uint32_t get_long_frozen()const
-		{
-			return today_long.frozen + history_long.frozen;
-		}
-
-		uint32_t get_short_frozen()const
-		{
-			return today_short.frozen + history_short.frozen;
-		}
 		position_info() :long_pending(0U), short_pending(0U)
 		{}
 	};
@@ -528,7 +510,7 @@ namespace lt
 	enum class offset_type
 	{
 		OT_OPEN = '0',	//开仓
-		OT_CLOSE,		//平仓,上期为平昨
+		OT_CLOSE,		//平仓,上期所等为平昨
 		OT_CLSTD		//平今
 	};
 

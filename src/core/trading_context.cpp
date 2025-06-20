@@ -47,8 +47,7 @@ trading_context::trading_context(market_api* market, trader_api* trader,const ch
 		_last_tick_time = _trading_section->get_open_time();
 	}
 	else
-	{
-		
+	{	
 		_last_tick_time = lt::make_daytm(time(0),0U);
 	}
 	if (_market)
@@ -104,27 +103,29 @@ bool trading_context::load_data()
 				pos.short_pending += it.total_volume;
 			}
 		}
-		else if (it.offset == offset_type::OT_CLSTD)
-		{
-			if (it.direction == direction_type::DT_LONG)
-			{
-				pos.today_long.frozen += it.total_volume;
-			}
-			else if (it.direction == direction_type::DT_SHORT)
-			{
-				pos.today_short.frozen += it.total_volume;
-			}
-		}
+		
 		else
 		{
 			if (it.direction == direction_type::DT_LONG)
 			{
-				pos.history_long.frozen += it.total_volume;
+				pos.total_long.frozen += it.total_volume;
 			}
 			else if (it.direction == direction_type::DT_SHORT)
 			{
-				pos.history_short.frozen += it.total_volume;
+				pos.total_short.frozen += it.total_volume;
 			}
+			if(it.offset == offset_type::OT_CLOSE)
+			{
+				if (it.direction == direction_type::DT_LONG)
+				{
+					pos.history_long.frozen += it.total_volume;
+				}
+				else if (it.direction == direction_type::DT_SHORT)
+				{
+					pos.history_short.frozen += it.total_volume;
+				}
+			}
+			
 
 		}
 		_order_info[it.estid] = it;
@@ -136,8 +137,8 @@ bool trading_context::load_data()
 	{
 		auto& pos = _position_info[it.id];
 		pos.id = it.id;
-		pos.today_long.postion = it.today_long;
-		pos.today_short.postion = it.today_short;
+		pos.total_long.postion = it.total_long;
+		pos.total_short.postion = it.total_short;
 		pos.history_long.postion = it.history_long;
 		pos.history_short.postion = it.history_short;
 	}
@@ -384,7 +385,7 @@ daytm_t trading_context::get_last_time()const
 {
 	std::chrono::time_point now = std::chrono::system_clock::now();
 	std::chrono::duration<double, std::milli> elapsed = now - _tick_update_point;
-	return _last_tick_time + std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+	return _last_tick_time + static_cast<daytm_t>(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
 }
 
 seqtm_t trading_context::get_now_time()const
@@ -685,40 +686,42 @@ void trading_context::calculate_position(const code_t& code, direction_type dir_
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
-			p.today_long.postion += volume;
+			p.total_long.postion += volume;
 			p.long_pending -= volume;
 
 		}
 		else
 		{
-			p.today_short.postion += volume;
+			p.total_short.postion += volume;
 			p.short_pending -= volume;
 		}
 	}
-	else if (offset_type == offset_type::OT_CLSTD)
-	{
-		if (dir_type == direction_type::DT_LONG)
-		{
-			p.today_long.postion -= volume;
-			p.today_long.frozen -= volume;
-		}
-		else if (dir_type == direction_type::DT_SHORT)
-		{
-			p.today_short.postion -= volume;
-			p.today_short.frozen -= volume;
-		}
-	}
+	
 	else
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
-			p.history_long.postion -= volume;
-			p.history_long.frozen -= volume;
+			p.total_long.postion -= volume;
+			p.total_long.frozen -= volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			p.history_short.postion -= volume;
-			p.history_short.frozen -= volume;
+			p.total_short.postion -= volume;
+			p.total_short.frozen -= volume;
+		}
+		
+		if (offset_type == offset_type::OT_CLOSE)
+		{
+			if (dir_type == direction_type::DT_LONG)
+			{
+				p.history_long.postion -= volume;
+				p.history_long.frozen -= volume;
+			}
+			else if (dir_type == direction_type::DT_SHORT)
+			{
+				p.history_short.postion -= volume;
+				p.history_short.frozen -= volume;
+			}
 		}
 	}
 	if (!p.empty())
@@ -743,18 +746,15 @@ void trading_context::frozen_deduction(const code_t& code, direction_type dir_ty
 		return;
 	}
 	position_info& pos = it->second;
-	if (offset_type == offset_type::OT_CLSTD)
+	if (dir_type == direction_type::DT_LONG)
 	{
-		if (dir_type == direction_type::DT_LONG)
-		{
-			pos.today_long.frozen += volume;
-		}
-		else if (dir_type == direction_type::DT_SHORT)
-		{
-			pos.today_short.frozen += volume;
-		}
+		pos.total_long.frozen += volume;
 	}
-	else if (offset_type == offset_type::OT_CLOSE)
+	else if (dir_type == direction_type::DT_SHORT)
+	{
+		pos.total_short.frozen += volume;
+	}
+	if (offset_type == offset_type::OT_CLOSE)
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
@@ -775,32 +775,29 @@ void trading_context::unfreeze_deduction(const code_t& code, direction_type dir_
 		return;
 	}
 	position_info& pos = it->second;
-	if (offset_type == offset_type::OT_CLSTD)
+	if (dir_type == direction_type::DT_LONG)
 	{
-		if (dir_type == direction_type::DT_LONG)
+		if (pos.total_long.frozen > volume)
 		{
-			if (pos.today_long.frozen > volume)
-			{
-				pos.today_long.frozen -= volume;
-			}
-			else
-			{
-				pos.today_long.frozen = 0;
-			}
+			pos.total_long.frozen -= volume;
 		}
-		else if (dir_type == direction_type::DT_SHORT)
+		else
 		{
-			if (pos.today_short.frozen > volume)
-			{
-				pos.today_short.frozen -= volume;
-			}
-			else
-			{
-				pos.today_short.frozen = 0;
-			}
+			pos.total_long.frozen = 0;
 		}
 	}
-	else if (offset_type == offset_type::OT_CLOSE)
+	else if (dir_type == direction_type::DT_SHORT)
+	{
+		if (pos.total_short.frozen > volume)
+		{
+			pos.total_short.frozen -= volume;
+		}
+		else
+		{
+			pos.total_short.frozen = 0;
+		}
+	}
+	if (offset_type == offset_type::OT_CLOSE)
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
@@ -939,7 +936,7 @@ void trading_context::print_position(const char* title)
 	for (const auto& it : _position_info)
 	{
 		const auto& pos = it.second;
-		LOG_INFO("position :", pos.id.get_symbol(), "today_long(", pos.today_long.postion, pos.today_long.frozen, ") today_short(", pos.today_short.postion, pos.today_short.frozen, ") yestoday_long(", pos.history_long.postion, pos.history_long.frozen, ") yestoday_short(", pos.history_short.postion, pos.history_short.frozen, ")");
+		LOG_INFO("position :", pos.id.get_symbol(), "total_long(", pos.total_long.postion, pos.total_long.frozen, ") total_short(", pos.total_short.postion, pos.total_short.frozen, ") history_long(", pos.history_long.postion, pos.history_long.frozen, ") history_short(", pos.history_short.postion, pos.history_short.frozen, ")");
 		LOG_INFO("pending :", pos.id.get_symbol(), pos.long_pending, pos.short_pending);
 	}
 }

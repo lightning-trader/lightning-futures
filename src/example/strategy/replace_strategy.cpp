@@ -108,13 +108,16 @@ void replace_strategy::try_buy()
 {
 	const auto& market = get_market_info(_code);
 	const auto& pos = get_position(_code);
-	if(pos.history_short.usable()>0)
+	if (pos.total_short.usable() > 0)
 	{
-		order_estids[SHORT_ClOSE_HISTORY] = buy_close(_code, pos.history_short.usable(), market.last_tick_info.sell_price());
-	}
-	if (pos.today_short.usable() > 0)
-	{
-		order_estids[SHORT_ClOSE_TODAY] = buy_close(_code, pos.today_short.usable(), market.last_tick_info.sell_price(), true);
+		if (pos.history_short.usable() > 0)
+		{
+			order_estids[SHORT_ClOSE_HISTORY] = buy_close(_code, pos.history_short.usable(), market.last_tick_info.sell_price());
+		}
+		if (pos.total_short.usable() > pos.history_short.usable())
+		{
+			order_estids[SHORT_ClOSE_TODAY] = buy_close(_code, pos.total_short.usable() - pos.history_short.usable(), market.last_tick_info.sell_price(), true);
+		}
 	}
 	order_estids[LONG_OPEN_TODAY] = buy_open(_code, _open_once, market.last_tick_info.sell_price());
 
@@ -124,13 +127,16 @@ void replace_strategy::try_sell()
 {
 	const auto& market = get_market_info(_code);
 	const auto& pos = get_position(_code);
-	if (pos.history_long.usable() > 0)
+	if (pos.total_long.usable() > 0)
 	{
-		order_estids[LONG_ClOSE_HISTORY] = sell_close(_code, pos.history_long.usable(), market.last_tick_info.buy_price());
-	}
-	if (pos.today_long.usable() > 0)
-	{
-		order_estids[LONG_ClOSE_TODAY] = sell_close(_code, pos.today_long.usable(), market.last_tick_info.buy_price(), true);
+		if (pos.history_long.usable() > 0)
+		{
+			order_estids[LONG_ClOSE_HISTORY] = sell_close(_code, pos.history_long.usable(), market.last_tick_info.buy_price());
+		}
+		if (pos.total_long.usable() > pos.history_long.usable())
+		{
+			order_estids[LONG_ClOSE_TODAY] = sell_close(_code, pos.total_long.usable() - pos.history_long.usable(), market.last_tick_info.buy_price(), true);
+		}
 	}
 	order_estids[SHORT_OPEN_TODAY] = sell_open(_code, _open_once, market.last_tick_info.buy_price());
 }
@@ -140,20 +146,27 @@ void replace_strategy::try_close()
 {
 	const auto& market = get_market_info(_code);
 	const auto& pos = get_position(_code);
-	if (pos.history_long.usable() > 0)
+	if (pos.total_long.usable() > 0)
 	{
-		order_estids[LONG_ClOSE_HISTORY] = sell_close(_code, pos.history_long.usable(), market.last_tick_info.buy_price());
+		if (pos.history_long.usable() > 0)
+		{
+			order_estids[LONG_ClOSE_HISTORY] = sell_close(_code, pos.history_long.usable(), market.last_tick_info.buy_price());
+		}
+		if (pos.total_long.usable() > pos.history_long.usable())
+		{
+			order_estids[LONG_ClOSE_TODAY] = sell_close(_code, pos.total_long.usable(), market.last_tick_info.buy_price(), true);
+		}
 	}
-	if (pos.today_long.usable() > 0)
+	
+	if (pos.total_short.usable() > 0)
 	{
-		order_estids[LONG_ClOSE_TODAY] = sell_close(_code, pos.today_long.usable(), market.last_tick_info.buy_price(), true);
-	}
-	if (pos.history_short.usable() > 0)
-	{
-		order_estids[SHORT_ClOSE_HISTORY] = buy_close(_code, pos.history_short.usable(), market.last_tick_info.sell_price());
-	}
-	if (pos.today_short.usable() > 0)
-	{
-		order_estids[SHORT_ClOSE_TODAY] = buy_close(_code, pos.today_short.usable(), market.last_tick_info.sell_price(), true);
+		if (pos.history_short.usable() > 0)
+		{
+			order_estids[SHORT_ClOSE_HISTORY] = buy_close(_code, pos.history_short.usable(), market.last_tick_info.sell_price());
+		}
+		if (pos.history_short.usable() > pos.history_short.usable())
+		{
+			order_estids[SHORT_ClOSE_TODAY] = buy_close(_code, pos.total_short.usable()- pos.history_short.usable(), market.last_tick_info.sell_price(), true);
+		}
 	}
 }

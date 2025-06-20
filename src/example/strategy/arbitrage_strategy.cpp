@@ -305,7 +305,7 @@ estid_t arbitrage_strategy::try_buy(const code_t& code)
 	{
 		return buy_close(code, _open_once, market.last_tick_info.sell_price());
 	}
-	if (pos.today_short.usable() > 0 && _open_once >= pos.today_short.usable())
+	if (pos.total_short.usable() > 0 && _open_once >= (pos.total_short.usable() - pos.history_short.usable()))
 	{
 		return buy_close(code, _open_once, market.last_tick_info.sell_price(), true);
 	}
@@ -320,7 +320,7 @@ estid_t arbitrage_strategy::try_sell(const code_t& code)
 	{
 		return sell_close(code, _open_once, market.last_tick_info.buy_price());
 	}
-	if (pos.today_long.usable() > 0 && _open_once >= pos.today_long.usable())
+	if (pos.total_long.usable() > 0 && _open_once >= (pos.total_long.usable() - pos.history_long.usable()))
 	{
 		return sell_close(code, _open_once, market.last_tick_info.buy_price(), true);
 	}

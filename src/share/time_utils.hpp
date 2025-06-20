@@ -152,12 +152,22 @@ namespace lt
 			return tm - 16 * ONE_HOUR_MILLISECONDS;
 		}
 	}
+	
 	static daytm_t daytm_really(daytm_t tm)
 	{
 		//21点开盘，向后偏移16小时
 		return (tm + 16 * ONE_HOUR_MILLISECONDS) % ONE_DAY_MILLISECONDS;
 	}
 
+	static time_t get_day_begin(time_t cur)
+	{
+		if (cur < ONE_DAY_SECONDS)
+			return 0;
+		int _0 = (int)cur / ONE_DAY_SECONDS * ONE_DAY_SECONDS - 28800;
+		if (_0 <= (cur - ONE_DAY_SECONDS))
+			_0 += ONE_DAY_SECONDS;
+		return _0;
+	}
 	static daytm_t make_daytm(const char* time, uint32_t tick)
 	{
 		if (time != nullptr)
@@ -170,6 +180,11 @@ namespace lt
 	static daytm_t make_daytm(uint32_t time, uint32_t tick)
 	{
 		return daytm_sequence(static_cast<daytm_t>(make_time(time)) * ONE_SECOND_MILLISECONDS + tick);
+	}
+	//time_t
+	static daytm_t make_daytm(time_t time, uint32_t tick)
+	{
+		return daytm_sequence(static_cast<daytm_t>(time-get_day_begin(time)) * ONE_SECOND_MILLISECONDS + tick);
 	}
 	//is_str==true: 21:12:30.500
 	//is_str==false:  211230.500 
@@ -197,7 +212,7 @@ namespace lt
 			}
 			else
 			{
-				return make_daytm(std::atoi(tmp), std::atoi(time + p));
+				return make_daytm(static_cast<uint32_t>(std::atoi(tmp)), std::atoi(time + p));
 			}
 		}
 		return -1;
@@ -214,15 +229,7 @@ namespace lt
 	{
 		return make_date(day) + daytm_really(dtm) / ONE_SECOND_MILLISECONDS;
 	}
-	static time_t get_day_begin(time_t cur)
-	{
-		if (cur < ONE_DAY_SECONDS)
-			return 0;
-		int _0 = (int)cur / ONE_DAY_SECONDS * ONE_DAY_SECONDS - 28800;
-		if (_0 <= (cur - ONE_DAY_SECONDS))
-			_0 += ONE_DAY_SECONDS;
-		return _0;
-	}
+
 
 	// 计算本周一0点(ISO标准周)
 	static time_t get_week_begin(time_t cur)

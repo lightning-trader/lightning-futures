@@ -85,9 +85,9 @@ namespace lt::driver
 		struct position_detail
 		{
 
-			//今仓
-			position_item today_long;
-			position_item today_short;
+			//仓位
+			position_item total_long;
+			position_item total_short;
 
 			//昨仓
 			position_item yestoday_long;
@@ -95,37 +95,19 @@ namespace lt::driver
 
 			bool empty()const
 			{
-				return today_long.empty() && today_short.empty() && yestoday_long.empty() && yestoday_short.empty();
+				return total_long.empty() && total_short.empty();
 			}
 
 			uint32_t get_total()const
 			{
-				return today_long.postion + today_short.postion + yestoday_long.postion + yestoday_short.postion;
+				return total_long.postion + total_short.postion ;
 			}
 
 			int32_t get_real()const
 			{
-				return today_long.postion + yestoday_long.postion - (today_short.postion + yestoday_short.postion);
+				return total_long.postion - total_short.postion ;
 			}
 
-			uint32_t get_long_position()const
-			{
-				return today_long.postion + yestoday_long.postion;
-			}
-
-			uint32_t get_short_position()const
-			{
-				return today_short.postion + yestoday_short.postion;
-			}
-			uint32_t get_long_frozen()const
-			{
-				return today_long.frozen + yestoday_long.frozen;
-			}
-
-			uint32_t get_short_frozen()const
-			{
-				return today_short.frozen + yestoday_short.frozen;
-			}
 			position_detail()
 			{}
 		};
