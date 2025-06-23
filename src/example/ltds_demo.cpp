@@ -32,7 +32,7 @@ void print_trading_day(uint32_t begin, uint32_t end)
 	ltd.get_trading_calendar(trading_days, begin, end);
 	for (auto it : trading_days)
 	{
-		LTLOG_INFO(it);
+		PRINT_INFO(it);
 	}
 }
 void print_all_instrument(uint32_t trading_day)
@@ -41,7 +41,7 @@ void print_all_instrument(uint32_t trading_day)
 	ltd.get_all_instrument(all_instruments, trading_day);
 	for (auto it : all_instruments)
 	{
-		LTLOG_INFO(it);
+		PRINT_INFO(it);
 	}
 }
 
@@ -51,7 +51,7 @@ void print_history_tick(const char* code, uint32_t trading_day)
 	ltd.get_history_tick(result, code, trading_day);
 	for (const auto& it : result)
 	{
-		LTLOG_INFO('\t', it.code, '\t', it.trading_day, '\t', it.time, '\t', it.price);
+		PRINT_INFO('\t', it.code, '\t', it.trading_day, '\t', it.time, '\t', it.price);
 	}
 }
 
@@ -62,7 +62,7 @@ void print_history_bar(const char* code)
 	ltd.get_history_bar(result, code, ltd_period::BC_10M, lt::make_seqtm(time(0)), 30);
 	for (const auto& it : result)
 	{
-		LTLOG_INFO(it.code, '\t', it.time, '\t', it.open, it.close, it.high, it.low, '\t', it.volume);
+		PRINT_INFO(it.code, '\t', it.time, '\t', it.open, it.close, it.high, it.low, '\t', it.volume);
 	}
 }
 

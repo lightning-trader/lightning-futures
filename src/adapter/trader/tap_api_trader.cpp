@@ -55,7 +55,7 @@ tap_api_trader::tap_api_trader(std::unordered_map<std::string, std::string>& id_
 	}
 	catch (...)
 	{
-		LTLOG_ERROR("tap trader init error ");
+		PRINT_ERROR("tap trader init error ");
 	}
 	_trader_handle = library_helper::load_library("TapTradeAPI");
 	if (_trader_handle)
@@ -65,10 +65,10 @@ tap_api_trader::tap_api_trader(std::unordered_map<std::string, std::string>& id_
 	}
 	else
 	{
-		LTLOG_ERROR("tap trader TapQuoteAPI load error ");
+		PRINT_ERROR("tap trader TapQuoteAPI load error ");
 	}
 
-	LTLOG_INFO("tap market init");
+	PRINT_INFO("tap market init");
 	
 }
 
@@ -94,7 +94,7 @@ bool tap_api_trader::login()
 	strcpy(stAppInfo.KeyOperationLogPath, log_path);
 	_td_api = _tap_creator(&stAppInfo, iResult);
 	if (NULL == _td_api) {
-		LTLOG_FATAL("创建API实例失败，错误码：" , iResult);
+		PRINT_FATAL("创建API实例失败，错误码：" , iResult);
 		return false;
 	}
 
@@ -108,7 +108,7 @@ bool tap_api_trader::login()
 	//设定服务器IP、端口
 	iErr = _td_api->SetHostAddress(_ip.c_str(), _port);
 	if (TAPIERROR_SUCCEED != iErr) {
-		LTLOG_ERROR("SetHostAddress Error:", iErr);
+		PRINT_ERROR("SetHostAddress Error:", iErr);
 		return false;
 	}
 
@@ -125,11 +125,11 @@ bool tap_api_trader::login()
 	iErr = _td_api->Login(&stLoginAuth);
 	if (TAPIERROR_SUCCEED != iErr)
 	{
-		LTLOG_ERROR( "Login Error:" ,iErr);
+		PRINT_ERROR( "Login Error:" ,iErr);
 		return false;
 	}
 
-	LTLOG_INFO("ctp_api_trader init ");
+	PRINT_INFO("ctp_api_trader init ");
 	_process_signal.wait(_process_mutex);
 
 	_is_inited = true;
@@ -165,20 +165,20 @@ bool tap_api_trader::query_positions(bool is_sync)
 {
 	if (_td_api == nullptr)
 	{
-		LTLOG_ERROR("tap trader api nullptr");
+		PRINT_ERROR("tap trader api nullptr");
 		return false;
 	}
 	if(_is_in_query)
 	{
-		LTLOG_ERROR("tap trader query_positions _is_in_query true");
+		PRINT_ERROR("tap trader query_positions _is_in_query true");
 		return false;
 	}
-	LTLOG_INFO("tap trader query_positions :", is_sync);
+	PRINT_INFO("tap trader query_positions :", is_sync);
 	TapAPIPositionQryReq qryReq;
 	auto err = _td_api->QryPosition(&_reqid, &qryReq);
 	if(err != TAPIERROR_SUCCEED)
 	{
-		LTLOG_ERROR("tap trader QryPosition Error:", err);
+		PRINT_ERROR("tap trader QryPosition Error:", err);
 		return false;
 	}
 	while (_is_in_query.exchange(true));
@@ -194,21 +194,21 @@ bool tap_api_trader::query_orders(bool is_sync)
 {
 	if (_td_api == nullptr)
 	{
-		LTLOG_ERROR("tap trader api nullptr");
+		PRINT_ERROR("tap trader api nullptr");
 		return false;
 	}
 	if (_is_in_query)
 	{
-		LTLOG_ERROR("tap trader query_orders _is_in_query true");
+		PRINT_ERROR("tap trader query_orders _is_in_query true");
 		return false;
 	}
-	LTLOG_INFO("tap trader query_orders :", is_sync);
+	PRINT_INFO("tap trader query_orders :", is_sync);
 	TapAPIOrderQryReq qryReq;
 	qryReq.OrderQryType = TAPI_ORDER_QRY_TYPE_UNENDED;
 	auto err = _td_api->QryOrder(&_reqid,&qryReq);
 	if (err != TAPIERROR_SUCCEED)
 	{
-		LTLOG_ERROR("tap trader QryOrder Error:", err);
+		PRINT_ERROR("tap trader QryOrder Error:", err);
 		return false;
 	}
 	while (_is_in_query.exchange(true));
@@ -232,7 +232,7 @@ void tap_api_trader::OnConnect()noexcept
 void tap_api_trader::OnRspLogin(TAPIINT32 errorCode, const TapAPITradeLoginRspInfo* loginRspInfo)noexcept
 {
 	if (TAPIERROR_SUCCEED == errorCode) {
-		LTLOG_INFO("登录成功，等待API初始化...");
+		PRINT_INFO("登录成功，等待API初始化...");
 		if (loginRspInfo)
 		{
 			_trading_day = date_to_uint(loginRspInfo->TradeDate);
@@ -242,13 +242,13 @@ void tap_api_trader::OnRspLogin(TAPIINT32 errorCode, const TapAPITradeLoginRspIn
 		}
 	}
 	else {
-		LTLOG_ERROR("登录失败，错误码:", errorCode);
+		PRINT_ERROR("登录失败，错误码:", errorCode);
 		//_process_signal.notify_all();
 	}
 }
 void tap_api_trader::OnAPIReady()noexcept
 {
-	LTLOG_INFO("OnAPIReady :", _ip.c_str(), _port);
+	PRINT_INFO("OnAPIReady :", _ip.c_str(), _port);
 	_process_signal.notify_all();
 }
 void tap_api_trader::OnDisconnect(TAPIINT32 reasonCode)noexcept
@@ -260,7 +260,7 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)noexcept
 {
 	if (notice && notice->ErrorCode != TAPIERROR_SUCCEED)
 	{
-		LTLOG_ERROR("OnRtnOrder Error : ", notice->ErrorCode);
+		PRINT_ERROR("OnRtnOrder Error : ", notice->ErrorCode);
 		return ;
 	}
 	
@@ -268,10 +268,10 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)noexcept
 	{
 		auto info = notice->OrderInfo;
 		estid_t estid = strtoll(info->RefString, NULL, 10);
-		LTLOG_INFO("OnRtnOrder : ", info->OrderState, estid, info->CommodityNo, info->ContractNo, info->ExchangeNo, info->OrderSide, info->PositionEffect);
+		PRINT_INFO("OnRtnOrder : ", info->OrderState, estid, info->CommodityNo, info->ContractNo, info->ExchangeNo, info->OrderSide, info->PositionEffect);
 		if(info->ErrorCode != TAPIERROR_SUCCEED)
 		{
-			LTLOG_ERROR("OnRtnOrder info Error : ", info->ErrorCode);
+			PRINT_ERROR("OnRtnOrder info Error : ", info->ErrorCode);
 			this->fire_event(trader_event_type::TET_OrderError, error_type::ET_PLACE_ORDER, estid, (uint8_t)error_code::EC_StateNotReady);
 			return;
 		}
@@ -299,12 +299,12 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)noexcept
 				}
 				if (info->OrderState == TAPI_ORDER_STATE_CANCELED || info->OrderState == TAPI_ORDER_STATE_LEFTDELETED)
 				{
-					LTLOG_INFO("OnRtnOrder fire_event ET_OrderCancel", estid, code.get_symbol(), direction, offset);
+					PRINT_INFO("OnRtnOrder fire_event ET_OrderCancel", estid, code.get_symbol(), direction, offset);
 					this->fire_event(trader_event_type::TET_OrderCancel, estid, code, offset, direction, info->OrderPrice, order.last_volume, info->OrderQty);
 				}
 				if (info->OrderState == TAPI_ORDER_STATE_FINISHED)
 				{
-					LTLOG_INFO("OnRtnOrder fire_event ET_OrderTrade", estid, code.get_symbol(), direction, offset);
+					PRINT_INFO("OnRtnOrder fire_event ET_OrderTrade", estid, code.get_symbol(), direction, offset);
 					this->fire_event(trader_event_type::TET_OrderTrade, estid, code, offset, direction, info->OrderPrice, info->OrderQty);
 				}
 				_order_info.erase(it);
@@ -358,7 +358,7 @@ void tap_api_trader::OnRtnOrder(const TapAPIOrderInfoNotice* notice)noexcept
 				}
 				else
 				{
-					LTLOG_WARNING("return order ", ordit->second.last_volume, info->OrderMatchQty, info->OrderQty);
+					PRINT_WARNING("return order ", ordit->second.last_volume, info->OrderMatchQty, info->OrderQty);
 				}
 				
 			}
@@ -370,13 +370,13 @@ void tap_api_trader::OnRspOrderAction(TAPIUINT32 sessionID, TAPIUINT32 errorCode
 {
 	if (errorCode != TAPIERROR_SUCCEED)
 	{
-		LTLOG_ERROR("OnRspOrderAction : ", errorCode);
+		PRINT_ERROR("OnRspOrderAction : ", errorCode);
 	}
 	if(info)
 	{
 		if (info->OrderInfo)
 		{
-			LTLOG_INFO("OnRspOrderAction : ", info->ActionType, info->OrderInfo->CommodityNo, info->OrderInfo->ContractNo, info->OrderInfo->ExchangeNo, info->OrderInfo->OrderSide, info->OrderInfo->PositionEffect);
+			PRINT_INFO("OnRspOrderAction : ", info->ActionType, info->OrderInfo->CommodityNo, info->OrderInfo->ContractNo, info->OrderInfo->ExchangeNo, info->OrderInfo->OrderSide, info->OrderInfo->PositionEffect);
 		}
 		
 	}
@@ -386,7 +386,7 @@ void tap_api_trader::OnRspQryOrder(TAPIUINT32 sessionID, TAPIINT32 errorCode, TA
 {
 	if(errorCode != TAPIERROR_SUCCEED)
 	{
-		LTLOG_ERROR("OnRspQryOrder : ", errorCode);
+		PRINT_ERROR("OnRspQryOrder : ", errorCode);
 	}
 	if (_is_in_query)
 	{
@@ -495,11 +495,11 @@ estid_t tap_api_trader::place_order(offset_type offset, direction_type direction
 {
 	if (_td_api == nullptr)
 	{
-		LTLOG_ERROR("tap trader api nullptr");
+		PRINT_ERROR("tap trader api nullptr");
 		return INVALID_ESTID;
 	}
 	PROFILE_DEBUG(code.get_symbol());
-	LTLOG_INFO("ctp_api_trader place_order %s %d", code.get_symbol(), volume);
+	PRINT_INFO("ctp_api_trader place_order %s %d", code.get_symbol(), volume);
 
 	TapAPINewOrder stNewOrder;
 	memset(&stNewOrder, 0, sizeof(stNewOrder));
@@ -551,11 +551,11 @@ estid_t tap_api_trader::place_order(offset_type offset, direction_type direction
 
 	auto iErr = _td_api->InsertOrder(&_reqid, &stNewOrder);
 	if (TAPIERROR_SUCCEED != iErr) {
-		LTLOG_INFO("InsertOrder Error:" , iErr);
+		PRINT_INFO("InsertOrder Error:" , iErr);
 		return INVALID_ESTID;
 	}
 	
-	LTLOG_INFO("ctp_api_trader place_order end", code.get_symbol(), extid);
+	PRINT_INFO("ctp_api_trader place_order end", code.get_symbol(), extid);
 	PROFILE_INFO(code.get_symbol());
 	return extid;
 }
@@ -564,13 +564,13 @@ bool tap_api_trader::cancel_order(estid_t estid)
 {
 	if (_td_api == nullptr)
 	{
-		LTLOG_ERROR("cancel_order _td_api nullptr : %llu", estid);
+		PRINT_ERROR("cancel_order _td_api nullptr : %llu", estid);
 		return false;
 	}
 	auto it = _order_index.find(estid);
 	if (it == _order_index.end())
 	{
-		LTLOG_ERROR("cancel_order order invalid : %llu", estid);
+		PRINT_ERROR("cancel_order order invalid : %llu", estid);
 		return false;
 	}
 	TapAPIOrderCancelReq cancel ;
@@ -579,11 +579,11 @@ bool tap_api_trader::cancel_order(estid_t estid)
 	cancel.ServerFlag = order.ServerFlag;
 	snprintf(cancel.RefString, 51, "%llu", estid);
 	
-	LTLOG_INFO("CancelOrder :", cancel.OrderNo, cancel.ServerFlag, cancel.RefString);
+	PRINT_INFO("CancelOrder :", cancel.OrderNo, cancel.ServerFlag, cancel.RefString);
 	auto iResult = _td_api->CancelOrder(&_reqid, &cancel);
 	if (iResult != 0)
 	{
-		LTLOG_ERROR("cancel_order request failed:", iResult);
+		PRINT_ERROR("cancel_order request failed:", iResult);
 		return false;
 	}
 	return true;
@@ -603,7 +603,7 @@ std::vector<order_info> tap_api_trader::get_all_orders()
 	std::vector<order_info> result;
 	if (!query_orders(true))
 	{
-		LTLOG_ERROR("query_orders error");
+		PRINT_ERROR("query_orders error");
 		return result;
 	}
 	std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -619,7 +619,7 @@ std::vector<position_seed> tap_api_trader::get_all_positions()
 	std::vector<position_seed> result;
 	if (!query_positions(true))
 	{
-		LTLOG_ERROR("query_positions error");
+		PRINT_ERROR("query_positions error");
 		return result;
 	}
 	std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -637,7 +637,7 @@ std::vector<instrument_info> tap_api_trader::get_all_instruments()
 	/*
 	if (!query_instruments(true))
 	{
-		LTLOG_ERROR("query_positions error");
+		PRINT_ERROR("query_positions error");
 		return result;
 	}
 	std::this_thread::sleep_for(std::chrono::seconds(1));

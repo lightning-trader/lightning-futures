@@ -118,7 +118,7 @@ namespace lt::hft
 			auto it = ini.sections.find("control");
 			if (it == ini.sections.end())
 			{
-				LTLOG_ERROR("runtime_engine init_from_file cant find [control]", control_config);
+				PRINT_ERROR("runtime_engine init_from_file cant find [control]", control_config);
 				return;
 			}
 			lt::params control_section(it->second);
@@ -131,7 +131,7 @@ namespace lt::hft
 				PriorityLevel level = static_cast<PriorityLevel>(process_priority);
 				if (!process_helper::set_priority(level))
 				{
-					LTLOG_WARNING("set_priority failed");
+					PRINT_WARNING("set_priority failed");
 				}
 			}
 		}
@@ -142,13 +142,13 @@ namespace lt::hft
 		{
 			if (_is_runing)
 			{
-				LTLOG_WARNING("start a runing service");
+				PRINT_WARNING("start a runing service");
 				return false;
 			}
 
 			if (!_ctx->load_data())
 			{
-				LTLOG_ERROR("load data error");
+				PRINT_ERROR("load data error");
 				return false;
 			}
 			_is_runing = true;
@@ -157,7 +157,7 @@ namespace lt::hft
 				{
 					if (!process_helper::thread_bind_core(static_cast<uint32_t>(_bind_cpu_core)))
 					{
-						LTLOG_WARNING("bind to core failed :", _bind_cpu_core);
+						PRINT_WARNING("bind to core failed :", _bind_cpu_core);
 					}
 				}
 				if (static_cast<int16_t>(PriorityLevel::LowPriority) <= _thread_priority && _thread_priority <= static_cast<int16_t>(PriorityLevel::RealtimePriority))
@@ -165,7 +165,7 @@ namespace lt::hft
 					PriorityLevel level = static_cast<PriorityLevel>(_thread_priority);
 					if (!process_helper::set_thread_priority(level))
 					{
-						LTLOG_WARNING("set_thread_priority failed");
+						PRINT_WARNING("set_thread_priority failed");
 					}
 				}
 
@@ -198,15 +198,15 @@ namespace lt::hft
 		{
 			if (!_is_runing)
 			{
-				LTLOG_WARNING("stop a not runing service");
+				PRINT_WARNING("stop a not runing service");
 				return false;
 			}
 			_is_runing = false;
 			if (_realtime_thread)
 			{
-				LTLOG_INFO("destory realtime thread");
+				PRINT_INFO("destory realtime thread");
 				_realtime_thread->join();
-				LTLOG_INFO("realtime thread join end for delete");
+				PRINT_INFO("realtime thread join end for delete");
 				delete _realtime_thread;
 				_realtime_thread = nullptr;
 			}

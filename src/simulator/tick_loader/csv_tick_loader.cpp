@@ -35,7 +35,7 @@ csv_tick_loader::csv_tick_loader(const char* root_path, const char* trading_day_
 
 	std::ifstream file(trading_day_file);
 	if (!file.is_open()) {
-		LTLOG_ERROR("cant open file :", trading_day_file);
+		PRINT_ERROR("cant open file :", trading_day_file);
 		return;
 	}
 	std::string line;
@@ -67,7 +67,7 @@ void csv_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t&
 
 	std::ifstream file(filename);
 	if (!file.is_open()) {
-		LTLOG_ERROR("cant open file :", filename);
+		PRINT_ERROR("cant open file :", filename);
 		return ;
 	}
 	time_t last_second = 0;

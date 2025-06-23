@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("lightning-futures")
+project ("lightures")
 if(UNIX)
     add_definitions( "-fPIC" )
     set(SYS_LIBS pthread)

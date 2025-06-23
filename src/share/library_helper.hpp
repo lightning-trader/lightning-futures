@@ -37,10 +37,10 @@ class library_helper
 {
 
 public:
-	static dll_handle load_library(const char *filename)
+	static dll_handle load_library(const char *filename,const char* debug_suffix=nullptr)
 	{
 #ifndef NDEBUG
-		std::string dll_name = std::string(filename) + "-d";
+		std::string dll_name = debug_suffix?std::string(filename) + debug_suffix : std::string(filename);
 #else
 		std::string dll_name(filename);
 #endif

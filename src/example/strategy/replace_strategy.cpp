@@ -36,7 +36,7 @@ void replace_strategy::on_init(subscriber& suber)
 
 void replace_strategy::on_tape(const lt::tape_info& tape)
 {
-	LTLOG_INFO(tape.price,static_cast<int32_t>(tape.direction))
+	PRINT_INFO(tape.price,static_cast<int32_t>(tape.direction))
 }
 
 void replace_strategy::on_change(const lt::params& p)
@@ -58,12 +58,12 @@ void replace_strategy::on_change(const lt::params& p)
 
 void replace_strategy::on_entrust(const order_info& order)
 {
-	LTLOG_INFO("on_entrust :", order.estid, order.code.get_symbol(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
+	PRINT_INFO("on_entrust :", order.estid, order.code.get_symbol(), order.direction, order.offset, order.price, order.last_volume, order.total_volume);
 }
 
 void replace_strategy::on_trade(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t volume)
 {
-	LTLOG_INFO("on_trade :", localid, code.get_symbol(), direction, offset, price, volume);
+	PRINT_INFO("on_trade :", localid, code.get_symbol(), direction, offset, price, volume);
 	for (size_t i = 0; i < ORDER_ESTID_COUNT; i++)
 	{
 		if (order_estids[i] != INVALID_ESTID)
@@ -75,7 +75,7 @@ void replace_strategy::on_trade(estid_t localid, const code_t& code, offset_type
 
 void replace_strategy::on_cancel(estid_t localid, const code_t& code, offset_type offset, direction_type direction, double_t price, uint32_t cancel_volume, uint32_t total_volume)
 {
-	LTLOG_INFO("on_cancel :", localid, code.get_symbol(), direction, offset, price, cancel_volume);
+	PRINT_INFO("on_cancel :", localid, code.get_symbol(), direction, offset, price, cancel_volume);
 
 	for (size_t i = 0; i < ORDER_ESTID_COUNT; i++)
 	{
@@ -88,7 +88,7 @@ void replace_strategy::on_cancel(estid_t localid, const code_t& code, offset_typ
 
 void replace_strategy::on_error(error_type type, estid_t localid, const error_code error)
 {
-	LTLOG_ERROR("on_error :", localid, error);
+	PRINT_ERROR("on_error :", localid, error);
 	for (size_t i = 0; i < ORDER_ESTID_COUNT; i++)
 	{
 		if (order_estids[i] != INVALID_ESTID)

@@ -96,7 +96,7 @@ namespace lt::hft
 			}
 			catch (const std::exception& e)
 			{
-				LTLOG_ERROR("csv_recorder record_crossday_flow exception : ", e.what());
+				PRINT_ERROR("csv_recorder record_crossday_flow exception : ", e.what());
 			}
 		}
 
@@ -117,7 +117,7 @@ namespace lt::hft
 		{
 			if (!std::filesystem::exists(account_config))
 			{
-				LTLOG_FATAL("evaluate_engine init_from_file config_path not exists : %s", account_config);
+				PRINT_FATAL("evaluate_engine init_from_file config_path not exists : %s", account_config);
 				return;
 			}
 			inipp::Ini<char> ini;
@@ -128,25 +128,25 @@ namespace lt::hft
 			auto it = ini.sections.find("dummy_market");
 			if (it == ini.sections.end())
 			{
-				LTLOG_ERROR("evaluate_engine cant find [dummy_market]", account_config);
+				PRINT_ERROR("evaluate_engine cant find [dummy_market]", account_config);
 				return;
 			}
 			_market_simulator = create_dummy_market(it->second);
 			if (_market_simulator == nullptr)
 			{
-				LTLOG_ERROR("evaluate_engine create_dummy_market error : %s", account_config);
+				PRINT_ERROR("evaluate_engine create_dummy_market error : %s", account_config);
 				return;
 			}
 			it = ini.sections.find("dummy_trader");
 			if (it == ini.sections.end())
 			{
-				LTLOG_ERROR("evaluate_engine cant find [dummy_trader]", account_config);
+				PRINT_ERROR("evaluate_engine cant find [dummy_trader]", account_config);
 				return;
 			}
 			_trader_simulator = create_dummy_trader(it->second);
 			if (_trader_simulator == nullptr)
 			{
-				LTLOG_ERROR("evaluate_engine create_dummy_trader error : %s", account_config);
+				PRINT_ERROR("evaluate_engine create_dummy_trader error : %s", account_config);
 				return;
 			}
 			it = ini.sections.find("recorder");

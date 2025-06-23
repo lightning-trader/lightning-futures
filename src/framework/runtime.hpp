@@ -50,7 +50,7 @@ namespace lt::hft
 		{
 			if (!std::filesystem::exists(account_config))
 			{
-				LTLOG_ERROR("runtime_engine init_from_file config_path not exit : %s", account_config);
+				PRINT_ERROR("runtime_engine init_from_file config_path not exit : %s", account_config);
 				return;
 			}
 			inipp::Ini<char> ini;
@@ -60,27 +60,27 @@ namespace lt::hft
 			auto it = ini.sections.find("actual_market");
 			if (it == ini.sections.end())
 			{
-				LTLOG_ERROR("runtime_engine init_from_file cant find [actual_market]", account_config);
+				PRINT_ERROR("runtime_engine init_from_file cant find [actual_market]", account_config);
 				return;
 			}
 			//market
 			_market = create_actual_market(it->second);
 			if (_market == nullptr)
 			{
-				LTLOG_ERROR("runtime_engine init_from_file create_market_api ", account_config);
+				PRINT_ERROR("runtime_engine init_from_file create_market_api ", account_config);
 				return;
 			}
 			it = ini.sections.find("actual_trader");
 			if (it == ini.sections.end())
 			{
-				LTLOG_ERROR("runtime_engine init_from_file cant find [actual_trader]", account_config);
+				PRINT_ERROR("runtime_engine init_from_file cant find [actual_trader]", account_config);
 				return;
 			}
 			//trader
 			_trader = create_actual_trader(it->second);
 			if (_trader == nullptr)
 			{
-				LTLOG_ERROR("runtime_engine init_from_file create_trader_api error : %s", account_config);
+				PRINT_ERROR("runtime_engine init_from_file create_trader_api error : %s", account_config);
 				return;
 			}
 			this->_ctx = new trading_context(_market, _trader, section_config);
@@ -114,7 +114,7 @@ namespace lt::hft
 					this->regist_strategy(strategys);
 					if (this->start_service())
 					{
-						LTLOG_INFO("runtime_engine run in start_trading");
+						PRINT_INFO("runtime_engine run in start_trading");
 					}
 				}
 			}
@@ -134,7 +134,7 @@ namespace lt::hft
 				{
 					_market->logout();
 				}
-				LTLOG_INFO("runtime_engine run end");
+				PRINT_INFO("runtime_engine run end");
 			}
 		}
 

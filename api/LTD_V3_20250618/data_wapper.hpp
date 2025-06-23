@@ -52,10 +52,10 @@ public:
 		_provider = initialize(channel,cache_path, detail_cache_size, bar_cache_size);
 		if(_provider == NULL)
 		{
-			LTLOG_FATAL("initialize error:",_get_last_error());
+			PRINT_FATAL("initialize error:",_get_last_error());
 		}
 		get_version_code_function get_version_code = (get_version_code_function)library_helper::get_symbol(_handle, "_get_version_code");
-		LTLOG_INFO("initialize success : ",get_version_code());
+		PRINT_INFO("initialize success : ",get_version_code());
 	}
 
 	virtual ~data_wapper()
