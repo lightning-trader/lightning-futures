@@ -88,6 +88,7 @@ namespace lt::hft
 
 		virtual ~runtime()
 		{
+			this->clear_strategy();
 			if (this->_ctx)
 			{
 				delete this->_ctx;
@@ -105,13 +106,12 @@ namespace lt::hft
 
 	public:
 
-		void start_trading(const std::vector <std::shared_ptr<lt::hft::strategy>>& strategys)
+		void start_trading()
 		{
 			if (_trader && _trader->login())
 			{
 				if (_market && _market->login())
 				{
-					this->regist_strategy(strategys);
 					if (this->start_service())
 					{
 						PRINT_INFO("runtime_engine run in start_trading");
@@ -125,7 +125,6 @@ namespace lt::hft
 			//std::this_thread::sleep_for(std::chrono::seconds(1));
 			if (this->stop_service())
 			{
-				this->clear_strategy();
 				if (_trader)
 				{
 					_trader->logout();

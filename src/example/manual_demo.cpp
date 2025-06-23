@@ -80,9 +80,11 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 int main(int argc, char* argv[])
 {
     app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/normal_control.ini", "config/alltrading_section.csv");
-    std::vector<std::shared_ptr<lt::hft::strategy>> strategys;
     current_strategy = 1U;
-    strategys.emplace_back(std::make_shared<replace_strategy>(current_strategy, app.get(), "SHFE.rb2510", 10));
+    app->regist_strategy({
+        std::make_shared<replace_strategy>(current_strategy, app.get(), "SHFE.rb2510", 10)
+    });
+    
     app->set_trading_filter([](const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, uint32_t count, double_t price, lt::order_flag flag)->bool {
         auto now = app->get_last_time();
         auto last_order = app->last_order_time();
@@ -92,7 +94,7 @@ int main(int argc, char* argv[])
         }
         return true;
         });
-    app->start_trading(strategys);
+    app->start_trading();
     // 安装键盘钩子
     hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, GetModuleHandle(NULL), 0);
 

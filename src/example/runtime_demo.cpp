@@ -32,11 +32,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 int main(int argc, char* argv[])
 {
 	auto app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/bindcore_control.ini", "config/alltrading_section.csv");
-	std::vector<std::shared_ptr<lt::hft::strategy>> strategys;
 	//支持一个或者多个策略同时运行
-	strategys.emplace_back(std::make_shared<marketing_strategy>(1, app.get(), "SHFE.rb2510", 1, 1));
-	strategys.emplace_back(std::make_shared<marketing_strategy>(2, app.get(), "SHFE.hc2510", 1, 1));
-	strategys.emplace_back(std::make_shared<orderflow_strategy>(3, app.get(), "SHFE.rb2510", 1, 1, 3, 3, 10));
+	app->regist_strategy({
+		std::make_shared<marketing_strategy>(1, app.get(), "SHFE.rb2510", 1, 1),
+		std::make_shared<marketing_strategy>(2, app.get(), "SHFE.hc2510", 1, 1),
+		std::make_shared<orderflow_strategy>(3, app.get(), "SHFE.rb2510", 1, 1, 3, 3, 10)
+	});
+
 	//设置拦截器对下单频率增加限制
 	app->set_trading_filter([app](const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, uint32_t count, double_t price, lt::order_flag flag)->bool {
 		auto now = app->get_last_time();
@@ -57,8 +59,8 @@ int main(int argc, char* argv[])
 	//日盘 从08:45:00启动运行7小时（13:45:00）结束
 	manager.add_schedule("08:45:00", std::chrono::hours(7));
 
-	manager.set_callback([app, &strategys](int index) {
-		app->start_trading(strategys);
+	manager.set_callback([app](int index) {
+		app->start_trading();
 		},
 		[app](int index) {
 			app->stop_trading();

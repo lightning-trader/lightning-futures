@@ -213,6 +213,8 @@ namespace lt::hft
 
 			return true;
 		}
+
+	public:
 		/***
 		* 注册策略
 		*/

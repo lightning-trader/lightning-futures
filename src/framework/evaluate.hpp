@@ -161,6 +161,7 @@ namespace lt::hft
 		
 		virtual ~evaluate()
 		{
+			this->clear_strategy();
 			if (this->_ctx)
 			{
 				delete this->_ctx;
@@ -179,9 +180,8 @@ namespace lt::hft
 
 	public:
 
-		void back_test(const std::vector<std::shared_ptr<lt::hft::strategy>>& strategys, uint32_t begin_day, uint32_t end_day)
+		void back_test(uint32_t begin_day, uint32_t end_day)
 		{
-			this->regist_strategy(strategys);
 			if (this->start_service())
 			{
 				_market_simulator->set_trading_range(begin_day, end_day);
@@ -207,10 +207,7 @@ namespace lt::hft
 				}
 
 
-				if (this->stop_service())
-				{
-					this->clear_strategy();
-				}
+				this->stop_service();
 			}
 
 		}

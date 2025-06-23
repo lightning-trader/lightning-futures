@@ -34,10 +34,8 @@ int main(int argc, char* argv[])
 
 	auto app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/bindcore_control.ini", "config/alltrading_section.csv");
 	lt::hft::strategy_creater sc("stgy-marketing");
-	std::vector<std::shared_ptr<lt::hft::strategy>> strategys;
 	//支持一个或者多个策略同时运行
-	strategys.emplace_back(sc.make_strategy(1, app.get(), "code=SHFE.rb2510&open_detla=1&open_once=1"));
-	
+	app->regist_strategy({ sc.make_strategy(1, app.get(), "code=SHFE.rb2510&open_detla=1&open_once=1") });
 	//设置拦截器对下单频率增加限制
 	app->set_trading_filter([app](const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, uint32_t count, double_t price, lt::order_flag flag)->bool {
 		auto now = app->get_last_time();
@@ -58,8 +56,8 @@ int main(int argc, char* argv[])
 	//日盘 从08:45:00启动运行7小时（13:45:00）结束
 	manager.add_schedule("08:45:00", std::chrono::hours(7));
 
-	manager.set_callback([app, &strategys](int index) {
-		app->start_trading(strategys);
+	manager.set_callback([app](int index) {
+		app->start_trading();
 		},
 		[app](int index) {
 			app->stop_trading();
