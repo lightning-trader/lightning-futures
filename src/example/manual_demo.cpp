@@ -49,7 +49,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
             case 0x57: // W键
                 if (app)
                 {
-                    app->change_strategy(current_strategy, true, true, "ratio=1");
+                    app->change_strategy(current_strategy, "ratio=1");
                 }
                 std::cout << "开多" << std::endl;
                 break;
@@ -57,14 +57,14 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
             case 0x53: // S键
                 if (app)
                 {
-                    app->change_strategy(current_strategy, true, true, "ratio=-1");
+                    app->change_strategy(current_strategy, "ratio=-1");
                 }
                 std::cout << "开空" << std::endl;
                 break;
             case 0x20: // 空格
                 if (app)
                 {
-                    app->change_strategy(current_strategy, true, true, "ratio=0");
+                    app->change_strategy(current_strategy, "ratio=0");
                 }
                 std::cout << "平仓" << std::endl;
                 break;

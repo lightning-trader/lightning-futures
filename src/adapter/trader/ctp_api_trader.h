@@ -129,6 +129,8 @@ namespace lt::driver
 
 		void submit_settlement();
 
+		bool is_product_trading(const std::string& product);
+
 	private:
 
 

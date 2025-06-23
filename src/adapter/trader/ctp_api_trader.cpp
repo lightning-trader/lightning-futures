@@ -823,7 +823,7 @@ estid_t ctp_api_trader::place_order(offset_type offset, direction_type direction
 		PRINT_ERROR("place_order contract not exist ", code.to_string());
 		return INVALID_ESTID;
 	}
-	if(!get_product_state(cst->second.product).first)
+	if(!is_product_trading(cst->second.product))
 	{
 		PRINT_ERROR("place_order contract not in trading ", cst->second.product);
 		return INVALID_ESTID;
@@ -925,7 +925,7 @@ bool ctp_api_trader::cancel_order(estid_t estid)
 		PRINT_ERROR("cancel_order contract not exist ", order.code.to_string());
 		return false;
 	}
-	if (!get_product_state(cst->second.product).first)
+	if (!is_product_trading(cst->second.product))
 	{
 		PRINT_ERROR("cancel_order contract not in trading ", cst->second.product);
 		return false;
@@ -1078,3 +1078,8 @@ void ctp_api_trader::submit_settlement()
 	_process_signal.wait(_process_mutex);
 }
 
+bool ctp_api_trader::is_product_trading(const std::string& product)
+{
+	auto it = _trading_product.find(product);
+	return (it != _trading_product.end());
+}

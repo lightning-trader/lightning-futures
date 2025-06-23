@@ -42,10 +42,10 @@ _is_runing(false)
 	const auto & loader_type = config.get<std::string>("loader_type");
 	if (loader_type == "ltds")
 	{
-		const auto& token = config.get<std::string>("token");
+		const auto& channel = config.get<std::string>("channel");
 		const auto& cache_path = config.get<std::string>("cache_path");
 		const auto& lru_size = config.get<size_t>("lru_size");
-		_loader = new ldts_tick_loader(token, cache_path, lru_size);
+		_loader = new ldts_tick_loader(channel, cache_path, lru_size);
 	}
 	else if (loader_type == "csv")
 	{

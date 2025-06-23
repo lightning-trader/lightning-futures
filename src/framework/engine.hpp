@@ -66,9 +66,9 @@ namespace lt::hft
 		/*
 		* 发送消息
 		*/
-		inline void change_strategy(straid_t straid, bool openable, bool closeable, const std::string& param)
+		inline void change_strategy(straid_t straid, const std::string& param)
 		{
-			this->fire_event(straid, openable, closeable, param);
+			this->fire_event(straid, param);
 		}
 
 		inline daytm_t get_last_time() const
