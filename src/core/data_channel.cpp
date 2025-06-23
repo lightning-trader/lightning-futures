@@ -247,3 +247,21 @@ void data_channel::update()
 		}
 	}
 }
+
+const std::vector<bar_info> data_channel::get_kline(const code_t& code, uint32_t period, size_t length)const
+{
+	auto it = _bar_generator.find(code);
+	if(it == _bar_generator.end())
+	{
+		PRINT_ERROR("cant find subscribe code ",code.to_string());
+		return std::vector<bar_info>();
+	}
+	auto pit = it->second.find(period);
+	if (pit == it->second.end())
+	{
+		PRINT_ERROR("cant find subscribe the code period", code.to_string(), period);
+		return std::vector<bar_info>();
+	}
+
+	return pit->second->get_kline(length);
+}

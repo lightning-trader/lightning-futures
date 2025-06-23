@@ -79,6 +79,8 @@ namespace lt
 
 		void update();
 
+		const std::vector<bar_info> get_kline(const code_t& code, uint32_t period, size_t length)const;
+
 	private:
 
 		void subscribe();

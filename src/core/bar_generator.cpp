@@ -78,11 +78,11 @@ void bar_generator::remove_receiver(bar_receiver* receiver)
 }
 
 
-const std::vector<bar_info> bar_generator::get_kline_serial(size_t size)
+const std::vector<bar_info> bar_generator::get_kline(size_t length)
 {
 
 	std::vector<bar_info> result;
-	size_t need_cache = size - 1; //最后一个为current bar
+	size_t need_cache = length - 1; //最后一个为current bar
 	if(_bar_cache.size()< need_cache)
 	{
 		std::vector<ltd_bar_info> data;

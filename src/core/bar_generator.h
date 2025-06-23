@@ -70,7 +70,7 @@ namespace lt
 
 		void remove_receiver(lt::bar_receiver* receiver);
 
-		const std::vector<bar_info> get_kline_serial(size_t size);
+		const std::vector<bar_info> get_kline(size_t length);
 
 		bool invalid()const;
 
