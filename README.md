@@ -1,66 +1,67 @@
 # lightning-futures
 
-## 介绍
+#### 介绍
+lightning-trader轻量级期货量化开发库，适合高频交易，3.5GHz处理器系统内部延时小于2微秒
 
-lightning-futures 是一个高性能的期货交易系统框架，提供市场数据获取、交易执行、策略开发等核心功能。该项目支持多种交易接口，包括 CTP 和 TAP，适用于高频交易、算法交易等场景。
+- 本框架支持高频柜台接入，需要联系开发者
+    - CTP2MINI 机房内从下单到收到委托回报时间300微秒，相比CTP13毫秒
+    - 易盛V9.0、易盛V10启明星郑商所最优解决方案
+    - 其他盛立，易达等高频柜台提供定制服务，具体联系QQ
 
-## 软件架构
+- QQ技术群:689852151（LT9527）
+- 开发者QQ:3844792568
+- 捐助链接:[点击这里](https://gitee.com/lightning-trader/)
 
-lightning-futures 采用模块化架构，主要包括以下几个模块：
+#### 软件架构
 
-- **Adapter**: 适配不同交易接口（CTP, TAP）的实现。
-- **Core**: 提供核心功能，如K线生成、数据通道等。
-- **Framework**: 提供策略开发框架。
-- **Logger**: 日志记录模块。
-- **Share**: 公共组件，如参数解析、CSV操作、内存池等。
-- **Simulator**: 回测支持模块，提供模拟交易和数据加载功能。
+lightning-futures框架分两层架构
 
-## 线程模型
+- 底层是交易系统API(ctp、ctpmini、易胜、盛立等)和高精度模拟器
+- 上层分为高频交易框架，数据服务采集器，强化学习引擎
+![输入图片说明](doc/images/%E6%9E%B6%E6%9E%84%E5%9B%BE.png)
 
-该项目使用多线程处理不同任务，确保交易、市场数据接收和策略逻辑之间的高效隔离和协作。主要线程包括：
+#### 线程模型
 
-- **Market Thread**: 负责接收和处理市场行情数据。
-- **Trading Thread**: 负责订单的发送和交易处理。
-- **Strategy Thread**: 负责策略逻辑的执行。
-- **Logger Thread**: 负责日志的异步写入。
+lightning-futures专为高频设计，采用双线程模型；
 
-## 使用文档
+- 一个主线程控制程序流程；
+- 一个低延时线程开启fast_mode以后会绑定的CPU，执行高频量化策略；
+![输入图片说明](doc/images/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B.png)
 
-### 编译构建
+#### 使用文档
 
-确保你已安装 CMake 和编译工具，然后执行以下命令：
 
-```bash
-mkdir build
-cd build
-cmake ..
-make
-```
+1. 官方wiki：[点击这里](https://gitee.com/lightning-trader/lightning-futures/wikis)
+2. 知乎架构设计
 
-### 运行示例
+    
+- [Lightning Trader架构设计](https://zhuanlan.zhihu.com/p/622262304)
+- [高频交易中如何处理低延时](https://zhuanlan.zhihu.com/p/622293141)
+- [多线程程序设计的两种架构](https://zhuanlan.zhihu.com/p/622423099)
+3. B站入门视频
+- [LightningFutures量化交易开发（1）](https://www.bilibili.com/video/BV1TufUYMEqX/?share_source=copy_web&vd_source=12fb40b76f12e33f07bfc4a936d52013)
+- [LightningFutures量化交易开发（2）](https://www.bilibili.com/video/BV1TufUYMEsP/?share_source=copy_web&vd_source=12fb40b76f12e33f07bfc4a936d52013)
+- [LightningFutures量化交易开发（3）](https://www.bilibili.com/video/BV14ufUYME6T/?share_source=copy_web&vd_source=12fb40b76f12e33f07bfc4a936d52013)
 
-在 `src/example` 中，有多个演示程序，展示如何使用框架开发交易策略。例如，`orderflow_strategy` 和 `arbitrage_strategy` 展示了基于不同数据接收模式的策略实现。
+#### 特别鸣谢
+- https://github.com/mcmtroffaes/inipp
+- https://github.com/grivet/mpsc-queue
+- https://github.com/d99kris/rapidcsv
+- https://github.com/jnk0le/Ring-Buffer
 
-```bash
-./runtime_demo
-```
+#### 参与贡献
 
-### 配置
+1.  Fork 本仓库
+2.  新建 Feat_xxx 分支
+3.  提交代码
+4.  新建 Pull Request
 
-配置文件位于 `bin/config/` 目录下，主要配置包括：
 
-- `runtime_ctpdev.ini`: CTP 接口运行时配置。
-- `runtime_tapdev.ini`: TAP � interface runtime 配置。
-- `contract.csv`: 合约配置文件。
-- `alltrading_section.csv`: 交易时间段配置。
+#### 特技
 
-### 策略开发
-
-策略开发基于 `lt::hft::strategy` 接口，用户可通过继承该类并重写以下关键函数实现策略：
-
-- `on_init`: 策略初始化。
-- `on_tick`: 接收行情 tick 数据。
-- `on_bar`: 接收 K 线数据。
-- `on_entrust`, `on_trade`, `on_cancel`: 订单相关回调。
-- `on_error`: 错误处理。
-- `on_destroy`: �
+1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
+2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
+3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
+4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
+5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
+6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
