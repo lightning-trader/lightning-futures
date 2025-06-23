@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	auto app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/bindcore_control.ini", "config/alltrading_section.csv");
 	lt::hft::strategy_creater sc("stgy-marketing");
 	//支持一个或者多个策略同时运行
-	app->regist_strategy({ sc.make_strategy(1, app.get(), "code=SHFE.rb2510&open_detla=1&open_once=1") });
+	app->regist_strategy({ sc.make_strategy(1, app.get(), "code=CFFEX.TF2509&open_detla=1&open_once=1") });
 	//设置拦截器对下单频率增加限制
 	app->set_trading_filter([app](const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, uint32_t count, double_t price, lt::order_flag flag)->bool {
 		auto now = app->get_last_time();

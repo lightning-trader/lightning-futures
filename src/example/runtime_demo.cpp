@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	app->regist_strategy({
 		std::make_shared<marketing_strategy>(1, app.get(), "SHFE.rb2510", 1, 1),
 		std::make_shared<marketing_strategy>(2, app.get(), "SHFE.hc2510", 1, 1),
-		std::make_shared<orderflow_strategy>(3, app.get(), "SHFE.rb2510", 1, 1, 3, 3, 10)
+		std::make_shared<orderflow_strategy>(3, app.get(), "SHFE.rb2510", 60, 1, 3, 3, 10)
 	});
 
 	//设置拦截器对下单频率增加限制

@@ -36,7 +36,7 @@ void orderflow_strategy::on_init(subscriber& suber)
 
 void orderflow_strategy::on_bar(const lt::bar_info& bar)
 {
-
+	PRINT_INFO("on bar:",bar.time);
 	auto unbalance = bar.get_unbalance(_multiple);
 	if(_order_data.buy_order == INVALID_ESTID)
 	{

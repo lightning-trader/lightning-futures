@@ -31,7 +31,7 @@ using namespace lt;
 using namespace lt::driver;
 
 market_simulator::market_simulator(const params& config) :_loader(nullptr),
-_current_trading_day(0),
+_current_day_index(0U),
 _current_time(0),
 _current_index(0),
 _interval(1),
@@ -91,7 +91,7 @@ bool market_simulator::play()
 	{
 		return false;
 	}
-	_current_trading_day = *_all_trading_day.begin();
+	_current_day_index = 0U;
 	_current_time = 0;
 	_current_index = 0;
 	_pending_tick_info.clear();
@@ -151,7 +151,7 @@ void market_simulator::load_data()
 	{
 		for(auto& it : _instrument_id_list)
 		{
-			_loader->load_tick(_pending_tick_info, it, _current_trading_day);
+			_loader->load_tick(_pending_tick_info, it, _all_trading_day[_current_day_index]);
 		}
 		std::sort(_pending_tick_info.begin(), _pending_tick_info.end(), [](const auto& lh, const auto& rh)->bool {
 
@@ -225,7 +225,7 @@ void market_simulator::finish_publish()
 	_current_index = 0;
 	_pending_tick_info.clear();
 	_instrument_id_list.clear();
-	if(_current_trading_day==*_all_trading_day.rbegin())
+	if(_current_day_index ==_all_trading_day.size()-1)
 	{
 		_is_finished.exchange(true);
 		_is_runing.exchange(false);
@@ -233,5 +233,8 @@ void market_simulator::finish_publish()
 		{
 			_finish_callback();
 		}
+	}else
+	{
+		_current_day_index++;
 	}
 }

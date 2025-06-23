@@ -40,7 +40,7 @@ namespace lt::driver
 		
 		std::vector<uint32_t> _all_trading_day;
 		
-		uint32_t _current_trading_day;
+		size_t _current_day_index;
 
 		std::vector<tick_detail> _pending_tick_info;
 

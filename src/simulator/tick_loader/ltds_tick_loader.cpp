@@ -78,5 +78,6 @@ void ldts_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t
 			it.max,			//max
 			it.min			//min
 		);
+		result.emplace_back(tick);
 	}
 }

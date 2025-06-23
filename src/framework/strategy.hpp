@@ -368,7 +368,7 @@ namespace lt::hft
 	public:
 		strategy_creater(const std::string& filename)
 		{
-			_strategy_handle = library_helper::load_library(filename.c_str());
+			_strategy_handle = library_helper::load_library(filename.c_str(),"-d");
 			if (!_strategy_handle)
 			{
 				PRINT_ERROR("load strategy error:", filename);

@@ -182,6 +182,7 @@ namespace lt::hft
 
 		void back_test(uint32_t begin_day, uint32_t end_day)
 		{
+			_trader_simulator->crossday(begin_day);
 			if (this->start_service())
 			{
 				_market_simulator->set_trading_range(begin_day, end_day);

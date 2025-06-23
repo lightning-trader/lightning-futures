@@ -175,5 +175,5 @@ void marketing_strategy::on_destroy(unsubscriber& unsuber)
 }
 
 bool marketing_strategy::is_close_coming()const {
-	return make_daytm("14:58:00", 0U) < get_last_time();
+	return make_daytm("15:13:00", 0U) < get_last_time();
 }

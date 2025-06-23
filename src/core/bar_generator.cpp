@@ -28,7 +28,11 @@ using namespace lt;
 bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_context*& ctx, const data_wapper& dw, size_t preload_bars) :_code(code), _period(period), _ctx(ctx), _dw(dw), _last_second_change(0), _detail_density(.0)
 {
 	std::vector<ltd_bar_info> data;
-	_dw.get_history_bar(data, _code.to_string().c_str(), static_cast<ltd_period>(_period), _ctx->get_now_time(), preload_bars);
+	ltd_error_code res = _dw.get_history_bar(data, _code.to_string().c_str(), static_cast<ltd_period>(_period), _ctx->get_now_time(), preload_bars);
+	if(res != ltd_error_code::EC_NO_ERROR)
+	{
+		PRINT_ERROR("get history bar error :",res);
+	}
 	for (auto it = data.begin(); it != data.end(); ++it)
 	{
 		bar_info bar;
@@ -36,6 +40,7 @@ bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_co
 		if(it < data.end()-1)
 		{
 			_bar_cache.emplace_front(bar);
+			_last_second_change = bar.time + period;
 		}
 		else
 		{
@@ -112,7 +117,7 @@ void bar_generator::update()
 {
 	if(_ctx->is_trading_time())
 	{
-		daytm_t now = _ctx->get_now_time();
+		seqtm_t now = _ctx->get_now_time();
 		for (;  _last_second_change < now;  _last_second_change += _period)
 		{
 			double_t last_price = _current_bar.close;
