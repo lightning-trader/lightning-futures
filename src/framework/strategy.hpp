@@ -342,6 +342,7 @@ namespace lt::hft
 extern "C"
 {
 	EXPORT_FLAG lt::hft::strategy* create_strategy(lt::hft::straid_t id, lt::hft::syringe* syringe, const lt::params& p);
+	EXPORT_FLAG void delete_strategy(lt::hft::strategy* strategy);
 }
 
 namespace lt::hft
@@ -352,6 +353,7 @@ namespace lt::hft
 	private:
 
 		typedef strategy* (*create_function)(straid_t, syringe*, const lt::params&);
+		typedef void (*delete_function)(strategy*);
 
 		dll_handle _strategy_handle;
 
@@ -379,13 +381,14 @@ namespace lt::hft
 			PRINT_INFO("make_strategy : ", id, param);
 			lt::params p(param);
 			create_function creator = (create_function)library_helper::get_symbol(_strategy_handle, "create_strategy");
-			if(creator == nullptr)
+			delete_function deleter = (delete_function)library_helper::get_symbol(_strategy_handle, "delete_strategy");
+			if(creator == nullptr || deleter == nullptr)
 			{
 				PRINT_ERROR("cant find create_strategy function :", id);
 				throw std::invalid_argument("cant find create_strategy function : " + id);
 			}
 			auto strategy = creator(id, syringe, p);
-			return std::shared_ptr<lt::hft::strategy>(strategy);
+			return std::shared_ptr<lt::hft::strategy>(strategy, deleter);
 		}
 
 	};

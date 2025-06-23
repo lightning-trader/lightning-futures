@@ -36,6 +36,12 @@ strategy* create_strategy(straid_t id, syringe* syringe, const params& p)
 	PRINT_INFO("create_strategy : ", id, code.to_string(), open_detla, open_once);
 	return new marketing_strategy(id, syringe, code, open_detla, open_once);
 }
+// 此策略作为动态链接策略需要提供DLL销毁接口
+void delete_strategy(lt::hft::strategy* strategy)
+{
+	PRINT_INFO("delete_strategy : ", strategy->get_id());
+	delete strategy;
+}
 
 void marketing_strategy::on_init(subscriber& suber)
 {
