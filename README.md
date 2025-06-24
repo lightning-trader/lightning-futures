@@ -48,6 +48,10 @@ lightning-futures专为高频设计，采用双线程模型；
 - https://github.com/grivet/mpsc-queue
 - https://github.com/d99kris/rapidcsv
 - https://github.com/jnk0le/Ring-Buffer
+- https://github.com/Iyengar111/NanoLog
+- https://github.com/curl/curl
+- https://github.com/madler/zlib
+- https://github.com/openssl/openssl
 
 #### 参与贡献
 
