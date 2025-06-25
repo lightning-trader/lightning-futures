@@ -79,7 +79,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 int main(int argc, char* argv[])
 {
-    app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/normal_control.ini", "config/alltrading_section.csv");
+    app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/control_normal.ini", "config/section_alltrading.csv");
     current_strategy = 1U;
     app->regist_strategy({
         std::make_shared<replace_strategy>(current_strategy, app.get(), "SHFE.rb2510", 10)

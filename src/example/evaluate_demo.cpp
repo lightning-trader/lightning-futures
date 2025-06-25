@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 int main(int argc, char* argv[])
 {
 	//根据不用月份不通合约做回测，20250618-20250619交易SHFE.rb2510;20250620-20250623交易SHFE.rb2601，可以根据自己实际情况测试跨月逻辑
-	auto app = std::make_shared<lt::hft::evaluate>("config/evaluate_account.ini", "config/normal_control.ini", "config/alltrading_section.csv");
+	auto app = std::make_shared<lt::hft::evaluate>("config/evaluate_account.ini", "config/control_normal.ini", "config/section_alltrading.csv");
 	app->regist_strategy({
 		std::make_shared<marketing_strategy>(1, app.get(), "SHFE.rb2510", 1, 1),
 		std::make_shared<orderflow_strategy>(2, app.get(), "SHFE.rb2510", 60, 1, 3, 3, 10)

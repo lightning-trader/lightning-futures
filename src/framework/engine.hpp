@@ -100,7 +100,7 @@ namespace lt::hft
 		
 		lt::trading_context* _ctx;
 
-		lt::data_channel _dc;
+		lt::data_channel* _dc;
 
 		engine(const char* control_config)
 			:
@@ -110,18 +110,18 @@ namespace lt::hft
 			_loop_interval(1000),
 			_thread_priority(0),
 			_ctx(nullptr),
-			_dc(_ctx)
+			_dc(nullptr)
 		{
 			inipp::Ini<char> ini;
-			std::ifstream is(control_config);
-			ini.parse(is);
-			auto it = ini.sections.find("control");
-			if (it == ini.sections.end())
+			std::ifstream control_is(control_config);
+			ini.parse(control_is);
+			auto ctrl_it = ini.sections.find("control");
+			if (ctrl_it == ini.sections.end())
 			{
-				PRINT_ERROR("runtime_engine init_from_file cant find [control]", control_config);
+				PRINT_ERROR("engine init_from_file cant find [control]", control_config);
 				return;
 			}
-			lt::params control_section(it->second);
+			lt::params control_section(ctrl_it->second);
 			_bind_cpu_core = control_section.get<int16_t>("bind_cpu_core");
 			_loop_interval = control_section.get<uint32_t>("loop_interval");
 			_thread_priority = control_section.get<int16_t>("thread_priority");
@@ -134,8 +134,35 @@ namespace lt::hft
 					PRINT_WARNING("set_priority failed");
 				}
 			}
+
+			auto ltds_it = ini.sections.find("ltds");
+			if (ltds_it == ini.sections.end())
+			{
+				PRINT_ERROR("runtime_engine init_from_file cant find [ltds]", control_config);
+				return;
+			}
+			lt::params ltds_section(ltds_it->second);
+			std::string channel = ltds_section.get<std::string>("channel");
+			std::string cache_path = ltds_section.get<std::string>("cache_path");
+			size_t detail_cache = 128;
+			if(ltds_section.has("detail_cache_size"))
+			{
+				detail_cache = ltds_section.get<size_t>("detail_cache_size");
+			}
+			size_t bar_cache = 819200U;
+			if (ltds_section.has("bar_cache_size"))
+			{
+				bar_cache = ltds_section.get<size_t>("bar_cache_size");
+			}
+			this->_dc = new data_channel(_ctx,channel.c_str(), cache_path.c_str(), detail_cache, bar_cache);
 		}
-		virtual ~engine(){}
+		virtual ~engine(){
+			if(_dc)
+			{
+				delete _dc;
+				_dc = nullptr;
+			}
+		}
 
 		/*启动*/
 		bool start_service()
@@ -175,7 +202,7 @@ namespace lt::hft
 				{
 					auto begin = std::chrono::system_clock::now();
 					_ctx->update();
-					_dc.update();
+					_dc->update();
 					this->process();
 					for (auto& it : this->_strategy_map)
 					{
@@ -255,7 +282,7 @@ namespace lt::hft
 	
 		virtual std::tuple<trading_context*, data_channel*> inject_data() override
 		{
-			return std::make_tuple(_ctx,&_dc);
+			return std::make_tuple(_ctx,_dc);
 		}
 	
 	protected:

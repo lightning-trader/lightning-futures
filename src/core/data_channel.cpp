@@ -30,22 +30,22 @@ using namespace lt;
 
 void subscriber::regist_tick_receiver(const code_t& code, tick_receiver* receiver)
 {
-	auto it = _data_channel._tick_receiver.find(code);
-	if (it == _data_channel._tick_receiver.end())
+	auto it = _dc->_tick_receiver.find(code);
+	if (it == _dc->_tick_receiver.end())
 	{
-		_data_channel._tick_receiver[code].insert(receiver);
+		_dc->_tick_receiver[code].insert(receiver);
 	}
 	else
 	{
 		it->second.insert(receiver);
 	}
-	_data_channel._tick_reference_count[code]++;
+	_dc->_tick_reference_count[code]++;
 }
 
 void unsubscriber::unregist_tick_receiver(const code_t& code, tick_receiver* receiver)
 {
-	auto it = _data_channel._tick_receiver.find(code);
-	if (it == _data_channel._tick_receiver.end())
+	auto it = _dc->_tick_receiver.find(code);
+	if (it == _dc->_tick_receiver.end())
 	{
 		return;
 	}
@@ -56,10 +56,10 @@ void unsubscriber::unregist_tick_receiver(const code_t& code, tick_receiver* rec
 	}
 	if (it->second.empty())
 	{
-		_data_channel._tick_receiver.erase(it);
+		_dc->_tick_receiver.erase(it);
 	}
-	auto d_it = _data_channel._tick_reference_count.find(code);
-	if (d_it != _data_channel._tick_reference_count.end())
+	auto d_it = _dc->_tick_reference_count.find(code);
+	if (d_it != _dc->_tick_reference_count.end())
 	{
 		if (d_it->second > 0)
 		{
@@ -70,22 +70,22 @@ void unsubscriber::unregist_tick_receiver(const code_t& code, tick_receiver* rec
 
 void subscriber::regist_tape_receiver(const code_t& code, tape_receiver* receiver)
 {
-	auto it = _data_channel._tape_receiver.find(code);
-	if (it == _data_channel._tape_receiver.end())
+	auto it = _dc->_tape_receiver.find(code);
+	if (it == _dc->_tape_receiver.end())
 	{
-		_data_channel._tape_receiver[code].insert(receiver);
+		_dc->_tape_receiver[code].insert(receiver);
 	}
 	else
 	{
 		it->second.insert(receiver);
 	}
-	_data_channel._tick_reference_count[code]++;
+	_dc->_tick_reference_count[code]++;
 }
 
 void unsubscriber::unregist_tape_receiver(const code_t& code, tape_receiver* receiver)
 {
-	auto it = _data_channel._tape_receiver.find(code);
-	if (it == _data_channel._tape_receiver.end())
+	auto it = _dc->_tape_receiver.find(code);
+	if (it == _dc->_tape_receiver.end())
 	{
 		return;
 	}
@@ -96,10 +96,10 @@ void unsubscriber::unregist_tape_receiver(const code_t& code, tape_receiver* rec
 	}
 	if (it->second.empty())
 	{
-		_data_channel._tape_receiver.erase(it);
+		_dc->_tape_receiver.erase(it);
 	}
-	auto d_it = _data_channel._tick_reference_count.find(code);
-	if (d_it != _data_channel._tick_reference_count.end())
+	auto d_it = _dc->_tick_reference_count.find(code);
+	if (d_it != _dc->_tick_reference_count.end())
 	{
 		if (d_it->second > 1)
 		{
@@ -110,24 +110,24 @@ void unsubscriber::unregist_tape_receiver(const code_t& code, tape_receiver* rec
 
 void subscriber::regist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver,size_t preload_bars)
 {
-	auto generator_iter = _data_channel._bar_generator[code].find(period);
-	if (generator_iter == _data_channel._bar_generator[code].end())
+	auto generator_iter = _dc->_bar_generator[code].find(period);
+	if (generator_iter == _dc->_bar_generator[code].end())
 	{
-		_data_channel._bar_generator[code][period] = std::make_shared<bar_generator>(code,period, _data_channel._ctx,_data_channel._dw, preload_bars);
+		_dc->_bar_generator[code][period] = std::make_shared<bar_generator>(code,period, _dc->_ctx,_dc->_dw, preload_bars);
 	}
-	_data_channel._bar_generator[code][period]->add_receiver(receiver);
-	_data_channel._tick_reference_count[code]++;
+	_dc->_bar_generator[code][period]->add_receiver(receiver);
+	_dc->_tick_reference_count[code]++;
 }
 
 void subscriber::subscribe()
 {
-	_data_channel.subscribe();
+	_dc->subscribe();
 }
 
 void unsubscriber::unregist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver)
 {
-	auto it = _data_channel._bar_generator.find(code);
-	if (it == _data_channel._bar_generator.end())
+	auto it = _dc->_bar_generator.find(code);
+	if (it == _dc->_bar_generator.end())
 	{
 		return;
 	}
@@ -142,12 +142,12 @@ void unsubscriber::unregist_bar_receiver(const code_t& code, uint32_t period, ba
 		it->second.erase(s_it);
 		if (it->second.empty())
 		{
-			_data_channel._bar_generator.erase(it);
+			_dc->_bar_generator.erase(it);
 		}
 	}
 
-	auto d_it = _data_channel._tick_reference_count.find(code);
-	if (d_it != _data_channel._tick_reference_count.end())
+	auto d_it = _dc->_tick_reference_count.find(code);
+	if (d_it != _dc->_tick_reference_count.end())
 	{
 		if (d_it->second > 1)
 		{
@@ -158,7 +158,7 @@ void unsubscriber::unregist_bar_receiver(const code_t& code, uint32_t period, ba
 
 void unsubscriber::unsubscribe()
 {
-	_data_channel.unsubscribe();
+	_dc->unsubscribe();
 }
 
 void data_channel::subscribe()

@@ -32,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 int main(int argc, char* argv[])
 {
 
-	auto app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/bindcore_control.ini", "config/alltrading_section.csv");
+	auto app = std::make_shared<lt::hft::runtime>("config/runtime_ctpdev.ini", "config/control_bindcore.ini", "config/section_alltrading.csv");
 	lt::hft::strategy_creater sc("stgy-marketing");
 	//支持一个或者多个策略同时运行
 	app->regist_strategy({ sc.make_strategy(1, app.get(), "code=CFFEX.TF2509&open_detla=1&open_once=1") });

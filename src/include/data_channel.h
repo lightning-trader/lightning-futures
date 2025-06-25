@@ -35,12 +35,12 @@ namespace lt
 
 	private:
 
-		data_channel& _data_channel;
+		data_channel*& _dc;
 
 	public:
 
-		subscriber(data_channel& chl) :
-			_data_channel(chl)
+		subscriber(data_channel*& chl) :
+			_dc(chl)
 		{}
 
 		void regist_tick_receiver(const code_t& code, tick_receiver* receiver);
@@ -55,10 +55,10 @@ namespace lt
 	{
 
 	private:
-		data_channel& _data_channel;
+		data_channel*& _dc;
 	public:
-		unsubscriber(data_channel& chl) :
-			_data_channel(chl)
+		unsubscriber(data_channel*& chl) :
+			_dc(chl)
 		{}
 		void unregist_tick_receiver(const code_t& code, tick_receiver* receiver);
 		void unregist_tape_receiver(const code_t& code, tape_receiver* receiver);
@@ -75,7 +75,7 @@ namespace lt
 
 	public:
 		
-		data_channel(lt::trading_context*& ctx):_ctx(ctx), _dw("ltds-release","./cache") {}
+		data_channel(lt::trading_context*& ctx, const char* channel, const char* cache_path, size_t detail_cache_size = 128U, size_t bar_cache_size = 819200U):_ctx(ctx), _dw(channel, cache_path, detail_cache_size, bar_cache_size) {}
 
 		void update();
 
