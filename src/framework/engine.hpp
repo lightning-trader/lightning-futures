@@ -38,27 +38,57 @@ namespace lt::hft
 	
 	private: 
 
-		void trading_begin()
-		{
-			this->_ctx->check_crossday();
 
-			subscriber suber(_dc);
-			for (auto it : _strategy_map)
-			{
-				it.second->init(suber);
-			}
-
-			suber.subscribe();
-		}
 
 		void trading_end()
 		{
-			unsubscriber unsuber(_dc);
-			for (auto it : _strategy_map)
+
+		}
+
+		void execute()
+		{
+			if(_is_servicing&&!_is_trading)
 			{
-				it.second->destroy(unsuber);
+				//开始交易
+				this->_ctx->check_crossday();
+				subscriber suber(_dc);
+				for (auto it : _strategy_map)
+				{
+					it.second->init(suber);
+				}
+				suber.subscribe();
+				_is_trading = true;
 			}
-			unsuber.unsubscribe();
+			if(_is_trading)
+			{
+				bool is_update = false;
+				is_update |= _ctx->poll();
+				is_update |= _dc->poll();
+				is_update |= this->poll();
+				if (is_update)
+				{
+					for (auto& it : this->_strategy_map)
+					{
+						it.second->update();
+					}
+				}
+			}
+			else
+			{
+				//不在交易中只处理 on_change 等修改策略参数
+				this->poll();
+			}
+			if (!_is_servicing && _is_trading)
+			{
+				//停止交易
+				unsubscriber unsuber(_dc);
+				for (auto it : _strategy_map)
+				{
+					it.second->destroy(unsuber);
+				}
+				unsuber.unsubscribe();
+				_is_trading = false;
+			}
 		}
 
 	public:
@@ -105,10 +135,9 @@ namespace lt::hft
 		engine(const char* control_config)
 			:
 			_is_runing(false),
+			_is_trading(false),
 			_realtime_thread(nullptr),
-			_bind_cpu_core(-1),
-			_loop_interval(1000),
-			_thread_priority(0),
+
 			_ctx(nullptr),
 			_dc(nullptr)
 		{
@@ -122,9 +151,40 @@ namespace lt::hft
 				return;
 			}
 			lt::params control_section(ctrl_it->second);
-			_bind_cpu_core = control_section.get<int16_t>("bind_cpu_core");
-			_loop_interval = control_section.get<uint32_t>("loop_interval");
-			_thread_priority = control_section.get<int16_t>("thread_priority");
+			int16_t loop_interval = control_section.get<uint32_t>("loop_interval");
+			int16_t bind_cpu_core = control_section.get<int16_t>("bind_cpu_core");
+			int16_t thread_priority = control_section.get<int16_t>("thread_priority");
+			_is_runing = true;
+			_realtime_thread = new std::thread([this, loop_interval, bind_cpu_core, thread_priority]()->void {
+				if (0 <= bind_cpu_core && bind_cpu_core < static_cast<int16_t>(std::thread::hardware_concurrency()))
+				{
+					if (!process_helper::thread_bind_core(static_cast<uint32_t>(bind_cpu_core)))
+					{
+						PRINT_WARNING("bind to core failed :", bind_cpu_core);
+					}
+				}
+				if (static_cast<int16_t>(PriorityLevel::LowPriority) <= thread_priority && thread_priority <= static_cast<int16_t>(PriorityLevel::RealtimePriority))
+				{
+					PriorityLevel level = static_cast<PriorityLevel>(thread_priority);
+					if (!process_helper::set_thread_priority(level))
+					{
+						PRINT_WARNING("set_thread_priority failed");
+					}
+				}
+
+				while (_is_runing/* || !_trader->is_idle()*/)
+				{
+					auto begin = std::chrono::system_clock::now();
+					this->execute();
+					auto use_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
+					auto duration = std::chrono::microseconds(loop_interval);
+					if (use_time < duration)
+					{
+						std::this_thread::sleep_for(duration - use_time);
+					}
+				}
+				
+				});
 			int16_t process_priority = control_section.get<int16_t>("process_priority");
 			if (static_cast<int16_t>(PriorityLevel::LowPriority) <= process_priority && process_priority <= static_cast<int16_t>(PriorityLevel::RealtimePriority))
 			{
@@ -157,81 +217,7 @@ namespace lt::hft
 			this->_dc = new data_channel(_ctx,channel.c_str(), cache_path.c_str(), detail_cache, bar_cache);
 		}
 		virtual ~engine(){
-			if(_dc)
-			{
-				delete _dc;
-				_dc = nullptr;
-			}
-		}
 
-		/*启动*/
-		bool start_service()
-		{
-			if (_is_runing)
-			{
-				PRINT_WARNING("start a runing service");
-				return false;
-			}
-
-			if (!_ctx->load_data())
-			{
-				PRINT_ERROR("load data error");
-				return false;
-			}
-			_is_runing = true;
-			_realtime_thread = new std::thread([this]()->void {
-				if (0 <= _bind_cpu_core && _bind_cpu_core < static_cast<int16_t>(std::thread::hardware_concurrency()))
-				{
-					if (!process_helper::thread_bind_core(static_cast<uint32_t>(_bind_cpu_core)))
-					{
-						PRINT_WARNING("bind to core failed :", _bind_cpu_core);
-					}
-				}
-				if (static_cast<int16_t>(PriorityLevel::LowPriority) <= _thread_priority && _thread_priority <= static_cast<int16_t>(PriorityLevel::RealtimePriority))
-				{
-					PriorityLevel level = static_cast<PriorityLevel>(_thread_priority);
-					if (!process_helper::set_thread_priority(level))
-					{
-						PRINT_WARNING("set_thread_priority failed");
-					}
-				}
-
-				this->trading_begin();
-
-				while (_is_runing/* || !_trader->is_idle()*/)
-				{
-					auto begin = std::chrono::system_clock::now();
-					bool is_update = false;
-					is_update |= _ctx->poll();
-					is_update |= _dc->poll();
-					is_update |= this->poll();
-					if(is_update)
-					{
-						for (auto& it : this->_strategy_map)
-						{
-							it.second->update();
-						}
-					}
-					auto use_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
-					auto duration = std::chrono::microseconds(_loop_interval);
-					if (use_time < duration)
-					{
-						std::this_thread::sleep_for(duration - use_time);
-					}
-				}
-				this->trading_end();
-				});
-			return true;
-		}
-
-		/*停止*/
-		bool stop_service()
-		{
-			if (!_is_runing)
-			{
-				PRINT_WARNING("stop a not runing service");
-				return false;
-			}
 			_is_runing = false;
 			if (_realtime_thread)
 			{
@@ -241,7 +227,40 @@ namespace lt::hft
 				delete _realtime_thread;
 				_realtime_thread = nullptr;
 			}
+			if (_dc)
+			{
+				delete _dc;
+				_dc = nullptr;
+			}
+		}
 
+		/*启动*/
+		bool start_service()
+		{
+			if (_is_trading)
+			{
+				PRINT_WARNING("start a trading service");
+				return false;
+			}
+
+			if (!_ctx->load_data())
+			{
+				PRINT_ERROR("load data error");
+				return false;
+			}
+			_is_servicing = true;
+			return true;
+		}
+
+		/*停止*/
+		bool stop_service()
+		{
+			if (!_is_trading)
+			{
+				PRINT_WARNING("stop a not trading service");
+				return false;
+			}
+			_is_servicing = false;
 			return true;
 		}
 
@@ -298,13 +317,11 @@ namespace lt::hft
 		//实时的线程
 		std::thread* _realtime_thread;
 
-		int16_t _bind_cpu_core;
-
-		int16_t _thread_priority;
-
-		uint32_t _loop_interval;
-
 		bool _is_runing;
+		
+		bool _is_servicing;
+
+		bool _is_trading;
 
 	};
 }
