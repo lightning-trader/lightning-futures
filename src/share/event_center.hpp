@@ -92,13 +92,16 @@ namespace lt
 
 	public:
 
-		void process()
+		bool poll()
 		{
+			bool result = false;
 			event_data<T> data;
 			while (_event_queue.remove(data))
 			{
 				this->trigger(data.type, data.params);
+				result = true;
 			}
+			return result;
 		}
 
 

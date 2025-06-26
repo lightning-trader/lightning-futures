@@ -56,7 +56,7 @@ namespace lt
 		/*
 		*	逻辑更新
 		*/
-		virtual void update() = 0;
+		virtual bool poll() = 0;
 
 		/*
 		*	绑定事件
@@ -120,9 +120,9 @@ namespace lt
 
 		asyn_actual_market(std::unordered_map<std::string, std::string>& id_excg_map) :actual_market(id_excg_map) {}
 
-		virtual void update()override
+		virtual bool poll()override
 		{
-			this->process();
+			return this->poll();
 		}
 
 		virtual void bind_event(market_event_type type, std::function<void(const std::vector<std::any>&)> handle) override

@@ -158,7 +158,7 @@ namespace lt::driver
 			return _account_info;
 		}
 
-		virtual void update()override;
+		virtual bool poll()override;
 
 	public:
 
@@ -184,19 +184,19 @@ namespace lt::driver
 
 		uint32_t get_sell_front(const code_t& code, double_t price);
 
-		void match_entrust(const tick_info& tick);
+		bool match_entrust(const tick_info& tick);
 
-		void handle_entrust(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume);
+		bool handle_entrust(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume);
 
-		void handle_sell(const tick_info& tick, order_match& match, order_info& order, uint32_t deal_volume);
+		bool handle_sell(const tick_info& tick, order_match& match, order_info& order, uint32_t deal_volume);
 
-		void handle_buy(const tick_info& tick, order_match& match, order_info& order, uint32_t deal_volume);
+		bool handle_buy(const tick_info& tick, order_match& match, order_info& order, uint32_t deal_volume);
 
-		void order_deal(order_info& order, uint32_t deal_volume);
+		bool order_deal(order_info& order, uint32_t deal_volume);
 
-		void order_error(error_type type, estid_t estid, error_code err);
+		bool order_error(error_type type, estid_t estid, error_code err);
 
-		void order_cancel(const order_info& order);
+		bool order_cancel(const order_info& order);
 
 		void visit_match_info(estid_t estid, std::function<void(order_match&)> cursor);
 		//冻结

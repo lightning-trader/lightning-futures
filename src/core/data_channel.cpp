@@ -237,15 +237,17 @@ void data_channel::unsubscribe()
 	_ctx->unsubscribe(tick_unsubscrib);
 }
 
-void data_channel::update()
+bool data_channel::poll()
 {
+	bool result = false ;
 	for(auto& it : _bar_generator)
 	{
 		for(auto p_it : it.second)
 		{
-			p_it.second->update();
+			result |= p_it.second->poll();
 		}
 	}
+	return result;
 }
 
 const std::vector<bar_info> data_channel::get_kline(const code_t& code, uint32_t period, size_t length)const

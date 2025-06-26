@@ -93,13 +93,13 @@ namespace lt::driver
 
 		virtual void unsubscribe(const std::set<lt::code_t>& codes)override;
 
-		virtual void update() override;
+		virtual bool poll() override;
 
 	private:
 
-		void load_data();
+		bool load_data();
 
-		void publish_tick();
+		bool publish_tick();
 
 		void finish_publish();
 

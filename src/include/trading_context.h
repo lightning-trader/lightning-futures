@@ -122,7 +122,7 @@ namespace lt
 		
 		void check_crossday();
 
-		void update();
+		bool poll();
 
 		estid_t place_order(order_listener* listener, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag = order_flag::OF_NOR);
 

@@ -74,7 +74,7 @@ namespace lt
 
 		bool invalid()const;
 
-		void update();
+		bool poll();
 
 	private:
 

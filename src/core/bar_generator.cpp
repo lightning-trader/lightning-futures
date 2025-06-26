@@ -113,8 +113,9 @@ bool bar_generator::invalid()const
 	return _bar_callback.empty();
 }
 
-void bar_generator::update()
+bool bar_generator::poll()
 {
+	bool result = false ;
 	if(_ctx->is_trading_time())
 	{
 		seqtm_t now = _ctx->get_now_time();
@@ -126,6 +127,7 @@ void bar_generator::update()
 			for (auto it : _bar_callback)
 			{
 				it->on_bar(_current_bar);
+				result = true;
 			}
 			//初始化下一个bar
 			_current_bar.clear();
@@ -145,7 +147,7 @@ void bar_generator::update()
 			}
 		}
 	}
-	
+	return result;
 }
 
 

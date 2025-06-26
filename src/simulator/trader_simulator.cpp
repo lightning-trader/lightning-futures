@@ -89,15 +89,16 @@ uint32_t trader_simulator::get_trading_day()const
 	return _trading_day;
 }
 
-void trader_simulator::update()
+bool trader_simulator::poll()
 {
+	bool result = false ;
 	for (const auto& tk_it : _current_tick_info)
 	{
 		_current_time = tk_it.second.time;
-		match_entrust(tk_it.second);
+		result |= match_entrust(tk_it.second);
 		_last_frame_volume[tk_it.second.id] = tk_it.second.volume;
 	}
-
+	return result;
 }
 
 bool trader_simulator::is_usable()const
@@ -268,7 +269,7 @@ uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)
 	return 0U;
 }
 
-void trader_simulator::match_entrust(const tick_info& tick)
+bool trader_simulator::match_entrust(const tick_info& tick)
 {
 	uint32_t current_volume = static_cast<uint32_t>(tick.volume);
 	auto last_volume = _last_frame_volume.find(tick.id);
@@ -276,6 +277,7 @@ void trader_simulator::match_entrust(const tick_info& tick)
 	{
 		current_volume = static_cast<uint32_t>(tick.volume - last_volume->second);
 	}
+	bool result = false ;
 	auto it = _order_match.find(tick.id);
 	if (it != _order_match.end())
 	{
@@ -284,7 +286,7 @@ void trader_simulator::match_entrust(const tick_info& tick)
 			auto od_it = _order_info.find(mc_it.estid);
 			if(od_it != _order_info.end())
 			{
-				handle_entrust(tick, mc_it, od_it->second, current_volume);
+				result |= handle_entrust(tick, mc_it, od_it->second, current_volume);
 			}
 		}
 	}
@@ -316,23 +318,23 @@ void trader_simulator::match_entrust(const tick_info& tick)
 			mc_it++;
 		}
 	}
+	return result;
 }
 
-void trader_simulator::handle_entrust(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume)
+bool trader_simulator::handle_entrust(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume)
 {
 	if (match.state == OS_CANELED)
 	{
 		//撤单
-		order_cancel(order);
-		return;
+		return order_cancel(order);
 	}
+	bool result = false;
 	if(match.state == OS_INVALID)
 	{
 		error_code err = frozen_deduction(order.estid, order.code, order.offset, order.direction, order.last_volume, order.price);
 		if (err != error_code::EC_Success)
 		{
-			order_error(error_type::ET_PLACE_ORDER,order.estid, err);
-			return;
+			return order_error(error_type::ET_PLACE_ORDER, order.estid, err);
 		}
 		this->fire_event(trader_event_type::TET_OrderPlace, order);
 
@@ -347,17 +349,18 @@ void trader_simulator::handle_entrust(const tick_info& tick, order_match& match,
 			}
 			mh.state = OS_IN_MATCH;
 		});
+		result = true;
 	}
 
 	if (order.direction == direction_type::DT_LONG)
 	{	
 		if(order.offset == offset_type::OT_OPEN)
 		{
-			handle_buy(tick, match, order, max_volume);
+			result |= handle_buy(tick, match, order, max_volume);
 		}
 		else
 		{
-			handle_sell(tick, match, order, max_volume);
+			result |= handle_sell(tick, match, order, max_volume);
 		}
 		
 	}
@@ -365,28 +368,29 @@ void trader_simulator::handle_entrust(const tick_info& tick, order_match& match,
 	{
 		if (order.offset == offset_type::OT_OPEN)
 		{
-			handle_sell(tick, match, order, max_volume);
+			result |= handle_sell(tick, match, order, max_volume);
 		}
 		else
 		{
-			handle_buy(tick, match, order, max_volume);
+			result |= handle_buy(tick, match, order, max_volume);
 		}
 	}
+	return result;
 }
-void trader_simulator::handle_sell(const tick_info& tick,order_match& match, order_info& order, uint32_t max_volume)
+bool trader_simulator::handle_sell(const tick_info& tick,order_match& match, order_info& order, uint32_t max_volume)
 {
-
+	bool result = false ;
 	if (match.flag == order_flag::OF_FOK)
 	{
 		if (order.last_volume <= max_volume && order.price <= tick.buy_price())
 		{
 			//全成
-			order_deal(order, order.last_volume);
+			result = order_deal(order, order.last_volume);
 		}
 		else
 		{
 			//全撤
-			order_cancel(order);
+			result = order_cancel(order);
 		}
 	}
 	else if (match.flag == order_flag::OF_FAK)
@@ -397,18 +401,18 @@ void trader_simulator::handle_sell(const tick_info& tick,order_match& match, ord
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				order_deal(order, deal_volume);
+				result |= order_deal(order, deal_volume);
 			}
 			uint32_t cancel_volume = order.last_volume - max_volume;
 			if (cancel_volume > 0)
 			{
 				//部撤
-				order_cancel(order);
+				result |= order_cancel(order);
 			}
 		}
 		else
 		{
-			order_cancel(order);
+			result = order_cancel(order);
 		}
 	}
 	else
@@ -419,7 +423,7 @@ void trader_simulator::handle_sell(const tick_info& tick,order_match& match, ord
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				order_deal(order, deal_volume);
+				result = order_deal(order, deal_volume);
 			}
 		}
 		else if (order.price <= tick.price)
@@ -435,7 +439,7 @@ void trader_simulator::handle_sell(const tick_info& tick,order_match& match, ord
 				uint32_t deal_volume = order.last_volume > can_deal_volume ? can_deal_volume : order.last_volume;
 				if (deal_volume > 0U)
 				{
-					order_deal(order, deal_volume);
+					result = order_deal(order, deal_volume);
 				}
 			}
 			else
@@ -445,24 +449,24 @@ void trader_simulator::handle_sell(const tick_info& tick,order_match& match, ord
 		}
 	}
 
-	
+	return result;
 
 }
 
-void trader_simulator::handle_buy(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume)
+bool trader_simulator::handle_buy(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume)
 {
-
+	bool result = false;
 	if (match.flag == order_flag::OF_FOK)
 	{
 		if (order.last_volume <= max_volume&& order.price >= tick.sell_price())
 		{
 			//全成
-			order_deal(order, order.last_volume);
+			result = order_deal(order, order.last_volume);
 		}
 		else
 		{
 			//全撤
-			order_cancel(order);
+			result = order_cancel(order);
 		}
 	}
 	else if (match.flag == order_flag::OF_FAK)
@@ -473,18 +477,18 @@ void trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0U)
 			{
-				order_deal(order, deal_volume);
+				result |= order_deal(order, deal_volume);
 			}
 			uint32_t cancel_volume = order.last_volume - max_volume;
 			if (cancel_volume > 0)
 			{
 				//部撤
-				order_cancel(order);
+				result |= order_cancel(order);
 			}
 		}
 		else
 		{
-			order_cancel(order);
+			result = order_cancel(order);
 		}
 		
 	}
@@ -497,7 +501,7 @@ void trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				order_deal(order, deal_volume);
+				result = order_deal(order, deal_volume);
 			}
 		}
 		else if (order.price >= tick.price)
@@ -514,7 +518,7 @@ void trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 				uint32_t deal_volume = order.last_volume > can_deal_volume ? can_deal_volume : order.last_volume;
 				if (deal_volume > 0)
 				{
-					order_deal(order, deal_volume);
+					result = order_deal(order, deal_volume);
 				}
 			}
 			else
@@ -523,16 +527,17 @@ void trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 			}
 		}
 	}
+	return result;
 }
 
-void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
+bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 {
 	
 	auto contract_info = _contract_parser.get_contract_info(order.code);
 	if(contract_info == nullptr)
 	{
 		PRINT_ERROR("tick_simulator order_deal cant find the contract_info for", order.code.get_symbol());
-		return;
+		return false;
 	}
 
 	double_t service_charge = contract_info->get_service_charge(order.price, order.offset);
@@ -566,7 +571,7 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		auto it = _position_info.find(order.code);
 		if (it == _position_info.end())
 		{
-			return;
+			return false;
 		}
 		auto& pos = it->second ;
 		//平仓
@@ -591,7 +596,7 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 			auto it = _position_info.find(order.code);
 			if (it == _position_info.end())
 			{
-				return;
+				return false;
 			}
 			auto& pos = it->second;
 			//平仓
@@ -628,21 +633,23 @@ void trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 			});
 		
 	}
-	
+	return true;
 }
-void trader_simulator::order_error(error_type type,estid_t estid, error_code err)
+bool trader_simulator::order_error(error_type type,estid_t estid, error_code err)
 {
 	fire_event(trader_event_type::TET_OrderError, type, estid, (uint8_t)err);
 	visit_match_info(estid, [this](order_match& mh)->void {
 		mh.state = OS_DELETE;
 		});
+	return true;
 }
-void trader_simulator::order_cancel(const order_info& order)
+bool trader_simulator::order_cancel(const order_info& order)
 {
+	bool result = false;
 	auto it = _order_info.find(order.estid);
 	if(it == _order_info.end())
 	{
-		return;
+		return result;
 	}
 	if(order.last_volume>0)
 	{
@@ -653,12 +660,14 @@ void trader_simulator::order_cancel(const order_info& order)
 			visit_match_info(order.estid, [this](order_match& mh)->void {
 				mh.state = OS_DELETE;
 				});
+			result = true;
 		}
 		else
 		{
 			PRINT_ERROR("order_cancel error");
 		}
 	}
+	return result;
 }
 
 

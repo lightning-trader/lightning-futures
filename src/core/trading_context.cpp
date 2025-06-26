@@ -153,21 +153,23 @@ bool trading_context::load_data()
 
 
 
-void trading_context::update()
+bool trading_context::poll()
 {
+	bool result = false;
 	if (_market)
 	{
-		_market->update();
+		result |= _market->poll();
 	}
 	if(is_trading_time())
 	{
 		if (_trader)
 		{
-			_trader->update();
+			result |= _trader->poll();
 		}
 
 		this->check_condition();
 	}
+	return result;
 }
 
 

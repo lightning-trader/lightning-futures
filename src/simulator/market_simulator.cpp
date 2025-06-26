@@ -136,39 +136,43 @@ void market_simulator::unsubscribe(const std::set<code_t>& codes)
 	}
 }
 
-void market_simulator::update()
+bool market_simulator::poll()
 {
+	bool result = false;
 	if(_is_runing)
 	{
-		publish_tick();
+		result = publish_tick();
 	}
+	return result;
 }
 
 
-void market_simulator::load_data()
+bool market_simulator::load_data()
 {
-	if(_loader)
+	if(!_loader)
 	{
-		for(auto& it : _instrument_id_list)
-		{
-			_loader->load_tick(_pending_tick_info, it, _all_trading_day[_current_day_index]);
-		}
-		std::sort(_pending_tick_info.begin(), _pending_tick_info.end(), [](const auto& lh, const auto& rh)->bool {
-
-			if (lh.time < rh.time)
-			{
-				return true;
-			}
-			if (lh.time > rh.time)
-			{
-				return false;
-			}
-			return lh.id < rh.id;
-			});
+		return false;
 	}
+	for (auto& it : _instrument_id_list)
+	{
+		_loader->load_tick(_pending_tick_info, it, _all_trading_day[_current_day_index]);
+	}
+	std::sort(_pending_tick_info.begin(), _pending_tick_info.end(), [](const auto& lh, const auto& rh)->bool {
+
+		if (lh.time < rh.time)
+		{
+			return true;
+		}
+		if (lh.time > rh.time)
+		{
+			return false;
+		}
+		return lh.id < rh.id;
+		});
+	return true;
 }
 
-void market_simulator::publish_tick()
+bool market_simulator::publish_tick()
 {	
 	if(_pending_tick_info.empty())
 	{
@@ -176,7 +180,7 @@ void market_simulator::publish_tick()
 	}
 	if (_current_index >= _pending_tick_info.size())
 	{
-		return;
+		return false;
 	}
 	const tick_detail* tick = &(_pending_tick_info[_current_index]);
 	_current_time = tick->time;
@@ -217,6 +221,7 @@ void market_simulator::publish_tick()
 	{
 		finish_publish();
 	}
+	return true;
 }
 
 void market_simulator::finish_publish()

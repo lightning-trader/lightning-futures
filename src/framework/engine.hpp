@@ -201,12 +201,16 @@ namespace lt::hft
 				while (_is_runing/* || !_trader->is_idle()*/)
 				{
 					auto begin = std::chrono::system_clock::now();
-					_ctx->update();
-					_dc->update();
-					this->process();
-					for (auto& it : this->_strategy_map)
+					bool is_update = false;
+					is_update |= _ctx->poll();
+					is_update |= _dc->poll();
+					is_update |= this->poll();
+					if(is_update)
 					{
-						it.second->update();
+						for (auto& it : this->_strategy_map)
+						{
+							it.second->update();
+						}
 					}
 					auto use_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - begin);
 					auto duration = std::chrono::microseconds(_loop_interval);
