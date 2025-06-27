@@ -351,6 +351,10 @@ void trading_context::check_crossday()
 {
 	_statistic_info.clear();
 	_last_order_time = 0U;
+	if(_last_tick_time>ONE_DAY_MILLISECONDS)
+	{
+		this->update_time(_last_tick_time- ONE_DAY_MILLISECONDS);
+	}
 	PRINT_INFO("trading ready");
 }
 const tick_info& trading_context::get_previous_tick(const code_t& code)const
