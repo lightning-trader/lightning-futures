@@ -351,7 +351,11 @@ void trading_context::check_crossday()
 {
 	_statistic_info.clear();
 	_last_order_time = 0U;
-	this->update_time(get_last_time() % ONE_DAY_MILLISECONDS);
+	std::chrono::time_point now = std::chrono::system_clock::now();
+	std::chrono::duration<double, std::milli> elapsed = now - _tick_update_point;
+	auto dirty_time = _last_tick_time + static_cast<daytm_t>(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
+	_last_tick_time = dirty_time % ONE_DAY_MILLISECONDS;
+	_tick_update_point = now;
 	PRINT_INFO("trading ready");
 }
 const tick_info& trading_context::get_previous_tick(const code_t& code)const
