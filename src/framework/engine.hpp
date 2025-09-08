@@ -137,7 +137,7 @@ namespace lt::hft
 			_is_runing(false),
 			_is_trading(false),
 			_realtime_thread(nullptr),
-
+			_is_servicing(false),
 			_ctx(nullptr),
 			_dc(nullptr)
 		{
