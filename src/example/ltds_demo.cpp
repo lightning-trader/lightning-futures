@@ -58,17 +58,17 @@ void print_history_tick(const char* code, uint32_t trading_day)
 void print_history_bar(const char* code)
 {
 	std::vector<ltd_bar_info> result;
-	//打印最近30根10分钟K线
-	ltd.get_history_bar(result, code, ltd_period::BC_10M, lt::make_seqtm(time(0)), 30);
+	//打印最近30根1分钟K线
+	ltd.get_history_bar(result, code, ltd_period::BC_1M, lt::make_seqtm(20250919U,"15:51:00.000"), 30);
 	for (const auto& it : result)
 	{
-		PRINT_INFO(it.code, '\t', it.time, '\t', it.open, it.close, it.high, it.low, '\t', it.volume);
+		PRINT_INFO(it.code, '\t', lt::seqtm_to_string(it.time), '\t', it.open, it.high, it.close, it.low, '\t', it.volume);
 	}
 }
 
 int main(int argc, char* argv[])
 {
-	print_history_bar("SHFE.rb2510");
+	print_history_bar("SHFE.ag2512");
 	std::this_thread::sleep_for(std::chrono::seconds(60));
 	return 0;
 }

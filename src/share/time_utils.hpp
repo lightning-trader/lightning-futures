@@ -35,6 +35,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #define ONE_SECOND_MILLISECONDS 1000
 #define ONE_WEEK_DAYS 7
 
+#define SEQTM_SEPARATION_COEFFICIENT 1000000000LLU
+
 
 #if defined(WIN32)
 #pragma  warning(disable:4996)
@@ -221,13 +223,22 @@ namespace lt
 	}
 	static seqtm_t make_seqtm(uint32_t date, daytm_t daytm)
 	{
-		return static_cast<seqtm_t>(make_date(date) + daytm / ONE_SECOND_MILLISECONDS);
+		return static_cast<seqtm_t>(static_cast<uint64_t>(date) * SEQTM_SEPARATION_COEFFICIENT + daytm );
 	}
-	static seqtm_t make_seqtm(time_t datetime)
+
+	static seqtm_t make_seqtm(uint32_t date, const char* tmstr)
 	{
-		auto day_begin = get_day_begin(datetime);
-		auto day_time = daytm_sequence(static_cast<daytm_t>(datetime - day_begin) * ONE_SECOND_MILLISECONDS);
-		return static_cast<seqtm_t>(day_begin + day_time / ONE_SECOND_MILLISECONDS);
+		return make_seqtm(date, make_daytm(tmstr,true));
+	}
+
+	static uint32_t get_uint_day(seqtm_t seqtm)
+	{
+		return static_cast<uint32_t>(static_cast<uint64_t>(seqtm) / SEQTM_SEPARATION_COEFFICIENT);
+	}
+	
+	static daytm_t get_daytm(seqtm_t seqtm)
+	{
+		return static_cast<daytm_t>(static_cast<uint64_t>(seqtm) % SEQTM_SEPARATION_COEFFICIENT);
 	}
 
 	static time_t make_datetime(time_t date_begin, const char* time)
@@ -235,13 +246,22 @@ namespace lt
 		return date_begin + make_time(time);
 	}
 
-
 	static time_t make_datetime(uint32_t day, daytm_t dtm)
 	{
 		return make_date(day) + daytm_really(dtm) / ONE_SECOND_MILLISECONDS;
 	}
 
+	static std::string seqtm_to_string(seqtm_t seqtm, const char* format = "%Y-%m-%d %H:%M:%S")
+	{
+		uint32_t trading_day = get_uint_day(seqtm);
+		daytm_t daytm = get_daytm(seqtm);
+		return datetime_to_string(make_datetime(trading_day, daytm), format);
+	}
 
+	static time_t make_datetime(seqtm_t seqtm)
+	{
+		return make_date(get_uint_day(seqtm)) + daytm_really(get_daytm(seqtm)) / ONE_SECOND_MILLISECONDS;
+	}
 	// 计算本周一0点(ISO标准周)
 	static time_t get_week_begin(time_t cur)
 	{
@@ -312,18 +332,6 @@ namespace lt
 		return std::atoi(buffer);
 	}
 
-	static uint32_t get_uint_day(seqtm_t seqtm)
-	{
-		return date_to_uint(static_cast<time_t>(seqtm));
-	}
-	static daytm_t get_daytm(seqtm_t seqtm)
-	{
-		return (seqtm - static_cast<seqtm_t>(get_day_begin(seqtm)))*ONE_SECOND_MILLISECONDS;
-	}
-	static time_t seqtm_to_time(seqtm_t seqtm)
-	{
-		return get_day_begin(seqtm) + daytm_really(get_daytm(seqtm));
-	}
 	static daytm_t section_daytm_snap(daytm_t tm, daytm_t delta=3000)
 	{
 		std::vector<daytm_t> base_time = {
@@ -381,5 +389,23 @@ namespace lt
 		struct tm tm1 = *localtime(&t1);
 		struct tm tm2 = *localtime(&t2);
 		return tm1.tm_year == tm2.tm_year;
+	}
+	//回到过去
+	static seqtm_t time_back(seqtm_t tm, uint32_t seconds)
+	{
+		return tm - seconds * ONE_SECOND_MILLISECONDS;
+	}
+	static daytm_t time_back(daytm_t tm, uint32_t seconds)
+	{
+		return tm - seconds * ONE_SECOND_MILLISECONDS;
+	}
+	//未来
+	static seqtm_t time_forward(seqtm_t tm, uint32_t seconds)
+	{
+		return tm + seconds * ONE_SECOND_MILLISECONDS;
+	}
+	static daytm_t time_forward(daytm_t tm, uint32_t seconds)
+	{
+		return tm + seconds * ONE_SECOND_MILLISECONDS;
 	}
 }

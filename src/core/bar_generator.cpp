@@ -40,7 +40,7 @@ bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_co
 		if(it < data.end()-1)
 		{
 			_bar_cache.emplace_front(bar);
-			_last_second_change = bar.time + period;
+			_last_second_change = time_forward(bar.time , period );
 		}
 		else
 		{
@@ -53,7 +53,7 @@ bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_co
 void bar_generator::insert_tick(const tick_info& tick)
 {
 	seqtm_t time = lt::make_seqtm(_ctx->get_trading_day(),tick.time);
-	if(time<_current_bar.time + _period)
+	if(time<lt::time_forward(_current_bar.time , _period))
 	{
 		merge_into_bar(tick);
 	}
@@ -119,7 +119,7 @@ bool bar_generator::poll()
 	if(_ctx->is_trading_time())
 	{
 		seqtm_t now = _ctx->get_now_time();
-		for (;  _last_second_change < now;  _last_second_change += _period)
+		while (_last_second_change < now)
 		{
 			double_t last_price = _current_bar.close;
 			_bar_cache.emplace_back(_current_bar);
@@ -145,6 +145,7 @@ bool bar_generator::poll()
 				merge_into_bar(_next_tick);
 				_next_tick = default_tick;
 			}
+			_last_second_change = time_forward(_last_second_change, _period);
 		}
 	}
 	return result;

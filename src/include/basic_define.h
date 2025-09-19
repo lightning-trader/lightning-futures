@@ -51,8 +51,8 @@ namespace lt{
 
 	//日内时间（精度到毫秒）
 	typedef uint32_t daytm_t;
-	//有序的时间（精确到秒）
-	typedef uint32_t seqtm_t;
+	//有序的时间（日期:uint32_t|时间:daytm_t）
+	typedef uint64_t seqtm_t;
 
 	typedef uint64_t estid_t;
 

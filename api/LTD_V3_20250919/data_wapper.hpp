@@ -25,7 +25,7 @@ private:
 	typedef size_t(*get_history_tick_function)(const void*, ltd_tick_info*, size_t, const char*, uint32_t);
 	get_history_tick_function _get_history_tick;
 
-	typedef size_t(*get_history_bar_function)(const void*, ltd_bar_info*, const char*, time_t, uint32_t, size_t);
+	typedef size_t(*get_history_bar_function)(const void*, ltd_bar_info*, const char*, uint64_t, uint32_t, size_t);
 	get_history_bar_function _get_history_bar;
 
 	typedef size_t(*get_trading_calendar_function)(const void*, uint32_t*, size_t, uint32_t, uint32_t);
@@ -76,7 +76,7 @@ public:
 		return _get_last_error();
 	}
 	
-	ltd_error_code get_history_bar(std::vector<ltd_bar_info>& result, const char* code, ltd_period period, time_t target,size_t size)const
+	ltd_error_code get_history_bar(std::vector<ltd_bar_info>& result, const char* code, ltd_period period, uint64_t target,size_t size)const
 	{
 		result.resize(size);
 		size_t real_size = _get_history_bar(_provider, result.data(), code, target,static_cast<uint32_t>(period), size);

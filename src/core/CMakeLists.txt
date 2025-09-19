@@ -1,4 +1,4 @@
-﻿include_directories(${CMAKE_INCLUDE_PATH} "../include" "../../api/LTD_V3_20250618")
+﻿include_directories(${CMAKE_INCLUDE_PATH} "../include" "../../api/LTD_V3_20250919")
 
 link_directories(${CMAKE_LIBRARY_PATH})
 

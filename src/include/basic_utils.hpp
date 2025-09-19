@@ -70,7 +70,7 @@ namespace lt{
         std::vector<std::string> pairstr = string_helper::split(string, ',');
         for (auto i = 0; i < pairstr.size(); i++)
         {
-            auto strs = string_helper::split(string, ':');
+            auto strs = string_helper::split(pairstr[i], ':');
             F key; S value;
             auto [key_ptr, key_ec] = std::from_chars(strs[0].data(), strs[0].data() + strs[0].size(), key);
             auto [val_ptr, val_ec] = std::from_chars(strs[1].data(), strs[1].data() + strs[1].size(), value);
@@ -104,7 +104,7 @@ namespace lt{
         std::vector<std::string> pairstr = string_helper::split(string, ',');
         for (auto i = 0; i < pairstr.size(); i++)
         {
-            auto strs = string_helper::split(string, ':');
+            auto strs = string_helper::split(pairstr[i], ':');
             
             F key;S value;
             auto [key_ptr, key_ec] = std::from_chars(strs[0].data(), strs[0].data() + strs[0].size(), key);

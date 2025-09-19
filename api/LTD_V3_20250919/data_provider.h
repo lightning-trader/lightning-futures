@@ -25,8 +25,6 @@
 
 extern "C" 
 {
-	//有序的时间（精确到秒）
-	typedef uint32_t seqtm_t;
 
 	typedef enum
 	{
@@ -122,7 +120,7 @@ extern "C"
 		 //合约ID
 		char code[MAX_CODE_LENGTH];
 
-		seqtm_t time; //时间(非标准时间戳)
+		uint64_t time; //时间(非标准时间戳)
 
 		uint32_t period;
 
@@ -159,7 +157,7 @@ extern "C"
 
 	EXPORT_FLAG size_t _get_history_tick(const void* provider,ltd_tick_info* result,size_t max_size, const char* code, uint32_t trading_day);
 
-	EXPORT_FLAG size_t _get_history_bar(const void* provider, ltd_bar_info* result, const char* code, seqtm_t target, uint32_t period, size_t size);
+	EXPORT_FLAG size_t _get_history_bar(const void* provider, ltd_bar_info* result, const char* code, uint64_t target, uint32_t period, size_t size);
 
 	EXPORT_FLAG size_t _get_trading_calendar(const void* provider, uint32_t* result, size_t max_size, uint32_t begin, uint32_t end);
 
