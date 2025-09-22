@@ -179,7 +179,7 @@ namespace lt
 
 		virtual bool poll()override
 		{
-			return this->poll();
+			return queue_event_source<trader_event_type, 32768U>::poll();
 		}
 
 		virtual bool is_idle()const override

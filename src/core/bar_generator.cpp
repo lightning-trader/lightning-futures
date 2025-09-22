@@ -100,9 +100,12 @@ const std::vector<bar_info> bar_generator::get_kline(size_t length)
 			_bar_cache.emplace_front(bar);
 		}
 	}
-	for (auto it = _bar_cache.begin(); it != _bar_cache.end(); ++it)
+	size_t history_size = std::min<size_t>(_bar_cache.size(), need_cache);
+	result.resize(history_size);
+	size_t r_index = 1;
+	for (auto it = _bar_cache.rbegin(); it != _bar_cache.rend()&& r_index <= history_size; ++it, r_index++)
 	{
-		result.emplace_back(*it);
+		result[history_size-r_index]=(*it);
 	}
 	result.emplace_back(_current_bar);
 	return result;

@@ -122,7 +122,7 @@ namespace lt
 
 		virtual bool poll()override
 		{
-			return this->poll();
+			return queue_event_source<market_event_type, 32768U>::poll();
 		}
 
 		virtual void bind_event(market_event_type type, std::function<void(const std::vector<std::any>&)> handle) override

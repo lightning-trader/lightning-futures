@@ -657,7 +657,7 @@ void trading_context::handle_state(const std::vector<std::any>& param)
 	{
 		return;
 	}
-	const code_t& product_code = std::any_cast<std::string>(param[0]);
+	const code_t& product_code = std::any_cast<code_t>(param[0]);
 	const bool current_state = std::any_cast<bool>(param[1]);
 	const daytm_t time = std::any_cast<daytm_t>(param[2]);
 	if (_state_listener)

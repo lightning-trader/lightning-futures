@@ -330,7 +330,7 @@ namespace lt::hft
 		/*
 		* 获取K线
 		*/
-		const std::vector<bar_info>& get_kline(const code_t& code,uint32_t period,size_t length)const
+		const std::vector<bar_info> get_kline(const code_t& code,uint32_t period,size_t length)const
 		{
 			return _dc->get_kline(code, period, length);
 		}
