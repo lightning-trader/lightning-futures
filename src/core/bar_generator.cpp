@@ -157,7 +157,11 @@ bool bar_generator::poll()
 
 void bar_generator::merge_into_bar(const tick_info& tick)
 {
-	uint32_t delta_volume = static_cast<uint32_t>(tick.volume - _prev_tick.volume);
+	uint32_t delta_volume = 0U;
+	if (!_prev_tick.invalid())
+	{
+		delta_volume = static_cast<uint32_t>(tick.volume - _prev_tick.volume);
+	}
 	_current_bar.id = tick.id;
 	_current_bar.period = _period;
 	_current_bar.detail_density = _detail_density;
