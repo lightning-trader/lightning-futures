@@ -32,3 +32,4 @@ bin/result/
 .idea
 build
 cmake-build-debug
+/bin/config/rt_simnow.ini
