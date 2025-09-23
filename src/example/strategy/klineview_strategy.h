@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 
 
-class klineview_strategy : public lt::hft::strategy,public lt::bar_receiver
+class klineview_strategy : public lt::hft::strategy,public lt::bar_receiver, public lt::tick_receiver
 {
 
 public:
@@ -58,7 +58,10 @@ public:
 	 */
 	virtual void on_bar(const lt::bar_info& bar) override;
 
-
+	/*
+	 *	tickÍÆËÍ
+	 */
+	virtual void on_tick(const lt::tick_info& tick)  override;
 	
 	/*
 	 *	Ïú»Ù

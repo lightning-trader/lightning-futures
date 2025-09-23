@@ -35,19 +35,19 @@ bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_co
 	}
 	for (auto it = data.begin(); it != data.end(); ++it)
 	{
+		_detail_density = it->detail_density;
 		bar_info bar;
 		convert_to_bar(bar, *it);
 		if(it < data.end()-1)
 		{
-			_bar_cache.emplace_front(bar);
+			_bar_cache.emplace_back(bar);
 			_last_second_change = time_forward(bar.time , period );
 		}
 		else
 		{
 			_current_bar = bar;
-			_detail_density = bar.detail_density;
+			_last_second_change = time_forward(_last_second_change, period);
 		}
-		
 	}
 }
 void bar_generator::insert_tick(const tick_info& tick)
@@ -91,7 +91,7 @@ const std::vector<bar_info> bar_generator::get_kline(size_t length)
 	if(_bar_cache.size()< need_cache)
 	{
 		std::vector<ltd_bar_info> data;
-		seqtm_t previous_time = _bar_cache.begin()->time;
+		seqtm_t previous_time = lt::time_back(_bar_cache.begin()->time,_period);
 		_dw.get_history_bar(data, _code.to_string().c_str(),static_cast<ltd_period>(_period), previous_time, need_cache - _bar_cache.size());
 		for (auto it = data.rbegin(); it != data.rend(); ++it)
 		{
@@ -125,13 +125,13 @@ bool bar_generator::poll()
 		while (_last_second_change < now)
 		{
 			double_t last_price = _current_bar.close;
-			_bar_cache.emplace_back(_current_bar);
 			//合成
 			for (auto it : _bar_callback)
 			{
 				it->on_bar(_current_bar);
 				result = true;
 			}
+			_bar_cache.emplace_back(_current_bar);
 			//初始化下一个bar
 			_current_bar.clear();
 			_current_bar.id = _code;
