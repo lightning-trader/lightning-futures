@@ -59,7 +59,7 @@ void print_history_bar(const char* code)
 {
 	std::vector<ltd_bar_info> result;
 	//打印最近30根1分钟K线
-	ltd.get_history_bar(result, code, ltd_period::BC_1M, lt::make_seqtm(20250919U,"15:51:00.000"), 30);
+	ltd.get_history_bar(result, code, ltd_period::BC_1M, lt::make_seqtm(20250917U,"15:51:00.000"), 30);
 	for (const auto& it : result)
 	{
 		PRINT_INFO(it.code, '\t', lt::seqtm_to_string(it.time), '\t', it.open, it.high, it.close, it.low, '\t', it.volume);

@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #pragma once
 
 #include<string>
+#include <iomanip>
 #include<basic_define.h>
 
 //#include "stringbuilder.h"
@@ -251,11 +252,14 @@ namespace lt
 		return make_date(day) + daytm_really(dtm) / ONE_SECOND_MILLISECONDS;
 	}
 
-	static std::string seqtm_to_string(seqtm_t seqtm, const char* format = "%Y-%m-%d %H:%M:%S")
+	static std::string seqtm_to_string(seqtm_t seqtm)
 	{
 		uint32_t trading_day = get_uint_day(seqtm);
 		daytm_t daytm = get_daytm(seqtm);
-		return datetime_to_string(make_datetime(trading_day, daytm), format);
+		uint32_t msec = static_cast<uint32_t>(daytm) % ONE_SECOND_MILLISECONDS;
+		std::stringstream ss;
+		ss << "%H:%M:%S." << std::setw(3) << std::setfill('0') << msec << "(%Y-%m-%d)";
+		return datetime_to_string(make_datetime(trading_day, daytm), ss.str().c_str());
 	}
 
 	static time_t make_datetime(seqtm_t seqtm)
