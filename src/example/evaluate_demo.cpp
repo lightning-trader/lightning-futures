@@ -36,14 +36,8 @@ int main(int argc, char* argv[])
 	auto app = std::make_shared<lt::hft::evaluate>("config/evaluate_account.ini", "config/control_normal.ini", "config/section_alltrading.csv");
 	app->regist_strategy({
 		std::make_shared<marketing_strategy>(1, app.get(), "SHFE.rb2510", 1, 1),
-		std::make_shared<orderflow_strategy>(2, app.get(), "SHFE.rb2510", 60, 1, 3, 3, 10)
+		std::make_shared<orderflow_strategy>(2, app.get(), "SHFE.ag2509", 600, 1, 3, 3, 10)
 		});
-	app->back_test(20250618U,20250619U);
-	app->clear_strategy();
-	app->regist_strategy({
-		std::make_shared<marketing_strategy>(1, app.get(), "SHFE.rb2601", 1, 1),
-		std::make_shared<orderflow_strategy>(2, app.get(), "SHFE.rb2601", 60, 1, 3, 3, 10)
-		});
-	app->back_test(20250620U, 20250623U);
+	app->back_test(20250620U,20250720U);
 	return 0;
 }

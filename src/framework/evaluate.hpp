@@ -190,7 +190,6 @@ namespace lt::hft
 					_trader_simulator->push_tick(current_tick);
 					});
 				_market_simulator->set_crossday_callback([this](uint32_t form, uint32_t to)->void {
-					rapidcsv::Document _crossday_flow_csv;
 					//记录结算数据
 					if (_recorder)
 					{

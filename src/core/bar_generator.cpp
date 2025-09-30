@@ -31,7 +31,7 @@ bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_co
 	ltd_error_code res = _dw.get_history_bar(data, _code.to_string().c_str(), static_cast<ltd_period>(_period), _ctx->get_now_time(), preload_bars);
 	if(res != ltd_error_code::EC_NO_ERROR)
 	{
-		PRINT_ERROR("get history bar error :",res);
+		PRINT_FATAL("get history bar error :",res);
 	}
 	for (auto it = data.begin(); it != data.end(); ++it)
 	{

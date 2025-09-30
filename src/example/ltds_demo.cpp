@@ -68,6 +68,9 @@ void print_history_bar(const char* code)
 
 int main(int argc, char* argv[])
 {
+	print_trading_day(20250619U, 20250730U);
+	print_all_instrument(20250930U);
+	print_history_tick("SHFE.rb2510", 20250930U);
 	print_history_bar("SHFE.ag2512");
 	std::this_thread::sleep_for(std::chrono::seconds(60));
 	return 0;

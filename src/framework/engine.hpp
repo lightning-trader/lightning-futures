@@ -182,6 +182,10 @@ namespace lt::hft
 					{
 						std::this_thread::sleep_for(duration - use_time);
 					}
+					else 
+					{
+						std::this_thread::yield();
+					}
 				}
 				
 				});
@@ -255,10 +259,9 @@ namespace lt::hft
 		/*停止*/
 		bool stop_service()
 		{
-			if (!_is_trading)
+			while (!_is_trading)
 			{
-				PRINT_WARNING("stop a not trading service");
-				return false;
+				std::this_thread::yield();
 			}
 			_is_servicing = false;
 			return true;

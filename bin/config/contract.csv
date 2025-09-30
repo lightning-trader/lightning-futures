@@ -1,5 +1,5 @@
 code,charge_type,open_charge,close_today_charge,close_yestoday_charge,multiple,margin_rate
 SHFE.rb2510,2,0.0001,0.0001,0.0001,10,0.14
 SHFE.rb2601,2,0.0001,0.0001,0.0001,10,0.14
-SHFE.ag2506,2,0.00005,0.00005,0.00005,15,0.19
+SHFE.ag2509,2,0.00005,0.00005,0.00005,15,0.19
 CZCE.SR503,1,3,3,3,10,0.08

@@ -240,6 +240,10 @@ void market_simulator::finish_publish()
 		}
 	}else
 	{
+		if (_crossday_callback)
+		{
+			_crossday_callback(_all_trading_day[_current_day_index], _all_trading_day[_current_day_index+1]);
+		}
 		_current_day_index++;
 	}
 }
