@@ -56,7 +56,7 @@ namespace lt::hft
 		{
 			if(syringe)
 			{
-				auto& data = syringe->inject_data();
+				const auto data = syringe->inject_data();
 				_ctx = std::get<0>(data);
 				_dc = std::get<1>(data);
 			}
