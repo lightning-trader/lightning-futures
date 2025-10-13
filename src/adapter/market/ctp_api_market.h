@@ -21,10 +21,11 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
+#include <mutex>
+#include <cfloat>
 #include <basic_define.h>
 #include <market_api.h>
 #include <event_center.hpp>
-#include <mutex>
 #include <condition_variable>
 #include <library_helper.hpp>
 #include <params.hpp>
@@ -85,9 +86,9 @@ namespace lt::driver
 
 		void do_unsubscribe(const std::vector<code_t>& code_list);
 
-		inline double_t price_adaptation(TThostFtdcPriceType price,double_t default = .0)
+		inline double_t price_adaptation(TThostFtdcPriceType price,double_t dft = .0)
 		{
-			return (.0< price && price < DBL_MAX) ? price : default;
+			return (.0< price && price < DBL_MAX) ? price : dft;
 		}
 
 	private:
