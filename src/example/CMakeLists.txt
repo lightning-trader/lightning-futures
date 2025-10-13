@@ -23,8 +23,10 @@ add_executable(demo-runtime "runtime_demo.cpp" ${STRATEGY_DIR})
 target_link_libraries(demo-runtime "latf-core-v3x")
 
 # 手动下单或者第三放干预策略示例
-add_executable(demo-manual "manual_demo.cpp" ${STRATEGY_DIR})
-target_link_libraries(demo-manual "latf-core-v3x")
+IF(WIN32)
+    add_executable(demo-manual "manual_demo.cpp" ${STRATEGY_DIR})
+    target_link_libraries(demo-manual "latf-core-v3x")
+ENDIF()
 
 # 策略运行器分离（动态链接策略）示例
 add_executable(demo-dlstgy "dlstgy_demo.cpp")
