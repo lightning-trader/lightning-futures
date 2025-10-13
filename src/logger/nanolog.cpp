@@ -34,7 +34,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <filesystem>
 #include <time_utils.hpp>
 #include <process_helper.hpp>
-#include <format>
 #include <string_helper.hpp>
 
 namespace
