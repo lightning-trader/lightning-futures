@@ -91,10 +91,10 @@ namespace lt
 
                 // 计算今日和昨日的开始时间
                 const auto schedule_today = get_schedule_time(today_tm, s.begin_time);
-                const auto end_today = schedule_today + s.duration;
+                const auto end_today = schedule_today + s.foretime;
 
                 const auto schedule_yesterday = get_schedule_time(yesterday_tm, s.begin_time);
-                const auto end_yesterday = schedule_yesterday + s.duration;
+                const auto end_yesterday = schedule_yesterday + s.foretime;
 
                 // 双重检查逻辑
                 if (yesterday_is_workday && now >= schedule_yesterday && now < end_yesterday)
@@ -113,7 +113,7 @@ namespace lt
     private:
         struct schedule {
             duration begin_time;
-            duration duration;
+            duration foretime;
         };
 
         std::unordered_set<int> _work_days;
