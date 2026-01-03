@@ -9,7 +9,7 @@ IF(UNIX)
     )
 ENDIF()
 
-include_directories(${CMAKE_INCLUDE_PATH} "./strategy" "../../api/LTD_V3_20250919" "../framework" )
+include_directories(${CMAKE_INCLUDE_PATH} "./strategy" "../../api/LTD_V3_20260103" "../framework" )
 link_directories(${CMAKE_LIBRARY_PATH})
 
 aux_source_directory(strategy STRATEGY_DIR)

@@ -39,7 +39,7 @@ private:
 
 public:
 
-	data_wapper(const char* channel, const char* cache_path, size_t detail_cache_size = 128U, size_t bar_cache_size = 819200U)
+	data_wapper(const char* channel, const char* cache_path, size_t product_cache_size=2U, size_t kline_cache_size=16U)
 	{
 		_handle = library_helper::load_library("latf-data-v3xp");
 		initialize_function initialize = (initialize_function)library_helper::get_symbol(_handle, "_initialize");
@@ -49,7 +49,7 @@ public:
 		_get_trading_calendar = (get_trading_calendar_function)library_helper::get_symbol(_handle, "_get_trading_calendar");
 		_get_all_instrument = (get_all_instrument_function)library_helper::get_symbol(_handle, "_get_all_instrument");
 
-		_provider = initialize(channel,cache_path, detail_cache_size, bar_cache_size);
+		_provider = initialize(channel,cache_path, product_cache_size, kline_cache_size);
 		if(_provider == NULL)
 		{
 			PRINT_FATAL("initialize error:",_get_last_error());

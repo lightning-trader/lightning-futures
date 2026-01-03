@@ -147,7 +147,7 @@ extern "C"
 	};
 
 
-	EXPORT_FLAG const void* _initialize(const char* channel, const char* cache_path, size_t detail_lru_size, size_t bar_lru_size);
+	EXPORT_FLAG const void* _initialize(const char* channel, const char* cache_path, size_t product_cache_size, size_t kline_cache_size);
 
 	EXPORT_FLAG void _destroy(const void* provider);
 
