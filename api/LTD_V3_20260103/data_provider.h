@@ -19,6 +19,8 @@
 
 #define MAX_CODE_LENGTH 32U
 
+#define MAX_SECTION_LENGTH 4U
+
 #define WAITING_PRICE_LENGTH  5U
 
 #define MAX_DETAIL_PRICE_SIZE  256U
@@ -146,6 +148,29 @@ extern "C"
 		
 	};
 
+	struct ltd_section_info
+	{
+		uint32_t begin_daytm;
+		uint32_t end_daytm;
+	};
+
+	struct ltd_instrument_info
+	{
+		//合约ID
+		char code[MAX_CODE_LENGTH];
+
+		char product_code[MAX_CODE_LENGTH];
+
+		uint32_t trading_day = 0U;
+
+		double_t price_step = .0;
+
+		size_t section_size = 0U;
+
+		ltd_section_info time_section[MAX_SECTION_LENGTH];
+
+
+	};
 
 	EXPORT_FLAG const void* _initialize(const char* channel, const char* cache_path, size_t product_cache_size, size_t kline_cache_size);
 
@@ -162,5 +187,7 @@ extern "C"
 	EXPORT_FLAG size_t _get_trading_calendar(const void* provider, uint32_t* result, size_t max_size, uint32_t begin, uint32_t end);
 
 	EXPORT_FLAG size_t _get_all_instrument(const void* provider, char(*result)[32], size_t max_size, uint32_t trading_day);
+
+	EXPORT_FLAG ltd_error_code _get_instrument_info(const void* provider, ltd_instrument_info* result, const char* code, uint32_t trading_day);
 
 }
