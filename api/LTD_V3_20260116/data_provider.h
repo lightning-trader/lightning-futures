@@ -37,6 +37,7 @@ extern "C"
 		EC_SERVICE_ERROR,		//服务错误
 		EC_LOAD_FILE_ERROR,		//加载文件错误
 		EC_VECSION_MISMATCH,	//SDK 版本不匹配（升级到最新SDK）
+		EC_ZSTD_ERROR,			//压缩解压错误
 	}ltd_error_code;
 
 	struct ltd_price_volume
