@@ -435,7 +435,7 @@ void tap_api_trader::OnRspQryPosition(TAPIUINT32 sessionID, TAPIINT32 errorCode,
 	{
 		code_t code = wrap_code(*info);
 		position_seed& pos = _position_info[code];
-		pos.id = code;
+		pos.code = code;
 		if (info->MatchSide == TAPI_SIDE_BUY)
 		{
 			pos.total_long += info->PositionQty;

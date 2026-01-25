@@ -53,7 +53,7 @@ void marketing_strategy::on_tick(const tick_info& tick)
 
 	if (is_close_coming())
 	{
-		PRINT_DEBUG("time > _coming_to_close", tick.id.get_symbol(), tick.time);
+		PRINT_DEBUG("time > _coming_to_close", tick.code.get_symbol(), tick.time);
 		return;
 	}
 	const auto& pos = get_position(_code);
@@ -69,17 +69,17 @@ void marketing_strategy::on_tick(const tick_info& tick)
 			if (pos.history_short.usable() > 0)
 			{
 				uint32_t buy_once = std::min<uint32_t>(pos.history_short.usable(), _open_once);
-				_order_data.buy_order = buy_close(tick.id, buy_once, buy_price);
+				_order_data.buy_order = buy_close(tick.code, buy_once, buy_price);
 			}
 			else
 			{
 				uint32_t buy_once = std::min<uint32_t>(pos.total_short.usable(), _open_once);
-				_order_data.buy_order = buy_close(tick.id, buy_once, buy_price, true);
+				_order_data.buy_order = buy_close(tick.code, buy_once, buy_price, true);
 			}
 		}
 		else
 		{
-			_order_data.buy_order = buy_open(tick.id, _open_once, buy_price);
+			_order_data.buy_order = buy_open(tick.code, _open_once, buy_price);
 		}
 	}
 	if (_order_data.sell_order == INVALID_ESTID)
@@ -90,16 +90,16 @@ void marketing_strategy::on_tick(const tick_info& tick)
 		if (pos.history_long.usable() > 0)
 		{
 			uint32_t sell_once = std::min<uint32_t>(pos.history_long.usable(), _open_once);
-			_order_data.sell_order = sell_close(tick.id, sell_once, sell_price);
+			_order_data.sell_order = sell_close(tick.code, sell_once, sell_price);
 		}
 		else if (pos.total_long.usable() > 0)
 		{
 			uint32_t sell_once = std::min<uint32_t>(pos.total_long.usable(), _open_once);
-			_order_data.sell_order = sell_close(tick.id, sell_once, sell_price, true);
+			_order_data.sell_order = sell_close(tick.code, sell_once, sell_price, true);
 		}
 		else
 		{
-			_order_data.sell_order = sell_open(tick.id, _open_once, sell_price);
+			_order_data.sell_order = sell_open(tick.code, _open_once, sell_price);
 		}
 	}
 }

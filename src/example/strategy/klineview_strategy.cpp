@@ -31,13 +31,13 @@ using namespace lt::hft;
 
 void klineview_strategy::on_init(subscriber& suber)
 {
-	suber.regist_bar_receiver(_code, _period,this,60);
+	suber.regist_bar_receiver(_code, _period,this);
 	suber.regist_tick_receiver(_code, this);
 }
 
 void klineview_strategy::on_bar(const lt::bar_info& bar)
 {
-	PRINT_INFO(bar.id.to_string(), '\t', lt::seqtm_to_string(bar.time), '\t', bar.open, bar.high, bar.close, bar.low, '\t', bar.volume);
+	PRINT_INFO(bar.code.to_string(), '\t', lt::seqtm_to_string(bar.time), '\t', bar.open, bar.high, bar.close, bar.low, '\t', bar.volume);
 }
 
 void klineview_strategy::on_tick(const lt::tick_info& tick) 

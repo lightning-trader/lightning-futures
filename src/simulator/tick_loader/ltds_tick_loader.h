@@ -25,7 +25,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <basic_define.h>
 #include <library_helper.hpp>
 #include <data_wapper.hpp>
-
 namespace lt::driver
 {
 	class ldts_tick_loader : public tick_loader
@@ -36,7 +35,7 @@ namespace lt::driver
 
 	public:
 		
-		ldts_tick_loader(const std::string& channel, const std::string& cache_path, size_t detail_cache_size = 128U, size_t bar_cache_size = 819200U);
+		ldts_tick_loader(const std::string& channel, const std::string& cache_path, size_t cache_size = 128U);
 
 		virtual ~ldts_tick_loader();
 

@@ -30,8 +30,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 using namespace lt::driver;
 
-ldts_tick_loader::ldts_tick_loader(const std::string& channel,const std::string& cache_path, size_t detail_cache_size , size_t bar_cache_size )
-:_ltd(channel.c_str(), cache_path.c_str(), detail_cache_size, bar_cache_size)
+ldts_tick_loader::ldts_tick_loader(const std::string& channel,const std::string& cache_path, size_t cache_size )
+:_ltd(channel.c_str(), cache_path.c_str(), cache_size)
 {
 
 }
@@ -54,7 +54,7 @@ void ldts_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t
 	for(const auto& it : res)
 	{
 		tick_detail tick;
-		tick.id = it.code;
+		tick.code = it.code;
 		tick.time = it.time;
 		tick.price = it.price;
 		tick.volume = it.volume;

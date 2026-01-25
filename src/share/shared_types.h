@@ -28,7 +28,7 @@ namespace lt
 {
 	struct position_seed
 	{
-		code_t id;
+		code_t code;
 		//总仓
 		uint32_t total_long;
 		uint32_t total_short;

@@ -50,8 +50,8 @@ namespace lt::hft
 			if(_is_servicing&&!_is_trading)
 			{
 				//开始交易
-				this->_ctx->check_crossday();
-				subscriber suber(_dc);
+				this->_ctx->crossday();
+				subscriber suber(_dc, _ctx->get_trading_day());
 				for (auto it : _strategy_map)
 				{
 					it.second->init(suber);

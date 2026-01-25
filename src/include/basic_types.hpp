@@ -330,7 +330,7 @@ namespace lt
 	
 	struct tick_info
 	{
-		code_t id; //合约ID
+		code_t code; //合约ID
 
 		daytm_t time; //日内时间（毫秒数）
 
@@ -376,7 +376,7 @@ namespace lt
 		{}
 
 		tick_info(const code_t& cod, daytm_t dtm, double_t prs, uint32_t val,double_t oit, double_t ap, uint32_t td, price_volume_array&& buy_ord, price_volume_array&& sell_ord)
-			:id(cod),
+			:code(cod),
 			time(dtm),
 			price(prs),
 			volume(val),
@@ -409,7 +409,7 @@ namespace lt
 
 		bool invalid()const
 		{
-			return id == default_code;
+			return code == default_code;
 		}
 
 	};
@@ -460,8 +460,8 @@ namespace lt
 	};
 	struct position_info
 	{
-		code_t id; //合约ID
-		position_info(const code_t& code) :id(code), long_pending(0), short_pending(0) {}
+		code_t code; //合约ID
+		position_info(const code_t& code) :code(code), long_pending(0), short_pending(0) {}
 		//全部仓位包含今仓昨仓
 		position_cell total_long;
 		position_cell total_short;
@@ -481,16 +481,17 @@ namespace lt
 
 		uint32_t get_total()const
 		{
-			return total_long.postion + total_short.postion ;
+			return total_long.postion + total_short.postion;
 		}
 
 		int32_t get_real()const
 		{
-			return total_long.postion  - total_long.postion ;
+			return total_long.postion - total_long.postion;
 		}
 
 		position_info() :long_pending(0U), short_pending(0U)
-		{}
+		{
+		}
 	};
 
 	const position_info default_position;
@@ -510,7 +511,7 @@ namespace lt
 	enum class offset_type
 	{
 		OT_OPEN = '0',	//开仓
-		OT_CLOSE,		//平仓,上期所等为平昨
+		OT_CLOSE,		//平仓,上期为平昨
 		OT_CLSTD		//平今
 	};
 
@@ -809,7 +810,7 @@ namespace lt
 
 	struct bar_info
 	{
-		code_t id; //合约ID
+		code_t code; //合约ID
 
 		seqtm_t time; //时间
 
@@ -961,6 +962,7 @@ namespace lt
 			detail_density = .0;
 			buy_details.clear();
 			sell_details.clear();
+			other_details.clear();
 		}
 
 		bar_info()

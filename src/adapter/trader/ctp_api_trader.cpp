@@ -471,7 +471,7 @@ void ctp_api_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *p
 		{
 			pos = it->second;
 		}
-		pos.id = code;
+		pos.code = code;
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
 

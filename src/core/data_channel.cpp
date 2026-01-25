@@ -57,6 +57,11 @@ void unsubscriber::unregist_tick_receiver(const code_t& code, tick_receiver* rec
 	if (it->second.empty())
 	{
 		_dc->_tick_receiver.erase(it);
+		auto cit = _dc->_tick_cache.find(code);
+		if (cit != _dc->_tick_cache.end()) 
+		{
+			_dc->_tick_cache.erase(cit);
+		}
 	}
 	auto d_it = _dc->_tick_reference_count.find(code);
 	if (d_it != _dc->_tick_reference_count.end())
@@ -108,12 +113,12 @@ void unsubscriber::unregist_tape_receiver(const code_t& code, tape_receiver* rec
 	}
 }
 
-void subscriber::regist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver,size_t preload_bars)
+void subscriber::regist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver)
 {
 	auto generator_iter = _dc->_bar_generator[code].find(period);
 	if (generator_iter == _dc->_bar_generator[code].end())
 	{
-		_dc->_bar_generator[code][period] = std::make_shared<bar_generator>(code,period, _dc->_ctx,_dc->_dw, preload_bars);
+		_dc->_bar_generator[code][period] = std::make_shared<bar_generator>(code,period, _dc->_ctx,_dc->_dw);
 	}
 	_dc->_bar_generator[code][period]->add_receiver(receiver);
 	_dc->_tick_reference_count[code]++;
@@ -121,7 +126,7 @@ void subscriber::regist_bar_receiver(const code_t& code, uint32_t period, bar_re
 
 void subscriber::subscribe()
 {
-	_dc->subscribe();
+	_dc->subscribe(_td);
 }
 
 void unsubscriber::unregist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver)
@@ -161,7 +166,7 @@ void unsubscriber::unsubscribe()
 	_dc->unsubscribe();
 }
 
-void data_channel::subscribe()
+void data_channel::subscribe(uint32_t td)
 {
 	std::set<code_t> tick_subscrib;
 	for (auto it = _tick_reference_count.begin(); it != _tick_reference_count.end();)
@@ -177,29 +182,36 @@ void data_channel::subscribe()
 		}
 	}
 	_ctx->subscribe(tick_subscrib, [this](const tick_info& tick)->void {
-		auto tk_it = _tick_receiver.find(tick.id);
+		auto tk_it = _tick_receiver.find(tick.code);
 		if (tk_it != _tick_receiver.end())
 		{
 			for (auto tkrc : tk_it->second)
 			{
 				if (tkrc)
 				{
-					PROFILE_DEBUG(tick.id.get_symbol());
+					PROFILE_DEBUG(tick.code.get_symbol());
+					auto cit = _tick_cache.find(tick.code);
+					if (cit != _tick_cache.end())
+					{
+						if(cit->second.empty()|| cit->second.back().time<tick.time)
+							cit->second.emplace_back(tick);
+					}
 					tkrc->on_tick(tick);
-					PROFILE_DEBUG(tick.id.get_symbol());
+					PROFILE_DEBUG(tick.code.get_symbol());
+					
 				}
 			}
 		}
 
-		auto tp_it = _tape_receiver.find(tick.id);
+		auto tp_it = _tape_receiver.find(tick.code);
 		if (tp_it != _tape_receiver.end())
 		{
 			for (auto tprc : tp_it->second)
 			{
 				if (tprc)
 				{
-					tape_info deal_info(tick.id, tick.time, tick.price);
-					const auto& prev_tick = _ctx->get_previous_tick(tick.id);
+					tape_info deal_info(tick.code, tick.time, tick.price);
+					const auto& prev_tick = _ctx->get_previous_tick(tick.code);
 					deal_info.volume_delta = static_cast<uint32_t>(tick.volume - prev_tick.volume);
 					deal_info.interest_delta = tick.open_interest - prev_tick.open_interest;
 					deal_info.direction = get_deal_direction(prev_tick, tick);
@@ -208,7 +220,7 @@ void data_channel::subscribe()
 			}
 		}
 
-		auto br_it = _bar_generator.find(tick.id);
+		auto br_it = _bar_generator.find(tick.code);
 		if (br_it != _bar_generator.end())
 		{
 			for (auto bg_it : br_it->second)
@@ -217,6 +229,38 @@ void data_channel::subscribe()
 			}
 		}
 	});
+	//加载历史tick
+	for (const auto& code : tick_subscrib)
+	{
+		std::vector<ltd_tick_info> preload_ticks;
+		_dw.get_history_tick(preload_ticks, code.to_string().c_str(), td);
+		std::vector<tick_info> ticks;
+		for (const auto& it : preload_ticks)
+		{
+			//
+			price_volume_array bid_order;
+			for (size_t i = 0; i < WAITING_PRICE_LENGTH && i < PRICE_VOLUME_SIZE; i++)
+			{
+				bid_order[i] = std::make_pair(it.bid_order[i].price, it.bid_order[i].volume);
+			}
+			price_volume_array ask_order;
+			for (size_t i = 0; i < WAITING_PRICE_LENGTH && i < PRICE_VOLUME_SIZE; i++)
+			{
+				ask_order[i] = std::make_pair(it.ask_order[i].price, it.ask_order[i].volume);
+			}
+
+			ticks.emplace_back(tick_info(code_t(it.code), it.time, it.price, it.volume, it.open_interest, it.average_price, it.trading_day, std::move(bid_order), std::move(ask_order)));
+		}
+		_tick_cache.insert(std::make_pair(code, ticks));
+	}
+	//加载历史k线
+	for (const auto& generator_pair : _bar_generator)
+	{
+		for (const auto& piroed_pair:generator_pair.second)
+		{
+			piroed_pair.second->load_history();
+		}
+	}
 }
 
 void data_channel::unsubscribe()
@@ -235,6 +279,15 @@ void data_channel::unsubscribe()
 		}
 	}
 	_ctx->unsubscribe(tick_unsubscrib);
+	_tick_cache.clear();
+	//加载历史k线
+	for (const auto& generator_pair : _bar_generator)
+	{
+		for (const auto& piroed_pair : generator_pair.second)
+		{
+			piroed_pair.second->clear_history();
+		}
+	}
 }
 
 bool data_channel::poll()
@@ -266,4 +319,16 @@ const std::vector<bar_info> data_channel::get_kline(const code_t& code, uint32_t
 	}
 
 	return pit->second->get_kline(length);
+}
+
+const std::vector<tick_info> data_channel::get_ticks(const code_t& code, size_t length) const
+{
+	auto it = _tick_cache.find(code);
+	if (it == _tick_cache.end())
+	{
+		PRINT_ERROR("cant find the code tick data ", code.to_string());
+		return std::vector<tick_info>();
+	}
+	std::vector<tick_info> last_ticks(it->second.end() - length, it->second.end());
+	return last_ticks;
 }

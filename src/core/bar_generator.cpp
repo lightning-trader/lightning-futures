@@ -25,30 +25,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <basic_utils.hpp>
 
 using namespace lt;
-bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_context*& ctx, const data_wapper& dw, size_t preload_bars) :_code(code), _period(period), _ctx(ctx), _dw(dw), _last_second_change(0), _detail_density(.0)
+bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_context*& ctx, const data_wapper& dw) :_code(code), _period(period), _ctx(ctx), _dw(dw), _last_second_change(0), _detail_density(.0)
+{
+	_last_second_change = _ctx->get_now_time();
+}
+
+void bar_generator::load_history(size_t preload_bars)
 {
 	std::vector<ltd_bar_info> data;
 	ltd_error_code res = _dw.get_history_bar(data, _code.to_string().c_str(), static_cast<ltd_period>(_period), _ctx->get_now_time(), preload_bars);
-	if(res != ltd_error_code::EC_NO_ERROR)
+	if (res != ltd_error_code::EC_NO_ERROR)
 	{
-		PRINT_FATAL("get history bar error :",res);
+		PRINT_FATAL("get history bar error :", res);
 	}
 	for (auto it = data.begin(); it != data.end(); ++it)
 	{
 		_detail_density = it->detail_density;
 		bar_info bar;
 		convert_to_bar(bar, *it);
-		if(it < data.end()-1)
+		if (it < data.end() - 1)
 		{
 			_bar_cache.emplace_back(bar);
-			_last_second_change = time_forward(bar.time , period );
 		}
 		else
 		{
 			_current_bar = bar;
-			_last_second_change = time_forward(_last_second_change, period);
 		}
+		_last_second_change = time_forward(bar.time, _period);
 	}
+}
+void bar_generator::clear_history()
+{
+	_bar_cache.clear();
 }
 void bar_generator::insert_tick(const tick_info& tick)
 {
@@ -119,7 +127,7 @@ bool bar_generator::invalid()const
 bool bar_generator::poll()
 {
 	bool result = false ;
-	if(_ctx->is_trading_time())
+	if(_ctx->is_in_trading(_code))
 	{
 		seqtm_t now = _ctx->get_now_time();
 		while (_last_second_change < now)
@@ -134,7 +142,7 @@ bool bar_generator::poll()
 			_bar_cache.emplace_back(_current_bar);
 			//初始化下一个bar
 			_current_bar.clear();
-			_current_bar.id = _code;
+			_current_bar.code = _code;
 			_current_bar.period = _period;
 			_current_bar.open = last_price;
 			_current_bar.close = last_price;
@@ -162,7 +170,7 @@ void bar_generator::merge_into_bar(const tick_info& tick)
 	{
 		delta_volume = static_cast<uint32_t>(tick.volume - _prev_tick.volume);
 	}
-	_current_bar.id = tick.id;
+	_current_bar.code = tick.code;
 	_current_bar.period = _period;
 	_current_bar.detail_density = _detail_density;
 	_current_bar.high = std::max<double_t>(_current_bar.high, tick.price);
@@ -190,7 +198,7 @@ void bar_generator::merge_into_bar(const tick_info& tick)
 
 void bar_generator::convert_to_bar(bar_info& bar, const ltd_bar_info& info)
 {
-	bar.id = info.code;
+	bar.code = info.code;
 	bar.period = info.period;
 	bar.open = info.open;
 	bar.close = info.close;

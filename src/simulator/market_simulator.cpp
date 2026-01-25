@@ -167,7 +167,7 @@ bool market_simulator::load_data()
 		{
 			return false;
 		}
-		return lh.id < rh.id;
+		return lh.code < rh.code;
 		});
 	return true;
 }
