@@ -155,6 +155,27 @@ extern "C"
 		uint32_t begin_daytm;
 		uint32_t end_daytm;
 	};
+<<<<<<<< HEAD:api/LTD_V3_20260125/data_provider.h
+========
+
+	struct ltd_instrument_info
+	{
+		//合约ID
+		char code[MAX_CODE_LENGTH];
+
+		char product_code[MAX_CODE_LENGTH];
+
+		uint32_t trading_day = 0U;
+
+		double_t price_step = .0;
+
+		size_t section_size = 0U;
+
+		ltd_section_info time_section[MAX_SECTION_LENGTH];
+
+
+	};
+>>>>>>>> c16686460c820e662d7803ca23d8822fda14985f:api/LTD_V3_20260116/data_provider.h
 
 	struct ltd_instrument_info
 	{
@@ -197,5 +218,7 @@ extern "C"
 	EXPORT_FLAG size_t PORTER_FLAG _get_all_instrument(const void* provider, char(*result)[MAX_CODE_LENGTH], size_t max_size, uint32_t trading_day);
 
 	EXPORT_FLAG ltd_error_code PORTER_FLAG _get_instrument_info(const void* provider, ltd_instrument_info* result, const char* code, uint32_t trading_day);
+
+	EXPORT_FLAG ltd_error_code _get_instrument_info(const void* provider, ltd_instrument_info* result, const char* code, uint32_t trading_day);
 
 }
