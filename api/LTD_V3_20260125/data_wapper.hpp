@@ -34,28 +34,35 @@ private:
 	typedef size_t(*get_all_instrument_function)(const void*, char(*)[32], size_t, uint32_t);
 	get_all_instrument_function _get_all_instrument;
 
+	typedef ltd_error_code(*get_instrument_info_function)(const void*, ltd_instrument_info*, const char*, uint32_t);
+	get_instrument_info_function _get_instrument_info;
+
 	typedef ltd_error_code(*get_last_error_function)();
 	get_last_error_function _get_last_error;
 
 public:
 
-	data_wapper(const char* channel, const char* cache_path, size_t product_cache_size=2U, size_t kline_cache_size=16U)
+	data_wapper(const char* channel, const char* cache_path, size_t product_cache=2U, size_t kline_cache=16U)
 	{
-		_handle = library_helper::load_library("latf-data-v3xp");
+		_handle = library_helper::load_library("latf-data-v3xp","-d");
 		initialize_function initialize = (initialize_function)library_helper::get_symbol(_handle, "_initialize");
 		_get_last_error = (get_last_error_function)library_helper::get_symbol(_handle, "_get_last_error");
 		_get_history_tick = (get_history_tick_function)library_helper::get_symbol(_handle, "_get_history_tick");
 		_get_history_bar = (get_history_bar_function)library_helper::get_symbol(_handle, "_get_history_bar");
 		_get_trading_calendar = (get_trading_calendar_function)library_helper::get_symbol(_handle, "_get_trading_calendar");
 		_get_all_instrument = (get_all_instrument_function)library_helper::get_symbol(_handle, "_get_all_instrument");
+		_get_instrument_info = (get_instrument_info_function)library_helper::get_symbol(_handle, "_get_instrument_info");
 
-		_provider = initialize(channel,cache_path, product_cache_size, kline_cache_size);
+		_provider = initialize(channel,cache_path, product_cache, kline_cache);
 		if(_provider == NULL)
 		{
-			PRINT_FATAL("initialize error:",_get_last_error());
+			PRINT_FATAL("initialize error:",static_cast<uint32_t>(_get_last_error()));
 		}
-		get_version_code_function get_version_code = (get_version_code_function)library_helper::get_symbol(_handle, "_get_version_code");
-		PRINT_INFO("initialize success : ",get_version_code());
+		else 
+		{
+			get_version_code_function get_version_code = (get_version_code_function)library_helper::get_symbol(_handle, "_get_version_code");
+			PRINT_INFO("initialize success : ", get_version_code());
+		}
 	}
 
 	virtual ~data_wapper()
@@ -104,5 +111,8 @@ public:
 		}
 		return _get_last_error();
 	}
-
+	ltd_error_code get_instrument_info(ltd_instrument_info& result, const char* code, uint32_t trading_day)const
+	{
+		return _get_instrument_info(_provider, &result, code, trading_day);
+	}
 };

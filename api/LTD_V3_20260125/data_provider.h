@@ -19,22 +19,26 @@
 
 #define MAX_CODE_LENGTH 32U
 
+#define MAX_SECTION_LENGTH 4U
+
 #define WAITING_PRICE_LENGTH  5U
 
 #define MAX_DETAIL_PRICE_SIZE  256U
 
-extern "C" 
+extern "C"
 {
 
 	typedef enum
 	{
-		EC_NO_ERROR,
+		EC_UNKNOWN_EXCEPTION = -1,//未知错误
+		EC_NO_ERROR = 0,
 		EC_SYSTEM_ERROR,		//系统错误
 		EC_WEBAPI_ERROR,		//WEB ERROR
 		EC_CONNECT_EXCEPTION,	//连接异常
 		EC_SERVICE_ERROR,		//服务错误
 		EC_LOAD_FILE_ERROR,		//加载文件错误
 		EC_VECSION_MISMATCH,	//SDK 版本不匹配（升级到最新SDK）
+		EC_ZSTD_ERROR,			//压缩解压错误
 	}ltd_error_code;
 
 	struct ltd_price_volume
@@ -60,7 +64,7 @@ extern "C"
 		double_t close;
 
 		double_t high;
-		
+
 		double_t low;
 
 		double_t max;
@@ -76,7 +80,7 @@ extern "C"
 		ltd_price_volume bid_order[WAITING_PRICE_LENGTH];
 
 		ltd_price_volume ask_order[WAITING_PRICE_LENGTH];
-	
+
 	};
 
 	typedef enum
@@ -112,12 +116,12 @@ extern "C"
 		BC_WEEK = 604800,
 		BC_MONTH = 2629746,//基于400年大周期的平均值计算获得
 		BC_YEAR = 31556952,//基于400年大周期的平均值计算获得
-		
+
 	}ltd_period;
 
 	struct ltd_bar_info
 	{
-		 //合约ID
+		//合约ID
 		char code[MAX_CODE_LENGTH];
 
 		uint64_t time; //时间(非标准时间戳)
@@ -133,34 +137,65 @@ extern "C"
 		double_t low;
 
 		uint32_t volume;
-		
+
 		double_t detail_density;
 		//订单流中的明细
-		size_t price_buy_size ;
+		size_t price_buy_size;
 		ltd_price_volume buy_volume[MAX_DETAIL_PRICE_SIZE];
 		size_t price_sell_size;
 		ltd_price_volume sell_volume[MAX_DETAIL_PRICE_SIZE];
 		size_t price_other_size;
 		ltd_price_volume other_volume[MAX_DETAIL_PRICE_SIZE];
 
-		
+
 	};
 
+	struct ltd_section_info
+	{
+		uint32_t begin_daytm;
+		uint32_t end_daytm;
+	};
 
-	EXPORT_FLAG const void* _initialize(const char* channel, const char* cache_path, size_t product_cache_size, size_t kline_cache_size);
+	struct ltd_instrument_info
+	{
+		//合约ID
+		char code[MAX_CODE_LENGTH];
 
-	EXPORT_FLAG void _destroy(const void* provider);
+		char product_code[MAX_CODE_LENGTH];
 
-	EXPORT_FLAG ltd_error_code _get_last_error();
+		uint32_t trading_day = 0U;
 
-	EXPORT_FLAG uint32_t _get_version_code();
+		double_t price_step = .0;
 
-	EXPORT_FLAG size_t _get_history_tick(const void* provider,ltd_tick_info* result,size_t max_size, const char* code, uint32_t trading_day);
+		size_t section_size = 0U;
 
-	EXPORT_FLAG size_t _get_history_bar(const void* provider, ltd_bar_info* result, const char* code, uint64_t target, uint32_t period, size_t size);
+		ltd_section_info time_section[MAX_SECTION_LENGTH];
 
-	EXPORT_FLAG size_t _get_trading_calendar(const void* provider, uint32_t* result, size_t max_size, uint32_t begin, uint32_t end);
 
-	EXPORT_FLAG size_t _get_all_instrument(const void* provider, char(*result)[32], size_t max_size, uint32_t trading_day);
+	};
+
+	// 多线程使用说明：
+	// 1. 所有函数都是线程安全的，可以安全地在多线程环境中调用
+	// 2. 多个线程可以共享同一个provider实例
+	// 3. 每个线程的错误状态是独立的
+
+	EXPORT_FLAG const void* PORTER_FLAG _initialize(const char* channel, const char* cache_path, size_t product_cache_size, size_t kline_cache_size);
+
+	EXPORT_FLAG void PORTER_FLAG _destroy(const void* provider);
+
+	// 线程安全的错误码获取（每个线程独立）
+	EXPORT_FLAG ltd_error_code PORTER_FLAG _get_last_error();
+
+	EXPORT_FLAG uint32_t PORTER_FLAG _get_version_code();
+
+	EXPORT_FLAG size_t PORTER_FLAG _get_history_tick(const void* provider, ltd_tick_info* result, size_t max_size, const char* code, uint32_t trading_day);
+
+	EXPORT_FLAG size_t PORTER_FLAG _get_history_bar(const void* provider, ltd_bar_info* result, const char* code, uint64_t target, uint32_t period, size_t size);
+
+	EXPORT_FLAG size_t PORTER_FLAG _get_trading_calendar(const void* provider, uint32_t* result, size_t max_size, uint32_t begin, uint32_t end);
+
+	EXPORT_FLAG size_t PORTER_FLAG _get_all_instrument(const void* provider, char(*result)[MAX_CODE_LENGTH], size_t max_size, uint32_t trading_day);
+
+	EXPORT_FLAG ltd_error_code PORTER_FLAG _get_instrument_info(const void* provider, ltd_instrument_info* result, const char* code, uint32_t trading_day);
 
 }
