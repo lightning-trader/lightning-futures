@@ -1,4 +1,4 @@
-﻿/*
+/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -480,7 +480,7 @@ void trading_context::handle_tick(const std::vector<std::any>& param)
 				current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
 				if (this->_tick_callback)
 				{
-					PROFILE_DEBUG(last_tick.id.get_symbol());
+					PROFILE_DEBUG(last_tick.code.get_symbol());
 					this->_tick_callback(last_tick);
 				}
 			}

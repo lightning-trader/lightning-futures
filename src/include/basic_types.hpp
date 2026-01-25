@@ -486,7 +486,7 @@ namespace lt
 
 		int32_t get_real()const
 		{
-			return total_long.postion - total_long.postion;
+			return total_long.postion - total_short.postion;
 		}
 
 		position_info() :long_pending(0U), short_pending(0U)
@@ -857,18 +857,18 @@ namespace lt
 		}
 
 		//订单流中delta
-		int32_t get_delta()const{
-			int32_t delta = 0;
-			for(const auto& it : sell_details)
-			{
-				delta += it.second;
-			}
-			for (const auto& it : sell_details)
-			{
-				delta -= it.second;
-			}
-			return delta;
+	int32_t get_delta()const{
+		int32_t delta = 0;
+		for(const auto& it : buy_details)
+		{
+			delta += it.second;
 		}
+		for (const auto& it : sell_details)
+		{
+			delta -= it.second;
+		}
+		return delta;
+	}
 
 		double_t get_poc()const{
 
