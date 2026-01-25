@@ -431,68 +431,72 @@ namespace lt
 	};
 
 	struct position_cell
+{
+	//仓位
+	uint32_t	position;
+	//冻结（平仓未成交）
+	uint32_t	frozen;
+
+	position_cell() :
+		position(0),
+		frozen(0)
+	{}
+
+	uint32_t usable()const
 	{
-		//仓位
-		uint32_t	postion;
-		//冻结（平仓未成交）
-		uint32_t	frozen;
+		return position - frozen;
+	}
 
-		position_cell() :
-			postion(0),
-			frozen(0)
-		{}
+	bool empty()const
+	{
+		return position == 0;
+	}
 
-		uint32_t usable()const
-		{
-			return postion - frozen;
-		}
-
-		bool empty()const
-		{
-			return postion == 0;
-		}
-
-		void clear()
-		{
-			postion = 0;
-			frozen = 0;
-		}
-	};
+	void clear()
+	{
+		position = 0;
+		frozen = 0;
+	}
+};
 	struct position_info
 	{
 		code_t code; //合约ID
 		position_info(const code_t& code) :code(code), long_pending(0), short_pending(0) {}
 		//全部仓位包含今仓昨仓
-		position_cell total_long;
-		position_cell total_short;
+	position_cell total_long;
+	position_cell total_short;
 
-		//昨仓
-		position_cell history_long;
-		position_cell history_short;
+	//昨仓
+	position_cell history_long;
+	position_cell history_short;
 
-		//开仓还未成交
-		uint32_t	long_pending;
-		uint32_t	short_pending;
+	//今仓
+	position_cell today_long;
+	position_cell today_short;
 
-		bool empty()const
-		{
-			return total_long.empty() && total_short.empty() && long_pending == 0U && short_pending == 0U;
-		}
+	//开仓还未成交
+	uint32_t	long_pending;
+	uint32_t	short_pending;
 
-		uint32_t get_total()const
-		{
-			return total_long.postion + total_short.postion;
-		}
+	bool empty()const
+	{
+		return total_long.empty() && total_short.empty() && long_pending == 0U && short_pending == 0U;
+	}
 
-		int32_t get_real()const
-		{
-			return total_long.postion - total_short.postion;
-		}
+	uint32_t get_total()const
+	{
+		return total_long.position + total_short.position;
+	}
 
-		position_info() :long_pending(0U), short_pending(0U)
-		{
-		}
-	};
+	int32_t get_real()const
+	{
+		return total_long.position - total_short.position;
+	}
+
+	position_info() :long_pending(0U), short_pending(0U)
+	{
+	}
+};
 
 	const position_info default_position;
 	/*

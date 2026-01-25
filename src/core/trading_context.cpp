@@ -138,10 +138,10 @@ bool trading_context::load_data()
 	{
 		auto& pos = _position_info[it.code];
 		pos.code = it.code;
-		pos.total_long.postion = it.total_long;
-		pos.total_short.postion = it.total_short;
-		pos.history_long.postion = it.history_long;
-		pos.history_short.postion = it.history_short;
+		pos.total_long.position = it.total_long;
+		pos.total_short.position = it.total_short;
+		pos.history_long.position = it.history_long;
+		pos.history_short.position = it.history_short;
 	}
 	auto instruments = _trader->get_all_instruments();
 	_instrument_info.clear();
@@ -707,13 +707,15 @@ void trading_context::calculate_position(const code_t& code, direction_type dir_
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
-			p.total_long.postion += volume;
+			p.total_long.position += volume;
+			p.today_long.position += volume;
 			p.long_pending -= volume;
 
 		}
 		else
 		{
-			p.total_short.postion += volume;
+			p.total_short.position += volume;
+			p.today_short.position += volume;
 			p.short_pending -= volume;
 		}
 	}
@@ -722,12 +724,24 @@ void trading_context::calculate_position(const code_t& code, direction_type dir_
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
-			p.total_long.postion -= volume;
+			if (p.total_long.position < volume)
+			{
+				PRINT_ERROR("Insufficient long position:", code.get_symbol(), p.total_long.position, volume);
+				// 处理仓位不足的情况，这里简单返回，实际应用中可能需要更复杂的处理
+				return;
+			}
+			p.total_long.position -= volume;
 			p.total_long.frozen -= volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			p.total_short.postion -= volume;
+			if (p.total_short.position < volume)
+			{
+				PRINT_ERROR("Insufficient short position:", code.get_symbol(), p.total_short.position, volume);
+				// 处理仓位不足的情况
+				return;
+			}
+			p.total_short.position -= volume;
 			p.total_short.frozen -= volume;
 		}
 		
@@ -735,13 +749,50 @@ void trading_context::calculate_position(const code_t& code, direction_type dir_
 		{
 			if (dir_type == direction_type::DT_LONG)
 			{
-				p.history_long.postion -= volume;
+				if (p.history_long.position < volume)
+				{
+					PRINT_ERROR("Insufficient history long position:", code.get_symbol(), p.history_long.position, volume);
+					// 处理仓位不足的情况
+					return;
+				}
+				p.history_long.position -= volume;
 				p.history_long.frozen -= volume;
 			}
 			else if (dir_type == direction_type::DT_SHORT)
 			{
-				p.history_short.postion -= volume;
+				if (p.history_short.position < volume)
+				{
+					PRINT_ERROR("Insufficient history short position:", code.get_symbol(), p.history_short.position, volume);
+					// 处理仓位不足的情况
+					return;
+				}
+				p.history_short.position -= volume;
 				p.history_short.frozen -= volume;
+			}
+		}
+		else if (offset_type == offset_type::OT_CLSTD)
+		{
+			if (dir_type == direction_type::DT_LONG)
+			{
+				if (p.today_long.position < volume)
+				{
+					PRINT_ERROR("Insufficient today long position:", code.get_symbol(), p.today_long.position, volume);
+					// 处理仓位不足的情况
+					return;
+				}
+				p.today_long.position -= volume;
+				p.today_long.frozen -= volume;
+			}
+			else if (dir_type == direction_type::DT_SHORT)
+			{
+				if (p.today_short.position < volume)
+				{
+					PRINT_ERROR("Insufficient today short position:", code.get_symbol(), p.today_short.position, volume);
+					// 处理仓位不足的情况
+					return;
+				}
+				p.today_short.position -= volume;
+				p.today_short.frozen -= volume;
 			}
 		}
 	}
@@ -769,21 +820,68 @@ void trading_context::frozen_deduction(const code_t& code, direction_type dir_ty
 	position_info& pos = it->second;
 	if (dir_type == direction_type::DT_LONG)
 	{
+		if (pos.total_long.position < pos.total_long.frozen + volume)
+		{
+			PRINT_ERROR("Frozen amount exceeds position:", code.get_symbol(), pos.total_long.position, pos.total_long.frozen + volume);
+			// 处理冻结过度的情况
+			return;
+		}
 		pos.total_long.frozen += volume;
 	}
 	else if (dir_type == direction_type::DT_SHORT)
 	{
+		if (pos.total_short.position < pos.total_short.frozen + volume)
+		{
+			PRINT_ERROR("Frozen amount exceeds position:", code.get_symbol(), pos.total_short.position, pos.total_short.frozen + volume);
+			// 处理冻结过度的情况
+			return;
+		}
 		pos.total_short.frozen += volume;
 	}
 	if (offset_type == offset_type::OT_CLOSE)
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
+			if (pos.history_long.position < pos.history_long.frozen + volume)
+			{
+				PRINT_ERROR("Frozen amount exceeds history position:", code.get_symbol(), pos.history_long.position, pos.history_long.frozen + volume);
+				// 处理冻结过度的情况
+				return;
+			}
 			pos.history_long.frozen += volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
+			if (pos.history_short.position < pos.history_short.frozen + volume)
+			{
+				PRINT_ERROR("Frozen amount exceeds history position:", code.get_symbol(), pos.history_short.position, pos.history_short.frozen + volume);
+				// 处理冻结过度的情况
+				return;
+			}
 			pos.history_short.frozen += volume;
+		}
+	}
+	else if (offset_type == offset_type::OT_CLSTD)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			if (pos.today_long.position < pos.today_long.frozen + volume)
+			{
+				PRINT_ERROR("Frozen amount exceeds today position:", code.get_symbol(), pos.today_long.position, pos.today_long.frozen + volume);
+				// 处理冻结过度的情况
+				return;
+			}
+			pos.today_long.frozen += volume;
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			if (pos.today_short.position < pos.today_short.frozen + volume)
+			{
+				PRINT_ERROR("Frozen amount exceeds today position:", code.get_symbol(), pos.today_short.position, pos.today_short.frozen + volume);
+				// 处理冻结过度的情况
+				return;
+			}
+			pos.today_short.frozen += volume;
 		}
 	}
 	print_position("frozen_deduction");
@@ -840,6 +938,31 @@ void trading_context::unfreeze_deduction(const code_t& code, direction_type dir_
 			else
 			{
 				pos.history_short.frozen = 0;
+			}
+		}
+	}
+	else if (offset_type == offset_type::OT_CLSTD)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			if (pos.today_long.frozen > volume)
+			{
+				pos.today_long.frozen -= volume;
+			}
+			else
+			{
+				pos.today_long.frozen = 0;
+			}
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			if (pos.today_short.frozen > volume)
+			{
+				pos.today_short.frozen -= volume;
+			}
+			else
+			{
+				pos.today_short.frozen = 0;
 			}
 		}
 	}
@@ -957,7 +1080,7 @@ void trading_context::print_position(const char* title)
 	for (const auto& it : _position_info)
 	{
 		const auto& pos = it.second;
-		PRINT_INFO("position :", pos.code.get_symbol(), "total_long(", pos.total_long.postion, pos.total_long.frozen, ") total_short(", pos.total_short.postion, pos.total_short.frozen, ") history_long(", pos.history_long.postion, pos.history_long.frozen, ") history_short(", pos.history_short.postion, pos.history_short.frozen, ")");
+		PRINT_INFO("position :", pos.code.get_symbol(), "total_long(", pos.total_long.position, pos.total_long.frozen, ") total_short(", pos.total_short.position, pos.total_short.frozen, ") history_long(", pos.history_long.position, pos.history_long.frozen, ") history_short(", pos.history_short.position, pos.history_short.frozen, ")");
 		PRINT_INFO("pending :", pos.code.get_symbol(), pos.long_pending, pos.short_pending);
 	}
 }

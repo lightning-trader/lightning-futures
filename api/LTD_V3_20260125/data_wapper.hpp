@@ -44,7 +44,7 @@ public:
 
 	data_wapper(const char* channel, const char* cache_path, size_t product_cache=2U, size_t kline_cache=16U)
 	{
-		_handle = library_helper::load_library("latf-data-v3xp","-d");
+		_handle = library_helper::load_library("latf-data-v3xp");
 		initialize_function initialize = (initialize_function)library_helper::get_symbol(_handle, "_initialize");
 		_get_last_error = (get_last_error_function)library_helper::get_symbol(_handle, "_get_last_error");
 		_get_history_tick = (get_history_tick_function)library_helper::get_symbol(_handle, "_get_history_tick");
