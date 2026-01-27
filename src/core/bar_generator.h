@@ -50,6 +50,7 @@ namespace lt
 		double_t _detail_density;
 
 		tick_info _prev_tick;
+
 		tick_info _next_tick;
 
 		trading_context*& _ctx;
@@ -63,7 +64,11 @@ namespace lt
 
 	public:
 
-		bar_generator(const lt::code_t& code, uint32_t period, trading_context*& ctx, const data_wapper& dw,size_t preload_bars=128U);
+		bar_generator(const lt::code_t& code, uint32_t period, trading_context*& ctx, const data_wapper& dw);
+
+		void load_history(size_t preload_bars = 128U);
+
+		void clear_history();
 
 		void insert_tick(const tick_info& tick);
 

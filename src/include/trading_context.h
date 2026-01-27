@@ -115,12 +115,13 @@ namespace lt
 
 		market_api* _market;
 
+
 	public:
 
 		/*加载数据*/
 		bool load_data();
 		
-		void check_crossday();
+		void crossday();
 
 		bool poll();
 
@@ -143,6 +144,8 @@ namespace lt
 		uint32_t get_trading_day()const;
 
 		bool is_trading_time()const;
+
+		bool is_in_trading(const code_t& code)const;
 
 		uint32_t get_total_pending();
 

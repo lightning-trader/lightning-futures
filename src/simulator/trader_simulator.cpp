@@ -57,7 +57,7 @@ void trader_simulator::push_tick(const std::vector<const tick_info*>& current_ti
 	{
 		if(tick)
 		{
-			_current_tick_info[tick->id] = *tick;
+			_current_tick_info[tick->code] = *tick;
 		}
 	}
 	
@@ -96,7 +96,7 @@ bool trader_simulator::poll()
 	{
 		_current_time = tk_it.second.time;
 		result |= match_entrust(tk_it.second);
-		_last_frame_volume[tk_it.second.id] = tk_it.second.volume;
+		_last_frame_volume[tk_it.second.code] = tk_it.second.volume;
 	}
 	return result;
 }
@@ -190,7 +190,7 @@ std::vector<position_seed> trader_simulator::get_all_positions()
 	for (const auto& it : _position_info)
 	{
 		position_seed pos;
-		pos.id = it.first;
+		pos.code = it.first;
 		pos.total_long = it.second.total_long.postion;
 		pos.total_short = it.second.total_short.postion;
 		pos.history_long = it.second.yestoday_long.postion;
@@ -272,13 +272,13 @@ uint32_t trader_simulator::get_sell_front(const code_t& code, double_t price)
 bool trader_simulator::match_entrust(const tick_info& tick)
 {
 	uint32_t current_volume = static_cast<uint32_t>(tick.volume);
-	auto last_volume = _last_frame_volume.find(tick.id);
+	auto last_volume = _last_frame_volume.find(tick.code);
 	if(last_volume != _last_frame_volume.end())
 	{
 		current_volume = static_cast<uint32_t>(tick.volume - last_volume->second);
 	}
 	bool result = false ;
-	auto it = _order_match.find(tick.id);
+	auto it = _order_match.find(tick.code);
 	if (it != _order_match.end())
 	{
 		for (order_match& mc_it : it->second)

@@ -37,15 +37,17 @@ namespace lt
 
 		data_channel*& _dc;
 
+		uint32_t _td;
+
 	public:
 
-		subscriber(data_channel*& chl) :
-			_dc(chl)
+		subscriber(data_channel*& chl,uint32_t td) :
+			_dc(chl),_td(td)
 		{}
 
 		void regist_tick_receiver(const code_t& code, tick_receiver* receiver);
 		void regist_tape_receiver(const code_t& code, tape_receiver* receiver);
-		void regist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver, size_t preload_bars = 128);
+		void regist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver);
 
 		void subscribe();
 		
@@ -67,6 +69,7 @@ namespace lt
 		void unsubscribe();
 		
 	};
+
 	class data_channel
 	{
 
@@ -75,15 +78,17 @@ namespace lt
 
 	public:
 		
-		data_channel(lt::trading_context*& ctx, const char* channel, const char* cache_path, size_t detail_cache_size = 2U, size_t bar_cache_size = 8U):_ctx(ctx), _dw(channel, cache_path, detail_cache_size, bar_cache_size) {}
+		data_channel(lt::trading_context*& ctx,const char* channel, const char* cache_path, size_t detail_cache_size = 8U, size_t bar_cache_size = 8U):_ctx(ctx), _dw(channel, cache_path, detail_cache_size, bar_cache_size) {}
 
 		bool poll();
 
 		const std::vector<bar_info> get_kline(const code_t& code, uint32_t period, size_t length)const;
 
+		const std::vector<tick_info> get_ticks(const code_t& code, size_t length)const;
+
 	private:
 
-		void subscribe();
+		void subscribe(uint32_t td);
 
 		void unsubscribe();
 
@@ -91,6 +96,8 @@ namespace lt
 	private:
 		
 		std::map<code_t, std::set<tick_receiver*>> _tick_receiver;
+
+		std::map<code_t, std::vector<tick_info>> _tick_cache;
 
 		std::map<code_t, std::set<tape_receiver*>> _tape_receiver;
 

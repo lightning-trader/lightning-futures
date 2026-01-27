@@ -80,7 +80,7 @@ void csv_tick_loader::load_tick(std::vector<tick_detail>& result , const code_t&
 			continue;
 		}
 		tick_detail tick;
-		tick.id = code;
+		tick.code = code;
 		//const std::string& date_str = doc.GetCell<std::string>("业务日期",i);
 		const std::string& time_str = cell[20];
 		uint32_t current_tick = 0;

@@ -1,4 +1,4 @@
-﻿/*
+/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -28,6 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <process_helper.hpp>
 #include "time_section.h"
 #include <log_define.hpp>
+#include <basic_utils.hpp>
 
 
 using namespace lt;
@@ -91,7 +92,7 @@ bool trading_context::load_data()
 	for (const auto& it : orders)
 	{
 		auto& pos = _position_info[it.code];
-		pos.id = it.code;
+		pos.code = it.code;
 		if (it.offset == offset_type::OT_OPEN)
 		{
 			if (it.direction == direction_type::DT_LONG)
@@ -135,12 +136,12 @@ bool trading_context::load_data()
 	_position_info.clear();
 	for (const auto& it : positions)
 	{
-		auto& pos = _position_info[it.id];
-		pos.id = it.id;
-		pos.total_long.postion = it.total_long;
-		pos.total_short.postion = it.total_short;
-		pos.history_long.postion = it.history_long;
-		pos.history_short.postion = it.history_short;
+		auto& pos = _position_info[it.code];
+		pos.code = it.code;
+		pos.total_long.position = it.total_long;
+		pos.total_short.position = it.total_short;
+		pos.history_long.position = it.history_long;
+		pos.history_short.position = it.history_short;
 	}
 	auto instruments = _trader->get_all_instruments();
 	_instrument_info.clear();
@@ -336,6 +337,20 @@ bool trading_context::is_trading_time()const
 	return _trading_section->is_trading_time(get_last_time());
 }
 
+bool trading_context::is_in_trading(const code_t& code)const
+{
+	if (auto* act_trader = dynamic_cast<actual_trader*>(_trader))
+	{
+		const auto& contract = get_instrument(code);
+		const auto product_code = lt::make_code(contract.code.get_exchange(), contract.product);
+		return act_trader->get_product_state(product_code).first;
+	}
+	else
+	{
+		return true;
+	}
+}
+
 
 uint32_t trading_context::get_total_pending()
 {
@@ -347,7 +362,7 @@ uint32_t trading_context::get_total_pending()
 	return res;
 }
 
-void trading_context::check_crossday()
+void trading_context::crossday()
 {
 	_statistic_info.clear();
 	_last_order_time = 0U;
@@ -437,22 +452,22 @@ void trading_context::handle_tick(const std::vector<std::any>& param)
 	{
 		PROFILE_DEBUG("pDepthMarketData->InstrumentID");
 		auto&& last_tick = std::any_cast<const tick_info>(param[0]);
-		PROFILE_DEBUG(last_tick.id.get_symbol());
-		PRINT_INFO("handle_tick", last_tick.id.get_symbol(), last_tick.time, _last_tick_time, last_tick.price);
+		PROFILE_DEBUG(last_tick.code.get_symbol());
+		PRINT_INFO("handle_tick", last_tick.code.get_symbol(), last_tick.time, _last_tick_time, last_tick.price);
 		if (last_tick.time > _last_tick_time)
 		{
 			update_time(last_tick.time);
 		}
 
-		auto it = _previous_tick.find(last_tick.id);
+		auto it = _previous_tick.find(last_tick.code);
 		if (it != _previous_tick.end())
 		{
 			tick_info& prev_tick = it->second;
 			if (_trading_section->is_trading_time(last_tick.time))
 			{
 				auto&& extend_data = std::any_cast<tick_extend>(param[1]);
-				auto& current_market_info = _market_info[last_tick.id];
-				current_market_info.code = last_tick.id;
+				auto& current_market_info = _market_info[last_tick.code];
+				current_market_info.code = last_tick.code;
 				current_market_info.last_tick_info = last_tick;
 				current_market_info.open_price = std::get<TEI_OPEN_PRICE>(extend_data);
 				current_market_info.close_price = std::get<TEI_CLOSE_PRICE>(extend_data);
@@ -465,7 +480,7 @@ void trading_context::handle_tick(const std::vector<std::any>& param)
 				current_market_info.volume_distribution[last_tick.price] += static_cast<uint32_t>(last_tick.volume - prev_tick.volume);
 				if (this->_tick_callback)
 				{
-					PROFILE_DEBUG(last_tick.id.get_symbol());
+					PROFILE_DEBUG(last_tick.code.get_symbol());
 					this->_tick_callback(last_tick);
 				}
 			}
@@ -473,7 +488,7 @@ void trading_context::handle_tick(const std::vector<std::any>& param)
 		}
 		else
 		{
-			_previous_tick.insert(std::make_pair(last_tick.id, last_tick));
+			_previous_tick.insert(std::make_pair(last_tick.code, last_tick));
 		}
 	}
 }
@@ -686,19 +701,21 @@ void trading_context::calculate_position(const code_t& code, direction_type dir_
 	}
 	else
 	{
-		p.id = code;
+		p.code = code;
 	}
 	if (offset_type == offset_type::OT_OPEN)
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
-			p.total_long.postion += volume;
+			p.total_long.position += volume;
+			p.today_long.position += volume;
 			p.long_pending -= volume;
 
 		}
 		else
 		{
-			p.total_short.postion += volume;
+			p.total_short.position += volume;
+			p.today_short.position += volume;
 			p.short_pending -= volume;
 		}
 	}
@@ -707,12 +724,24 @@ void trading_context::calculate_position(const code_t& code, direction_type dir_
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
-			p.total_long.postion -= volume;
+			if (p.total_long.position < volume)
+			{
+				PRINT_ERROR("Insufficient long position:", code.get_symbol(), p.total_long.position, volume);
+				// 处理仓位不足的情况，这里简单返回，实际应用中可能需要更复杂的处理
+				return;
+			}
+			p.total_long.position -= volume;
 			p.total_long.frozen -= volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
-			p.total_short.postion -= volume;
+			if (p.total_short.position < volume)
+			{
+				PRINT_ERROR("Insufficient short position:", code.get_symbol(), p.total_short.position, volume);
+				// 处理仓位不足的情况
+				return;
+			}
+			p.total_short.position -= volume;
 			p.total_short.frozen -= volume;
 		}
 		
@@ -720,13 +749,50 @@ void trading_context::calculate_position(const code_t& code, direction_type dir_
 		{
 			if (dir_type == direction_type::DT_LONG)
 			{
-				p.history_long.postion -= volume;
+				if (p.history_long.position < volume)
+				{
+					PRINT_ERROR("Insufficient history long position:", code.get_symbol(), p.history_long.position, volume);
+					// 处理仓位不足的情况
+					return;
+				}
+				p.history_long.position -= volume;
 				p.history_long.frozen -= volume;
 			}
 			else if (dir_type == direction_type::DT_SHORT)
 			{
-				p.history_short.postion -= volume;
+				if (p.history_short.position < volume)
+				{
+					PRINT_ERROR("Insufficient history short position:", code.get_symbol(), p.history_short.position, volume);
+					// 处理仓位不足的情况
+					return;
+				}
+				p.history_short.position -= volume;
 				p.history_short.frozen -= volume;
+			}
+		}
+		else if (offset_type == offset_type::OT_CLSTD)
+		{
+			if (dir_type == direction_type::DT_LONG)
+			{
+				if (p.today_long.position < volume)
+				{
+					PRINT_ERROR("Insufficient today long position:", code.get_symbol(), p.today_long.position, volume);
+					// 处理仓位不足的情况
+					return;
+				}
+				p.today_long.position -= volume;
+				p.today_long.frozen -= volume;
+			}
+			else if (dir_type == direction_type::DT_SHORT)
+			{
+				if (p.today_short.position < volume)
+				{
+					PRINT_ERROR("Insufficient today short position:", code.get_symbol(), p.today_short.position, volume);
+					// 处理仓位不足的情况
+					return;
+				}
+				p.today_short.position -= volume;
+				p.today_short.frozen -= volume;
 			}
 		}
 	}
@@ -754,21 +820,68 @@ void trading_context::frozen_deduction(const code_t& code, direction_type dir_ty
 	position_info& pos = it->second;
 	if (dir_type == direction_type::DT_LONG)
 	{
+		if (pos.total_long.position < pos.total_long.frozen + volume)
+		{
+			PRINT_ERROR("Frozen amount exceeds position:", code.get_symbol(), pos.total_long.position, pos.total_long.frozen + volume);
+			// 处理冻结过度的情况
+			return;
+		}
 		pos.total_long.frozen += volume;
 	}
 	else if (dir_type == direction_type::DT_SHORT)
 	{
+		if (pos.total_short.position < pos.total_short.frozen + volume)
+		{
+			PRINT_ERROR("Frozen amount exceeds position:", code.get_symbol(), pos.total_short.position, pos.total_short.frozen + volume);
+			// 处理冻结过度的情况
+			return;
+		}
 		pos.total_short.frozen += volume;
 	}
 	if (offset_type == offset_type::OT_CLOSE)
 	{
 		if (dir_type == direction_type::DT_LONG)
 		{
+			if (pos.history_long.position < pos.history_long.frozen + volume)
+			{
+				PRINT_ERROR("Frozen amount exceeds history position:", code.get_symbol(), pos.history_long.position, pos.history_long.frozen + volume);
+				// 处理冻结过度的情况
+				return;
+			}
 			pos.history_long.frozen += volume;
 		}
 		else if (dir_type == direction_type::DT_SHORT)
 		{
+			if (pos.history_short.position < pos.history_short.frozen + volume)
+			{
+				PRINT_ERROR("Frozen amount exceeds history position:", code.get_symbol(), pos.history_short.position, pos.history_short.frozen + volume);
+				// 处理冻结过度的情况
+				return;
+			}
 			pos.history_short.frozen += volume;
+		}
+	}
+	else if (offset_type == offset_type::OT_CLSTD)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			if (pos.today_long.position < pos.today_long.frozen + volume)
+			{
+				PRINT_ERROR("Frozen amount exceeds today position:", code.get_symbol(), pos.today_long.position, pos.today_long.frozen + volume);
+				// 处理冻结过度的情况
+				return;
+			}
+			pos.today_long.frozen += volume;
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			if (pos.today_short.position < pos.today_short.frozen + volume)
+			{
+				PRINT_ERROR("Frozen amount exceeds today position:", code.get_symbol(), pos.today_short.position, pos.today_short.frozen + volume);
+				// 处理冻结过度的情况
+				return;
+			}
+			pos.today_short.frozen += volume;
 		}
 	}
 	print_position("frozen_deduction");
@@ -828,6 +941,31 @@ void trading_context::unfreeze_deduction(const code_t& code, direction_type dir_
 			}
 		}
 	}
+	else if (offset_type == offset_type::OT_CLSTD)
+	{
+		if (dir_type == direction_type::DT_LONG)
+		{
+			if (pos.today_long.frozen > volume)
+			{
+				pos.today_long.frozen -= volume;
+			}
+			else
+			{
+				pos.today_long.frozen = 0;
+			}
+		}
+		else if (dir_type == direction_type::DT_SHORT)
+		{
+			if (pos.today_short.frozen > volume)
+			{
+				pos.today_short.frozen -= volume;
+			}
+			else
+			{
+				pos.today_short.frozen = 0;
+			}
+		}
+	}
 	print_position("thawing_deduction");
 }
 
@@ -837,7 +975,7 @@ void trading_context::record_pending(const code_t& code, direction_type dir_type
 	if(offset_type== offset_type::OT_OPEN)
 	{
 		auto& pos = _position_info[code];
-		pos.id = code ;
+		pos.code = code ;
 		if(dir_type == direction_type::DT_LONG)
 		{
 			pos.long_pending += volume;
@@ -942,7 +1080,7 @@ void trading_context::print_position(const char* title)
 	for (const auto& it : _position_info)
 	{
 		const auto& pos = it.second;
-		PRINT_INFO("position :", pos.id.get_symbol(), "total_long(", pos.total_long.postion, pos.total_long.frozen, ") total_short(", pos.total_short.postion, pos.total_short.frozen, ") history_long(", pos.history_long.postion, pos.history_long.frozen, ") history_short(", pos.history_short.postion, pos.history_short.frozen, ")");
-		PRINT_INFO("pending :", pos.id.get_symbol(), pos.long_pending, pos.short_pending);
+		PRINT_INFO("position :", pos.code.get_symbol(), "total_long(", pos.total_long.position, pos.total_long.frozen, ") total_short(", pos.total_short.position, pos.total_short.frozen, ") history_long(", pos.history_long.position, pos.history_long.frozen, ") history_short(", pos.history_short.position, pos.history_short.frozen, ")");
+		PRINT_INFO("pending :", pos.code.get_symbol(), pos.long_pending, pos.short_pending);
 	}
 }

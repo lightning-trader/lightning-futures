@@ -330,7 +330,7 @@ namespace lt
 	
 	struct tick_info
 	{
-		code_t id; //合约ID
+		code_t code; //合约ID
 
 		daytm_t time; //日内时间（毫秒数）
 
@@ -376,7 +376,7 @@ namespace lt
 		{}
 
 		tick_info(const code_t& cod, daytm_t dtm, double_t prs, uint32_t val,double_t oit, double_t ap, uint32_t td, price_volume_array&& buy_ord, price_volume_array&& sell_ord)
-			:id(cod),
+			:code(cod),
 			time(dtm),
 			price(prs),
 			volume(val),
@@ -409,7 +409,7 @@ namespace lt
 
 		bool invalid()const
 		{
-			return id == default_code;
+			return code == default_code;
 		}
 
 	};
@@ -431,67 +431,72 @@ namespace lt
 	};
 
 	struct position_cell
+{
+	//仓位
+	uint32_t	position;
+	//冻结（平仓未成交）
+	uint32_t	frozen;
+
+	position_cell() :
+		position(0),
+		frozen(0)
+	{}
+
+	uint32_t usable()const
 	{
-		//仓位
-		uint32_t	postion;
-		//冻结（平仓未成交）
-		uint32_t	frozen;
+		return position - frozen;
+	}
 
-		position_cell() :
-			postion(0),
-			frozen(0)
-		{}
+	bool empty()const
+	{
+		return position == 0;
+	}
 
-		uint32_t usable()const
-		{
-			return postion - frozen;
-		}
-
-		bool empty()const
-		{
-			return postion == 0;
-		}
-
-		void clear()
-		{
-			postion = 0;
-			frozen = 0;
-		}
-	};
+	void clear()
+	{
+		position = 0;
+		frozen = 0;
+	}
+};
 	struct position_info
 	{
-		code_t id; //合约ID
-		position_info(const code_t& code) :id(code), long_pending(0), short_pending(0) {}
+		code_t code; //合约ID
+		position_info(const code_t& code) :code(code), long_pending(0), short_pending(0) {}
 		//全部仓位包含今仓昨仓
-		position_cell total_long;
-		position_cell total_short;
+	position_cell total_long;
+	position_cell total_short;
 
-		//昨仓
-		position_cell history_long;
-		position_cell history_short;
+	//昨仓
+	position_cell history_long;
+	position_cell history_short;
 
-		//开仓还未成交
-		uint32_t	long_pending;
-		uint32_t	short_pending;
+	//今仓
+	position_cell today_long;
+	position_cell today_short;
 
-		bool empty()const
-		{
-			return total_long.empty() && total_short.empty() && long_pending == 0U && short_pending == 0U;
-		}
+	//开仓还未成交
+	uint32_t	long_pending;
+	uint32_t	short_pending;
 
-		uint32_t get_total()const
-		{
-			return total_long.postion + total_short.postion ;
-		}
+	bool empty()const
+	{
+		return total_long.empty() && total_short.empty() && long_pending == 0U && short_pending == 0U;
+	}
 
-		int32_t get_real()const
-		{
-			return total_long.postion  - total_long.postion ;
-		}
+	uint32_t get_total()const
+	{
+		return total_long.position + total_short.position;
+	}
 
-		position_info() :long_pending(0U), short_pending(0U)
-		{}
-	};
+	int32_t get_real()const
+	{
+		return total_long.position - total_short.position;
+	}
+
+	position_info() :long_pending(0U), short_pending(0U)
+	{
+	}
+};
 
 	const position_info default_position;
 	/*
@@ -510,7 +515,7 @@ namespace lt
 	enum class offset_type
 	{
 		OT_OPEN = '0',	//开仓
-		OT_CLOSE,		//平仓,上期所等为平昨
+		OT_CLOSE,		//平仓,上期为平昨
 		OT_CLSTD		//平今
 	};
 
@@ -809,7 +814,7 @@ namespace lt
 
 	struct bar_info
 	{
-		code_t id; //合约ID
+		code_t code; //合约ID
 
 		seqtm_t time; //时间
 
@@ -856,18 +861,18 @@ namespace lt
 		}
 
 		//订单流中delta
-		int32_t get_delta()const{
-			int32_t delta = 0;
-			for(const auto& it : sell_details)
-			{
-				delta += it.second;
-			}
-			for (const auto& it : sell_details)
-			{
-				delta -= it.second;
-			}
-			return delta;
+	int32_t get_delta()const{
+		int32_t delta = 0;
+		for(const auto& it : buy_details)
+		{
+			delta += it.second;
 		}
+		for (const auto& it : sell_details)
+		{
+			delta -= it.second;
+		}
+		return delta;
+	}
 
 		double_t get_poc()const{
 
@@ -961,6 +966,7 @@ namespace lt
 			detail_density = .0;
 			buy_details.clear();
 			sell_details.clear();
+			other_details.clear();
 		}
 
 		bar_info()

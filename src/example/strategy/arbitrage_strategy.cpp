@@ -41,14 +41,14 @@ void arbitrage_strategy::on_tick(const tick_info& tick)
 
 	if (is_close_coming())
 	{
-		PRINT_DEBUG("time > _coming_to_close", tick.id.get_symbol(), tick.time);
+		PRINT_DEBUG("time > _coming_to_close", tick.code.get_symbol(), tick.time);
 		return;
 	}
-	if(tick.id == _code1)
+	if(tick.code == _code1)
 	{
 		_price1 = tick.price;
 	}
-	else if(tick.id == _code2)
+	else if(tick.code == _code2)
 	{
 		_price2 = tick.price;
 	}

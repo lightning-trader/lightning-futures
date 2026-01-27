@@ -143,7 +143,7 @@ void orderflow_strategy::try_buy()
 		_order_data.buy_order = buy_close(_code, volume, market.last_tick_info.sell_price(), true);
 		return;
 	}
-	if(_open_once + pos.total_long.postion + pos.long_pending < _position_limit)
+	if(_open_once + pos.total_long.position + pos.long_pending < _position_limit)
 	{
 		_order_data.buy_order = buy_open(_code, _open_once, market.last_tick_info.sell_price());
 	}
@@ -165,7 +165,7 @@ void orderflow_strategy::try_sell()
 		_order_data.sell_order = sell_close(_code, min, market.last_tick_info.buy_price(), true);
 		return;
 	}
-	if (_open_once + pos.total_short.postion + pos.short_pending < _position_limit)
+	if (_open_once + pos.total_short.position + pos.short_pending < _position_limit)
 	{
 		_order_data.sell_order = sell_open(_code, _open_once, market.last_tick_info.buy_price());
 	}
