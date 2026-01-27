@@ -1,4 +1,4 @@
-﻿/*
+/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -192,7 +192,7 @@ namespace lt::driver
 
 		bool handle_buy(const tick_info& tick, order_match& match, order_info& order, uint32_t deal_volume);
 
-		bool order_deal(order_info& order, uint32_t deal_volume);
+		bool order_deal(order_info& order, uint32_t deal_volume, double_t deal_price);
 
 		bool order_error(error_type type, estid_t estid, error_code err);
 

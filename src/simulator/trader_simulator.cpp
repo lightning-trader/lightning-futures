@@ -1,4 +1,4 @@
-﻿/*
+/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -385,7 +385,7 @@ bool trader_simulator::handle_sell(const tick_info& tick,order_match& match, ord
 		if (order.last_volume <= max_volume && order.price <= tick.buy_price())
 		{
 			//全成
-			result = order_deal(order, order.last_volume);
+			result = order_deal(order, order.last_volume, tick.buy_price());
 		}
 		else
 		{
@@ -401,7 +401,7 @@ bool trader_simulator::handle_sell(const tick_info& tick,order_match& match, ord
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				result |= order_deal(order, deal_volume);
+				result |= order_deal(order, deal_volume, tick.buy_price());
 			}
 			uint32_t cancel_volume = order.last_volume - max_volume;
 			if (cancel_volume > 0)
@@ -423,7 +423,7 @@ bool trader_simulator::handle_sell(const tick_info& tick,order_match& match, ord
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				result = order_deal(order, deal_volume);
+				result = order_deal(order, deal_volume, tick.buy_price());
 			}
 		}
 		else if (order.price <= tick.price)
@@ -439,7 +439,7 @@ bool trader_simulator::handle_sell(const tick_info& tick,order_match& match, ord
 				uint32_t deal_volume = order.last_volume > can_deal_volume ? can_deal_volume : order.last_volume;
 				if (deal_volume > 0U)
 				{
-					result = order_deal(order, deal_volume);
+					result = order_deal(order, deal_volume, tick.price);
 				}
 			}
 			else
@@ -461,7 +461,7 @@ bool trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 		if (order.last_volume <= max_volume&& order.price >= tick.sell_price())
 		{
 			//全成
-			result = order_deal(order, order.last_volume);
+			result = order_deal(order, order.last_volume, tick.sell_price());
 		}
 		else
 		{
@@ -477,7 +477,7 @@ bool trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0U)
 			{
-				result |= order_deal(order, deal_volume);
+				result |= order_deal(order, deal_volume, tick.sell_price());
 			}
 			uint32_t cancel_volume = order.last_volume - max_volume;
 			if (cancel_volume > 0)
@@ -501,7 +501,7 @@ bool trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 			uint32_t deal_volume = order.last_volume > max_volume ? max_volume : order.last_volume;
 			if (deal_volume > 0)
 			{
-				result = order_deal(order, deal_volume);
+				result = order_deal(order, deal_volume, tick.sell_price());
 			}
 		}
 		else if (order.price >= tick.price)
@@ -518,7 +518,7 @@ bool trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 				uint32_t deal_volume = order.last_volume > can_deal_volume ? can_deal_volume : order.last_volume;
 				if (deal_volume > 0)
 				{
-					result = order_deal(order, deal_volume);
+					result = order_deal(order, deal_volume, tick.price);
 				}
 			}
 			else
@@ -530,7 +530,7 @@ bool trader_simulator::handle_buy(const tick_info& tick, order_match& match, ord
 	return result;
 }
 
-bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
+bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume, double_t deal_price)
 {
 	
 	auto contract_info = _contract_parser.get_contract_info(order.code);
@@ -540,7 +540,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		return false;
 	}
 
-	double_t service_charge = contract_info->get_service_charge(order.price, order.offset);
+	double_t service_charge = contract_info->get_service_charge(deal_price, order.offset);
 	if(order.offset == offset_type::OT_OPEN)
 	{
 		auto& pos = _position_info[order.code];
@@ -550,7 +550,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 			
 			if(_account_info.money >= deal_volume * service_charge)
 			{
-				pos.total_long.price = (pos.total_long.postion * pos.total_long.price + order.price * deal_volume) / (pos.total_long.postion + deal_volume);
+				pos.total_long.price = (pos.total_long.postion * pos.total_long.price + deal_price * deal_volume) / (pos.total_long.postion + deal_volume);
 				pos.total_long.postion += deal_volume;
 				_account_info.money -=  deal_volume * service_charge;
 			}
@@ -560,7 +560,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		{
 			if(_account_info.money >= deal_volume * service_charge)
 			{
-				pos.total_short.price = (pos.total_short.postion * pos.total_short.price + order.price * deal_volume) / (pos.total_short.postion + deal_volume);
+				pos.total_short.price = (pos.total_short.postion * pos.total_short.price + deal_price * deal_volume) / (pos.total_short.postion + deal_volume);
 				pos.total_short.postion += deal_volume;
 				_account_info.money -= (deal_volume * service_charge);
 			}
@@ -577,7 +577,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		//平仓
 		if (order.direction == direction_type::DT_LONG)
 		{
-			_account_info.money += (deal_volume * (order.price - pos.total_long.price) * contract_info->multiple);
+			_account_info.money += (deal_volume * (deal_price - pos.total_long.price) * contract_info->multiple);
 			pos.total_long.postion -= std::min<uint32_t>(deal_volume, pos.total_long.postion);
 			pos.total_long.frozen -= std::min<uint32_t>(deal_volume, pos.total_long.frozen);
 			_account_info.frozen_monery -= (deal_volume * pos.total_long.price * contract_info->multiple * contract_info->margin_rate);
@@ -585,7 +585,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 		}
 		else if (order.direction == direction_type::DT_SHORT)
 		{
-			_account_info.money += (deal_volume * (pos.total_short.price - order.price) * contract_info->multiple);
+			_account_info.money += (deal_volume * (pos.total_short.price - deal_price) * contract_info->multiple);
 			pos.total_short.postion -= std::min<uint32_t>(deal_volume, pos.total_short.postion);
 			pos.total_short.frozen -= std::min<uint32_t>(deal_volume, pos.total_short.frozen);
 			_account_info.frozen_monery -= (deal_volume * pos.total_short.price * contract_info->multiple * contract_info->margin_rate);
@@ -602,7 +602,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 			//平仓
 			if (order.direction == direction_type::DT_LONG)
 			{
-				_account_info.money += (deal_volume * (order.price - pos.yestoday_long.price) * contract_info->multiple);
+				_account_info.money += (deal_volume * (deal_price - pos.yestoday_long.price) * contract_info->multiple);
 				pos.yestoday_long.postion -= std::min<uint32_t>(deal_volume, pos.yestoday_long.postion);
 				pos.yestoday_long.frozen -= std::min<uint32_t>(deal_volume, pos.yestoday_long.frozen);
 				_account_info.frozen_monery -= (deal_volume * pos.yestoday_long.price * contract_info->multiple * contract_info->margin_rate);
@@ -610,7 +610,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume)
 			}
 			else if (order.direction == direction_type::DT_SHORT)
 			{
-				_account_info.money += (deal_volume * (pos.yestoday_short.price - order.price) * contract_info->multiple);
+				_account_info.money += (deal_volume * (pos.yestoday_short.price - deal_price) * contract_info->multiple);
 				pos.yestoday_short.postion -= std::min<uint32_t>(deal_volume, pos.yestoday_short.postion);
 				pos.yestoday_short.frozen -= std::min<uint32_t>(deal_volume, pos.yestoday_short.frozen);
 				_account_info.frozen_monery -= (deal_volume * pos.yestoday_short.price * contract_info->multiple * contract_info->margin_rate);
