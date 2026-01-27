@@ -92,7 +92,7 @@ namespace lt
 
 	public:
 
-		bool poll()
+		bool polling()
 		{
 			bool result = false;
 			event_data<T> data;

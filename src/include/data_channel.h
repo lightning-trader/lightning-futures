@@ -78,9 +78,9 @@ namespace lt
 
 	public:
 		
-		data_channel(lt::trading_context*& ctx,const char* channel, const char* cache_path, size_t detail_cache_size = 8U, size_t bar_cache_size = 8U):_ctx(ctx), _dw(channel, cache_path, detail_cache_size, bar_cache_size) {}
+		data_channel(lt::trading_context*& ctx,const char* channel, const char* cache_path, size_t detail_cache = 2U, size_t bar_cache_size = 8U):_ctx(ctx), _dw(channel, cache_path, detail_cache, bar_cache_size) {}
 
-		bool poll();
+		bool polling();
 
 		const std::vector<bar_info> get_kline(const code_t& code, uint32_t period, size_t length)const;
 

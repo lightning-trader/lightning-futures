@@ -196,7 +196,7 @@ void tap_api_market::OnRtnQuote(const TapAPIQuoteWhole* info)noexcept
 		info->QLimitDownPrice,
 		info->QPreSettlePrice
 	);
-	PROFILE_DEBUG(tick_data.id.get_symbol());
+	PROFILE_DEBUG(tick_data.code.get_symbol());
 	this->fire_event(market_event_type::MET_TickReceived, tick_data);
 }
 

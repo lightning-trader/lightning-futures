@@ -136,7 +136,7 @@ void market_simulator::unsubscribe(const std::set<code_t>& codes)
 	}
 }
 
-bool market_simulator::poll()
+bool market_simulator::polling()
 {
 	bool result = false;
 	if(_is_runing)
@@ -213,7 +213,7 @@ bool market_simulator::publish_tick()
 
 	for(auto tick : current_tick)
 	{
-		PROFILE_INFO(tick->id.get_symbol());
+		PROFILE_INFO(tick->code.get_symbol());
 		fire_event(market_event_type::MET_TickReceived, *static_cast<const tick_info*>(tick),tick->extend);
 	}
 

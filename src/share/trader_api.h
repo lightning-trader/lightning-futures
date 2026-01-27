@@ -55,7 +55,7 @@ namespace lt
 		/*
 		*	逻辑更新
 		*/
-		virtual bool poll() = 0;
+		virtual bool polling() = 0;
 
 		/*
 		 *	下单接口
@@ -177,9 +177,9 @@ namespace lt
 
 		asyn_actual_trader(std::unordered_map<std::string, std::string>& id_excg_map) :actual_trader(id_excg_map) {}
 
-		virtual bool poll()override
+		virtual bool polling()override
 		{
-			return queue_event_source<trader_event_type, 32768U>::poll();
+			return queue_event_source<trader_event_type, 32768U>::polling();
 		}
 
 		virtual bool is_idle()const override

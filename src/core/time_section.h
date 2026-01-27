@@ -40,7 +40,7 @@ namespace lt
 
 	public:
 
-		bool is_trading_time(daytm_t last_time)const;
+		bool is_trade_time(daytm_t last_time)const;
 
 		daytm_t get_open_time();
 

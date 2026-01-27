@@ -123,7 +123,7 @@ namespace lt
 		
 		void crossday();
 
-		bool poll();
+		bool polling();
 
 		estid_t place_order(order_listener* listener, offset_type offset, direction_type direction, const code_t& code, uint32_t count, double_t price, order_flag flag = order_flag::OF_NOR);
 
@@ -143,9 +143,9 @@ namespace lt
 
 		uint32_t get_trading_day()const;
 
-		bool is_trading_time()const;
+		bool is_trade_time()const;
 
-		bool is_in_trading(const code_t& code)const;
+		bool is_trading(const code_t& code)const;
 
 		uint32_t get_total_pending();
 

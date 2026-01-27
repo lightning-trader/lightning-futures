@@ -25,9 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <basic_utils.hpp>
 
 using namespace lt;
-bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_context*& ctx, const data_wapper& dw) :_code(code), _period(period), _ctx(ctx), _dw(dw), _last_second_change(0), _detail_density(.0)
+bar_generator::bar_generator(const lt::code_t& code, uint32_t period, trading_context*& ctx, const data_wapper& dw) :_code(code), _period(period), _ctx(ctx), _dw(dw), _last_bar_end(0), _detail_density(.0)
 {
-	_last_second_change = _ctx->get_now_time();
 }
 
 void bar_generator::load_history(size_t preload_bars)
@@ -46,12 +45,13 @@ void bar_generator::load_history(size_t preload_bars)
 		if (it < data.end() - 1)
 		{
 			_bar_cache.emplace_back(bar);
+			_last_bar_end = time_forward(bar.time, _period);
 		}
 		else
 		{
 			_current_bar = bar;
 		}
-		_last_second_change = time_forward(bar.time, _period);
+		
 	}
 }
 void bar_generator::clear_history()
@@ -61,14 +61,12 @@ void bar_generator::clear_history()
 void bar_generator::insert_tick(const tick_info& tick)
 {
 	seqtm_t time = lt::make_seqtm(_ctx->get_trading_day(),tick.time);
-	if(time<lt::time_forward(_current_bar.time , _period))
+	while(_last_bar_end < time)
 	{
-		merge_into_bar(tick);
+		create_new_bar();
+		_last_bar_end = time_forward(_current_bar.time, _period);
 	}
-	else
-	{
-		_next_tick = tick;
-	}
+	merge_into_bar(tick);
 }
 
 
@@ -124,39 +122,17 @@ bool bar_generator::invalid()const
 	return _bar_callback.empty();
 }
 
-bool bar_generator::poll()
+bool bar_generator::polling()
 {
 	bool result = false ;
-	if(_ctx->is_in_trading(_code))
+	if(_ctx->is_trading(_code))
 	{
 		seqtm_t now = _ctx->get_now_time();
-		while (_last_second_change < now)
+		while (now > _last_bar_end)
 		{
-			double_t last_price = _current_bar.close;
-			//合成
-			for (auto it : _bar_callback)
-			{
-				it->on_bar(_current_bar);
-				result = true;
-			}
-			_bar_cache.emplace_back(_current_bar);
-			//初始化下一个bar
-			_current_bar.clear();
-			_current_bar.code = _code;
-			_current_bar.period = _period;
-			_current_bar.open = last_price;
-			_current_bar.close = last_price;
-			_current_bar.high = last_price;
-			_current_bar.low = last_price;
-			_current_bar.time = _last_second_change;
-			_current_bar.volume = 0U;
-			_current_bar.detail_density = _detail_density;
-			if(!_next_tick.invalid())
-			{
-				merge_into_bar(_next_tick);
-				_next_tick = default_tick;
-			}
-			_last_second_change = time_forward(_last_second_change, _period);
+			create_new_bar();
+			result = true;
+			_last_bar_end = time_forward(_last_bar_end, _period);
 		}
 	}
 	return result;
@@ -228,4 +204,25 @@ void bar_generator::convert_to_bar(bar_info& bar, const ltd_bar_info& info)
 			bar.other_details[info.other_volume[i].price] += info.other_volume[i].volume;
 		}
 	}
+}
+void bar_generator::create_new_bar()
+{
+	double_t last_price = _current_bar.close;
+	//合成
+	for (auto it : _bar_callback)
+	{
+		it->on_bar(_current_bar);
+	}
+	_bar_cache.emplace_back(_current_bar);
+	//初始化下一个bar
+	_current_bar.clear();
+	_current_bar.code = _code;
+	_current_bar.period = _period;
+	_current_bar.open = last_price;
+	_current_bar.close = last_price;
+	_current_bar.high = last_price;
+	_current_bar.low = last_price;
+	_current_bar.time = _last_bar_end;
+	_current_bar.volume = 0U;
+	_current_bar.detail_density = _detail_density;
 }

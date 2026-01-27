@@ -51,15 +51,13 @@ namespace lt
 
 		tick_info _prev_tick;
 
-		tick_info _next_tick;
-
 		trading_context*& _ctx;
 
 		const data_wapper & _dw;
 
 		std::set<lt::bar_receiver*> _bar_callback;
 
-		seqtm_t _last_second_change;
+		seqtm_t _last_bar_end;
 
 
 	public:
@@ -80,13 +78,15 @@ namespace lt
 
 		bool invalid()const;
 
-		bool poll();
+		bool polling();
 
 	private:
 
 		void merge_into_bar(const tick_info& tick);
 
 		void convert_to_bar(bar_info& bar,const ltd_bar_info& info);
+
+		void create_new_bar();
 	};
 
 }

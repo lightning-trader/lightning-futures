@@ -93,7 +93,7 @@ namespace lt::driver
 
 		virtual void unsubscribe(const std::set<lt::code_t>& codes)override;
 
-		virtual bool poll() override;
+		virtual bool polling() override;
 
 	private:
 

@@ -50,9 +50,9 @@ time_section::~time_section()
 }
 
 
-bool time_section::is_trading_time(daytm_t last_time)const
+bool time_section::is_trade_time(daytm_t last_time)const
 {
-	//PRINT_TRACE("trading_section is_in_trading : %s ", datetime_to_string(last_time).c_str());
+	//PRINT_TRACE("trading_section is_trading : %s ", datetime_to_string(last_time).c_str());
 
 	for(const auto& it: _trading_section)
 	{

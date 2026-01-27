@@ -158,7 +158,7 @@ namespace lt::driver
 			return _account_info;
 		}
 
-		virtual bool poll()override;
+		virtual bool polling()override;
 
 	public:
 

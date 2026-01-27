@@ -48,7 +48,7 @@ trading_context::trading_context(market_api* market, trader_api* trader,const ch
 		_last_tick_time = _trading_section->get_open_time();
 	}
 	else
-	{	
+	{
 		_last_tick_time = lt::make_daytm(time(0),0U);
 	}
 	if (_market)
@@ -154,18 +154,18 @@ bool trading_context::load_data()
 
 
 
-bool trading_context::poll()
+bool trading_context::polling()
 {
 	bool result = false;
 	if (_market)
 	{
-		result |= _market->poll();
+		result |= _market->polling();
 	}
-	if(is_trading_time())
+	if(is_trade_time())
 	{
 		if (_trader)
 		{
-			result |= _trader->poll();
+			result |= _trader->polling();
 		}
 
 		this->check_condition();
@@ -207,7 +207,7 @@ estid_t trading_context::place_order(order_listener* listener, offset_type offse
 		PRINT_ERROR("place order this->_trader null");
 		return INVALID_ESTID;
 	}
-	if (!is_trading_time())
+	if (!is_trade_time())
 	{
 		PRINT_WARNING("place order not in trading time", code.get_symbol());
 		return INVALID_ESTID;
@@ -246,7 +246,7 @@ bool trading_context::cancel_order(estid_t estid)
 		PRINT_ERROR("cancel order this->_trader null");
 		return false;
 	}
-	if (!is_trading_time())
+	if (!is_trade_time())
 	{
 		PRINT_WARNING("cancel order not in trading time ", estid);
 		return false;
@@ -332,25 +332,24 @@ uint32_t trading_context::get_trading_day()const
 	return this->_trader->get_trading_day();
 }
 
-bool trading_context::is_trading_time()const
+bool trading_context::is_trade_time()const
 {
-	return _trading_section->is_trading_time(get_last_time());
+	return _trading_section->is_trade_time(get_last_time());
 }
 
-bool trading_context::is_in_trading(const code_t& code)const
+bool trading_context::is_trading(const code_t& code)const 
 {
 	if (auto* act_trader = dynamic_cast<actual_trader*>(_trader))
 	{
 		const auto& contract = get_instrument(code);
-		const auto product_code = lt::make_code(contract.code.get_exchange(), contract.product);
+		const auto product_code = make_code(contract.code.get_exchange(), contract.product);
 		return act_trader->get_product_state(product_code).first;
 	}
-	else
+	else 
 	{
 		return true;
 	}
 }
-
 
 uint32_t trading_context::get_total_pending()
 {
@@ -463,7 +462,7 @@ void trading_context::handle_tick(const std::vector<std::any>& param)
 		if (it != _previous_tick.end())
 		{
 			tick_info& prev_tick = it->second;
-			if (_trading_section->is_trading_time(last_tick.time))
+			if (_trading_section->is_trade_time(last_tick.time))
 			{
 				auto&& extend_data = std::any_cast<tick_extend>(param[1]);
 				auto& current_market_info = _market_info[last_tick.code];

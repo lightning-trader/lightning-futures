@@ -62,9 +62,9 @@ namespace lt::hft
 			if(_is_trading)
 			{
 				bool is_update = false;
-				is_update |= _ctx->poll();
-				is_update |= _dc->poll();
-				is_update |= this->poll();
+				is_update |= _ctx->polling();
+				is_update |= _dc->polling();
+				is_update |= this->polling();
 				if (is_update)
 				{
 					for (auto& it : this->_strategy_map)
@@ -76,7 +76,7 @@ namespace lt::hft
 			else
 			{
 				//不在交易中只处理 on_change 等修改策略参数
-				this->poll();
+				this->polling();
 			}
 			if (!_is_servicing && _is_trading)
 			{

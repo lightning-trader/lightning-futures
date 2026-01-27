@@ -89,7 +89,7 @@ uint32_t trader_simulator::get_trading_day()const
 	return _trading_day;
 }
 
-bool trader_simulator::poll()
+bool trader_simulator::polling()
 {
 	bool result = false ;
 	for (const auto& tk_it : _current_tick_info)

@@ -64,7 +64,21 @@ namespace lt
 		{
 			return get<T>(std::string(key));
 		}
-
+		std::string to_string() const
+		{
+			std::string result;
+			for (auto it = _params.begin(); it != _params.end(); ++it)
+			{
+				if (it != _params.begin())
+				{
+					result += '&';
+				}
+				result += it->first;
+				result += '=';
+				result += it->second;
+			}
+			return result;
+		}
 	private:
 		template <typename T>
 		typename std::enable_if<std::is_same<T, const char*>::value, T>::type get(const std::string& key)const

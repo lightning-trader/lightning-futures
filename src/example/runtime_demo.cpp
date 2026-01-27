@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
 	while (true)
 	{
-		manager.poll();
+		manager.polling();
 	}
 	return 0;
 }

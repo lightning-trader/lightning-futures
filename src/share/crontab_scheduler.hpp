@@ -56,7 +56,7 @@ namespace lt
             _end_cb = end_cb;
         }
 
-        void poll() {
+        void polling() {
             const auto now = std::chrono::system_clock::now();
             const std::time_t now_t = std::chrono::system_clock::to_time_t(now);
 

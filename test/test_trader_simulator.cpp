@@ -96,10 +96,10 @@ void test_trader_simulator() {
         simulator.push_tick(ticks);
         std::cout << "   ✓ 推送 tick 成功" << std::endl;
         
-        // 测试 poll 方法
-        std::cout << "\n11. 测试 poll 方法:" << std::endl;
-        bool poll_result = simulator.poll();
-        std::cout << "   poll 结果: " << poll_result << std::endl;
+        // 测试 polling 方法
+        std::cout << "\n11. 测试 polling 方法:" << std::endl;
+        bool poll_result = simulator.polling();
+        std::cout << "   polling 结果: " << poll_result << std::endl;
         
     } catch (const std::exception& e) {
         std::cout << "   ✗ 初始化失败: " << e.what() << std::endl;

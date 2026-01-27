@@ -229,6 +229,7 @@ void data_channel::subscribe(uint32_t td)
 			}
 		}
 	});
+	PRINT_INFO("start load history ticks");
 	//加载历史tick
 	for (const auto& code : tick_subscrib)
 	{
@@ -253,6 +254,7 @@ void data_channel::subscribe(uint32_t td)
 		}
 		_tick_cache.insert(std::make_pair(code, ticks));
 	}
+	PRINT_INFO("start load history kline");
 	//加载历史k线
 	for (const auto& generator_pair : _bar_generator)
 	{
@@ -290,14 +292,14 @@ void data_channel::unsubscribe()
 	}
 }
 
-bool data_channel::poll()
+bool data_channel::polling()
 {
 	bool result = false ;
 	for(auto& it : _bar_generator)
 	{
 		for(auto p_it : it.second)
 		{
-			result |= p_it.second->poll();
+			result |= p_it.second->polling();
 		}
 	}
 	return result;
