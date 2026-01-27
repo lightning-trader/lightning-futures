@@ -208,12 +208,12 @@ namespace lt::hft
 			lt::params ltds_section(ltds_it->second);
 			std::string channel = ltds_section.get<std::string>("channel");
 			std::string cache_path = ltds_section.get<std::string>("cache_path");
-			size_t detail_cache = 128;
+			size_t detail_cache = 2U;
 			if(ltds_section.has("detail_cache_size"))
 			{
 				detail_cache = ltds_section.get<size_t>("detail_cache_size");
 			}
-			size_t bar_cache = 819200U;
+			size_t bar_cache = 8U;
 			if (ltds_section.has("bar_cache_size"))
 			{
 				bar_cache = ltds_section.get<size_t>("bar_cache_size");

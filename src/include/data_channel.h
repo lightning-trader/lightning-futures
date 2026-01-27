@@ -75,7 +75,7 @@ namespace lt
 
 	public:
 		
-		data_channel(lt::trading_context*& ctx, const char* channel, const char* cache_path, size_t detail_cache_size = 128U, size_t bar_cache_size = 819200U):_ctx(ctx), _dw(channel, cache_path, detail_cache_size, bar_cache_size) {}
+		data_channel(lt::trading_context*& ctx, const char* channel, const char* cache_path, size_t detail_cache_size = 2U, size_t bar_cache_size = 8U):_ctx(ctx), _dw(channel, cache_path, detail_cache_size, bar_cache_size) {}
 
 		bool poll();
 

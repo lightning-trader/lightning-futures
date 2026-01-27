@@ -36,7 +36,7 @@ namespace lt::driver
 
 	public:
 		
-		ldts_tick_loader(const std::string& channel, const std::string& cache_path, size_t detail_cache_size = 128U, size_t bar_cache_size = 819200U);
+		ldts_tick_loader(const std::string& channel, const std::string& cache_path, size_t detail_cache_size = 8U, size_t bar_cache_size = 8U);
 
 		virtual ~ldts_tick_loader();
 
