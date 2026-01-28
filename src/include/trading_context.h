@@ -170,10 +170,13 @@ namespace lt
 		daytm_t get_last_time()const;
 		
 		seqtm_t get_now_time()const;
-		//
-		const market_info& get_market_info(const code_t& id)const;
+		
+		//当前小节的开始时间
+		daytm_t get_section_daytm(const code_t& code)const;
 
-		const tick_info& get_last_tick(const code_t& id)const;
+		const market_info& get_market_info(const code_t& code)const;
+
+		const tick_info& get_last_tick(const code_t& code)const;
 
 		const tick_info& get_previous_tick(const code_t& code)const;
 

@@ -412,24 +412,38 @@ seqtm_t trading_context::get_now_time()const
 {
 	return lt::make_seqtm(get_trading_day(),get_last_time());
 }
-
-const market_info& trading_context::get_market_info(const code_t& id)const
+daytm_t trading_context::get_section_daytm(const code_t& code)const
 {
-	auto it = _market_info.find(id);
+	if (auto* act_trader = dynamic_cast<actual_trader*>(_trader))
+	{
+		const auto& contract = get_instrument(code);
+		const auto product_code = make_code(contract.code.get_exchange(), contract.product);
+		const auto state_begin = act_trader->get_product_state(product_code).second;
+		return lt::section_daytm_snap(state_begin);
+	}
+	else
+	{
+		// 模拟环境固定返回21:00:00
+		return 18000000;
+	}
+}
+const market_info& trading_context::get_market_info(const code_t& code)const
+{
+	auto it = _market_info.find(code);
 	if (it == _market_info.end())
 	{
 		return default_market;
 	}
 	return it->second;
 }
-const tick_info& trading_context::get_last_tick(const code_t& id)const
+const tick_info& trading_context::get_last_tick(const code_t& code)const
 {
-	auto last_it = _market_info.find(id);
+	auto last_it = _market_info.find(code);
 	if (last_it != _market_info.end())
 	{
 		return last_it->second.last_tick_info;
 	}
-	const auto it = _previous_tick.find(id);
+	const auto it = _previous_tick.find(code);
 	if (it != _previous_tick.end())
 	{
 		return it->second;

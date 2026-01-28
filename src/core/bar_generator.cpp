@@ -36,6 +36,10 @@ void bar_generator::load_history(size_t preload_bars)
 	if (res != ltd_error_code::EC_NO_ERROR)
 	{
 		PRINT_FATAL("get history bar error :", res);
+		//这里注意如果获取历史行情出错注意bar的时间对齐
+		const auto state_begin = _ctx->get_section_daytm(_code);
+		const auto now = _ctx->get_now_time();
+		_last_bar_end = ((now - state_begin) / _period + 1) * _period;
 	}
 	for (auto it = data.begin(); it != data.end(); ++it)
 	{
@@ -61,7 +65,7 @@ void bar_generator::clear_history()
 void bar_generator::insert_tick(const tick_info& tick)
 {
 	seqtm_t time = lt::make_seqtm(_ctx->get_trading_day(),tick.time);
-	while(_last_bar_end < time)
+	while(time > _last_bar_end)
 	{
 		create_new_bar();
 		_last_bar_end = time_forward(_current_bar.time, _period);
@@ -132,7 +136,7 @@ bool bar_generator::polling()
 		{
 			create_new_bar();
 			result = true;
-			_last_bar_end = time_forward(_last_bar_end, _period);
+			_last_bar_end = time_forward(_current_bar.time, _period);
 		}
 	}
 	return result;
