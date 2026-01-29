@@ -43,11 +43,11 @@ void bar_generator::load_history(size_t preload_bars)
 			if (it < data.end() - 1)
 			{
 				_bar_cache.emplace_back(bar);
-				_last_bar_end = time_forward(_current_bar.time, _period);
 			}
 			else
 			{
 				_current_bar = bar;
+				_last_bar_end = time_forward(_current_bar.time, _period);
 			}
 		}
 	}
