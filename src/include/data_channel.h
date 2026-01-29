@@ -37,12 +37,10 @@ namespace lt
 
 		data_channel*& _dc;
 
-		uint32_t _td;
-
 	public:
 
-		subscriber(data_channel*& chl,uint32_t td) :
-			_dc(chl),_td(td)
+		subscriber(data_channel*& chl) :
+			_dc(chl)
 		{}
 
 		void regist_tick_receiver(const code_t& code, tick_receiver* receiver);
@@ -88,7 +86,7 @@ namespace lt
 
 	private:
 
-		void subscribe(uint32_t td);
+		void subscribe();
 
 		void unsubscribe();
 

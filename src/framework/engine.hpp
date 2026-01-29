@@ -51,7 +51,7 @@ namespace lt::hft
 			{
 				//开始交易
 				this->_ctx->crossday();
-				subscriber suber(_dc, _ctx->get_trading_day());
+				subscriber suber(_dc);
 				for (auto it : _strategy_map)
 				{
 					it.second->init(suber);

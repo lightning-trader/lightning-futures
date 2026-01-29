@@ -412,7 +412,11 @@ seqtm_t trading_context::get_now_time()const
 {
 	return lt::make_seqtm(get_trading_day(),get_last_time());
 }
-daytm_t trading_context::get_section_daytm(const code_t& code)const
+daytm_t trading_context::get_open_time()const
+{
+	return _trading_section->get_open_time();
+}
+daytm_t trading_context::get_section_time(const code_t& code)const
 {
 	if (auto* act_trader = dynamic_cast<actual_trader*>(_trader))
 	{
@@ -424,7 +428,7 @@ daytm_t trading_context::get_section_daytm(const code_t& code)const
 	else
 	{
 		// 模拟环境固定返回21:00:00
-		return 18000000;
+		return _trading_section->get_open_time();
 	}
 }
 const market_info& trading_context::get_market_info(const code_t& code)const

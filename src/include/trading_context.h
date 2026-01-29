@@ -170,9 +170,10 @@ namespace lt
 		daytm_t get_last_time()const;
 		
 		seqtm_t get_now_time()const;
-		
+		//开盘时间
+		daytm_t get_open_time()const;
 		//当前小节的开始时间
-		daytm_t get_section_daytm(const code_t& code)const;
+		daytm_t get_section_time(const code_t& code)const;
 
 		const market_info& get_market_info(const code_t& code)const;
 

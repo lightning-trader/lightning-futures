@@ -33,30 +33,44 @@ void bar_generator::load_history(size_t preload_bars)
 {
 	std::vector<ltd_bar_info> data;
 	ltd_error_code res = _dw.get_history_bar(data, _code.to_string().c_str(), static_cast<ltd_period>(_period), _ctx->get_now_time(), preload_bars);
-	if (res != ltd_error_code::EC_NO_ERROR)
+	if (res == ltd_error_code::EC_NO_ERROR)
 	{
-		PRINT_FATAL("get history bar error :", res);
-		//这里注意如果获取历史行情出错注意bar的时间对齐
-		const auto state_begin = _ctx->get_section_daytm(_code);
-		const auto now = _ctx->get_now_time();
-		_last_bar_end = ((now - state_begin) / _period + 1) * _period;
-	}
-	for (auto it = data.begin(); it != data.end(); ++it)
-	{
-		_detail_density = it->detail_density;
-		bar_info bar;
-		convert_to_bar(bar, *it);
-		if (it < data.end() - 1)
+		for (auto it = data.begin(); it != data.end(); ++it)
 		{
-			_bar_cache.emplace_back(bar);
-			_last_bar_end = time_forward(bar.time, _period);
+			_detail_density = it->detail_density;
+			bar_info bar;
+			convert_to_bar(bar, *it);
+			if (it < data.end() - 1)
+			{
+				_bar_cache.emplace_back(bar);
+				_last_bar_end = time_forward(_current_bar.time, _period);
+			}
+			else
+			{
+				_current_bar = bar;
+			}
+		}
+	}
+	else 
+	{
+		PRINT_ERROR("get history bar error :", res);
+		//这里注意如果获取历史行情出错注意bar的时间对齐
+		const auto state_begin = _ctx->get_section_time(_code);
+		const auto period_milliseconds = (_period * ONE_SECOND_MILLISECONDS);
+		if (state_begin == 0U)
+		{
+			//说明是开盘前所以定位到开盘的第一个周期结束
+			_last_bar_end = lt::make_seqtm(_ctx->get_trading_day(),_ctx->get_open_time() + period_milliseconds);
 		}
 		else
 		{
-			_current_bar = bar;
+			const auto now = _ctx->get_last_time();
+			_last_bar_end = lt::make_seqtm(_ctx->get_trading_day(),((now - state_begin) / period_milliseconds + 1) * period_milliseconds);
 		}
-		
+		const auto& contract = _ctx->get_instrument(_code);
+		_detail_density = contract.price_step;
 	}
+	
 }
 void bar_generator::clear_history()
 {

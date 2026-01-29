@@ -126,7 +126,7 @@ void subscriber::regist_bar_receiver(const code_t& code, uint32_t period, bar_re
 
 void subscriber::subscribe()
 {
-	_dc->subscribe(_td);
+	_dc->subscribe();
 }
 
 void unsubscriber::unregist_bar_receiver(const code_t& code, uint32_t period, bar_receiver* receiver)
@@ -166,7 +166,7 @@ void unsubscriber::unsubscribe()
 	_dc->unsubscribe();
 }
 
-void data_channel::subscribe(uint32_t td)
+void data_channel::subscribe()
 {
 	std::set<code_t> tick_subscrib;
 	for (auto it = _tick_reference_count.begin(); it != _tick_reference_count.end();)
@@ -234,7 +234,11 @@ void data_channel::subscribe(uint32_t td)
 	for (const auto& code : tick_subscrib)
 	{
 		std::vector<ltd_tick_info> preload_ticks;
-		_dw.get_history_tick(preload_ticks, code.to_string().c_str(), td);
+		auto ret = _dw.get_history_tick(preload_ticks, code.to_string().c_str(), _ctx->get_trading_day());
+		if (ret != ltd_error_code::EC_NO_ERROR)
+		{
+			PRINT_ERROR("get_history_tick error:",static_cast<uint32_t>(ret));
+		}
 		std::vector<tick_info> ticks;
 		for (const auto& it : preload_ticks)
 		{
