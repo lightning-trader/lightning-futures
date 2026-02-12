@@ -43,13 +43,16 @@ void bar_generator::load_history(size_t preload_bars)
 			if (it < data.end() - 1)
 			{
 				_bar_cache.emplace_back(bar);
+				_last_bar_end = time_forward(_current_bar.time, _period);
 			}
 			else
 			{
 				_current_bar = bar;
-				_last_bar_end = time_forward(_current_bar.time, _period);
 			}
 		}
+		const auto period_milliseconds = (_period * ONE_SECOND_MILLISECONDS);
+		auto open_time = lt::make_seqtm(_ctx->get_trading_day(), _ctx->get_open_time() + period_milliseconds);
+		_last_bar_end = std::max<seqtm_t>(open_time, _last_bar_end);
 	}
 	else 
 	{
