@@ -50,9 +50,16 @@ void bar_generator::load_history(size_t preload_bars)
 				_current_bar = bar;
 			}
 		}
+		const auto state_begin = _ctx->get_section_time(_code);
 		const auto period_milliseconds = (_period * ONE_SECOND_MILLISECONDS);
-		auto open_time = lt::make_seqtm(_ctx->get_trading_day(), _ctx->get_open_time() + period_milliseconds);
-		_last_bar_end = std::max<seqtm_t>(open_time, _last_bar_end);
+		//说明是开盘前所以定位到开盘的第一个周期结束
+		auto frist_bar_end = lt::make_seqtm(_ctx->get_trading_day(), _ctx->get_open_time() + period_milliseconds);
+		if (state_begin > 0U)
+		{
+			const auto now = _ctx->get_last_time();
+			frist_bar_end = lt::make_seqtm(_ctx->get_trading_day(), ((now - state_begin) / period_milliseconds + 1) * period_milliseconds);
+		}
+		_last_bar_end = std::max<seqtm_t>(frist_bar_end, _last_bar_end);
 	}
 	else 
 	{
