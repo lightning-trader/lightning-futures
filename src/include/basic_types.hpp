@@ -463,40 +463,36 @@ namespace lt
 		code_t code; //合约ID
 		position_info(const code_t& code) :code(code), long_pending(0), short_pending(0) {}
 		//全部仓位包含今仓昨仓
-	position_cell total_long;
-	position_cell total_short;
+		position_cell total_long;
+		position_cell total_short;
 
-	//昨仓
-	position_cell history_long;
-	position_cell history_short;
+		//昨仓
+		position_cell history_long;
+		position_cell history_short;
 
-	//今仓
-	position_cell today_long;
-	position_cell today_short;
+		//开仓还未成交
+		uint32_t	long_pending;
+		uint32_t	short_pending;
 
-	//开仓还未成交
-	uint32_t	long_pending;
-	uint32_t	short_pending;
+		bool empty()const
+		{
+			return total_long.empty() && total_short.empty() && long_pending == 0U && short_pending == 0U;
+		}
 
-	bool empty()const
-	{
-		return total_long.empty() && total_short.empty() && long_pending == 0U && short_pending == 0U;
-	}
+		uint32_t get_total()const
+		{
+			return total_long.position + total_short.position;
+		}
 
-	uint32_t get_total()const
-	{
-		return total_long.position + total_short.position;
-	}
+		int32_t get_real()const
+		{
+			return total_long.position - total_short.position;
+		}
 
-	int32_t get_real()const
-	{
-		return total_long.position - total_short.position;
-	}
-
-	position_info() :long_pending(0U), short_pending(0U)
-	{
-	}
-};
+		position_info() :long_pending(0U), short_pending(0U)
+		{
+		}
+	};
 
 	const position_info default_position;
 	/*
