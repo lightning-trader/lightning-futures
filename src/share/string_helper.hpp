@@ -105,7 +105,7 @@ namespace lt
 
             std::string result;
             for (auto i=0 ;i< values.size();i++) {
-                result.append(values[i]);
+                result.append(to_string(values[i]));
                 if(i< values.size()-1)
                 {
                     result.push_back(separator);

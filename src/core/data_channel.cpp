@@ -335,6 +335,7 @@ const std::vector<tick_info> data_channel::get_ticks(const code_t& code, size_t 
 		PRINT_ERROR("cant find the code tick data ", code.to_string());
 		return std::vector<tick_info>();
 	}
-	std::vector<tick_info> last_ticks(it->second.end() - length, it->second.end());
+	size_t real_size = std::min<size_t>(it->second.size(), length);
+	std::vector<tick_info> last_ticks(it->second.end() - real_size, it->second.end());
 	return last_ticks;
 }

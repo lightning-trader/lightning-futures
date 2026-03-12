@@ -181,6 +181,16 @@ namespace lt
 
 		const tick_info& get_previous_tick(const code_t& code)const;
 
+		const std::map<code_t, position_info>& get_positions()const 
+		{
+			return this->_position_info;
+		}
+
+		const std::map<estid_t, order_info>& get_orders()const 
+		{
+			return this->_order_info;
+		}
+
 	private:
 		
 		void update_time(daytm_t time);
