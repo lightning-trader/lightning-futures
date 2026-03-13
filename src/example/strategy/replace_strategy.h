@@ -30,11 +30,11 @@ class replace_strategy : public lt::hft::strategy,public lt::tape_receiver
 {
 	enum {
 		LONG_ClOSE_HISTORY,
-		LONG_ClOSE_TODAY,
-		LONG_OPEN_TODAY,
+		LONG_ClOSE_CURRENT,
+		LONG_OPEN_CURRENT,
 		SHORT_ClOSE_HISTORY,
-		SHORT_ClOSE_TODAY,
-		SHORT_OPEN_TODAY,
+		SHORT_ClOSE_CURRENT,
+		SHORT_OPEN_CURRENT,
 
 		ORDER_ESTID_COUNT
 	};

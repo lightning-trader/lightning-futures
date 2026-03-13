@@ -431,40 +431,40 @@ namespace lt
 	};
 
 	struct position_cell
-{
-	//仓位
-	uint32_t	position;
-	//冻结（平仓未成交）
-	uint32_t	frozen;
-
-	position_cell() :
-		position(0),
-		frozen(0)
-	{}
-
-	uint32_t usable()const
 	{
-		return position - frozen;
-	}
+		//仓位
+		uint32_t	position;
+		//冻结（平仓未成交）
+		uint32_t	frozen;
 
-	bool empty()const
-	{
-		return position == 0;
-	}
+		position_cell() :
+			position(0),
+			frozen(0)
+		{}
 
-	void clear()
-	{
-		position = 0;
-		frozen = 0;
-	}
-};
+		uint32_t usable()const
+		{
+			return position - frozen;
+		}
+
+		bool empty()const
+		{
+			return position == 0;
+		}
+
+		void clear()
+		{
+			position = 0;
+			frozen = 0;
+		}
+	};
 	struct position_info
 	{
 		code_t code; //合约ID
 		position_info(const code_t& code) :code(code), long_pending(0), short_pending(0) {}
-		//全部仓位包含今仓昨仓
-		position_cell total_long;
-		position_cell total_short;
+		//今仓
+		position_cell current_long;
+		position_cell current_short;
 
 		//昨仓
 		position_cell history_long;
@@ -476,22 +476,39 @@ namespace lt
 
 		bool empty()const
 		{
-			return total_long.empty() && total_short.empty() && long_pending == 0U && short_pending == 0U;
+			return current_long.empty() && current_short.empty() && history_long.empty() && history_short.empty() && long_pending == 0U && short_pending == 0U;
 		}
 
 		uint32_t get_total()const
 		{
-			return total_long.position + total_short.position;
+			return current_long.position + current_short.position + history_long.position + history_short.position;
 		}
 
 		int32_t get_real()const
 		{
-			return total_long.position - total_short.position;
+			return current_long.position + history_long.position - (current_short.position + history_short.position);
 		}
 
-		position_info() :long_pending(0U), short_pending(0U)
+		uint32_t get_long_position()const
 		{
+			return current_long.position + history_long.position;
 		}
+
+		uint32_t get_short_position()const
+		{
+			return current_short.position + history_short.position;
+		}
+		uint32_t get_long_frozen()const
+		{
+			return current_long.frozen + history_long.frozen;
+		}
+
+		uint32_t get_short_frozen()const
+		{
+			return current_short.frozen + history_short.frozen;
+		}
+		position_info() :long_pending(0U), short_pending(0U)
+		{}
 	};
 
 	const position_info default_position;

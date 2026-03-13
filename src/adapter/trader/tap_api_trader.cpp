@@ -436,19 +436,6 @@ void tap_api_trader::OnRspQryPosition(TAPIUINT32 sessionID, TAPIINT32 errorCode,
 		code_t code = wrap_code(*info);
 		position_seed& pos = _position_info[code];
 		pos.code = code;
-		if (info->MatchSide == TAPI_SIDE_BUY)
-		{
-			pos.total_long += info->PositionQty;
-		}
-		else if (info->MatchSide == TAPI_SIDE_SELL)
-		{
-			pos.total_short += info->PositionQty;
-		}
-		else if (info->MatchSide == TAPI_SIDE_ALL)
-		{
-			pos.total_long += info->PositionQty;
-			pos.total_short += info->PositionQty;
-		}
 		if(info->IsHistory == APIYNFLAG_YES&&code.is_distinct())
 		{
 			if(info->MatchSide == TAPI_SIDE_BUY)
@@ -463,6 +450,22 @@ void tap_api_trader::OnRspQryPosition(TAPIUINT32 sessionID, TAPIINT32 errorCode,
 			{
 				pos.history_long += info->PositionQty;
 				pos.history_short += info->PositionQty;
+			}
+		}
+		else
+		{
+			if (info->MatchSide == TAPI_SIDE_BUY)
+			{
+				pos.current_long += info->PositionQty;
+			}
+			else if (info->MatchSide == TAPI_SIDE_SELL )
+			{
+				pos.current_short += info->PositionQty;
+			}
+			else if (info->MatchSide == TAPI_SIDE_ALL)
+			{
+				pos.current_long += info->PositionQty;
+				pos.current_short += info->PositionQty;
 			}
 		}
 	}
