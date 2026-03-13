@@ -71,9 +71,10 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 
             }
         }
-        // 将消息传递给下一个钩子
-        return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+        
     };
+    // 将消息传递给下一个钩子
+    return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
 }
 
 

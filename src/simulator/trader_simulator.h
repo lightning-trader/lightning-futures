@@ -1,4 +1,4 @@
-/*
+﻿/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -52,31 +52,31 @@ namespace lt::driver
 		struct position_item
 		{
 			//仓位
-			uint32_t	postion;
+			uint32_t	position;
 			//价格
 			double_t	price;
 			//冻结
 			uint32_t	frozen;
 
 			position_item() :
-				postion(0),
+				position(0),
 				price(.0F),
 				frozen(0)
 			{}
 
 			uint32_t usable()const
 			{
-				return postion - frozen;
+				return position - frozen;
 			}
 
 			bool empty()const
 			{
-				return postion == 0;
+				return position == 0;
 			}
 
 			void clear()
 			{
-				postion = 0;
+				position = 0;
 				price = .0F;
 				frozen = 0;
 			}
@@ -85,9 +85,9 @@ namespace lt::driver
 		struct position_detail
 		{
 
-			//仓位
-			position_item total_long;
-			position_item total_short;
+			//今仓
+			position_item today_long;
+			position_item today_short;
 
 			//昨仓
 			position_item yestoday_long;
@@ -95,19 +95,37 @@ namespace lt::driver
 
 			bool empty()const
 			{
-				return total_long.empty() && total_short.empty();
+				return today_long.empty() && today_short.empty() && yestoday_long.empty() && yestoday_short.empty();
 			}
 
 			uint32_t get_total()const
 			{
-				return total_long.postion + total_short.postion ;
+				return today_long.position + today_short.position + yestoday_long.position + yestoday_short.position;
 			}
 
 			int32_t get_real()const
 			{
-				return total_long.postion - total_short.postion ;
+				return today_long.position + yestoday_long.position - (today_short.position + yestoday_short.position);
 			}
 
+			uint32_t get_long_position()const
+			{
+				return today_long.position + yestoday_long.position;
+			}
+
+			uint32_t get_short_position()const
+			{
+				return today_short.position + yestoday_short.position;
+			}
+			uint32_t get_long_frozen()const
+			{
+				return today_long.frozen + yestoday_long.frozen;
+			}
+
+			uint32_t get_short_frozen()const
+			{
+				return today_short.frozen + yestoday_short.frozen;
+			}
 			position_detail()
 			{}
 		};

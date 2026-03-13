@@ -29,15 +29,15 @@ namespace lt
 	struct position_seed
 	{
 		code_t code;
-		//总仓
-		uint32_t total_long;
-		uint32_t total_short;
+		//今仓
+		uint32_t current_long;
+		uint32_t current_short;
 
 		//昨仓
 		uint32_t history_long;
 		uint32_t history_short;
 
-		position_seed() :total_long(0U), total_short(0U), history_long(0U), history_short(0) {}
+		position_seed() :current_long(0U), current_short(0U), history_long(0U), history_short(0) {}
 	};
 
 	typedef std::map<code_t, position_info> position_map;

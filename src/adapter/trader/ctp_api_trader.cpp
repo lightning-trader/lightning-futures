@@ -474,17 +474,37 @@ void ctp_api_trader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *p
 		pos.code = code;
 		if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Long)
 		{
-
-			pos.total_long += pInvestorPosition->Position;
-			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_History)
+			if(pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
+			{
+				if (code.is_distinct())
+				{
+					pos.current_long += pInvestorPosition->TodayPosition;
+				}
+				else
+				{
+					pos.current_long += pInvestorPosition->Position;
+				}
+				
+			}
+			else
 			{
 				pos.history_long += (pInvestorPosition->Position - pInvestorPosition->TodayPosition);
 			}
 		}
 		else if (pInvestorPosition->PosiDirection == THOST_FTDC_PD_Short)
 		{
-			pos.total_short += pInvestorPosition->Position;
-			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_History)
+			if (pInvestorPosition->PositionDate == THOST_FTDC_PSD_Today)
+			{
+				if(code.is_distinct())
+				{
+					pos.current_short += pInvestorPosition->TodayPosition;
+				}
+				else
+				{
+					pos.current_short += pInvestorPosition->Position;
+				}
+			}
+			else
 			{
 				pos.history_short += (pInvestorPosition->Position - pInvestorPosition->TodayPosition);
 			}
