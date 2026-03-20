@@ -87,6 +87,7 @@ bool trading_context::load_data()
 	}
 	PRINT_INFO("context load trader data");
 	
+	_position_info.clear();
 	const auto orders = _trader->get_all_orders();
 	_order_info.clear();
 	for (const auto& it : orders)
@@ -131,7 +132,6 @@ bool trading_context::load_data()
 	}
 
 	const auto positions = _trader->get_all_positions();
-	_position_info.clear();
 	for (const auto& it : positions)
 	{
 		auto& pos = _position_info[it.code];
@@ -212,7 +212,15 @@ estid_t trading_context::place_order(order_listener* listener, offset_type offse
 	}
 	PROFILE_DEBUG(code.get_symbol());
 	auto& contract = this->get_instrument(code);
-	double_t real_price = std::round(price / contract.price_step) * contract.price_step;
+	double_t real_price = price;
+	if (contract.price_step > .0)
+	{
+		real_price = std::round(price / contract.price_step) * contract.price_step;
+	}
+	else
+	{
+		PRINT_WARNING("place order instrument price_step invalid", code.get_symbol(), price);
+	}
 	if (_filter_function)
 	{
 		if (!_filter_function(code, offset, direction, count, real_price, flag))

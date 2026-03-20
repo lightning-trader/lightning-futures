@@ -821,6 +821,7 @@ namespace lt
 			{
 				return deal_status::DS_DOUBLE_CLOSE;
 			}
+			return deal_status::DS_INVALID;
 		}
 	};
 

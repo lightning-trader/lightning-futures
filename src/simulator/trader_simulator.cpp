@@ -587,7 +587,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume, doubl
 		//平仓
 		if (order.direction == direction_type::DT_LONG)
 		{
-			_account_info.money += (deal_volume * (deal_volume - pos.today_long.price) * contract_info->multiple);
+			_account_info.money += (deal_volume * (deal_price - pos.today_long.price) * contract_info->multiple);
 			pos.today_long.position -= std::min<uint32_t>(deal_volume, pos.today_long.position);
 			pos.today_long.frozen -= std::min<uint32_t>(deal_volume, pos.today_long.frozen);
 			_account_info.frozen_monery -= (deal_volume * pos.today_long.price * contract_info->multiple * contract_info->margin_rate);
@@ -636,7 +636,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume, doubl
 	{
 		PRINT_TRACE(" order_deal _order_info.del_order", order.estid);
 		//全部成交
-		fire_event(trader_event_type::TET_OrderTrade, order.estid, order.code, order.offset, order.direction, deal_volume, order.total_volume);
+		fire_event(trader_event_type::TET_OrderTrade, order.estid, order.code, order.offset, order.direction, deal_price, deal_volume);
 		visit_match_info(order.estid, [this](order_match& mh)->void {
 			mh.state = OS_DELETE;
 			});
