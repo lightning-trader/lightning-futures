@@ -90,7 +90,7 @@ namespace lt::hft
 				row_data.emplace_back(std::to_string(statistic.cancel_amount));
 				row_data.emplace_back(std::to_string(statistic.error_amount));
 				row_data.emplace_back(std::to_string(account.money));
-				row_data.emplace_back(std::to_string(account.frozen_monery));
+				row_data.emplace_back(std::to_string(account.frozen_money));
 				_crossday_flow_csv.InsertRow<std::string>(count, row_data);
 				_crossday_flow_csv.Save(_basic_path + "/crossday_flow.csv");
 			}

@@ -1,4 +1,4 @@
-// The MIT License (MIT)
+﻿// The MIT License (MIT)
 //
 // Copyright (c) 2015 Jeremy Letang
 //
@@ -66,19 +66,19 @@ namespace mpsc {
         // check a compile time if the value T is default_constructible
         mpsc_queue() {
             auto stub = new node<T>(nullptr);
-            this->head.exchange(std::atomic<node<T>*>(stub));
+            this->head.store(stub, std::memory_order_relaxed);
             this->tail = stub;
         }
 
         // move constructor
         mpsc_queue(mpsc_queue&& oth) {
-            this->tail = std::move(oth.tail);
-            this->head.exchange(oth.head);
+            this->tail = oth.tail;
+            this->head.store(oth.head.load(std::memory_order_acquire), std::memory_order_release);
             oth.tail = nullptr;
         }
 
         // destroy the queue
-        // remove all remaining stored values
+        // remove all remaining values
         ~mpsc_queue() {
             if (tail != nullptr) {
                 while (this->pop());
@@ -86,13 +86,16 @@ namespace mpsc {
             }
         }
 
+        // 娉ㄦ剰锛歝lone() 鎿嶄綔涓嶆槸绾跨▼瀹夊叏鐨勶紝鍙兘鍦ㄥ崟绾跨▼鐜涓嬩娇鐢?
+        // 濡傛灉闇€瑕佺嚎绋嬪畨鍏ㄧ殑鍏嬮殕锛岄渶瑕佷娇鐢ㄥ閮ㄥ悓姝ユ満鍒?
         mpsc_queue clone() {
-            auto new_q = mpsc_queue<T>();
-
-            new_q.head = this->head;
-            new_q.tail = this->tail;
-
-            return std::move(new_q);
+            mpsc_queue<T> new_q;
+            // 鍒犻櫎宸插瓨鍦ㄧ殑 stub 鑺傜偣
+            delete new_q.tail;
+            // 澶嶅埗褰撳墠闃熷垪鐨勭姸鎬侊紙娉ㄦ剰锛氳繖鍙槸娴呮嫹璐濓紝涓嶄繚璇佺嚎绋嬪畨鍏級
+            new_q.tail = new node<T>(nullptr);
+            new_q.head.store(this->head.load(std::memory_order_acquire), std::memory_order_release);
+            return new_q;
         }
 
         // insert a new value inside the queue

@@ -387,24 +387,24 @@ namespace lt
 			ask_order(sell_ord)
 		{}
 
-		uint32_t total_buy_valume()const
+		uint32_t total_buy_volume()const
 		{
-			uint32_t reuslt = 0;
+			uint32_t result = 0;
 			for (auto& it : bid_order)
 			{
-				reuslt += it.second;
+				result += it.second;
 			}
-			return reuslt;
+			return result;
 		}
 
-		uint32_t total_sell_valume()const
+		uint32_t total_sell_volume()const
 		{
-			uint32_t reuslt = 0;
+			uint32_t result = 0;
 			for (auto& it : ask_order)
 			{
-				reuslt += it.second;
+				result += it.second;
 			}
-			return reuslt;
+			return result;
 		}
 
 		bool invalid()const
@@ -853,6 +853,11 @@ namespace lt
 
 		uint32_t get_buy_volume(double_t price)const
 		{
+			// 防止除零错误
+			if (detail_density <= .0)
+			{
+				return 0;
+			}
 			double_t bucket_price = std::round(price / detail_density) * detail_density;
 			auto it = buy_details.find(bucket_price);
 			if (it == buy_details.end())
@@ -864,6 +869,11 @@ namespace lt
 
 		uint32_t get_sell_volume(double_t price)const
 		{
+			// 防止除零错误
+			if (detail_density <= .0)
+			{
+				return 0;
+			}
 			double_t bucket_price = std::round(price / detail_density) * detail_density;
 			auto it = sell_details.find(bucket_price);
 			if (it == sell_details.end())

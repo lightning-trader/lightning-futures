@@ -176,9 +176,9 @@ bool trader_simulator::cancel_order(estid_t estid)
 	{
 		return false;
 	}
-	if ((od_it)->state != OS_CANELED)
+	if ((od_it)->state != OS_CANCELED)
 	{
-		(od_it)->state = OS_CANELED;
+		(od_it)->state = OS_CANCELED;
 	}
 	return true;
 }
@@ -333,7 +333,7 @@ bool trader_simulator::match_entrust(const tick_info& tick)
 
 bool trader_simulator::handle_entrust(const tick_info& tick, order_match& match, order_info& order, uint32_t max_volume)
 {
-	if (match.state == OS_CANELED)
+	if (match.state == OS_CANCELED)
 	{
 		//撤单
 		return order_cancel(order);
@@ -587,10 +587,10 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume, doubl
 		//平仓
 		if (order.direction == direction_type::DT_LONG)
 		{
-			_account_info.money += (deal_volume * (deal_volume - pos.today_long.price) * contract_info->multiple);
+			_account_info.money += (deal_volume * (deal_price - pos.today_long.price) * contract_info->multiple);
 			pos.today_long.position -= std::min<uint32_t>(deal_volume, pos.today_long.position);
 			pos.today_long.frozen -= std::min<uint32_t>(deal_volume, pos.today_long.frozen);
-			_account_info.frozen_monery -= (deal_volume * pos.today_long.price * contract_info->multiple * contract_info->margin_rate);
+			_account_info.frozen_money -= (deal_volume * pos.today_long.price * contract_info->multiple * contract_info->margin_rate);
 			_account_info.money -= (deal_volume * service_charge);
 		}
 		else if (order.direction == direction_type::DT_SHORT)
@@ -598,7 +598,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume, doubl
 			_account_info.money += (deal_volume * (pos.today_short.price - deal_price) * contract_info->multiple);
 			pos.today_short.position -= std::min<uint32_t>(deal_volume, pos.today_short.position);
 			pos.today_short.frozen -= std::min<uint32_t>(deal_volume, pos.today_short.frozen);
-			_account_info.frozen_monery -= (deal_volume * pos.today_short.price * contract_info->multiple * contract_info->margin_rate);
+			_account_info.frozen_money -= (deal_volume * pos.today_short.price * contract_info->multiple * contract_info->margin_rate);
 			_account_info.money -= deal_volume * service_charge;
 		}
 	}
@@ -616,7 +616,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume, doubl
 			_account_info.money += (deal_volume * (deal_price - pos.yestoday_long.price) * contract_info->multiple);
 			pos.yestoday_long.position -= std::min<uint32_t>(deal_volume, pos.yestoday_long.position);
 			pos.yestoday_long.frozen -= std::min<uint32_t>(deal_volume, pos.yestoday_long.frozen);
-			_account_info.frozen_monery -= (deal_volume * pos.yestoday_long.price * contract_info->multiple * contract_info->margin_rate);
+			_account_info.frozen_money -= (deal_volume * pos.yestoday_long.price * contract_info->multiple * contract_info->margin_rate);
 			_account_info.money -= (deal_volume * service_charge);
 		}
 		else if (order.direction == direction_type::DT_SHORT)
@@ -624,19 +624,19 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume, doubl
 			_account_info.money += (deal_volume * (pos.yestoday_short.price - deal_price) * contract_info->multiple);
 			pos.yestoday_short.position -= std::min<uint32_t>(deal_volume, pos.yestoday_short.position);
 			pos.yestoday_short.frozen -= std::min<uint32_t>(deal_volume, pos.yestoday_short.frozen);
-			_account_info.frozen_monery -= (deal_volume * pos.yestoday_short.price * contract_info->multiple * contract_info->margin_rate);
+			_account_info.frozen_money -= (deal_volume * pos.yestoday_short.price * contract_info->multiple * contract_info->margin_rate);
 			_account_info.money -= deal_volume * service_charge;
 		}
 	}
 	
-	order.last_volume = (order.estid,order.last_volume - deal_volume);
-	//部分成交
+	// 部分成交
+	order.last_volume = order.last_volume - deal_volume;
 	fire_event(trader_event_type::TET_OrderDeal, order.estid, deal_volume, order.last_volume);
 	if(order.last_volume == 0)
 	{
 		PRINT_TRACE(" order_deal _order_info.del_order", order.estid);
 		//全部成交
-		fire_event(trader_event_type::TET_OrderTrade, order.estid, order.code, order.offset, order.direction, deal_volume, order.total_volume);
+		fire_event(trader_event_type::TET_OrderTrade, order.estid, order.code, order.offset, order.direction, deal_price, order.total_volume);
 		visit_match_info(order.estid, [this](order_match& mh)->void {
 			mh.state = OS_DELETE;
 			});
@@ -709,13 +709,13 @@ error_code trader_simulator::frozen_deduction(estid_t estid,const code_t& code,o
 	}
 	if (offset == offset_type::OT_OPEN)
 	{
-		double_t frozen_monery = (volume * price * contract_info->multiple * contract_info->margin_rate);
-		if (frozen_monery + _account_info.frozen_monery > _account_info.money)
+		double_t frozen_money = (volume * price * contract_info->multiple * contract_info->margin_rate);
+		if (frozen_money + _account_info.frozen_money > _account_info.money)
 		{
 			return error_code::EC_MarginNotEnough;
 		}
-		//开仓 冻结保证金
-		_account_info.frozen_monery += frozen_monery;
+//开仓 冻结保证金
+		_account_info.frozen_money += frozen_money;
 		return error_code::EC_Success;
 	}
 	auto it = _position_info.find(code);
@@ -785,9 +785,9 @@ bool trader_simulator::unfrozen_deduction(const code_t& code, offset_type offset
 	{
 		double_t delta = (last_volume * price * contract_info->multiple * contract_info->margin_rate);
 		//撤单 取消冻结保证金
-		PRINT_TRACE("thawing_deduction 1", _account_info.frozen_monery, delta, last_volume , price);
-		_account_info.frozen_monery -= std::min<double_t>(delta, _account_info.frozen_monery);
-		PRINT_TRACE("thawing_deduction 2", _account_info.frozen_monery, delta);
+		PRINT_TRACE("thawing_deduction 1", _account_info.frozen_money, delta, last_volume , price);
+		_account_info.frozen_money -= std::min<double_t>(delta, _account_info.frozen_money);
+		PRINT_TRACE("thawing_deduction 2", _account_info.frozen_money, delta);
 		return true ;
 	}
 	auto it = _position_info.find(code);

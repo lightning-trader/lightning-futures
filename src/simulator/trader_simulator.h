@@ -35,7 +35,7 @@ namespace lt::driver
 		{
 			OS_INVALID,
 			OS_IN_MATCH,
-			OS_CANELED,
+			OS_CANCELED,
 			OS_DELETE,
 		};
 

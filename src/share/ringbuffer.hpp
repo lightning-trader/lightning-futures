@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * \file ringbuffer.hpp
  * \version 2.0.4
  * \brief Simple SPSC ring buffer implementation

@@ -1,4 +1,4 @@
-/*
+﻿/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -40,8 +40,8 @@ void orderflow_strategy::on_bar(const lt::bar_info& bar)
 	auto unbalance = bar.get_unbalance(_multiple);
 	if(_order_data.buy_order == INVALID_ESTID)
 	{
-		//可以买入的
-		//需求失衡，说明有买方力量大于卖方力量，顺势而为则买入
+		//鍙互涔板叆鐨?
+		//闇€姹傚け琛★紝璇存槑鏈変拱鏂瑰姏閲忓ぇ浜庡崠鏂瑰姏閲忥紝椤哄娍鑰屼负鍒欎拱鍏?
 		auto ub = unbalance.first;
 		if(ub->size() > _threshold)
 		{
@@ -50,8 +50,8 @@ void orderflow_strategy::on_bar(const lt::bar_info& bar)
 	}
 	if (_order_data.sell_order == INVALID_ESTID)
 	{
-		//可以卖出的
-		//需求失衡，说明有买方力量大于买方力量，顺势而为则卖出
+		//鍙互鍗栧嚭鐨?
+		//闇€姹傚け琛★紝璇存槑鏈変拱鏂瑰姏閲忓ぇ浜庝拱鏂瑰姏閲忥紝椤哄娍鑰屼负鍒欏崠鍑?
 		auto ub = unbalance.second;
 		if (ub->size() > _threshold)
 		{

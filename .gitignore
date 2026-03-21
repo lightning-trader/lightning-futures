@@ -33,3 +33,5 @@ bin/result/
 build
 cmake-build-debug
 /bin/config/rt_simnow.ini
+test/*.obj
+test/build

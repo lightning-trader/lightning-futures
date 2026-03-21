@@ -67,35 +67,41 @@ bool time_section::is_trade_time(daytm_t last_time)const
 
 daytm_t time_section::get_open_time()
 {
-	auto frist_one = _trading_section.begin();
-	if (frist_one == _trading_section.end())
+	if (_trading_section.empty())
 	{
 		return 0;
 	}
-	return frist_one->first;
+	auto first_one = _trading_section.begin();
+	return first_one->first;
 }
 
 daytm_t time_section::get_close_time()
 {
-	auto last_one = _trading_section.rbegin();
-	if(last_one == _trading_section.rend())
+	if (_trading_section.empty())
 	{
 		return 0;
 	}
+	auto last_one = _trading_section.rbegin();
 	return last_one->second;
 }
 
 daytm_t time_section::next_open_time(daytm_t now)
 {
+	// 防止空数组访问
+	if (_trading_section.empty())
+	{
+		return 0U;
+	}
+	
 	size_t i = 0;
-	for(;i<_trading_section.size();i++)
+	for(; i < _trading_section.size(); i++)
 	{
 		if(_trading_section[i].first <= now)
 		{
 			break;
 		}
 	}
-	for (size_t j=i; j<i + _trading_section.size(); j++)
+	for (size_t j = i; j < i + _trading_section.size(); j++)
 	{
 		auto iter = _trading_section[j % _trading_section.size()];
 		if(now < iter.first)
