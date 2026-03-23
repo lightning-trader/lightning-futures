@@ -35,6 +35,23 @@ namespace
 	{
 		return (static_cast<uint64_t>(tick.time) << 32U) | static_cast<uint64_t>(tick.volume);
 	}
+
+	void pad_display_ticks(std::vector<gui_bridge_strategy::tick_row>& ticks, size_t target_count)
+	{
+		if (ticks.empty() || ticks.size() >= target_count)
+		{
+			return;
+		}
+
+		const auto seed = ticks.back();
+		while (ticks.size() < target_count)
+		{
+			auto filler = seed;
+			filler.time_text.clear();
+			filler.delta_volume = 0;
+			ticks.push_back(filler);
+		}
+	}
 }
 
 gui_bridge_strategy::gui_bridge_strategy(lt::hft::straid_t id, lt::hft::syringe* syringe)
@@ -56,6 +73,7 @@ gui_bridge_strategy::gui_bridge_strategy(lt::hft::straid_t id, lt::hft::syringe*
 	_snapshot.cancel_request_count = 0U;
 	_snapshot.duplicate_warning_count = 0U;
 	_snapshot.reject_count = 0U;
+	_snapshot.error_event_id = 0U;
 	_snapshot.order_threshold = 100U;
 	_snapshot.cancel_threshold = 100U;
 	_snapshot.order_threshold_alert = false;
@@ -74,6 +92,7 @@ gui_bridge_strategy::gui_bridge_strategy(lt::hft::straid_t id, lt::hft::syringe*
 
 gui_bridge_strategy::snapshot gui_bridge_strategy::get_snapshot() const
 {
+	const_cast<gui_bridge_strategy*>(this)->refresh_snapshot();
 	std::lock_guard<std::mutex> lock(_snapshot_mutex);
 	return _snapshot;
 }
@@ -150,6 +169,7 @@ void gui_bridge_strategy::on_change(const lt::params& p)
 				}
 				update_threshold_flags();
 				set_status("trading is paused");
+				publish_error("trading is paused");
 				append_log("risk", "rejected order because trading is paused");
 				refresh_snapshot();
 				return;
@@ -166,6 +186,13 @@ void gui_bridge_strategy::on_change(const lt::params& p)
 			if (get_instrument(code).code == lt::default_code)
 			{
 				throw std::invalid_argument("contract not found");
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				if (_snapshot.order_submit_count >= _snapshot.order_threshold)
+				{
+					throw std::invalid_argument("order limit reached");
+				}
 			}
 
 			const std::string order_signature = code.to_string() + "|" + side + "|" + std::to_string(volume) + "|" + std::to_string(price);
@@ -211,6 +238,7 @@ void gui_bridge_strategy::on_change(const lt::params& p)
 				}
 				update_threshold_flags();
 				set_status("order rejected by framework");
+				publish_error("order rejected by framework");
 				append_log("error", "framework rejected order: " + order_signature);
 			}
 			else
@@ -229,6 +257,13 @@ void gui_bridge_strategy::on_change(const lt::params& p)
 		else if (action == "cancel")
 		{
 			const auto estid = p.get<uint64_t>("estid");
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				if (_snapshot.cancel_request_count >= _snapshot.cancel_threshold)
+				{
+					throw std::invalid_argument("cancel limit reached");
+				}
+			}
 			cancel_order(estid);
 			{
 				std::lock_guard<std::mutex> lock(_snapshot_mutex);
@@ -253,6 +288,13 @@ void gui_bridge_strategy::on_change(const lt::params& p)
 					continue;
 				}
 				estids.emplace_back(it.first);
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				if (_snapshot.cancel_request_count + static_cast<uint32_t>(estids.size()) > _snapshot.cancel_threshold)
+				{
+					throw std::invalid_argument("cancel limit would be exceeded");
+				}
 			}
 			for (const auto estid : estids)
 			{
@@ -283,6 +325,93 @@ void gui_bridge_strategy::on_change(const lt::params& p)
 			set_status(paused ? "trading paused" : "trading resumed");
 			append_log("system", paused ? "trading paused" : "trading resumed");
 		}
+		else if (action == "close_all")
+		{
+			if (get_snapshot().trading_paused)
+			{
+				{
+					std::lock_guard<std::mutex> lock(_snapshot_mutex);
+					_snapshot.reject_count++;
+				}
+				update_threshold_flags();
+				set_status("trading is paused");
+				publish_error("trading is paused");
+				append_log("risk", "rejected close all because trading is paused");
+				refresh_snapshot();
+				return;
+			}
+
+			uint32_t planned_count = 0U;
+			for (const auto& it : get_positions())
+			{
+				const auto& pos = it.second;
+				if (pos.history_short.usable() > 0U) { planned_count++; }
+				if (pos.current_short.usable() > 0U) { planned_count++; }
+				if (pos.history_long.usable() > 0U) { planned_count++; }
+				if (pos.current_long.usable() > 0U) { planned_count++; }
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				if (_snapshot.order_submit_count + planned_count > _snapshot.order_threshold)
+				{
+					throw std::invalid_argument("order limit would be exceeded");
+				}
+			}
+
+			uint32_t close_count = 0U;
+			for (const auto& it : get_positions())
+			{
+				const auto& code = it.first;
+				const auto& pos = it.second;
+				const auto& tick = get_last_tick(code);
+				const double buy_price = tick.sell_price() > 0.0 ? tick.sell_price() : tick.price;
+				const double sell_price = tick.buy_price() > 0.0 ? tick.buy_price() : tick.price;
+
+				const auto history_short = pos.history_short.usable();
+				const auto current_short = pos.current_short.usable();
+				const auto history_long = pos.history_long.usable();
+				const auto current_long = pos.current_long.usable();
+
+				if (history_short > 0U)
+				{
+					if (buy_close(code, history_short, buy_price) != INVALID_ESTID)
+					{
+						close_count++;
+					}
+				}
+				if (current_short > 0U)
+				{
+					if (buy_close(code, current_short, buy_price, true) != INVALID_ESTID)
+					{
+						close_count++;
+					}
+				}
+				if (history_long > 0U)
+				{
+					if (sell_close(code, history_long, sell_price) != INVALID_ESTID)
+					{
+						close_count++;
+					}
+				}
+				if (current_long > 0U)
+				{
+					if (sell_close(code, current_long, sell_price, true) != INVALID_ESTID)
+					{
+						close_count++;
+					}
+				}
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				_snapshot.order_submit_count += close_count;
+			}
+			update_threshold_flags();
+
+			std::ostringstream oss;
+			oss << "close all requested count=" << close_count;
+			set_status(oss.str());
+			append_log("trade", oss.str());
+		}
 		else if (action == "set_limits")
 		{
 			const auto order_threshold = p.get<uint32_t>("order_threshold");
@@ -312,6 +441,7 @@ void gui_bridge_strategy::on_change(const lt::params& p)
 		}
 		update_threshold_flags();
 		set_status(std::string("command failed: ") + ex.what());
+		publish_error(std::string("command failed: ") + ex.what());
 		append_log("error", std::string("command failed: ") + ex.what());
 	}
 
@@ -538,6 +668,8 @@ void gui_bridge_strategy::refresh_snapshot()
 			row.ask_price = tick.sell_price();
 			new_snapshot.recent_ticks.push_back(row);
 		}
+
+		pad_display_ticks(new_snapshot.recent_ticks, 32U);
 	}
 
 	{
@@ -561,6 +693,13 @@ void gui_bridge_strategy::set_status(const std::string& status)
 {
 	std::lock_guard<std::mutex> lock(_snapshot_mutex);
 	_snapshot.status = status;
+}
+
+void gui_bridge_strategy::publish_error(const std::string& message)
+{
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	_snapshot.error_message = message;
+	++_snapshot.error_event_id;
 }
 
 void gui_bridge_strategy::append_log(const std::string& category, const std::string& message)
@@ -620,8 +759,8 @@ void gui_bridge_strategy::update_connection_status()
 void gui_bridge_strategy::update_threshold_flags()
 {
 	std::lock_guard<std::mutex> lock(_snapshot_mutex);
-	_snapshot.order_threshold_alert = _snapshot.order_submit_count > _snapshot.order_threshold;
-	_snapshot.cancel_threshold_alert = _snapshot.cancel_request_count > _snapshot.cancel_threshold;
+	_snapshot.order_threshold_alert = _snapshot.order_submit_count >= _snapshot.order_threshold;
+	_snapshot.cancel_threshold_alert = _snapshot.cancel_request_count >= _snapshot.cancel_threshold;
 }
 
 std::string gui_bridge_strategy::to_string(lt::offset_type offset)

@@ -636,11 +636,7 @@ bool trader_simulator::order_deal(order_info& order, uint32_t deal_volume, doubl
 	{
 		PRINT_TRACE(" order_deal _order_info.del_order", order.estid);
 		//全部成交
-<<<<<<< HEAD
-		fire_event(trader_event_type::TET_OrderTrade, order.estid, order.code, order.offset, order.direction, deal_price, deal_volume);
-=======
 		fire_event(trader_event_type::TET_OrderTrade, order.estid, order.code, order.offset, order.direction, deal_price, order.total_volume);
->>>>>>> 2db044e766fa5285e0837ce0ee064ecddaa9d151
 		visit_match_info(order.estid, [this](order_match& mh)->void {
 			mh.state = OS_DELETE;
 			});

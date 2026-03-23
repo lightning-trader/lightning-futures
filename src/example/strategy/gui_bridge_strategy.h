@@ -71,6 +71,8 @@ public:
 		uint32_t cancel_request_count;
 		uint32_t duplicate_warning_count;
 		uint32_t reject_count;
+		uint64_t error_event_id;
+		std::string error_message;
 		uint32_t order_threshold;
 		uint32_t cancel_threshold;
 		bool order_threshold_alert;
@@ -119,6 +121,8 @@ private:
 	void refresh_snapshot();
 
 	void set_status(const std::string& status);
+
+	void publish_error(const std::string& message);
 
 	void append_log(const std::string& category, const std::string& message);
 
