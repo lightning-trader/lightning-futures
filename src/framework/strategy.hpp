@@ -268,12 +268,22 @@ namespace lt::hft
 			return _ctx->get_position(code);
 		}
 
+		const std::map<code_t, position_info>& get_positions() const
+		{
+			return _ctx->get_positions();
+		}
+
 		/**
 		* 获取委托订单
 		**/
 		const order_info& get_order(estid_t estid) const
 		{
 			return _ctx->get_order(estid);
+		}
+
+		const std::map<estid_t, order_info>& get_orders() const
+		{
+			return _ctx->get_orders();
 		}
 
 		/**
