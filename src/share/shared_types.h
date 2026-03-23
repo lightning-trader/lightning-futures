@@ -48,11 +48,11 @@ namespace lt
 	{
 		double money;
 
-		double frozen_monery;
+		double frozen_money;
 
 		account_info() :
 			money(.0F),
-			frozen_monery(.0F)
+			frozen_money(.0F)
 
 		{}
 	};

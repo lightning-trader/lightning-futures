@@ -25,6 +25,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <iostream>  
 #include <vector>  
 
+// Debug output macro
+#ifdef DEBUG
+#define PRINT_DEBUG(...) do { std::cout << __VA_ARGS__ << std::endl; } while(0)
+#else
+#define PRINT_DEBUG(...)
+#endif
+
 class memory_pool {
 private:
 	unsigned char* _data ;
@@ -38,16 +45,19 @@ public:
 		_chunk_size(chunk_size), 
 		_block_size(alignment), 
 		_alignment(alignment), 
-		_next_free(0)
+		_next_free(0),
+		_data(nullptr)
 	{
 		if (chunk_size == 0 || alignment == 0) {
 			throw std::invalid_argument("chunk_size and alignment must be positive");
 		}
+		// 先初始化状态，如果失败会抛出异常，此时_data 还是 nullptr
+		_used_state.resize(chunk_size, false);
+		// 状态初始化成功后再分配内存
 		_data = reinterpret_cast<unsigned char*>(malloc(chunk_size * alignment));
 		if (!_data) {
 			throw std::bad_alloc();
 		}
-		_used_state.resize(chunk_size, false);
 	}
 	~memory_pool()
 	{

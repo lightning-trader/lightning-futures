@@ -1,42 +1,38 @@
 #include <iostream>
 #include "../src/include/basic_utils.hpp"
 
-// 测试 basic_utils 模块
+// Test basic_utils module
 void test_basic_utils() {
-    std::cout << "=== 测试 basic_utils 模块 ===" << std::endl;
+    std::cout << "=== Testing basic_utils Module ===" << std::endl;
     
-    // 测试 make_code 函数
-    std::cout << "1. 测试 make_code 函数:" << std::endl;
+    // Test make_code function
+    std::cout << "1. Testing make_code function:" << std::endl;
     
-    // 测试字符串参数
+    // Test string parameters
     lt::code_t code1 = lt::make_code("CFFEX", "IF2109");
-    std::cout << "   ✓ make_code(\"CFFEX\", \"IF2109\") 成功，code = " << code1.get_symbol() << std::endl;
+    std::cout << "   make_code(\"CFFEX\", \"IF2109\") = " << code1.get_symbol() << std::endl;
     
-    // 测试 const char* 参数
+    // Test const char* parameters
     lt::code_t code2 = lt::make_code("CFFEX", "IF2109");
-    std::cout << "   ✓ make_code(\"CFFEX\", \"IF2109\") 成功，code = " << code2.get_symbol() << std::endl;
+    std::cout << "   make_code(\"CFFEX\", \"IF2109\") = " << code2.get_symbol() << std::endl;
     
-    // 测试混合参数
-    lt::code_t code3 = lt::make_code("CFFEX", "IF2109");
-    std::cout << "   ✓ make_code(\"CFFEX\", \"IF2109\") 成功，code = " << code3.get_symbol() << std::endl;
+    // Test value_to_string function
+    std::cout << "\n2. Testing value_to_string function:" << std::endl;
     
-    // 测试 value_to_string 函数
-    std::cout << "\n2. 测试 value_to_string 函数:" << std::endl;
-    
-    // 测试整数
+    // Test integer
     std::string int_str = lt::value_to_string(42);
-    std::cout << "   ✓ value_to_string(42) = " << int_str << std::endl;
+    std::cout << "   value_to_string(42) = " << int_str << std::endl;
     
-    // 测试浮点数
+    // Test floating point
     std::string float_str = lt::value_to_string(3.14159);
-    std::cout << "   ✓ value_to_string(3.14159) = " << float_str << std::endl;
+    std::cout << "   value_to_string(3.14159) = " << float_str << std::endl;
     
-    // 测试 double
+    // Test double
     std::string double_str = lt::value_to_string(2.718281828459045);
-    std::cout << "   ✓ value_to_string(2.718281828459045) = " << double_str << std::endl;
+    std::cout << "   value_to_string(2.718281828459045) = " << double_str << std::endl;
     
-    // 测试 pairarr_to_string 函数
-    std::cout << "\n3. 测试 pairarr_to_string 函数:" << std::endl;
+    // Test pairarr_to_string function
+    std::cout << "\n3. Testing pairarr_to_string function:" << std::endl;
     
     std::array<std::pair<int, int>, 3> pairs = {
         std::make_pair(1, 10),
@@ -45,25 +41,25 @@ void test_basic_utils() {
     };
     
     std::string pair_str = lt::pairarr_to_string(pairs);
-    std::cout << "   ✓ pairarr_to_string() = " << pair_str << std::endl;
+    std::cout << "   pairarr_to_string() = " << pair_str << std::endl;
     
-    // 测试带过滤回调的 pairarr_to_string
+    // Test with filter callback
     auto filter = [](int key, int value) { return value > 15; };
-    std::string filtered_str = lt::pairarr_to_string(pairs, filter);
-    std::cout << "   ✓ pairarr_to_string() 带过滤 = " << filtered_str << std::endl;
+    std::string filtered_str = lt::pairarr_to_string<int, int, 3>(pairs, filter);
+    std::cout << "   pairarr_to_string() with filter = " << filtered_str << std::endl;
     
-    // 测试 string_to_pairarr 函数
-    std::cout << "\n4. 测试 string_to_pairarr 函数:" << std::endl;
+    // Test string_to_pairarr function
+    std::cout << "\n4. Testing string_to_pairarr function:" << std::endl;
     
     std::string pairarr_str = "1:10,2:20,3:30";
     auto parsed_pairs = lt::string_to_pairarr<int, int, 3>(pairarr_str);
-    std::cout << "   ✓ string_to_pairarr() 成功" << std::endl;
+    std::cout << "   string_to_pairarr() success" << std::endl;
     for (auto& p : parsed_pairs) {
         std::cout << "     " << p.first << ":" << p.second << std::endl;
     }
     
-    // 测试 valmap_to_string 函数
-    std::cout << "\n5. 测试 valmap_to_string 函数:" << std::endl;
+    // Test valmap_to_string function
+    std::cout << "\n5. Testing valmap_to_string function:" << std::endl;
     
     std::map<int, double> valmap = {
         {1, 10.5},
@@ -72,63 +68,55 @@ void test_basic_utils() {
     };
     
     std::string valmap_str = lt::valmap_to_string(valmap);
-    std::cout << "   ✓ valmap_to_string() = " << valmap_str << std::endl;
+    std::cout << "   valmap_to_string() = " << valmap_str << std::endl;
     
-    // 测试带过滤回调的 valmap_to_string
+    // Test with filter callback
     auto valmap_filter = [](int key, double value) { return value > 15.0; };
-    std::string filtered_valmap_str = lt::valmap_to_string(valmap, valmap_filter);
-    std::cout << "   ✓ valmap_to_string() 带过滤 = " << filtered_valmap_str << std::endl;
+    std::string filtered_valmap_str = lt::valmap_to_string<int, double>(valmap, valmap_filter);
+    std::cout << "   valmap_to_string() with filter = " << filtered_valmap_str << std::endl;
     
-    // 测试 string_to_valmap 函数
-    std::cout << "\n6. 测试 string_to_valmap 函数:" << std::endl;
+    // Test string_to_valmap function
+    std::cout << "\n6. Testing string_to_valmap function:" << std::endl;
     
     std::string valmap_str_input = "1:10.5,2:20.75,3:30.25";
     auto parsed_valmap = lt::string_to_valmap<int, double>(valmap_str_input);
-    std::cout << "   ✓ string_to_valmap() 成功" << std::endl;
+    std::cout << "   string_to_valmap() success" << std::endl;
     for (auto& p : parsed_valmap) {
         std::cout << "     " << p.first << ":" << p.second << std::endl;
     }
     
-    // 测试 get_deal_direction 函数
-    std::cout << "\n7. 测试 get_deal_direction 函数:" << std::endl;
+    // Test get_deal_direction function
+    std::cout << "\n7. Testing get_deal_direction function:" << std::endl;
     
     lt::tick_info prev_tick;
     prev_tick.price = 4500.0;
-    prev_tick.bid_price[0] = 4490.0;
-    prev_tick.ask_price[0] = 4510.0;
     
     lt::tick_info up_tick;
     up_tick.price = 4520.0;
-    up_tick.bid_price[0] = 4500.0;
-    up_tick.ask_price[0] = 4520.0;
     
     lt::tick_info down_tick;
     down_tick.price = 4480.0;
-    down_tick.bid_price[0] = 4480.0;
-    down_tick.ask_price[0] = 4500.0;
     
     lt::tick_info flat_tick;
     flat_tick.price = 4500.0;
-    flat_tick.bid_price[0] = 4490.0;
-    flat_tick.ask_price[0] = 4510.0;
     
     lt::deal_direction dir_up = lt::get_deal_direction(prev_tick, up_tick);
-    std::cout << "   ✓ get_deal_direction(up) = " << static_cast<int>(dir_up) << std::endl;
+    std::cout << "   get_deal_direction(up) = " << static_cast<int>(dir_up) << std::endl;
     
     lt::deal_direction dir_down = lt::get_deal_direction(prev_tick, down_tick);
-    std::cout << "   ✓ get_deal_direction(down) = " << static_cast<int>(dir_down) << std::endl;
+    std::cout << "   get_deal_direction(down) = " << static_cast<int>(dir_down) << std::endl;
     
     lt::deal_direction dir_flat = lt::get_deal_direction(prev_tick, flat_tick);
-    std::cout << "   ✓ get_deal_direction(flat) = " << static_cast<int>(dir_flat) << std::endl;
+    std::cout << "   get_deal_direction(flat) = " << static_cast<int>(dir_flat) << std::endl;
     
-    std::cout << "=== basic_utils 测试完成 ===\n" << std::endl;
+    std::cout << "=== basic_utils testing complete ===\n" << std::endl;
 }
 
 int main() {
-    std::cout << "=== 开始 basic_utils 模块单元测试 ===\n" << std::endl;
+    std::cout << "=== Starting basic_utils Module Unit Tests ===\n" << std::endl;
     
     test_basic_utils();
     
-    std::cout << "=== basic_utils 模块单元测试完成 ===" << std::endl;
+    std::cout << "=== basic_utils Module Unit Tests Complete ===" << std::endl;
     return 0;
 }

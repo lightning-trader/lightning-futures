@@ -21,7 +21,7 @@ echo === 开始编译单元测试 ===
 echo.
 
 REM 编译所有测试文件
-set "TEST_FILES=test_basic_types.cpp test_basic_utils.cpp test_memory_pool.cpp test_params.cpp test_trading_context.cpp test_trader_simulator.cpp test_fix.cpp test_position_fix.cpp test_simulator_fix.cpp"
+set "TEST_FILES=test_basic_types.cpp test_basic_utils.cpp test_memory_pool.cpp test_basic_types_edge.cpp test_time_section.cpp test_time_utils.cpp test_string_helper.cpp test_params.cpp test_trading_context.cpp test_trader_simulator.cpp test_trader_simulator_extended.cpp test_fix.cpp test_position_fix.cpp test_simulator_fix.cpp test_ringbuffer.cpp test_event_center.cpp test_crontab_scheduler.cpp test_stream_buffer.cpp"
 
 for %%f in (%TEST_FILES%) do (
     if exist "%%f" (

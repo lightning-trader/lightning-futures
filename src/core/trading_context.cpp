@@ -1,4 +1,4 @@
-/*
+﻿/*
 Distributed under the MIT License(MIT)
 
 Copyright(c) 2023 Jihua Zou EMail: ghuazo@qq.com QQ:137336521
@@ -433,7 +433,7 @@ daytm_t trading_context::get_section_time(const code_t& code)const
 	}
 	else
 	{
-		// 模拟环境固定返回21:00:00
+		// 妯℃嫙鐜鍥哄畾杩斿洖21:00:00
 		return _trading_section->get_open_time();
 	}
 }
@@ -528,7 +528,7 @@ void trading_context::handle_entrust(const std::vector<std::any>& param)
 		}
 		else
 		{
-			//平仓冻结仓位
+			//骞充粨鍐荤粨浠撲綅
 			frozen_deduction(order.code, order.direction, order.offset, order.total_volume);
 		}
 		auto it = _order_listener.find(order.estid);
@@ -608,7 +608,7 @@ void trading_context::handle_cancel(const std::vector<std::any>& param)
 		auto it = _order_info.find(estid);
 		if(it != _order_info.end())
 		{
-			//撤销解冻仓位
+			//鎾ら攢瑙ｅ喕浠撲綅
 			if (offset == offset_type::OT_OPEN)
 			{
 				recover_pending(code, direction, offset, cancel_volume);
