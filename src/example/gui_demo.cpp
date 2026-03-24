@@ -10,23 +10,34 @@
 
 #include <algorithm>
 #include <atomic>
+#include <array>
+#include <cmath>
 #include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <interface.h>
 #include <memory>
+#include <mutex>
 #include <numeric>
+#include <params.hpp>
+#include <queue>
+#include <receiver.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <trading_context.h>
+#include <data_channel.h>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
-#include "runtime.hpp"
-#include "gui_bridge_strategy.h"
+#include <inipp.h>
 
 namespace
 {
 	constexpr UINT_PTR UI_TIMER_ID = 2001U;
 	constexpr UINT UI_REFRESH_INTERVAL_MS = 33U;
-	constexpr lt::hft::straid_t MANUAL_UI_STRATEGY_ID = 9527U;
 	const std::array<const char*, 3> kFavoriteContracts = {
 		"SHFE.ag2606",
 		"SHFE.fu2609",
@@ -150,12 +161,1224 @@ namespace
 
 		throw std::runtime_error(std::string("config file not found: ") + relative_name);
 	}
+
+	constexpr uint32_t kDefaultMaxSingleOrderVolume = 100U;
+	constexpr uint32_t kAgOpenMaxSingleOrderVolume = 800U;
+
+	std::string format_logic_time_text(lt::daytm_t time)
+	{
+		const auto hour = time / 3600000U;
+		const auto minute = (time / 60000U) % 60U;
+		const auto second = (time / 1000U) % 60U;
+		const auto millisecond = time % 1000U;
+
+		std::ostringstream oss;
+		oss << std::setfill('0')
+			<< std::setw(2) << hour << ":"
+			<< std::setw(2) << minute << ":"
+			<< std::setw(2) << second << "."
+			<< std::setw(3) << millisecond;
+		return oss.str();
+	}
+
+	uint64_t make_tick_key(const lt::tick_info& tick)
+	{
+		return (static_cast<uint64_t>(tick.time) << 32U) | static_cast<uint64_t>(tick.volume);
+	}
+
+	bool is_price_step_aligned(double price, double price_step)
+	{
+		if (price_step <= 0.0)
+		{
+			return true;
+		}
+		const double scaled = price / price_step;
+		return std::fabs(scaled - std::round(scaled)) < 1e-6;
+	}
+
+	uint32_t get_max_single_order_volume(const lt::code_t& code, const std::string& side)
+	{
+		if ((side == "buy_open" || side == "sell_open") && code.to_string().rfind("SHFE.ag", 0) == 0)
+		{
+			return kAgOpenMaxSingleOrderVolume;
+		}
+		return kDefaultMaxSingleOrderVolume;
+	}
+
+	bool should_write_test_record(const std::string& category)
+	{
+		return category == "trade"
+			|| category == "system"
+			|| category == "monitor"
+			|| category == "risk"
+			|| category == "error";
+	}
+}
+
+class gui_logic : public lt::trading_context::order_listener, public lt::tick_receiver
+{
+public:
+	struct order_row
+	{
+		lt::estid_t estid;
+		std::string code;
+		std::string offset;
+		std::string direction;
+		double price;
+		uint32_t total_volume;
+		uint32_t last_volume;
+		lt::daytm_t create_time;
+	};
+
+	struct position_row
+	{
+		std::string code;
+		uint32_t current_long;
+		uint32_t current_short;
+		uint32_t history_long;
+		uint32_t history_short;
+		uint32_t long_frozen;
+		uint32_t short_frozen;
+		uint32_t long_pending;
+		uint32_t short_pending;
+	};
+
+	struct market_level_row
+	{
+		std::string label;
+		double price;
+		uint32_t volume;
+	};
+
+	struct tick_row
+	{
+		std::string time_text;
+		double price;
+		int32_t delta_volume;
+		double open_interest;
+		double bid_price;
+		double ask_price;
+	};
+
+	struct snapshot
+	{
+		std::vector<std::string> instruments;
+		std::vector<order_row> orders;
+		std::vector<position_row> positions;
+		std::vector<std::string> logs;
+		std::string status;
+		std::string connection_status;
+		std::string focused_code;
+		uint32_t trading_day;
+		lt::daytm_t last_time;
+		uint32_t order_submit_count;
+		uint32_t cancel_request_count;
+		uint32_t duplicate_warning_count;
+		uint32_t reject_count;
+		uint64_t error_event_id;
+		std::string error_message;
+		uint32_t order_threshold;
+		uint32_t cancel_threshold;
+		bool order_threshold_alert;
+		bool cancel_threshold_alert;
+		bool trading_paused;
+		double last_price;
+		double average_price;
+		double open_interest;
+		double open_price;
+		double high_price;
+		double low_price;
+		double control_price;
+		std::vector<market_level_row> market_levels;
+		std::vector<tick_row> recent_ticks;
+	};
+
+public:
+	gui_logic(const char* account_config, const char* control_config, const char* section_config);
+	~gui_logic();
+
+	snapshot get_snapshot() const;
+	void append_test_record(const std::string& category, const std::string& message);
+	bool is_started() const;
+	void start_trading();
+	void stop_trading();
+	void post_command(const std::string& command);
+
+private:
+	virtual void on_entrust(const lt::order_info& order) override;
+	virtual void on_deal(lt::estid_t estid, uint32_t deal_volume) override;
+	virtual void on_trade(lt::estid_t estid, const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, double price, uint32_t volume) override;
+	virtual void on_cancel(lt::estid_t estid, const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, double price, uint32_t cancel_volume, uint32_t total_volume) override;
+	virtual void on_error(lt::error_type type, lt::estid_t estid, const lt::error_code error) override;
+	virtual void on_tick(const lt::tick_info& tick) override;
+
+private:
+	void worker_loop();
+	bool process_command_queue();
+	void handle_command(const lt::params& p);
+	void subscribe_favorites();
+	void unsubscribe_favorites();
+	void refresh_snapshot();
+	void update_focus(const lt::code_t& code);
+	void set_status(const std::string& status);
+	void publish_error(const std::string& message);
+	void append_log(const std::string& category, const std::string& message);
+	void open_log_file();
+	void update_connection_status();
+	void update_threshold_flags();
+	void pad_display_ticks(std::vector<tick_row>& ticks, size_t target_count) const;
+
+	lt::estid_t buy_open(const lt::code_t& code, uint32_t count, double price = 0.0, lt::order_flag flag = lt::order_flag::OF_NOR);
+	lt::estid_t sell_open(const lt::code_t& code, uint32_t count, double price = 0.0, lt::order_flag flag = lt::order_flag::OF_NOR);
+	lt::estid_t buy_close(const lt::code_t& code, uint32_t count, double price = 0.0, bool close_today = false, lt::order_flag flag = lt::order_flag::OF_NOR);
+	lt::estid_t sell_close(const lt::code_t& code, uint32_t count, double price = 0.0, bool close_today = false, lt::order_flag flag = lt::order_flag::OF_NOR);
+
+	static std::string to_string(lt::offset_type offset);
+	static std::string to_string(lt::direction_type direction);
+	static std::string to_string(lt::error_type type);
+	static std::string to_string(lt::error_code error);
+	static lt::order_flag parse_order_flag(const std::string& flag_text);
+
+private:
+	mutable std::mutex _snapshot_mutex;
+	snapshot _snapshot;
+	std::mutex _command_mutex;
+	std::queue<std::string> _command_queue;
+	lt::actual_market* _market = nullptr;
+	lt::actual_trader* _trader = nullptr;
+	lt::trading_context* _ctx = nullptr;
+	lt::data_channel* _dc = nullptr;
+	std::thread _worker;
+	std::atomic<bool> _running { false };
+	std::atomic<bool> _servicing { false };
+	std::atomic<bool> _subscribed { false };
+	std::atomic<uint32_t> _loop_interval_us { 1000U };
+	std::unordered_map<std::string, lt::daytm_t> _recent_orders;
+	std::unordered_map<std::string, uint64_t> _last_tick_keys;
+	std::unordered_map<std::string, uint32_t> _last_tick_volumes;
+	std::unordered_map<std::string, std::vector<tick_row>> _tick_history;
+	std::unordered_set<std::string> _tick_seen_codes;
+	std::chrono::steady_clock::time_point _start_time;
+	bool _no_tick_warning_emitted = false;
+	std::ofstream _log_file;
+	std::ofstream _test_log_file;
+	std::filesystem::path _log_path;
+	std::filesystem::path _test_log_path;
+	std::vector<lt::code_t> _favorites;
+};
+
+gui_logic::gui_logic(const char* account_config, const char* control_config, const char* section_config)
+	: _start_time(std::chrono::steady_clock::now())
+{
+	for (const auto* code : kFavoriteContracts)
+	{
+		_favorites.emplace_back(code);
+		_snapshot.instruments.emplace_back(code);
+	}
+	_snapshot.status = "waiting for trading service";
+	_snapshot.connection_status = "starting";
+	_snapshot.focused_code = _favorites.front().to_string();
+	_snapshot.trading_day = 0U;
+	_snapshot.last_time = 0U;
+	_snapshot.order_submit_count = 0U;
+	_snapshot.cancel_request_count = 0U;
+	_snapshot.duplicate_warning_count = 0U;
+	_snapshot.reject_count = 0U;
+	_snapshot.error_event_id = 0U;
+	_snapshot.error_message.clear();
+	_snapshot.order_threshold = 100U;
+	_snapshot.cancel_threshold = 100U;
+	_snapshot.order_threshold_alert = false;
+	_snapshot.cancel_threshold_alert = false;
+	_snapshot.trading_paused = false;
+	_snapshot.last_price = .0;
+	_snapshot.average_price = .0;
+	_snapshot.open_interest = .0;
+	_snapshot.open_price = .0;
+	_snapshot.high_price = .0;
+	_snapshot.low_price = .0;
+	_snapshot.control_price = .0;
+
+	inipp::Ini<char> account_ini;
+	std::ifstream account_stream(account_config);
+	if (!account_stream.is_open())
+	{
+		throw std::runtime_error(std::string("cannot open account config: ") + account_config);
+	}
+	account_ini.parse(account_stream);
+
+	auto market_it = account_ini.sections.find("actual_market");
+	auto trader_it = account_ini.sections.find("actual_trader");
+	if (market_it == account_ini.sections.end() || trader_it == account_ini.sections.end())
+	{
+		throw std::runtime_error("missing actual_market or actual_trader section");
+	}
+
+	_market = create_actual_market(lt::params(market_it->second));
+	_trader = create_actual_trader(lt::params(trader_it->second));
+	if (_market == nullptr || _trader == nullptr)
+	{
+		throw std::runtime_error("failed to create actual_market or actual_trader");
+	}
+
+	_ctx = new lt::trading_context(_market, _trader, section_config);
+
+	inipp::Ini<char> control_ini;
+	std::ifstream control_stream(control_config);
+	if (control_stream.is_open())
+	{
+		control_ini.parse(control_stream);
+		auto control_it = control_ini.sections.find("control");
+		if (control_it != control_ini.sections.end())
+		{
+			lt::params control_params(control_it->second);
+			if (control_params.has("loop_interval"))
+			{
+				_loop_interval_us = control_params.get<uint32_t>("loop_interval");
+			}
+		}
+	}
+
+	auto ltds_it = control_ini.sections.find("ltds");
+	if (ltds_it == control_ini.sections.end())
+	{
+		throw std::runtime_error("missing [ltds] section");
+	}
+	lt::params ltds_params(ltds_it->second);
+	const std::string channel = ltds_params.get<std::string>("channel");
+	const std::string cache_path = ltds_params.get<std::string>("cache_path");
+	const size_t detail_cache = ltds_params.has("detail_cache_size") ? ltds_params.get<uint32_t>("detail_cache_size") : 2U;
+	const size_t bar_cache = ltds_params.has("bar_cache_size") ? ltds_params.get<uint32_t>("bar_cache_size") : 8U;
+	_dc = new lt::data_channel(_ctx, channel.c_str(), cache_path.c_str(), detail_cache, bar_cache);
+
+	open_log_file();
+	append_log("system", "demo-gui logic initialized");
+
+	_running = true;
+	_worker = std::thread([this]() { worker_loop(); });
+}
+
+gui_logic::~gui_logic()
+{
+	stop_trading();
+	_running = false;
+	if (_worker.joinable())
+	{
+		_worker.join();
+	}
+	if (_dc != nullptr)
+	{
+		delete _dc;
+		_dc = nullptr;
+	}
+	if (_ctx != nullptr)
+	{
+		delete _ctx;
+		_ctx = nullptr;
+	}
+	if (_market != nullptr)
+	{
+		destory_actual_market(_market);
+	}
+	if (_trader != nullptr)
+	{
+		destory_actual_trader(_trader);
+	}
+}
+
+gui_logic::snapshot gui_logic::get_snapshot() const
+{
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	return _snapshot;
+}
+
+void gui_logic::append_test_record(const std::string& category, const std::string& message)
+{
+	if (!_test_log_file.is_open() || !should_write_test_record(category))
+	{
+		return;
+	}
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	_test_log_file << "[external-" << category << "] " << message << std::endl;
+}
+
+bool gui_logic::is_started() const
+{
+	return _servicing.load();
+}
+
+void gui_logic::start_trading()
+{
+	if (_servicing)
+	{
+		return;
+	}
+
+	_start_time = std::chrono::steady_clock::now();
+	_no_tick_warning_emitted = false;
+	_tick_seen_codes.clear();
+	set_status("logging in");
+	append_log("system", "starting trading service");
+
+	if (!_trader || !_trader->login())
+	{
+		set_status("trader login failed");
+		publish_error("trader login failed");
+		append_log("error", "trader login failed");
+		refresh_snapshot();
+		return;
+	}
+	if (!_market || !_market->login())
+	{
+		set_status("market login failed");
+		publish_error("market login failed");
+		append_log("error", "market login failed");
+		_trader->logout();
+		refresh_snapshot();
+		return;
+	}
+	if (!_ctx->load_data())
+	{
+		set_status("load data failed");
+		publish_error("load data failed");
+		append_log("error", "load data failed");
+		_market->logout();
+		_trader->logout();
+		refresh_snapshot();
+		return;
+	}
+
+	subscribe_favorites();
+	_servicing = true;
+	set_status("trading service started");
+	append_log("system", "trading service started");
+	refresh_snapshot();
+}
+
+void gui_logic::stop_trading()
+{
+	if (_servicing)
+	{
+		unsubscribe_favorites();
+		_servicing = false;
+	}
+	if (_trader)
+	{
+		_trader->logout();
+	}
+	if (_market)
+	{
+		_market->logout();
+	}
+	set_status("trading service stopped");
+	append_log("system", "trading service stopped");
+	refresh_snapshot();
+}
+
+void gui_logic::post_command(const std::string& command)
+{
+	std::lock_guard<std::mutex> lock(_command_mutex);
+	_command_queue.push(command);
+}
+
+void gui_logic::worker_loop()
+{
+	while (_running)
+	{
+		bool did_update = process_command_queue();
+		if (_servicing)
+		{
+			did_update |= _ctx->polling();
+			did_update |= _dc->polling();
+
+			if (!_no_tick_warning_emitted &&
+				std::chrono::steady_clock::now() - _start_time > std::chrono::seconds(15) &&
+				_tick_seen_codes.empty())
+			{
+				std::ostringstream oss;
+				oss << "no tick received yet for favorites: ";
+				for (size_t index = 0; index < _favorites.size(); ++index)
+				{
+					if (index > 0)
+					{
+						oss << ", ";
+					}
+					oss << _favorites[index].to_string();
+				}
+				append_log("market", oss.str());
+				_no_tick_warning_emitted = true;
+			}
+
+			update_connection_status();
+			if (did_update)
+			{
+				refresh_snapshot();
+			}
+		}
+		else if (did_update)
+		{
+			refresh_snapshot();
+		}
+
+		std::this_thread::sleep_for(std::chrono::microseconds(_loop_interval_us.load()));
+	}
+}
+
+bool gui_logic::process_command_queue()
+{
+	std::queue<std::string> commands;
+	{
+		std::lock_guard<std::mutex> lock(_command_mutex);
+		std::swap(commands, _command_queue);
+	}
+
+	bool changed = false;
+	while (!commands.empty())
+	{
+		handle_command(lt::params(commands.front()));
+		commands.pop();
+		changed = true;
+	}
+	return changed;
+}
+
+void gui_logic::pad_display_ticks(std::vector<tick_row>& ticks, size_t target_count) const
+{
+	if (ticks.empty() || ticks.size() >= target_count)
+	{
+		return;
+	}
+	const auto seed = ticks.back();
+	while (ticks.size() < target_count)
+	{
+		auto filler = seed;
+		filler.time_text.clear();
+		filler.delta_volume = 0;
+		ticks.push_back(filler);
+	}
+}
+
+void gui_logic::handle_command(const lt::params& p)
+{
+	try
+	{
+		const auto action = p.get<std::string>("action");
+		if (action == "order")
+		{
+			const auto code = p.get<lt::code_t>("code");
+			const auto side = p.get<std::string>("side");
+			const auto volume = p.get<uint32_t>("volume");
+			const auto price = p.get<double_t>("price");
+			const auto close_today = p.has("close_today") ? p.get<bool>("close_today") : false;
+
+			if (get_snapshot().trading_paused)
+			{
+				{
+					std::lock_guard<std::mutex> lock(_snapshot_mutex);
+					_snapshot.reject_count++;
+				}
+				update_threshold_flags();
+				set_status("trading is paused");
+				publish_error("trading is paused");
+				append_log("risk", "rejected order because trading is paused");
+				refresh_snapshot();
+				return;
+			}
+
+			if (volume == 0U)
+			{
+				throw std::invalid_argument("volume must be greater than zero");
+			}
+			if (price < .0)
+			{
+				throw std::invalid_argument("price must not be negative");
+			}
+			const auto& instrument = _ctx->get_instrument(code);
+			if (instrument.code == lt::default_code)
+			{
+				throw std::invalid_argument("contract not found");
+			}
+			if (price > 0.0 && instrument.price_step > 0.0 && !is_price_step_aligned(price, instrument.price_step))
+			{
+				std::ostringstream oss;
+				oss << "price does not match minimum tick: step=" << instrument.price_step;
+				throw std::invalid_argument(oss.str());
+			}
+			const uint32_t max_single_order_volume = get_max_single_order_volume(code, side);
+			if (volume > max_single_order_volume)
+			{
+				std::ostringstream oss;
+				oss << "single order volume exceeds max limit: max=" << max_single_order_volume;
+				throw std::invalid_argument(oss.str());
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				if (_snapshot.order_submit_count >= _snapshot.order_threshold)
+				{
+					throw std::invalid_argument("order limit reached");
+				}
+			}
+
+			const std::string order_signature = code.to_string() + "|" + side + "|" + std::to_string(volume) + "|" + std::to_string(price);
+			const auto now = _ctx->get_last_time();
+			auto dup_it = _recent_orders.find(order_signature);
+			if (dup_it != _recent_orders.end() && now >= dup_it->second && now - dup_it->second <= 1000U)
+			{
+				{
+					std::lock_guard<std::mutex> lock(_snapshot_mutex);
+					_snapshot.duplicate_warning_count++;
+				}
+				append_log("monitor", "duplicate order pattern detected: " + order_signature);
+			}
+			_recent_orders[order_signature] = now;
+
+			lt::estid_t estid = INVALID_ESTID;
+			if (side == "buy_open") estid = buy_open(code, volume, price);
+			else if (side == "sell_open") estid = sell_open(code, volume, price);
+			else if (side == "buy_close") estid = buy_close(code, volume, price, close_today);
+			else if (side == "sell_close") estid = sell_close(code, volume, price, close_today);
+			else throw std::invalid_argument("unsupported side");
+
+			if (estid == INVALID_ESTID)
+			{
+				{
+					std::lock_guard<std::mutex> lock(_snapshot_mutex);
+					_snapshot.reject_count++;
+				}
+				update_threshold_flags();
+				set_status("order rejected by framework");
+				publish_error("order rejected by framework");
+				append_log("error", "framework rejected order: " + order_signature);
+			}
+			else
+			{
+				{
+					std::lock_guard<std::mutex> lock(_snapshot_mutex);
+					_snapshot.order_submit_count++;
+				}
+				update_threshold_flags();
+				std::ostringstream oss;
+				oss << "order submitted estid=" << estid;
+				set_status(oss.str());
+				append_log("trade", oss.str() + " " + order_signature);
+			}
+		}
+		else if (action == "cancel")
+		{
+			const auto estid = p.get<uint64_t>("estid");
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				if (_snapshot.cancel_request_count >= _snapshot.cancel_threshold)
+				{
+					throw std::invalid_argument("cancel limit reached");
+				}
+			}
+			_ctx->cancel_order(estid);
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				_snapshot.cancel_request_count++;
+			}
+			update_threshold_flags();
+			std::ostringstream oss;
+			oss << "cancel requested estid=" << estid;
+			set_status(oss.str());
+			append_log("trade", oss.str());
+		}
+		else if (action == "batch_cancel")
+		{
+			const auto scope = p.has("scope") ? p.get<std::string>("scope") : std::string("all");
+			const auto code = p.has("code") ? p.get<lt::code_t>("code") : lt::default_code;
+			std::vector<lt::estid_t> estids;
+			for (const auto& it : _ctx->get_orders())
+			{
+				if (scope == "contract" && it.second.code != code)
+				{
+					continue;
+				}
+				estids.emplace_back(it.first);
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				if (_snapshot.cancel_request_count + static_cast<uint32_t>(estids.size()) > _snapshot.cancel_threshold)
+				{
+					throw std::invalid_argument("cancel limit would be exceeded");
+				}
+			}
+			for (const auto estid : estids)
+			{
+				_ctx->cancel_order(estid);
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				_snapshot.cancel_request_count += static_cast<uint32_t>(estids.size());
+			}
+			update_threshold_flags();
+			std::ostringstream oss;
+			oss << "batch cancel requested count=" << estids.size();
+			set_status(oss.str());
+			append_log("trade", oss.str());
+		}
+		else if (action == "pause")
+		{
+			const auto paused = p.get<bool>("value");
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				_snapshot.trading_paused = paused;
+			}
+			set_status(paused ? "trading paused" : "trading resumed");
+			append_log("system", paused ? "trading paused" : "trading resumed");
+		}
+		else if (action == "close_all")
+		{
+			if (get_snapshot().trading_paused)
+			{
+				{
+					std::lock_guard<std::mutex> lock(_snapshot_mutex);
+					_snapshot.reject_count++;
+				}
+				update_threshold_flags();
+				set_status("trading is paused");
+				publish_error("trading is paused");
+				append_log("risk", "rejected close all because trading is paused");
+				refresh_snapshot();
+				return;
+			}
+
+			uint32_t planned_count = 0U;
+			for (const auto& it : _ctx->get_positions())
+			{
+				const auto& pos = it.second;
+				if (pos.history_short.usable() > 0U) { planned_count++; }
+				if (pos.current_short.usable() > 0U) { planned_count++; }
+				if (pos.history_long.usable() > 0U) { planned_count++; }
+				if (pos.current_long.usable() > 0U) { planned_count++; }
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				if (_snapshot.order_submit_count + planned_count > _snapshot.order_threshold)
+				{
+					throw std::invalid_argument("order limit would be exceeded");
+				}
+			}
+
+			uint32_t close_count = 0U;
+			for (const auto& it : _ctx->get_positions())
+			{
+				const auto& code = it.first;
+				const auto& pos = it.second;
+				const auto& tick = _ctx->get_last_tick(code);
+				const double buy_price = tick.sell_price() > 0.0 ? tick.sell_price() : tick.price;
+				const double sell_price = tick.buy_price() > 0.0 ? tick.buy_price() : tick.price;
+				if (pos.history_short.usable() > 0U && buy_close(code, pos.history_short.usable(), buy_price) != INVALID_ESTID) { close_count++; }
+				if (pos.current_short.usable() > 0U && buy_close(code, pos.current_short.usable(), buy_price, true) != INVALID_ESTID) { close_count++; }
+				if (pos.history_long.usable() > 0U && sell_close(code, pos.history_long.usable(), sell_price) != INVALID_ESTID) { close_count++; }
+				if (pos.current_long.usable() > 0U && sell_close(code, pos.current_long.usable(), sell_price, true) != INVALID_ESTID) { close_count++; }
+			}
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				_snapshot.order_submit_count += close_count;
+			}
+			update_threshold_flags();
+			std::ostringstream oss;
+			oss << "close all requested count=" << close_count;
+			set_status(oss.str());
+			append_log("trade", oss.str());
+		}
+		else if (action == "set_limits")
+		{
+			const auto order_threshold = p.get<uint32_t>("order_threshold");
+			const auto cancel_threshold = p.get<uint32_t>("cancel_threshold");
+			{
+				std::lock_guard<std::mutex> lock(_snapshot_mutex);
+				_snapshot.order_threshold = order_threshold;
+				_snapshot.cancel_threshold = cancel_threshold;
+			}
+			update_threshold_flags();
+			std::ostringstream oss;
+			oss << "thresholds updated order=" << order_threshold << " cancel=" << cancel_threshold;
+			set_status(oss.str());
+			append_log("monitor", oss.str());
+		}
+		else if (action == "focus")
+		{
+			update_focus(p.get<lt::code_t>("code"));
+			set_status("focused contract updated");
+		}
+	}
+	catch (const std::exception& ex)
+	{
+		{
+			std::lock_guard<std::mutex> lock(_snapshot_mutex);
+			_snapshot.reject_count++;
+		}
+		update_threshold_flags();
+		set_status(std::string("command failed: ") + ex.what());
+		publish_error(std::string("command failed: ") + ex.what());
+		append_log("error", std::string("command failed: ") + ex.what());
+	}
+
+	refresh_snapshot();
+}
+
+void gui_logic::subscribe_favorites()
+{
+	if (_subscribed || _dc == nullptr)
+	{
+		return;
+	}
+	lt::subscriber suber(_dc);
+	std::ostringstream oss;
+	for (const auto& code : _favorites)
+	{
+		suber.regist_tick_receiver(code, this);
+		if (oss.tellp() > 0)
+		{
+			oss << ", ";
+		}
+		oss << code.to_string();
+	}
+	suber.subscribe();
+	_subscribed = true;
+	append_log("market", "subscribed favorites: " + oss.str());
+}
+
+void gui_logic::unsubscribe_favorites()
+{
+	if (!_subscribed || _dc == nullptr)
+	{
+		return;
+	}
+	lt::unsubscriber unsuber(_dc);
+	for (const auto& code : _favorites)
+	{
+		unsuber.unregist_tick_receiver(code, this);
+	}
+	unsuber.unsubscribe();
+	_subscribed = false;
+}
+
+void gui_logic::on_entrust(const lt::order_info& order)
+{
+	std::ostringstream oss;
+	oss << "entrusted " << order.code.to_string() << " estid=" << order.estid;
+	set_status(oss.str());
+	append_log("trade", oss.str());
+	refresh_snapshot();
+}
+
+void gui_logic::on_deal(lt::estid_t estid, uint32_t deal_volume)
+{
+	std::ostringstream oss;
+	oss << "dealt estid=" << estid << " volume=" << deal_volume;
+	set_status(oss.str());
+	append_log("trade", oss.str());
+	refresh_snapshot();
+}
+
+void gui_logic::on_trade(lt::estid_t estid, const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, double price, uint32_t volume)
+{
+	std::ostringstream oss;
+	oss << "trade finished estid=" << estid
+		<< " code=" << code.to_string()
+		<< " offset=" << to_string(offset)
+		<< " direction=" << to_string(direction)
+		<< " price=" << price
+		<< " volume=" << volume;
+	set_status(oss.str());
+	append_log("trade", oss.str());
+	refresh_snapshot();
+}
+
+void gui_logic::on_cancel(lt::estid_t estid, const lt::code_t& code, lt::offset_type offset, lt::direction_type direction, double price, uint32_t cancel_volume, uint32_t total_volume)
+{
+	std::ostringstream oss;
+	oss << "canceled estid=" << estid
+		<< " code=" << code.to_string()
+		<< " offset=" << to_string(offset)
+		<< " direction=" << to_string(direction)
+		<< " price=" << price
+		<< " volume=" << cancel_volume
+		<< "/" << total_volume;
+	set_status(oss.str());
+	append_log("trade", oss.str());
+	refresh_snapshot();
+}
+
+void gui_logic::on_error(lt::error_type type, lt::estid_t estid, const lt::error_code error)
+{
+	const auto error_id = static_cast<uint32_t>(error);
+	std::ostringstream oss;
+	oss << "error type=" << to_string(type)
+		<< " estid=" << estid
+		<< " code=" << error_id << "(" << to_string(error) << ")";
+	{
+		std::lock_guard<std::mutex> lock(_snapshot_mutex);
+		_snapshot.reject_count++;
+	}
+	update_threshold_flags();
+	set_status(oss.str());
+	publish_error(oss.str());
+	append_log("error", oss.str());
+	refresh_snapshot();
+}
+
+void gui_logic::on_tick(const lt::tick_info& tick)
+{
+	if (_snapshot.focused_code.empty())
+	{
+		update_focus(tick.code);
+	}
+
+	if (!tick.invalid())
+	{
+		const std::string code = tick.code.to_string();
+		if (_tick_seen_codes.insert(code).second)
+		{
+			std::ostringstream oss;
+			oss << "first tick received for " << code
+				<< " price=" << tick.price
+				<< " time=" << format_logic_time_text(tick.time);
+			append_log("market", oss.str());
+		}
+
+		const auto tick_key = make_tick_key(tick);
+		auto key_it = _last_tick_keys.find(code);
+		if (key_it == _last_tick_keys.end() || key_it->second != tick_key)
+		{
+			const auto volume_it = _last_tick_volumes.find(code);
+			const uint32_t prev_volume = volume_it == _last_tick_volumes.end() ? tick.volume : volume_it->second;
+			const int32_t delta_volume = tick.volume >= prev_volume
+				? static_cast<int32_t>(tick.volume - prev_volume)
+				: static_cast<int32_t>(tick.volume);
+
+			tick_row row;
+			row.time_text = format_logic_time_text(tick.time);
+			row.price = tick.price;
+			row.delta_volume = delta_volume;
+			row.open_interest = tick.open_interest;
+			row.bid_price = tick.buy_price();
+			row.ask_price = tick.sell_price();
+			auto& history = _tick_history[code];
+			history.insert(history.begin(), row);
+			if (history.size() > 120U)
+			{
+				history.resize(120U);
+			}
+			_last_tick_keys[code] = tick_key;
+			_last_tick_volumes[code] = tick.volume;
+		}
+	}
+
+	refresh_snapshot();
+}
+
+void gui_logic::refresh_snapshot()
+{
+	snapshot new_snapshot;
+	{
+		std::lock_guard<std::mutex> lock(_snapshot_mutex);
+		new_snapshot = _snapshot;
+	}
+
+	new_snapshot.trading_day = _ctx ? _ctx->get_trading_day() : 0U;
+	new_snapshot.last_time = _ctx ? _ctx->get_last_time() : 0U;
+	new_snapshot.instruments.clear();
+	new_snapshot.orders.clear();
+	new_snapshot.positions.clear();
+
+	for (const auto& favorite : _favorites)
+	{
+		new_snapshot.instruments.emplace_back(favorite.to_string());
+	}
+	std::sort(new_snapshot.instruments.begin(), new_snapshot.instruments.end());
+	if (new_snapshot.focused_code.empty() && !new_snapshot.instruments.empty())
+	{
+		new_snapshot.focused_code = new_snapshot.instruments.front();
+	}
+
+	if (_ctx)
+	{
+		for (const auto& it : _ctx->get_orders())
+		{
+			order_row row;
+			row.estid = it.second.estid;
+			row.code = it.second.code.to_string();
+			row.offset = to_string(it.second.offset);
+			row.direction = to_string(it.second.direction);
+			row.price = it.second.price;
+			row.total_volume = it.second.total_volume;
+			row.last_volume = it.second.last_volume;
+			row.create_time = it.second.create_time;
+			new_snapshot.orders.emplace_back(row);
+		}
+
+		for (const auto& it : _ctx->get_positions())
+		{
+			position_row row;
+			row.code = it.first.to_string();
+			row.current_long = it.second.current_long.position;
+			row.current_short = it.second.current_short.position;
+			row.history_long = it.second.history_long.position;
+			row.history_short = it.second.history_short.position;
+			row.long_frozen = it.second.get_long_frozen();
+			row.short_frozen = it.second.get_short_frozen();
+			row.long_pending = it.second.long_pending;
+			row.short_pending = it.second.short_pending;
+			new_snapshot.positions.emplace_back(row);
+		}
+	}
+
+	std::sort(new_snapshot.orders.begin(), new_snapshot.orders.end(), [](const order_row& lhs, const order_row& rhs) {
+		return lhs.estid > rhs.estid;
+	});
+	std::sort(new_snapshot.positions.begin(), new_snapshot.positions.end(), [](const position_row& lhs, const position_row& rhs) {
+		return lhs.code < rhs.code;
+	});
+
+	if (_ctx && !new_snapshot.focused_code.empty())
+	{
+		const lt::code_t focused_code(new_snapshot.focused_code.c_str());
+		const auto& market = _ctx->get_market_info(focused_code);
+		const auto& tick = _ctx->get_last_tick(focused_code);
+		new_snapshot.last_price = tick.price;
+		new_snapshot.average_price = tick.average_price;
+		new_snapshot.open_interest = tick.open_interest;
+		new_snapshot.open_price = market.open_price;
+		new_snapshot.high_price = market.high_price;
+		new_snapshot.low_price = market.low_price;
+		new_snapshot.control_price = market.control_price();
+		new_snapshot.market_levels.clear();
+
+		for (size_t index = 0; index < tick.ask_order.size() && index < 5U; ++index)
+		{
+			market_level_row row;
+			row.label = "Ask " + std::to_string(index + 1U);
+			row.price = tick.ask_order[index].first;
+			row.volume = tick.ask_order[index].second;
+			new_snapshot.market_levels.emplace_back(row);
+		}
+		for (size_t reverse = std::min<size_t>(5U, tick.bid_order.size()); reverse > 0; --reverse)
+		{
+			const size_t index = reverse - 1U;
+			market_level_row row;
+			row.label = "Bid " + std::to_string(index + 1U);
+			row.price = tick.bid_order[index].first;
+			row.volume = tick.bid_order[index].second;
+			new_snapshot.market_levels.emplace_back(row);
+		}
+
+		const auto history_it = _tick_history.find(new_snapshot.focused_code);
+		new_snapshot.recent_ticks = history_it == _tick_history.end() ? std::vector<tick_row>{} : history_it->second;
+		if (!tick.invalid() && new_snapshot.recent_ticks.empty())
+		{
+			tick_row row;
+			row.time_text = format_logic_time_text(tick.time);
+			row.price = tick.price;
+			row.delta_volume = 0;
+			row.open_interest = tick.open_interest;
+			row.bid_price = tick.buy_price();
+			row.ask_price = tick.sell_price();
+			new_snapshot.recent_ticks.push_back(row);
+		}
+		pad_display_ticks(new_snapshot.recent_ticks, 32U);
+	}
+
+	{
+		std::lock_guard<std::mutex> lock(_snapshot_mutex);
+		_snapshot = std::move(new_snapshot);
+	}
+}
+
+void gui_logic::update_focus(const lt::code_t& code)
+{
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	if (_snapshot.focused_code != code.to_string())
+	{
+		_snapshot.focused_code = code.to_string();
+		const auto history_it = _tick_history.find(_snapshot.focused_code);
+		_snapshot.recent_ticks = history_it == _tick_history.end() ? std::vector<tick_row>{} : history_it->second;
+	}
+}
+
+void gui_logic::set_status(const std::string& status)
+{
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	_snapshot.status = status;
+}
+
+void gui_logic::publish_error(const std::string& message)
+{
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	_snapshot.error_message = message;
+	++_snapshot.error_event_id;
+}
+
+void gui_logic::append_log(const std::string& category, const std::string& message)
+{
+	const std::string line = format_logic_time_text(_ctx ? _ctx->get_last_time() : 0U) + " [" + category + "] " + message;
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	_snapshot.logs.emplace_back(line);
+	if (_snapshot.logs.size() > 200U)
+	{
+		_snapshot.logs.erase(_snapshot.logs.begin(), _snapshot.logs.begin() + static_cast<long long>(_snapshot.logs.size() - 200U));
+	}
+	if (_log_file.is_open())
+	{
+		_log_file << line << std::endl;
+	}
+	if (_test_log_file.is_open() && should_write_test_record(category))
+	{
+		_test_log_file << line << std::endl;
+	}
+}
+
+void gui_logic::open_log_file()
+{
+	try
+	{
+		const auto now = std::chrono::system_clock::now();
+		const std::time_t current = std::chrono::system_clock::to_time_t(now);
+		std::tm local_tm = {};
+		localtime_s(&local_tm, &current);
+
+		std::ostringstream name;
+		name << "demo-gui-" << std::put_time(&local_tm, "%Y%m%d") << ".log";
+		_log_path = std::filesystem::current_path() / "logs" / name.str();
+
+		std::ostringstream test_name;
+		test_name << "demo-gui-test-record-" << std::put_time(&local_tm, "%Y%m%d") << ".log";
+		_test_log_path = std::filesystem::current_path() / "logs" / test_name.str();
+
+		std::filesystem::create_directories(_log_path.parent_path());
+		_log_file.open(_log_path, std::ios::app);
+		_test_log_file.open(_test_log_path, std::ios::app);
+	}
+	catch (...)
+	{
+	}
+}
+
+void gui_logic::update_connection_status()
+{
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	if (_snapshot.trading_day != 0U)
+	{
+		_snapshot.connection_status = "connected";
+	}
+	else if (_servicing)
+	{
+		_snapshot.connection_status = "initializing";
+	}
+	else
+	{
+		_snapshot.connection_status = "starting";
+	}
+}
+
+void gui_logic::update_threshold_flags()
+{
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	_snapshot.order_threshold_alert = _snapshot.order_submit_count >= _snapshot.order_threshold;
+	_snapshot.cancel_threshold_alert = _snapshot.cancel_request_count >= _snapshot.cancel_threshold;
+}
+
+lt::estid_t gui_logic::buy_open(const lt::code_t& code, uint32_t count, double price, lt::order_flag flag)
+{
+	return _ctx->place_order(this, lt::offset_type::OT_OPEN, lt::direction_type::DT_LONG, code, count, price, flag);
+}
+
+lt::estid_t gui_logic::sell_open(const lt::code_t& code, uint32_t count, double price, lt::order_flag flag)
+{
+	return _ctx->place_order(this, lt::offset_type::OT_OPEN, lt::direction_type::DT_SHORT, code, count, price, flag);
+}
+
+lt::estid_t gui_logic::buy_close(const lt::code_t& code, uint32_t count, double price, bool close_today, lt::order_flag flag)
+{
+	return _ctx->place_order(this, close_today ? lt::offset_type::OT_CLSTD : lt::offset_type::OT_CLOSE, lt::direction_type::DT_SHORT, code, count, price, flag);
+}
+
+lt::estid_t gui_logic::sell_close(const lt::code_t& code, uint32_t count, double price, bool close_today, lt::order_flag flag)
+{
+	return _ctx->place_order(this, close_today ? lt::offset_type::OT_CLSTD : lt::offset_type::OT_CLOSE, lt::direction_type::DT_LONG, code, count, price, flag);
+}
+
+std::string gui_logic::to_string(lt::offset_type offset)
+{
+	switch (offset)
+	{
+	case lt::offset_type::OT_OPEN:
+		return "open";
+	case lt::offset_type::OT_CLOSE:
+		return "close";
+	case lt::offset_type::OT_CLSTD:
+		return "close_today";
+	default:
+		return "unknown";
+	}
+}
+
+std::string gui_logic::to_string(lt::direction_type direction)
+{
+	switch (direction)
+	{
+	case lt::direction_type::DT_LONG:
+		return "long";
+	case lt::direction_type::DT_SHORT:
+		return "short";
+	default:
+		return "unknown";
+	}
+}
+
+std::string gui_logic::to_string(lt::error_type type)
+{
+	switch (type)
+	{
+	case lt::error_type::ET_PLACE_ORDER:
+		return "place_order";
+	case lt::error_type::ET_CANCEL_ORDER:
+		return "cancel_order";
+	case lt::error_type::ET_OTHER_ERROR:
+		return "other";
+	default:
+		return "unknown";
+	}
+}
+
+std::string gui_logic::to_string(lt::error_code error)
+{
+	switch (error)
+	{
+	case lt::error_code::EC_Success:
+		return "success";
+	case lt::error_code::EC_Failure:
+		return "failure";
+	case lt::error_code::EC_OrderFieldError:
+		return "field_error";
+	case lt::error_code::EC_PositionNotEnough:
+		return "position_not_enough";
+	case lt::error_code::EC_MarginNotEnough:
+		return "margin_not_enough";
+	case lt::error_code::EC_StateNotReady:
+		return "state_not_ready";
+	case static_cast<lt::error_code>(50):
+		return "close_today_not_enough";
+	case static_cast<lt::error_code>(51):
+		return "close_yesterday_not_enough";
+	default:
+		return "unknown";
+	}
+}
+
+lt::order_flag gui_logic::parse_order_flag(const std::string&)
+{
+	return lt::order_flag::OF_NOR;
 }
 
 class market_chart_ctrl : public CWnd
 {
 public:
-	void set_data(const std::vector<gui_bridge_strategy::tick_row>& ticks, double last_price, double average_price)
+	void set_data(const std::vector<gui_logic::tick_row>& ticks, double last_price, double average_price)
 	{
 		std::ostringstream oss;
 		oss.setf(std::ios::fixed);
@@ -288,7 +1511,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	std::vector<gui_bridge_strategy::tick_row> _ticks;
+	std::vector<gui_logic::tick_row> _ticks;
 	double _last_price = 0.0;
 	double _average_price = 0.0;
 	std::string _signature;
@@ -308,9 +1531,7 @@ public:
 			const auto runtime_config = resolve_config_path("runtime_ctpdev.ini");
 			const auto control_config = resolve_config_path("control_gui.ini");
 			const auto section_config = resolve_config_path("section_alltrading.csv");
-			_app = std::make_shared<lt::hft::runtime>(runtime_config.string().c_str(), control_config.string().c_str(), section_config.string().c_str());
-			_bridge = std::make_shared<gui_bridge_strategy>(MANUAL_UI_STRATEGY_ID, _app.get());
-			_app->regist_strategy({ _bridge });
+			_logic = std::make_shared<gui_logic>(runtime_config.string().c_str(), control_config.string().c_str(), section_config.string().c_str());
 		}
 		catch (const std::exception& ex)
 		{
@@ -321,12 +1542,23 @@ public:
 
 	virtual ~demo_gui_frame()
 	{
-		stop_runtime();
+		stop_logic();
 	}
 
 	bool is_service_started() const
 	{
-		return _trading_ready && !_trading_starting;
+		return _logic && _logic->is_started() && _trading_ready && !_trading_starting;
+	}
+
+	bool has_startup_failed() const
+	{
+		if (_logic == nullptr || _trading_ready || _trading_starting)
+		{
+			return false;
+		}
+
+		const auto snapshot = _logic->get_snapshot();
+		return snapshot.error_event_id > 0 || snapshot.status.find("failed") != std::string::npos;
 	}
 
 protected:
@@ -340,7 +1572,7 @@ protected:
 		_font.CreatePointFont(95, _T("Segoe UI"));
 		create_controls();
 		layout_controls();
-		start_runtime();
+		start_logic();
 		SetTimer(UI_TIMER_ID, UI_REFRESH_INTERVAL_MS, nullptr);
 		refresh_ui();
 		return 0;
@@ -349,7 +1581,7 @@ protected:
 	afx_msg void OnDestroy()
 	{
 		KillTimer(UI_TIMER_ID);
-		stop_runtime();
+		stop_logic();
 		CFrameWnd::OnDestroy();
 	}
 
@@ -802,7 +2034,6 @@ private:
 		const int risk_edit_width = compact_top ? 92 : 86;
 		const int apply_width = compact_top ? 112 : 102;
 		const int action_gap = 14;
-		const int action_button_width = (risk_inner_width - action_gap * 2) / 3;
 		const int left_col_x = risk_x + 22;
 		const int left_value_x = left_col_x + risk_label_width + 4;
 		const int apply_x = risk_x + risk_width - 22 - apply_width;
@@ -817,9 +2048,10 @@ private:
 		_edit_cancel_limit.MoveWindow(left_value_x, row2_y, risk_edit_width, input_height);
 		_button_set_limits.MoveWindow(apply_x, row1_y - 1, apply_width, button_height * 2 + 8);
 		_risk_divider.MoveWindow(risk_x + 22, divider_y, risk_inner_width - 12, 2);
-		_button_cancel_all.MoveWindow(risk_x + 22, button_row_y, action_button_width, button_height);
-		_button_pause.MoveWindow(risk_x + 22 + action_button_width + action_gap, button_row_y, action_button_width, button_height);
-		_button_close_all.MoveWindow(apply_x + apply_width - action_button_width, button_row_y, action_button_width, button_height);
+		const int risk_action_total_width = risk_inner_width - 12;
+		const int risk_action_width = (risk_action_total_width - action_gap) / 2;
+		_button_pause.MoveWindow(risk_x + 22, button_row_y, risk_action_width, button_height);
+		_button_close_all.MoveWindow(risk_x + 22 + risk_action_width + action_gap, button_row_y, risk_action_width, button_height);
 		_summary_label.MoveWindow(risk_x + 22, risk_page_y + 46 + panel_content_offset, risk_inner_width - 12, 22);
 		_monitor_label.MoveWindow(risk_x + 22, risk_page_y + 90 + panel_content_offset, risk_inner_width - 12, std::max(44, risk_height - 114 - panel_content_offset));
 
@@ -834,6 +2066,7 @@ private:
 		_group_orders.MoveWindow(left_x, orders_y, left_width, top_half_height);
 		_list_orders.MoveWindow(left_x + 12, orders_y + 24, left_width - 24, top_half_height - 72);
 		_button_cancel.MoveWindow(left_x + 12, orders_y + top_half_height - 40, 120, button_height);
+		_button_cancel_all.MoveWindow(left_x + 12 + 120 + 12, orders_y + top_half_height - 40, 120, button_height);
 
 		_group_positions.MoveWindow(left_x, orders_y + top_half_height + gap, left_width, bottom_half_height);
 		_list_positions.MoveWindow(left_x + 12, orders_y + top_half_height + gap + 24, left_width - 24, bottom_half_height - 36);
@@ -852,6 +2085,7 @@ private:
 		_group_orders.ShowWindow(SW_SHOW);
 		_list_orders.ShowWindow(SW_SHOW);
 		_button_cancel.ShowWindow(SW_SHOW);
+		_button_cancel_all.ShowWindow(SW_SHOW);
 		_group_positions.ShowWindow(SW_SHOW);
 		_list_positions.ShowWindow(SW_SHOW);
 		_group_logs.ShowWindow(SW_SHOW);
@@ -869,7 +2103,6 @@ private:
 		_edit_cancel_limit.ShowWindow(show_risk ? SW_SHOW : SW_HIDE);
 		_risk_divider.ShowWindow(show_risk ? SW_SHOW : SW_HIDE);
 		_button_set_limits.ShowWindow(show_risk ? SW_SHOW : SW_HIDE);
-		_button_cancel_all.ShowWindow(show_risk ? SW_SHOW : SW_HIDE);
 		_button_close_all.ShowWindow(show_risk ? SW_SHOW : SW_HIDE);
 
 		_group_monitor.ShowWindow(show_risk ? SW_HIDE : SW_SHOW);
@@ -878,13 +2111,17 @@ private:
 		_monitor_label.ShowWindow(show_risk ? SW_HIDE : SW_SHOW);
 	}
 
-	void start_runtime()
+	void start_logic()
 	{
+		if (_trading_thread.joinable())
+		{
+			_trading_thread.join();
+		}
 		_trading_ready = false;
 		_trading_starting = true;
 		_stop_requested = false;
 		_trading_thread = std::thread([this]() {
-			_app->start_trading();
+			_logic->start_trading();
 			if (!_stop_requested)
 			{
 				_trading_ready = true;
@@ -893,12 +2130,12 @@ private:
 		});
 	}
 
-	void stop_runtime()
+	void stop_logic()
 	{
 		_stop_requested = true;
-		if (_trading_ready)
+		if (_logic)
 		{
-			_app->stop_trading();
+			_logic->stop_trading();
 		}
 		if (_trading_thread.joinable())
 		{
@@ -911,7 +2148,7 @@ private:
 		set_window_text(_status_label, text);
 	}
 
-	void refresh_instrument_combo(const gui_bridge_strategy::snapshot& snapshot)
+	void refresh_instrument_combo(const gui_logic::snapshot& snapshot)
 	{
 		const std::string current_text = get_window_text(_combo_code);
 		std::vector<std::string> codes;
@@ -957,12 +2194,12 @@ private:
 		sync_favorite_selection();
 	}
 
-	void refresh_market_panel(const gui_bridge_strategy::snapshot& snapshot)
+	void refresh_market_panel(const gui_logic::snapshot& snapshot)
 	{
 		_chart_market.set_data(snapshot.recent_ticks, snapshot.last_price, snapshot.average_price);
 	}
 
-	void sync_order_price_with_focus(const gui_bridge_strategy::snapshot& snapshot)
+	void sync_order_price_with_focus(const gui_logic::snapshot& snapshot)
 	{
 		if (snapshot.focused_code.empty())
 		{
@@ -998,7 +2235,7 @@ private:
 		}
 	}
 
-	void refresh_tick_panel(const gui_bridge_strategy::snapshot& snapshot)
+	void refresh_tick_panel(const gui_logic::snapshot& snapshot)
 	{
 		std::ostringstream signature;
 		for (const auto& tick : snapshot.recent_ticks)
@@ -1026,7 +2263,7 @@ private:
 		_list_ticks.Invalidate(FALSE);
 	}
 
-	void refresh_order_list(const gui_bridge_strategy::snapshot& snapshot)
+	void refresh_order_list(const gui_logic::snapshot& snapshot)
 	{
 		std::ostringstream signature;
 		for (const auto& order : snapshot.orders)
@@ -1056,7 +2293,7 @@ private:
 		_list_orders.Invalidate(FALSE);
 	}
 
-	void refresh_position_list(const gui_bridge_strategy::snapshot& snapshot)
+	void refresh_position_list(const gui_logic::snapshot& snapshot)
 	{
 		std::ostringstream signature;
 		for (const auto& pos : snapshot.positions)
@@ -1087,7 +2324,7 @@ private:
 		_list_positions.Invalidate(FALSE);
 	}
 
-	void refresh_logs(const gui_bridge_strategy::snapshot& snapshot)
+	void refresh_logs(const gui_logic::snapshot& snapshot)
 	{
 		refresh_framework_logs();
 		std::ostringstream oss;
@@ -1166,7 +2403,7 @@ private:
 
 	void append_framework_test_record(const std::string& line)
 	{
-		if (!_bridge)
+		if (!_logic)
 		{
 			return;
 		}
@@ -1179,7 +2416,7 @@ private:
 			line.find("SessionID") != std::string::npos ||
 			line.find("AppID") != std::string::npos)
 		{
-			_bridge->append_test_record("system", line);
+			_logic->append_test_record("system", line);
 		}
 
 		if (line.find("[报单统计]") != std::string::npos ||
@@ -1187,7 +2424,7 @@ private:
 			line.find("报单数量") != std::string::npos ||
 			line.find("撤单数量") != std::string::npos)
 		{
-			_bridge->append_test_record("monitor", line);
+			_logic->append_test_record("monitor", line);
 		}
 
 		if (line.find("ErrorID") != std::string::npos ||
@@ -1195,7 +2432,7 @@ private:
 			line.find("[ERROR]") != std::string::npos ||
 			line.find("错误") != std::string::npos)
 		{
-			_bridge->append_test_record("error", line);
+			_logic->append_test_record("error", line);
 		}
 	}
 
@@ -1257,7 +2494,7 @@ private:
 		return line.find(levels[filter]) != std::string::npos;
 	}
 
-	void refresh_monitor(const gui_bridge_strategy::snapshot& snapshot)
+	void refresh_monitor(const gui_logic::snapshot& snapshot)
 	{
 		std::ostringstream monitor;
 		monitor << "Connection: " << snapshot.connection_status
@@ -1273,7 +2510,7 @@ private:
 
 	void refresh_ui()
 	{
-		const auto snapshot = _bridge->get_snapshot();
+		const auto snapshot = _logic->get_snapshot();
 		refresh_instrument_combo(snapshot);
 		refresh_market_panel(snapshot);
 		sync_order_price_with_focus(snapshot);
@@ -1319,7 +2556,7 @@ private:
 			AfxMessageBox(_T("Trading service is still starting, please wait."), MB_ICONINFORMATION | MB_OK);
 			return;
 		}
-		_app->change_strategy(MANUAL_UI_STRATEGY_ID, command);
+		_logic->post_command(command);
 	}
 
 	void submit_order()
@@ -1345,7 +2582,7 @@ private:
 			const bool close_today = _check_close_today.GetCheck() == BST_CHECKED;
 			const auto volume = std::stoul(volume_text);
 			const auto price = price_text.empty() ? 0.0 : std::stod(price_text);
-			const auto snapshot = _bridge->get_snapshot();
+			const auto snapshot = _logic->get_snapshot();
 			if (snapshot.order_submit_count >= snapshot.order_threshold)
 			{
 				set_status("Status: order limit reached");
@@ -1392,6 +2629,7 @@ private:
 		if (pos == nullptr)
 		{
 			set_status("Status: please select an order to cancel");
+			AfxMessageBox(_T("Please select an order to cancel."), MB_ICONINFORMATION | MB_OK);
 			return;
 		}
 
@@ -1408,7 +2646,7 @@ private:
 			return;
 		}
 
-		const auto snapshot = _bridge->get_snapshot();
+		const auto snapshot = _logic->get_snapshot();
 		if (snapshot.cancel_request_count >= snapshot.cancel_threshold)
 		{
 			set_status("Status: cancel limit reached");
@@ -1437,7 +2675,7 @@ private:
 			}
 			cmd << "&code=" << code;
 		}
-		const auto snapshot = _bridge->get_snapshot();
+		const auto snapshot = _logic->get_snapshot();
 		if (snapshot.cancel_request_count >= snapshot.cancel_threshold)
 		{
 			set_status("Status: cancel limit reached");
@@ -1458,7 +2696,7 @@ private:
 
 	void toggle_pause()
 	{
-		const auto snapshot = _bridge->get_snapshot();
+		const auto snapshot = _logic->get_snapshot();
 		std::ostringstream cmd;
 		cmd << "action=pause&value=" << (snapshot.trading_paused ? 0 : 1);
 		send_command(cmd.str());
@@ -1545,7 +2783,7 @@ private:
 
 	void sync_favorite_selection()
 	{
-		const std::string current_focus = !_pending_market_focus_code.empty() ? _pending_market_focus_code : _bridge->get_snapshot().focused_code;
+		const std::string current_focus = !_pending_market_focus_code.empty() ? _pending_market_focus_code : _logic->get_snapshot().focused_code;
 		const CString current = to_cstring(current_focus);
 		const int count = _list_favorites.GetCount();
 		const int current_selection = _list_favorites.GetCurSel();
@@ -1576,7 +2814,7 @@ private:
 		}
 	}
 
-	void set_market_focus_code(const std::string& code, bool notify_runtime)
+	void set_market_focus_code(const std::string& code, bool notify_logic)
 	{
 		if (code.empty())
 		{
@@ -1588,7 +2826,7 @@ private:
 		}
 		_pending_market_focus_code = code;
 		sync_favorite_selection();
-		if (notify_runtime)
+		if (notify_logic)
 		{
 			send_command("action=focus&code=" + code, false);
 		}
@@ -1662,8 +2900,7 @@ private:
 	CStatic _monitor_label;
 	CStatic _hint_label;
 	CStatic _status_label;
-	std::shared_ptr<lt::hft::runtime> _app;
-	std::shared_ptr<gui_bridge_strategy> _bridge;
+	std::shared_ptr<gui_logic> _logic;
 	std::thread _trading_thread;
 	std::vector<std::string> _cached_codes;
 	std::string _pending_market_focus_code;

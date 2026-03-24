@@ -28,7 +28,7 @@ IF(WIN32)
     target_link_libraries(demo-manual "latf-core-v3x")
 
     set(CMAKE_MFC_FLAG 2)
-    add_executable(demo-gui WIN32 "gui_demo.cpp" "strategy/gui_bridge_strategy.cpp")
+    add_executable(demo-gui WIN32 "gui_demo.cpp")
     target_link_libraries(demo-gui "latf-core-v3x" "comctl32")
     target_compile_definitions(demo-gui PRIVATE _AFXDLL NOMINMAX _WIN32_WINNT=0x0A00)
     set(CMAKE_MFC_FLAG 0)
