@@ -37,7 +37,9 @@
 namespace
 {
 	constexpr UINT_PTR UI_TIMER_ID = 2001U;
-	constexpr UINT UI_REFRESH_INTERVAL_MS = 33U;
+	constexpr UINT_PTR LOG_TIMER_ID = 2002U;
+	constexpr UINT UI_REFRESH_INTERVAL_MS = 50U;
+	constexpr UINT LOG_REFRESH_INTERVAL_MS = 250U;
 	const std::array<const char*, 3> kFavoriteContracts = {
 		"SHFE.ag2606",
 		"SHFE.fu2609",
@@ -300,6 +302,7 @@ public:
 	snapshot get_snapshot() const;
 	void append_test_record(const std::string& category, const std::string& message);
 	bool is_started() const;
+	bool polling();
 	void start_trading();
 	void stop_trading();
 	void post_command(const std::string& command);
@@ -313,7 +316,6 @@ private:
 	virtual void on_tick(const lt::tick_info& tick) override;
 
 private:
-	void worker_loop();
 	bool process_command_queue();
 	void handle_command(const lt::params& p);
 	void subscribe_favorites();
@@ -348,11 +350,8 @@ private:
 	lt::actual_trader* _trader = nullptr;
 	lt::trading_context* _ctx = nullptr;
 	lt::data_channel* _dc = nullptr;
-	std::thread _worker;
-	std::atomic<bool> _running { false };
 	std::atomic<bool> _servicing { false };
 	std::atomic<bool> _subscribed { false };
-	std::atomic<uint32_t> _loop_interval_us { 1000U };
 	std::unordered_map<std::string, lt::daytm_t> _recent_orders;
 	std::unordered_map<std::string, uint64_t> _last_tick_keys;
 	std::unordered_map<std::string, uint32_t> _last_tick_volumes;
@@ -432,10 +431,6 @@ gui_logic::gui_logic(const char* account_config, const char* control_config, con
 		if (control_it != control_ini.sections.end())
 		{
 			lt::params control_params(control_it->second);
-			if (control_params.has("loop_interval"))
-			{
-				_loop_interval_us = control_params.get<uint32_t>("loop_interval");
-			}
 		}
 	}
 
@@ -453,19 +448,11 @@ gui_logic::gui_logic(const char* account_config, const char* control_config, con
 
 	open_log_file();
 	append_log("system", "demo-gui logic initialized");
-
-	_running = true;
-	_worker = std::thread([this]() { worker_loop(); });
 }
 
 gui_logic::~gui_logic()
 {
 	stop_trading();
-	_running = false;
-	if (_worker.joinable())
-	{
-		_worker.join();
-	}
 	if (_dc != nullptr)
 	{
 		delete _dc;
@@ -505,6 +492,45 @@ void gui_logic::append_test_record(const std::string& category, const std::strin
 bool gui_logic::is_started() const
 {
 	return _servicing.load();
+}
+
+bool gui_logic::polling()
+{
+	bool did_update = process_command_queue();
+	if (_servicing)
+	{
+		did_update |= _ctx->polling();
+		did_update |= _dc->polling();
+
+		if (!_no_tick_warning_emitted &&
+			std::chrono::steady_clock::now() - _start_time > std::chrono::seconds(15) &&
+			_tick_seen_codes.empty())
+		{
+			std::ostringstream oss;
+			oss << "no tick received yet for favorites: ";
+			for (size_t index = 0; index < _favorites.size(); ++index)
+			{
+				if (index > 0)
+				{
+					oss << ", ";
+				}
+				oss << _favorites[index].to_string();
+			}
+			append_log("market", oss.str());
+			_no_tick_warning_emitted = true;
+		}
+
+		update_connection_status();
+		if (did_update)
+		{
+			refresh_snapshot();
+		}
+	}
+	else if (did_update)
+	{
+		refresh_snapshot();
+	}
+	return did_update;
 }
 
 void gui_logic::start_trading()
@@ -579,49 +605,6 @@ void gui_logic::post_command(const std::string& command)
 {
 	std::lock_guard<std::mutex> lock(_command_mutex);
 	_command_queue.push(command);
-}
-
-void gui_logic::worker_loop()
-{
-	while (_running)
-	{
-		bool did_update = process_command_queue();
-		if (_servicing)
-		{
-			did_update |= _ctx->polling();
-			did_update |= _dc->polling();
-
-			if (!_no_tick_warning_emitted &&
-				std::chrono::steady_clock::now() - _start_time > std::chrono::seconds(15) &&
-				_tick_seen_codes.empty())
-			{
-				std::ostringstream oss;
-				oss << "no tick received yet for favorites: ";
-				for (size_t index = 0; index < _favorites.size(); ++index)
-				{
-					if (index > 0)
-					{
-						oss << ", ";
-					}
-					oss << _favorites[index].to_string();
-				}
-				append_log("market", oss.str());
-				_no_tick_warning_emitted = true;
-			}
-
-			update_connection_status();
-			if (did_update)
-			{
-				refresh_snapshot();
-			}
-		}
-		else if (did_update)
-		{
-			refresh_snapshot();
-		}
-
-		std::this_thread::sleep_for(std::chrono::microseconds(_loop_interval_us.load()));
-	}
 }
 
 bool gui_logic::process_command_queue()
@@ -844,24 +827,8 @@ void gui_logic::handle_command(const lt::params& p)
 				return;
 			}
 
-			uint32_t planned_count = 0U;
-			for (const auto& it : _ctx->get_positions())
-			{
-				const auto& pos = it.second;
-				if (pos.history_short.usable() > 0U) { planned_count++; }
-				if (pos.current_short.usable() > 0U) { planned_count++; }
-				if (pos.history_long.usable() > 0U) { planned_count++; }
-				if (pos.current_long.usable() > 0U) { planned_count++; }
-			}
-			{
-				std::lock_guard<std::mutex> lock(_snapshot_mutex);
-				if (_snapshot.order_submit_count + planned_count > _snapshot.order_threshold)
-				{
-					throw std::invalid_argument("order limit would be exceeded");
-				}
-			}
-
 			uint32_t close_count = 0U;
+			uint32_t planned_count = 0U;
 			for (const auto& it : _ctx->get_positions())
 			{
 				const auto& code = it.first;
@@ -869,10 +836,55 @@ void gui_logic::handle_command(const lt::params& p)
 				const auto& tick = _ctx->get_last_tick(code);
 				const double buy_price = tick.sell_price() > 0.0 ? tick.sell_price() : tick.price;
 				const double sell_price = tick.buy_price() > 0.0 ? tick.buy_price() : tick.price;
-				if (pos.history_short.usable() > 0U && buy_close(code, pos.history_short.usable(), buy_price) != INVALID_ESTID) { close_count++; }
-				if (pos.current_short.usable() > 0U && buy_close(code, pos.current_short.usable(), buy_price, true) != INVALID_ESTID) { close_count++; }
-				if (pos.history_long.usable() > 0U && sell_close(code, pos.history_long.usable(), sell_price) != INVALID_ESTID) { close_count++; }
-				if (pos.current_long.usable() > 0U && sell_close(code, pos.current_long.usable(), sell_price, true) != INVALID_ESTID) { close_count++; }
+				const uint32_t short_history = pos.history_short.position;
+				const uint32_t short_current = pos.current_short.position;
+				const uint32_t long_history = pos.history_long.position;
+				const uint32_t long_current = pos.current_long.position;
+				if (code.is_distinct())
+				{
+					if (short_history > 0U)
+					{
+						planned_count++;
+						if (buy_close(code, short_history, buy_price) != INVALID_ESTID) { close_count++; }
+					}
+					if (short_current > 0U)
+					{
+						planned_count++;
+						if (buy_close(code, short_current, buy_price, true) != INVALID_ESTID) { close_count++; }
+					}
+					if (long_history > 0U)
+					{
+						planned_count++;
+						if (sell_close(code, long_history, sell_price) != INVALID_ESTID) { close_count++; }
+					}
+					if (long_current > 0U)
+					{
+						planned_count++;
+						if (sell_close(code, long_current, sell_price, true) != INVALID_ESTID) { close_count++; }
+					}
+				}
+				else
+				{
+					const uint32_t short_total = short_history + short_current;
+					const uint32_t long_total = long_history + long_current;
+					if (short_total > 0U)
+					{
+						planned_count++;
+						if (buy_close(code, short_total, buy_price) != INVALID_ESTID) { close_count++; }
+					}
+					if (long_total > 0U)
+					{
+						planned_count++;
+						if (sell_close(code, long_total, sell_price) != INVALID_ESTID) { close_count++; }
+					}
+				}
+			}
+			if (planned_count == 0U)
+			{
+				set_status("no positions to close");
+				append_log("trade", "close all requested but no positions found");
+				refresh_snapshot();
+				return;
 			}
 			{
 				std::lock_guard<std::mutex> lock(_snapshot_mutex);
@@ -880,9 +892,19 @@ void gui_logic::handle_command(const lt::params& p)
 			}
 			update_threshold_flags();
 			std::ostringstream oss;
-			oss << "close all requested count=" << close_count;
+			oss << "close all requested count=" << close_count << "/" << planned_count;
 			set_status(oss.str());
 			append_log("trade", oss.str());
+			if (close_count == 0U)
+			{
+				{
+					std::lock_guard<std::mutex> lock(_snapshot_mutex);
+					_snapshot.reject_count++;
+				}
+				update_threshold_flags();
+				publish_error("close all submitted no valid close orders");
+				append_log("error", "close all submitted no valid close orders");
+			}
 		}
 		else if (action == "set_limits")
 		{
@@ -1574,13 +1596,15 @@ protected:
 		layout_controls();
 		start_logic();
 		SetTimer(UI_TIMER_ID, UI_REFRESH_INTERVAL_MS, nullptr);
-		refresh_ui();
+		SetTimer(LOG_TIMER_ID, LOG_REFRESH_INTERVAL_MS, nullptr);
+		refresh_ui(true);
 		return 0;
 	}
 
 	afx_msg void OnDestroy()
 	{
 		KillTimer(UI_TIMER_ID);
+		KillTimer(LOG_TIMER_ID);
 		stop_logic();
 		CFrameWnd::OnDestroy();
 	}
@@ -1613,7 +1637,15 @@ protected:
 	{
 		if (id == UI_TIMER_ID)
 		{
-			refresh_ui();
+			if (_logic)
+			{
+				_logic->polling();
+			}
+			refresh_ui(false);
+		}
+		else if (id == LOG_TIMER_ID)
+		{
+			refresh_log_only();
 		}
 		CFrameWnd::OnTimer(id);
 	}
@@ -1725,7 +1757,7 @@ protected:
 
 	afx_msg void OnLogFilterChanged()
 	{
-		refresh_ui();
+		refresh_ui(true);
 	}
 
 	DECLARE_MESSAGE_MAP()
@@ -2339,7 +2371,24 @@ private:
 				oss << line << "\r\n";
 			}
 		}
-		_edit_logs.SetWindowText(to_cstring(oss.str()));
+		const std::string text = oss.str();
+		if (text == _log_text_signature)
+		{
+			return;
+		}
+
+		int sel_start = 0;
+		int sel_end = 0;
+		_edit_logs.GetSel(sel_start, sel_end);
+		const bool has_selection = sel_start != sel_end;
+		const bool has_focus = (::GetFocus() == _edit_logs.GetSafeHwnd());
+		if (has_focus || has_selection)
+		{
+			return;
+		}
+
+		_log_text_signature = text;
+		_edit_logs.SetWindowText(to_cstring(text));
 		_edit_logs.SetSel(-1, -1);
 		_edit_logs.LineScroll(_edit_logs.GetLineCount());
 	}
@@ -2508,7 +2557,16 @@ private:
 		_button_pause.SetWindowText(snapshot.trading_paused ? _T("Resume Trading") : _T("Pause Trading"));
 	}
 
-	void refresh_ui()
+	void refresh_log_only()
+	{
+		if (!_logic)
+		{
+			return;
+		}
+		refresh_logs(_logic->get_snapshot());
+	}
+
+	void refresh_ui(bool include_logs = true)
 	{
 		const auto snapshot = _logic->get_snapshot();
 		refresh_instrument_combo(snapshot);
@@ -2517,7 +2575,10 @@ private:
 		refresh_tick_panel(snapshot);
 		refresh_order_list(snapshot);
 		refresh_position_list(snapshot);
-		refresh_logs(snapshot);
+		if (include_logs)
+		{
+			refresh_logs(snapshot);
+		}
 		refresh_monitor(snapshot);
 		if (snapshot.error_event_id > _last_error_event_id && !snapshot.error_message.empty())
 		{
@@ -2912,6 +2973,7 @@ private:
 	std::string _tick_list_signature;
 	std::string _order_list_signature;
 	std::string _position_list_signature;
+	std::string _log_text_signature;
 	std::filesystem::path _framework_log_path;
 	uintmax_t _framework_log_offset = 0;
 	std::vector<std::string> _framework_log_lines;

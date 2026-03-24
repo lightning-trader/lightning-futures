@@ -168,7 +168,15 @@ namespace lt::driver
 			{
 				return THOST_FTDC_OF_Open;
 			}
-			else if (offset_type::OT_CLOSE == offset)
+
+			// Only SHFE/INE distinguish close-today vs close-yesterday.
+			// For other exchanges, both close intents should fall back to generic close.
+			if (!code.is_distinct())
+			{
+				return THOST_FTDC_OF_Close;
+			}
+
+			if (offset_type::OT_CLOSE == offset)
 			{
 				return THOST_FTDC_OF_CloseYesterday;
 			}
