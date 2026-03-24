@@ -504,6 +504,7 @@ private:
 		const DWORD group_style = WS_CHILD | WS_VISIBLE | BS_GROUPBOX;
 		const DWORD label_style = WS_CHILD | WS_VISIBLE;
 		const DWORD combo_list_style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | WS_VSCROLL;
+		const DWORD combo_edit_style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWN | WS_VSCROLL;
 		const DWORD edit_style = WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL;
 		const DWORD button_style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON;
 
@@ -525,7 +526,7 @@ private:
 		_label_cancel_limit.Create(_T("Cancel Limit"), label_style, CRect(0, 0, 0, 0), this, IDC_LABEL_CANCEL_LIMIT);
 		_risk_divider.Create(_T(""), WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, CRect(0, 0, 0, 0), this, IDC_STATIC_RISK_DIVIDER);
 
-		_combo_code.Create(combo_list_style, CRect(0, 0, 0, 260), this, IDC_COMBO_CODE);
+		_combo_code.Create(combo_edit_style, CRect(0, 0, 0, 260), this, IDC_COMBO_CODE);
 		_combo_side.Create(combo_list_style, CRect(0, 0, 0, 220), this, IDC_COMBO_SIDE);
 		_combo_side.AddString(_T("Buy Open"));
 		_combo_side.AddString(_T("Sell Open"));
@@ -912,6 +913,7 @@ private:
 
 	void refresh_instrument_combo(const gui_bridge_strategy::snapshot& snapshot)
 	{
+		const std::string current_text = get_window_text(_combo_code);
 		std::vector<std::string> codes;
 		for (const auto* code : kFavoriteContracts)
 		{
@@ -943,14 +945,14 @@ private:
 		}
 		const std::string effective_order_code = !_pending_order_contract_code.empty()
 			? _pending_order_contract_code
-			: get_window_text(_combo_code);
+			: current_text;
 		if (!effective_order_code.empty())
 		{
-			_combo_code.SelectString(-1, to_cstring(effective_order_code));
+			set_window_text(_combo_code, effective_order_code);
 		}
-		else if (_combo_code.GetCount() > 0 && _combo_code.GetCurSel() == CB_ERR)
+		else if (_combo_code.GetCount() > 0 && current_text.empty())
 		{
-			_combo_code.SetCurSel(0);
+			set_window_text(_combo_code, _cached_codes.front());
 		}
 		sync_favorite_selection();
 	}
@@ -1145,6 +1147,7 @@ private:
 			if (!line.empty())
 			{
 				_framework_log_lines.emplace_back(line);
+				append_framework_test_record(line);
 			}
 		}
 		_framework_log_offset = static_cast<uintmax_t>(input.tellg());
@@ -1158,6 +1161,41 @@ private:
 		{
 			_framework_log_lines.erase(_framework_log_lines.begin(),
 				_framework_log_lines.begin() + static_cast<long long>(_framework_log_lines.size() - 400U));
+		}
+	}
+
+	void append_framework_test_record(const std::string& line)
+	{
+		if (!_bridge)
+		{
+			return;
+		}
+
+		if (line.find("OnRspUserLogin") != std::string::npos ||
+			line.find("OnFrontConnected") != std::string::npos ||
+			line.find("OnFrontDisconnected") != std::string::npos ||
+			line.find("用户登录") != std::string::npos ||
+			line.find("FrontID") != std::string::npos ||
+			line.find("SessionID") != std::string::npos ||
+			line.find("AppID") != std::string::npos)
+		{
+			_bridge->append_test_record("system", line);
+		}
+
+		if (line.find("[报单统计]") != std::string::npos ||
+			line.find("[撤单统计]") != std::string::npos ||
+			line.find("报单数量") != std::string::npos ||
+			line.find("撤单数量") != std::string::npos)
+		{
+			_bridge->append_test_record("monitor", line);
+		}
+
+		if (line.find("ErrorID") != std::string::npos ||
+			line.find("ErrorMsg") != std::string::npos ||
+			line.find("[ERROR]") != std::string::npos ||
+			line.find("错误") != std::string::npos)
+		{
+			_bridge->append_test_record("error", line);
 		}
 	}
 
@@ -1563,7 +1601,7 @@ private:
 			return;
 		}
 		_pending_order_contract_code = code;
-		_combo_code.SelectString(-1, to_cstring(code));
+		set_window_text(_combo_code, code);
 		update_close_today_visibility();
 	}
 
@@ -1658,6 +1696,7 @@ BEGIN_MESSAGE_MAP(demo_gui_frame, CFrameWnd)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_POSITIONS, &demo_gui_frame::OnPositionSelectionChanged)
 	ON_LBN_SELCHANGE(IDC_LIST_FAVORITES, &demo_gui_frame::OnFavoriteChanged)
 	ON_CBN_SELCHANGE(IDC_COMBO_CODE, &demo_gui_frame::OnContractChanged)
+	ON_CBN_EDITCHANGE(IDC_COMBO_CODE, &demo_gui_frame::OnContractChanged)
 	ON_CBN_SELCHANGE(IDC_COMBO_SIDE, &demo_gui_frame::OnSideChanged)
 	ON_CBN_SELCHANGE(IDC_COMBO_LOG_LEVEL, &demo_gui_frame::OnLogFilterChanged)
 	ON_BN_CLICKED(IDC_BUTTON_ORDER, &demo_gui_frame::OnSendOrder)

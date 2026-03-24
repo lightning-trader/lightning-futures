@@ -16,7 +16,7 @@ aux_source_directory(strategy STRATEGY_DIR)
 
 # 回测环境示例
 add_executable(demo-evaluate "evaluate_demo.cpp" ${STRATEGY_DIR})
-target_link_libraries(demo-evaluate "latf-core-v3x")
+target_link_libraries(demo-evaluate "latf-core-v3x" "latf-simulator-v3x")
 
 # 实盘/仿真运行示例
 add_executable(demo-runtime "runtime_demo.cpp" ${STRATEGY_DIR})

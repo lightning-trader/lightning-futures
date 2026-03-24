@@ -10,4 +10,4 @@ add_library(latf-core-v3x STATIC
 	"time_section.cpp"
 	)
 
-target_link_libraries(latf-core-v3x "latf-adapter-v3x" "latf-simulator-v3x")
+target_link_libraries(latf-core-v3x "latf-adapter-v3x")

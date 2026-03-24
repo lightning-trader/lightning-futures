@@ -13,6 +13,7 @@ _deps
 out/
 run/
 bin/log/
+bin/logs/
 bin/light_test/
 bin/*.lib
 bin/*.a
@@ -29,6 +30,7 @@ bin/*.mmf
 bin/cache/
 bin/data/
 bin/result/
+api/ctp_6.6.8_t1/
 .idea
 build
 cmake-build-debug

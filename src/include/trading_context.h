@@ -31,7 +31,8 @@ namespace lt
 	class market_api;
 	class trader_api;
 
-	typedef std::function<bool(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)> filter_function;
+	typedef std::function<bool(const code_t& code, offset_type offset, direction_type direction, uint32_t count, double_t price, order_flag flag)> order_filter_function;
+	typedef std::function<bool(estid_t estid)> cancel_filter_function;
 
 	class trading_context
 	{
@@ -99,7 +100,8 @@ namespace lt
 
 		std::map<estid_t,std::pair<std::function<bool(estid_t)>, std::function<void(estid_t)>>> _need_check_condition;
 
-		filter_function _filter_function;
+		order_filter_function _order_filter_function;
+		cancel_filter_function _cancel_filter_function;
 
 		std::unique_ptr<class time_section> _trading_section ;
 
@@ -157,7 +159,7 @@ namespace lt
 
 		void remove_condition(estid_t estid);
 
-		void set_trading_filter(filter_function callback);
+		void set_trading_filter(order_filter_function place_callback, cancel_filter_function cancel_callback = nullptr);
 
 		const instrument_info& get_instrument(const code_t& code)const;
 

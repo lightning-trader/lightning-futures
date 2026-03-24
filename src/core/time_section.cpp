@@ -69,21 +69,21 @@ bool time_section::is_trade_time(daytm_t last_time)const
 
 daytm_t time_section::get_open_time()
 {
-	if (_trading_section.empty())
+	auto frist_one = _trading_section.begin();
+	if (frist_one == _trading_section.end())
 	{
 		return 0;
 	}
-	auto first_one = _trading_section.begin();
-	return first_one->first;
+	return frist_one->first;
 }
 
 daytm_t time_section::get_close_time()
 {
-	if (_trading_section.empty())
+	auto last_one = _trading_section.rbegin();
+	if(last_one == _trading_section.rend())
 	{
 		return 0;
 	}
-	auto last_one = _trading_section.rbegin();
 	return last_one->second;
 }
 

@@ -94,6 +94,8 @@ public:
 
 	snapshot get_snapshot() const;
 
+	void append_test_record(const std::string& category, const std::string& message);
+
 private:
 	virtual void on_init(lt::subscriber& suber) override;
 
@@ -153,6 +155,8 @@ private:
 	std::chrono::steady_clock::time_point _start_time;
 	bool _no_tick_warning_emitted;
 	std::ofstream _log_file;
+	std::ofstream _test_log_file;
 	std::filesystem::path _log_path;
+	std::filesystem::path _test_log_path;
 	std::vector<lt::code_t> _favorites;
 };

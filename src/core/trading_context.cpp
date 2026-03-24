@@ -221,9 +221,9 @@ estid_t trading_context::place_order(order_listener* listener, offset_type offse
 	{
 		PRINT_WARNING("place order instrument price_step invalid", code.get_symbol(), price);
 	}
-	if (_filter_function)
+	if (_order_filter_function)
 	{
-		if (!_filter_function(code, offset, direction, count, real_price, flag))
+		if (!_order_filter_function(code, offset, direction, count, real_price, flag))
 		{
 			PRINT_WARNING("engine place order : _filter_function false", code.get_symbol(), offset, direction, real_price, count);
 			return INVALID_ESTID;
@@ -262,7 +262,14 @@ bool trading_context::cancel_order(estid_t estid)
 		PRINT_WARNING("cancel order in freeze ", estid);
 		return true;
 	}
-	
+	if (_cancel_filter_function)
+	{
+		if (!_cancel_filter_function(estid))
+		{
+			PRINT_WARNING("engine place order : _filter_function false", estid);
+			return false;
+		}
+	}
 	PRINT_INFO("context cancel_order : ", estid);
 	auto result = this->_trader->cancel_order(estid);
 	if(result)
@@ -433,7 +440,7 @@ daytm_t trading_context::get_section_time(const code_t& code)const
 	}
 	else
 	{
-		// 妯℃嫙鐜鍥哄畾杩斿洖21:00:00
+		// 模拟环境固定返回21:00:00
 		return _trading_section->get_open_time();
 	}
 }
@@ -528,7 +535,7 @@ void trading_context::handle_entrust(const std::vector<std::any>& param)
 		}
 		else
 		{
-			//骞充粨鍐荤粨浠撲綅
+			//平仓冻结仓位
 			frozen_deduction(order.code, order.direction, order.offset, order.total_volume);
 		}
 		auto it = _order_listener.find(order.estid);
@@ -538,7 +545,7 @@ void trading_context::handle_entrust(const std::vector<std::any>& param)
 		}
 		_last_order_time = order.create_time;
 		_statistic_info[order.code].entrust_amount++;
-
+		EVALUATE_INFO("[报单统计] 合约:", order.code.to_string(), " 报单数量:", _statistic_info[order.code].entrust_amount);
 	}
 }
 
@@ -608,7 +615,7 @@ void trading_context::handle_cancel(const std::vector<std::any>& param)
 		auto it = _order_info.find(estid);
 		if(it != _order_info.end())
 		{
-			//鎾ら攢瑙ｅ喕浠撲綅
+			//撤销解冻仓位
 			if (offset == offset_type::OT_OPEN)
 			{
 				recover_pending(code, direction, offset, cancel_volume);
@@ -636,6 +643,8 @@ void trading_context::handle_cancel(const std::vector<std::any>& param)
 			_cancel_freeze.erase(cfit);
 		}
 		_statistic_info[code].cancel_amount++;
+		EVALUATE_INFO("[撤单统计] 合约:", code.to_string(), " 撤单数量:", _statistic_info[code].cancel_amount);
+
 	}
 }
 
@@ -914,9 +923,10 @@ void trading_context::recover_pending(const code_t& code, direction_type dir_typ
 }
 
 
-void trading_context::set_trading_filter(filter_function callback)
+void trading_context::set_trading_filter(order_filter_function order_callback, cancel_filter_function cancel_callback)
 {
-	_filter_function = callback;
+	_order_filter_function = order_callback;
+	_cancel_filter_function = cancel_callback;
 }
 
 void trading_context::check_condition()

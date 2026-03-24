@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
@@ -14,6 +15,8 @@ namespace
 		"SHFE.fu2609",
 		"CZCE.MA505"
 	};
+	constexpr uint32_t kDefaultMaxSingleOrderVolume = 100U;
+	constexpr uint32_t kAgOpenMaxSingleOrderVolume = 800U;
 
 	std::string format_time_text(lt::daytm_t time)
 	{
@@ -51,6 +54,34 @@ namespace
 			filler.delta_volume = 0;
 			ticks.push_back(filler);
 		}
+	}
+
+	bool is_price_step_aligned(double price, double price_step)
+	{
+		if (price_step <= 0.0)
+		{
+			return true;
+		}
+		const double scaled = price / price_step;
+		return std::fabs(scaled - std::round(scaled)) < 1e-6;
+	}
+
+	uint32_t get_max_single_order_volume(const lt::code_t& code, const std::string& side)
+	{
+		if ((side == "buy_open" || side == "sell_open") && code.to_string().rfind("SHFE.ag", 0) == 0)
+		{
+			return kAgOpenMaxSingleOrderVolume;
+		}
+		return kDefaultMaxSingleOrderVolume;
+	}
+
+	bool should_write_test_record(const std::string& category)
+	{
+		return category == "trade"
+			|| category == "system"
+			|| category == "monitor"
+			|| category == "risk"
+			|| category == "error";
 	}
 }
 
@@ -95,6 +126,16 @@ gui_bridge_strategy::snapshot gui_bridge_strategy::get_snapshot() const
 	const_cast<gui_bridge_strategy*>(this)->refresh_snapshot();
 	std::lock_guard<std::mutex> lock(_snapshot_mutex);
 	return _snapshot;
+}
+
+void gui_bridge_strategy::append_test_record(const std::string& category, const std::string& message)
+{
+	if (!_test_log_file.is_open() || !should_write_test_record(category))
+	{
+		return;
+	}
+	std::lock_guard<std::mutex> lock(_snapshot_mutex);
+	_test_log_file << "[external-" << category << "] " << message << std::endl;
 }
 
 void gui_bridge_strategy::on_init(lt::subscriber& suber)
@@ -186,6 +227,20 @@ void gui_bridge_strategy::on_change(const lt::params& p)
 			if (get_instrument(code).code == lt::default_code)
 			{
 				throw std::invalid_argument("contract not found");
+			}
+			const auto& instrument = get_instrument(code);
+			if (price > 0.0 && instrument.price_step > 0.0 && !is_price_step_aligned(price, instrument.price_step))
+			{
+				std::ostringstream oss;
+				oss << "price does not match minimum tick: step=" << instrument.price_step;
+				throw std::invalid_argument(oss.str());
+			}
+			const uint32_t max_single_order_volume = get_max_single_order_volume(code, side);
+			if (volume > max_single_order_volume)
+			{
+				std::ostringstream oss;
+				oss << "single order volume exceeds max limit: max=" << max_single_order_volume;
+				throw std::invalid_argument(oss.str());
 			}
 			{
 				std::lock_guard<std::mutex> lock(_snapshot_mutex);
@@ -497,11 +552,18 @@ void gui_bridge_strategy::on_cancel(lt::estid_t estid, const lt::code_t& code, l
 
 void gui_bridge_strategy::on_error(lt::error_type type, lt::estid_t estid, const lt::error_code error)
 {
+	const auto error_id = static_cast<uint32_t>(error);
 	std::ostringstream oss;
 	oss << "error type=" << to_string(type)
 		<< " estid=" << estid
-		<< " code=" << to_string(error);
+		<< " code=" << error_id << "(" << to_string(error) << ")";
+	{
+		std::lock_guard<std::mutex> lock(_snapshot_mutex);
+		_snapshot.reject_count++;
+	}
+	update_threshold_flags();
 	set_status(oss.str());
+	publish_error(oss.str());
 	append_log("error", oss.str());
 	refresh_snapshot();
 }
@@ -715,6 +777,10 @@ void gui_bridge_strategy::append_log(const std::string& category, const std::str
 	{
 		_log_file << line << std::endl;
 	}
+	if (_test_log_file.is_open() && should_write_test_record(category))
+	{
+		_test_log_file << line << std::endl;
+	}
 }
 
 void gui_bridge_strategy::open_log_file()
@@ -731,8 +797,16 @@ void gui_bridge_strategy::open_log_file()
 			<< std::put_time(&local_tm, "%Y%m%d")
 			<< ".log";
 		_log_path = std::filesystem::current_path() / "logs" / name.str();
+
+		std::ostringstream test_name;
+		test_name << "demo-gui-test-record-"
+			<< std::put_time(&local_tm, "%Y%m%d")
+			<< ".log";
+		_test_log_path = std::filesystem::current_path() / "logs" / test_name.str();
+
 		std::filesystem::create_directories(_log_path.parent_path());
 		_log_file.open(_log_path, std::ios::app);
+		_test_log_file.open(_test_log_path, std::ios::app);
 	}
 	catch (...)
 	{
@@ -822,6 +896,10 @@ std::string gui_bridge_strategy::to_string(lt::error_code error)
 		return "margin_not_enough";
 	case lt::error_code::EC_StateNotReady:
 		return "state_not_ready";
+	case static_cast<lt::error_code>(50):
+		return "close_today_not_enough";
+	case static_cast<lt::error_code>(51):
+		return "close_yesterday_not_enough";
 	default:
 		return "unknown";
 	}

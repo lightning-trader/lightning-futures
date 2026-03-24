@@ -116,9 +116,9 @@ namespace lt::hft
 			return _ctx->get_trading_day();
 		}
 
-		void set_trading_filter(filter_function callback)
+		void set_trading_filter(order_filter_function order_callback, cancel_filter_function cancel_callback=nullptr)
 		{
-			_ctx->set_trading_filter(callback);
+			_ctx->set_trading_filter(order_callback, cancel_callback);
 		}
 
 		const order_statistic& get_order_statistic(const code_t& code)const
