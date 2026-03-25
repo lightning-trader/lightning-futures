@@ -33,4 +33,12 @@ extern "C"
 
 	EXPORT_FLAG void _dump_logline(NanoLogLine* line);
 
+	EXPORT_FLAG void _flush_log(uint32_t timeout_ms);
+
+	EXPORT_FLAG const char* _current_stacktrace(uint32_t skip);
+
+	EXPORT_FLAG void _set_log_option(LogLevel level, uint8_t field, uint8_t print);
+
+	EXPORT_FLAG uint8_t _get_log_field();
+
 }

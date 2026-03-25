@@ -32,6 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <mutex>
 #include <time_utils.hpp>
 #include <process_helper.hpp>
 #include <string_helper.hpp>
@@ -135,6 +136,11 @@ namespace nanolog
 			logline_stringify(std::cout, logline, field);
 		}
 
+		virtual void flush() override
+		{
+			std::cout.flush();
+		}
+
 		~ConsoleWriter()
 		{
 			std::ios::sync_with_stdio(true);
@@ -167,6 +173,14 @@ namespace nanolog
 			if (m_bytes_written > m_log_file_roll_size_bytes)
 			{
 				roll_file();
+			}
+		}
+
+		virtual void flush() override
+		{
+			if (m_os)
+			{
+				m_os->flush();
 			}
 		}
 
@@ -240,12 +254,14 @@ namespace nanolog
 			_is_runing.store(false, std::memory_order_release);
 			_thread->join();
 		}
+		flush(100U);
 	}
 
 
 
 	void NanoLogger::pop()
 	{
+		_worker_thread_id = std::this_thread::get_id();
 
 		
 		while (_is_runing || !_mq.is_empty())
@@ -253,15 +269,9 @@ namespace nanolog
 			NanoLogLine* logline = _mq.pop();
 			if (logline)
 			{
-				if (_print & static_cast<uint8_t>(LogPrint::LOG_FILE))
-				{
-					_file_writer->write(*logline, _field);
-				}
-				if (_print & static_cast<uint8_t>(LogPrint::CONSOLE))
-				{
-					_console_writer->write(*logline, _field);
-				}
+				write_to_outputs(*logline, false);
 				recycle(logline);
+				_pending_count.fetch_sub(1U, std::memory_order_release);
 			}
 			else
 			{
@@ -285,7 +295,38 @@ namespace nanolog
 
 	void NanoLogger::dump(NanoLogLine* line)
 	{
+		if (!line)
+		{
+			return;
+		}
+		if (line->_log_level >= LogLevel::LLV_ERROR)
+		{
+			write_to_outputs(*line, true);
+			recycle(line);
+			return;
+		}
+		_pending_count.fetch_add(1U, std::memory_order_release);
 		_mq.push(std::move(line));
+	}
+
+	void NanoLogger::flush(uint32_t timeout_ms)
+	{
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
+		while (_pending_count.load(std::memory_order_acquire) != 0U &&
+			std::chrono::steady_clock::now() < deadline)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+
+		std::lock_guard<std::mutex> guard(_writer_mutex);
+		if (_file_writer)
+		{
+			_file_writer->flush();
+		}
+		if (_console_writer)
+		{
+			_console_writer->flush();
+		}
 	}
 
 	void NanoLogger::set_option(LogLevel level,uint8_t field,uint8_t print)
@@ -298,5 +339,31 @@ namespace nanolog
 	bool NanoLogger::is_logged(LogLevel level)
 	{
 		return static_cast<uint8_t>(level) >= static_cast<uint8_t>(_level);
+	}
+
+	uint8_t NanoLogger::field_mask() const
+	{
+		return _field;
+	}
+
+	void NanoLogger::write_to_outputs(const NanoLogLine& logline, bool flush_immediately)
+	{
+		std::lock_guard<std::mutex> guard(_writer_mutex);
+		if (_print & static_cast<uint8_t>(LogPrint::LOG_FILE))
+		{
+			_file_writer->write(logline, _field);
+			if (flush_immediately)
+			{
+				_file_writer->flush();
+			}
+		}
+		if (_print & static_cast<uint8_t>(LogPrint::CONSOLE))
+		{
+			_console_writer->write(logline, _field);
+			if (flush_immediately)
+			{
+				_console_writer->flush();
+			}
+		}
 	}
 } // namespace nanologger

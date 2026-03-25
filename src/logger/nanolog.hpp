@@ -27,30 +27,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #define NANO_LOG_HEADER_GUARD
 
 #include <thread>
+#include <atomic>
+#include <mutex>
 #include <log_define.hpp>
 
 namespace nanolog
 {
-	enum class LogField : uint8_t
-	{
-		TIME_SPAMP = 0B00000001,
-		THREAD_ID = 0B00000010,
-		LOG_LEVEL = 0B00000100,
-		SOURCE_FILE = 0B00001000,
-		FUNCTION = 0B00010000,
-	};
-
-
-	enum class LogPrint : uint8_t
-	{
-		LOG_FILE = 0B00000001,
-		CONSOLE = 0B00000010,
-	};
-
 	class LogWriter
 	{
 	public:
 		virtual void write(const NanoLogLine& logline, uint8_t field) = 0;
+		virtual void flush() = 0;
 	};
 
 	class NanoLogger
@@ -68,6 +55,8 @@ namespace nanolog
 
 		bool is_logged(LogLevel level);
 
+		uint8_t field_mask() const;
+		
 		void pop();
 		
 		NanoLogLine* alloc();
@@ -75,8 +64,12 @@ namespace nanolog
 		void recycle(NanoLogLine* line);
 		
 		void dump(NanoLogLine* line);
+
+		void flush(uint32_t timeout_ms = 1000U);
 		
 	private:
+
+		void write_to_outputs(const NanoLogLine& logline, bool flush_immediately);
 
 
 		std::unique_ptr<LogWriter> _file_writer;
@@ -87,11 +80,16 @@ namespace nanolog
 
 		LoglineQueue _mq;
 
+		std::atomic<uint64_t> _pending_count = 0U;
+
 		std::atomic<bool> _is_runing = false;
+
+		std::thread::id _worker_thread_id{};
 		
 		LogLevel _level = LogLevel::LLV_TRACE;
 		uint8_t _field = 0U;
 		uint8_t _print = 0U;
+		std::mutex _writer_mutex;
 	};
 
 
