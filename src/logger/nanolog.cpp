@@ -24,7 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 
 #include "nanolog.hpp"
-#include <mpsc_queue.hpp>
 #include <cstring>
 #include <chrono>
 #include <ctime>
@@ -117,7 +116,12 @@ namespace nanolog
 		{
 			os << '[' << logline._function << ':' << logline._source_line << "] ";
 		}
-		os << logline._buffer.str() << std::endl;
+		os.write(logline._buffer, static_cast<std::streamsize>(logline._message_size));
+		if (logline._truncated)
+		{
+			os << " [truncated]";
+		}
+		os << std::endl;
 		//os.flush();
 	}
 
@@ -228,6 +232,13 @@ namespace nanolog
 		}
 		auto time_string = lt::datetime_to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), "%Y-%m-%d_%H%M%S");
 		auto file_name = lt::string_helper::format("lt_{0}.{1}", time_string, process_helper::get_pid());
+
+		_pool_storage = std::make_unique<NanoLogLine[]>(LOG_POOL_SIZE);
+		for (size_t i = 0; i < LOG_POOL_SIZE; ++i)
+		{
+			_pool_storage[i]._from_pool = true;
+			push_free_line(&_pool_storage[i]);
+		}
 		
 #ifndef NDEBUG
 		uint8_t field = static_cast<uint8_t>(LogField::TIME_SPAMP) | static_cast<uint8_t>(LogField::THREAD_ID) | static_cast<uint8_t>(LogField::LOG_LEVEL) | static_cast<uint8_t>(LogField::SOURCE_FILE);
@@ -262,6 +273,7 @@ namespace nanolog
 	void NanoLogger::pop()
 	{
 		_worker_thread_id = std::this_thread::get_id();
+		uint32_t idle_rounds = 0U;
 
 		
 		while (_is_runing || !_mq.is_empty())
@@ -269,13 +281,26 @@ namespace nanolog
 			NanoLogLine* logline = _mq.pop();
 			if (logline)
 			{
+				idle_rounds = 0U;
 				write_to_outputs(*logline, false);
 				recycle(logline);
 				_pending_count.fetch_sub(1U, std::memory_order_release);
 			}
 			else
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				++idle_rounds;
+				if (idle_rounds <= 64U)
+				{
+					std::this_thread::yield();
+				}
+				else if (idle_rounds <= 256U)
+				{
+					std::this_thread::sleep_for(std::chrono::microseconds(50));
+				}
+				else
+				{
+					std::this_thread::sleep_for(std::chrono::microseconds(200));
+				}
 			}
 		}
 		
@@ -285,11 +310,28 @@ namespace nanolog
 
 	NanoLogLine* NanoLogger::alloc()
 	{
-		return new NanoLogLine();
+		NanoLogLine* line = pop_free_line();
+		if (line)
+		{
+			return line;
+		}
+
+		line = new NanoLogLine();
+		line->_from_pool = false;
+		return line;
 	}
 
 	void NanoLogger::recycle(NanoLogLine* line)
 	{
+		if (!line)
+		{
+			return;
+		}
+		if (line->_from_pool)
+		{
+			push_free_line(line);
+			return;
+		}
 		delete line;
 	}
 
@@ -299,7 +341,7 @@ namespace nanolog
 		{
 			return;
 		}
-		if (line->_log_level >= LogLevel::LLV_ERROR)
+		if (line->_log_level >= LogLevel::LLV_FATAL)
 		{
 			write_to_outputs(*line, true);
 			recycle(line);
@@ -365,5 +407,35 @@ namespace nanolog
 				_console_writer->flush();
 			}
 		}
+	}
+
+	NanoLogLine* NanoLogger::pop_free_line()
+	{
+		free_list_head head = _free_list.load(std::memory_order_acquire);
+		while (head.line)
+		{
+			free_list_head next{ head.line->_next_free, head.version + 1U };
+			if (_free_list.compare_exchange_weak(head, next, std::memory_order_acq_rel, std::memory_order_acquire))
+			{
+				next.line = head.line;
+				next.line->_next_free = nullptr;
+				return next.line;
+			}
+		}
+		return nullptr;
+	}
+
+	void NanoLogger::push_free_line(NanoLogLine* line)
+	{
+		if (!line)
+		{
+			return;
+		}
+
+		free_list_head head = _free_list.load(std::memory_order_acquire);
+		do
+		{
+			line->_next_free = head.line;
+		} while (!_free_list.compare_exchange_weak(head, free_list_head{ line, head.version + 1U }, std::memory_order_acq_rel, std::memory_order_acquire));
 	}
 } // namespace nanologger

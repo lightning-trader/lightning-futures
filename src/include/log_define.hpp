@@ -21,13 +21,19 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #pragma once
+#include <atomic>
 #include <library_helper.hpp>
-#include <mpsc_queue.hpp>
-#include <thread>
-#include <sstream>
+#include <charconv>
 #include <chrono>
+#include <cstring>
+#include <cstdio>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <thread>
+#include <type_traits>
+#include <utility>
 
 enum class LogLevel : uint8_t
 {
@@ -55,7 +61,15 @@ enum class LogPrint : uint8_t
 	CONSOLE = 0B00000010,
 };
 
-#define LOG_BUFFER_SIZE 1024U
+#define LOG_BUFFER_SIZE 2048U
+
+struct NanoLogLine;
+
+struct NanoLogQueueNode
+{
+	std::atomic<NanoLogQueueNode*> next{ nullptr };
+	NanoLogLine* value = nullptr;
+};
 
 struct NanoLogLine
 {
@@ -69,7 +83,11 @@ public:
 
 	NanoLogLine& operator=(NanoLogLine&&) = default;
 
-	std::stringstream _buffer;
+	char _buffer[LOG_BUFFER_SIZE] = {};
+
+	uint32_t _message_size = 0U;
+
+	bool _truncated = false;
 
 	uint64_t _timestamp = 0LLU;
 
@@ -77,14 +95,23 @@ public:
 	
 	LogLevel _log_level = LogLevel::LLV_TRACE;
 	
-	std::string _source_file = "";
+	const char* _source_file = "";
 	
-	std::string _function = "";
+	const char* _function = "";
 	
 	uint32_t	_source_line = 0U;
 
+	NanoLogLine* _next_free = nullptr;
+
+	NanoLogQueueNode _queue_node{};
+
+	bool _from_pool = false;
+
 	void initialize(LogLevel lv, const char* file, char const* func, uint32_t line)
 	{
+		_message_size = 0U;
+		_truncated = false;
+		_buffer[0] = '\0';
 		_log_level = lv;
 		_source_file = file;
 		_function = func;
@@ -93,9 +120,142 @@ public:
 		_thread_id = std::this_thread::get_id();
 	}
 
-};
+	void append_separator()
+	{
+		append_char(' ');
+	}
 
-typedef mpsc::mpsc_queue<NanoLogLine> LoglineQueue;
+	void append_newline()
+	{
+		append_char('\n');
+	}
+
+	void append_string(std::string_view text)
+	{
+		append_bytes(text.data(), text.size());
+	}
+
+	template <typename T>
+	void append_value(T&& value)
+	{
+		using value_type = std::decay_t<T>;
+		if constexpr (std::is_same_v<value_type, std::string>)
+		{
+			append_string(value);
+		}
+		else if constexpr (std::is_same_v<value_type, std::string_view>)
+		{
+			append_string(value);
+		}
+		else if constexpr (std::is_same_v<value_type, const char*> || std::is_same_v<value_type, char*>)
+		{
+			append_cstr(value);
+		}
+		else if constexpr (std::is_same_v<value_type, char>)
+		{
+			append_char(value);
+		}
+		else if constexpr (std::is_same_v<value_type, bool>)
+		{
+			append_string(value ? "1" : "0");
+		}
+		else if constexpr (std::is_enum_v<value_type>)
+		{
+			append_integer(static_cast<std::underlying_type_t<value_type>>(value));
+		}
+		else if constexpr (std::is_integral_v<value_type>)
+		{
+			append_integer(value);
+		}
+		else if constexpr (std::is_floating_point_v<value_type>)
+		{
+			append_float(static_cast<double>(value));
+		}
+		else if constexpr (std::is_pointer_v<value_type>)
+		{
+			append_pointer(reinterpret_cast<const void*>(value));
+		}
+		else
+		{
+			std::ostringstream oss;
+			oss << value;
+			append_string(oss.str());
+		}
+	}
+
+private:
+
+	void append_char(char value)
+	{
+		append_bytes(&value, 1U);
+	}
+
+	void append_cstr(const char* text)
+	{
+		if (!text)
+		{
+			append_string("<null>");
+			return;
+		}
+		append_string(text);
+	}
+
+	template <typename Integer>
+	void append_integer(Integer value)
+	{
+		char local[32] = {};
+		auto [end, ec] = std::to_chars(local, local + sizeof(local), value);
+		if (ec == std::errc())
+		{
+			append_bytes(local, static_cast<size_t>(end - local));
+		}
+	}
+
+	void append_float(double value)
+	{
+		char local[64] = {};
+		int len = std::snprintf(local, sizeof(local), "%.6g", value);
+		if (len > 0)
+		{
+			append_bytes(local, static_cast<size_t>(len));
+		}
+	}
+
+	void append_pointer(const void* value)
+	{
+		char local[32] = {};
+		int len = std::snprintf(local, sizeof(local), "%p", value);
+		if (len > 0)
+		{
+			append_bytes(local, static_cast<size_t>(len));
+		}
+	}
+
+	void append_bytes(const char* data, size_t size)
+	{
+		if (!data || size == 0U)
+		{
+			return;
+		}
+
+		if (_message_size >= LOG_BUFFER_SIZE - 1U)
+		{
+			_truncated = true;
+			return;
+		}
+
+		const size_t available = LOG_BUFFER_SIZE - 1U - _message_size;
+		const size_t copied = (size < available) ? size : available;
+		std::memcpy(_buffer + _message_size, data, copied);
+		_message_size += static_cast<uint32_t>(copied);
+		_buffer[_message_size] = '\0';
+		if (copied < size)
+		{
+			_truncated = true;
+		}
+	}
+
+};
 
 
 
@@ -261,40 +421,6 @@ namespace lt::log
 			}
 		}
 
-		template <typename Frist, typename... Types>
-		typename std::enable_if < !std::is_enum <Frist>::value, void >::type
-			print(Frist firstArg, Types... args) {
-			if (_line)
-			{
-				_line->_buffer << static_cast<std::decay_t<Frist>>(firstArg) << " ";
-			}
-			print(args...);
-		}
-		template <typename Frist, typename... Types>
-		typename std::enable_if < std::is_enum <Frist>::value, void >::type
-			print(Frist firstArg, Types... args) {
-			if (_line)
-			{
-				_line->_buffer << static_cast<uint8_t>(firstArg) << " ";
-			}
-			print(args...);
-		}
-		template <typename... Types>
-		void print(const std::string& firstArg, Types... args) {
-			if (_line)
-			{
-				_line->_buffer << firstArg.c_str() << " ";
-			}
-			print(args...);
-		}
-		template <typename... Types>
-		void print(char* firstArg, Types... args) {
-			if (_line)
-			{
-				_line->_buffer << static_cast<const char*>(firstArg) << " ";
-			}
-			print(args...);
-		}
 		void print()
 		{
 			if (!_line)
@@ -305,19 +431,53 @@ namespace lt::log
 			logger.dump_logline(_line);
 		}
 
+		template <typename First, typename... Types>
+		void print(First&& firstArg, Types&&... args)
+		{
+			append_values(std::forward<First>(firstArg), std::forward<Types>(args)...);
+			print();
+		}
+
 		template <typename... Types>
 		void print_with_stack(Types... args)
 		{
-			print(args...);
+			append_values(args...);
 			if (_line && _level >= LogLevel::LLV_ERROR && logger.has_field(LogField::STACK_TRACE))
 			{
 				auto stack = logger.current_stacktrace(3U);
 				if (!stack.empty())
 				{
-					_line->_buffer << "\n" << stack;
+					_line->append_newline();
+					_line->append_string(stack);
 				}
 			}
 			print();
+		}
+
+	private:
+
+		void append_values()
+		{
+		}
+
+		template <typename First, typename... Types>
+		void append_values(First&& firstArg, Types&&... args)
+		{
+			append_value(std::forward<First>(firstArg));
+			if constexpr (sizeof...(args) > 0)
+			{
+				append_values(std::forward<Types>(args)...);
+			}
+		}
+
+		template <typename T>
+		void append_value(T&& value)
+		{
+			if (_line)
+			{
+				_line->append_value(std::forward<T>(value));
+				_line->append_separator();
+			}
 		}
 
 	};

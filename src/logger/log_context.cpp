@@ -143,7 +143,7 @@ namespace
 			return;
 		}
 		line->initialize(level, source, source, 0U);
-		line->_buffer << message;
+		line->append_string(message);
 		logger->dump(line);
 		logger->flush(2000U);
 	}

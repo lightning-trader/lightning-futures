@@ -28,11 +28,59 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 #include <thread>
 #include <atomic>
+#include <memory>
 #include <mutex>
 #include <log_define.hpp>
 
 namespace nanolog
 {
+	class LoglineQueue
+	{
+	public:
+		LoglineQueue()
+		{
+			_stub.next.store(nullptr, std::memory_order_relaxed);
+			_stub.value = nullptr;
+			_head.store(&_stub, std::memory_order_relaxed);
+			_tail = &_stub;
+		}
+
+		void push(NanoLogLine* line)
+		{
+			if (!line)
+			{
+				return;
+			}
+			NanoLogQueueNode* node = &line->_queue_node;
+			node->value = line;
+			node->next.store(nullptr, std::memory_order_relaxed);
+			NanoLogQueueNode* prev = _head.exchange(node, std::memory_order_acq_rel);
+			prev->next.store(node, std::memory_order_release);
+		}
+
+		NanoLogLine* pop()
+		{
+			NanoLogQueueNode* tail = _tail;
+			NanoLogQueueNode* next = tail->next.load(std::memory_order_acquire);
+			if (next != nullptr)
+			{
+				_tail = next;
+				return next->value;
+			}
+			return nullptr;
+		}
+
+		bool is_empty() const
+		{
+			return _head.load(std::memory_order_acquire) == _tail;
+		}
+
+	private:
+		std::atomic<NanoLogQueueNode*> _head{};
+		NanoLogQueueNode* _tail = nullptr;
+		NanoLogQueueNode _stub{};
+	};
+
 	class LogWriter
 	{
 	public:
@@ -69,7 +117,19 @@ namespace nanolog
 		
 	private:
 
+		struct free_list_head
+		{
+			NanoLogLine* line;
+			uint64_t version;
+		};
+
+		static constexpr size_t LOG_POOL_SIZE = 4096U;
+
 		void write_to_outputs(const NanoLogLine& logline, bool flush_immediately);
+
+		NanoLogLine* pop_free_line();
+
+		void push_free_line(NanoLogLine* line);
 
 
 		std::unique_ptr<LogWriter> _file_writer;
@@ -90,6 +150,8 @@ namespace nanolog
 		uint8_t _field = 0U;
 		uint8_t _print = 0U;
 		std::mutex _writer_mutex;
+		std::unique_ptr<NanoLogLine[]> _pool_storage;
+		std::atomic<free_list_head> _free_list = free_list_head{ nullptr, 0U };
 	};
 
 
