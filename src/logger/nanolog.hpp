@@ -26,60 +26,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #ifndef NANO_LOG_HEADER_GUARD
 #define NANO_LOG_HEADER_GUARD
 
-#include <thread>
 #include <atomic>
+#include <thread>
 #include <memory>
 #include <mutex>
-#include <log_define.hpp>
+#include <mpsc_queue.hpp>
+#include "log_define.hpp"
 
 namespace nanolog
 {
-	class LoglineQueue
-	{
-	public:
-		LoglineQueue()
-		{
-			_stub.next.store(nullptr, std::memory_order_relaxed);
-			_stub.value = nullptr;
-			_head.store(&_stub, std::memory_order_relaxed);
-			_tail = &_stub;
-		}
-
-		void push(NanoLogLine* line)
-		{
-			if (!line)
-			{
-				return;
-			}
-			NanoLogQueueNode* node = &line->_queue_node;
-			node->value = line;
-			node->next.store(nullptr, std::memory_order_relaxed);
-			NanoLogQueueNode* prev = _head.exchange(node, std::memory_order_acq_rel);
-			prev->next.store(node, std::memory_order_release);
-		}
-
-		NanoLogLine* pop()
-		{
-			NanoLogQueueNode* tail = _tail;
-			NanoLogQueueNode* next = tail->next.load(std::memory_order_acquire);
-			if (next != nullptr)
-			{
-				_tail = next;
-				return next->value;
-			}
-			return nullptr;
-		}
-
-		bool is_empty() const
-		{
-			return _head.load(std::memory_order_acquire) == _tail;
-		}
-
-	private:
-		std::atomic<NanoLogQueueNode*> _head{};
-		NanoLogQueueNode* _tail = nullptr;
-		NanoLogQueueNode _stub{};
-	};
 
 	class LogWriter
 	{
@@ -89,6 +44,7 @@ namespace nanolog
 	};
 
 	class NanoLogger
+
 	{
 
 	public:
@@ -138,7 +94,7 @@ namespace nanolog
 
 		std::unique_ptr<std::thread> _thread;
 
-		LoglineQueue _mq;
+		mpsc::mpsc_queue<NanoLogLine> _mq;
 
 		std::atomic<uint64_t> _pending_count = 0U;
 

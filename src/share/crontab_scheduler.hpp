@@ -42,11 +42,11 @@ namespace lt
             return static_cast<int>(_schedules.size()) - 1;
         }
 
-        void set_work_days(const std::vector<int>& days) {
+        void set_work_days(const std::vector<uint32_t>& days) {
             _work_days.clear();
             for (int day : days) {
                 if (day >= 0 && day <= 6) {
-                    _work_days.insert(day);
+                    _work_days.insert(static_cast<int>(day));
                 }
             }
         }

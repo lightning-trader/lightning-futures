@@ -417,9 +417,13 @@ namespace nanolog
 			free_list_head next{ head.line->_next_free, head.version + 1U };
 			if (_free_list.compare_exchange_weak(head, next, std::memory_order_acq_rel, std::memory_order_acquire))
 			{
-				next.line = head.line;
-				next.line->_next_free = nullptr;
-				return next.line;
+				NanoLogLine* line = head.line;
+				line->_next_free = nullptr;
+				// 重置状态，避免残留数据
+				line->_message_size = 0;
+				line->_truncated = false;
+				line->_timestamp = 0;
+				return line;
 			}
 		}
 		return nullptr;

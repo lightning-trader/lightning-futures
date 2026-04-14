@@ -63,14 +63,6 @@ enum class LogPrint : uint8_t
 
 #define LOG_BUFFER_SIZE 2048U
 
-struct NanoLogLine;
-
-struct NanoLogQueueNode
-{
-	std::atomic<NanoLogQueueNode*> next{ nullptr };
-	NanoLogLine* value = nullptr;
-};
-
 struct NanoLogLine
 {
 public:
@@ -102,8 +94,6 @@ public:
 	uint32_t	_source_line = 0U;
 
 	NanoLogLine* _next_free = nullptr;
-
-	NanoLogQueueNode _queue_node{};
 
 	bool _from_pool = false;
 
@@ -499,7 +489,7 @@ namespace lt::log
 #define PRINT_ERROR(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_ERROR,__FILE__,__func__,__LINE__).print_with_stack(__VA_ARGS__);
 
 //测评日志
-#define EVALUATE_INFO(...) if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
+#define EVALUATE_INFO(...) //if(lt::log::logger.is_ready())lt::log::logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 //性能测试
 #define PROFILE_INFO(...) //if(logger.is_ready())logline(LogLevel::LLV_INFO,__FILE__,__func__,__LINE__).print(__VA_ARGS__);
 
